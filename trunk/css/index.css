@@ -1,0 +1,11 @@
+/* css for index.php */
+
+span.drop {
+  float                   : left;
+  margin-top              : 0px;
+  padding-top             : 0.2em;
+  font-size               : 36pt;
+  font-weight             : bold;
+  color                   : #444444;
+}
+

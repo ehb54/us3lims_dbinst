@@ -1,0 +1,285 @@
+/*
+ * common.css
+ *
+ * Styles that are common to many files
+ *
+ */
+
+body {
+	margin                : 0px;
+	padding               : 0px;
+	background-color      : #FFFFFF;      /* Outer frame color */
+	font-family           : Georgia, "Times New Roman", Times, serif;
+	font-size             : 13px;
+}
+
+h1 {
+  font-family           : Arial, Helvetica, sans-serif;
+  font-size             : 1.8em;
+  color                 : dimgray;
+  font-weight           : bold;
+}
+
+h2 {
+  font-family           : Arial, Helvetica, sans-serif;
+  font-size             : 1.6em;
+  color                 : slategray;
+  font-weight           : bold;
+  margin-top            : 20px;
+}
+
+h3 {
+  font-family           : Arial, Helvetica, sans-serif;
+  font-size             : 1.4em;
+  color                 : dimgray;
+  margin-top            : 20px;
+}
+
+h4, h5, h6 {
+  font-family           : Arial, Helvetica, sans-serif;
+  font-size             : 1.2em;
+  font-weight           : bold;
+  color                 : gray;
+}
+
+p, ul, ol, dd, div, td {
+  font-family           : Verdana, arial, Sans-serif;
+  color                 : black;
+  font-size             : 12px;
+  line-height           : 1.5;
+}
+
+ul {
+  list-style-type :square;
+}
+
+ul ul {
+  list-style-type :disc;
+}
+
+ul ul ul {
+  list-style-type :none;
+}
+
+table.style1 {
+  border                : 5px groove #006666; 
+  width                 : 90%;
+  margin                : 2em 1em;
+}
+
+table.style1 thead th {
+  font-family           : Arial, Helvetica, sans-serif;
+  font-size             : 14px;
+  font-weight           : bold;
+  background-color      : #006666;      /* banner background color */
+  color                 : black;
+  line-height           : 1.5;
+}
+
+table.style1 td {
+  border                : 1px solid black;
+}
+
+table.style1 tbody th {
+  border                : 1px solid black;
+  text-align            : left;
+}
+
+table.noborder td {
+  border                : 0px;
+}
+
+a  {
+  text-decoration       : none;
+  color                 : dimgray;
+  font-size             : 12px;
+  font-weight           : bold;
+}
+
+a:hover {
+  text-decoration       : underline;
+}
+
+a.block {
+  display               : block;
+  margin-bottom         : 12px;
+  border                : 1px solid #FFF;
+  padding               : 4px;
+  color                 : #000;
+  text-decoration       : none;
+  font-weight           : normal;
+  font-size             : 12px;
+}
+
+a.block:hover {
+  border                : 1px solid #CCC;
+  color                 : #000;
+  background            : #F3F3F3;
+  text-decoration       : none;
+  font-size             : 12px;
+}
+
+.required {
+  font-weight           : bold;
+  color                 : black;
+}
+
+.message {
+  font-size             : 110%;
+  font-weight           : bold;
+  color                 : #FF0000;        /* red */
+}
+
+/* Header */
+
+#header {
+	width                 : 980px;
+	margin                : 1em auto 0px;   /* page will be 1em from top of window */
+  background            : #FFFFFF  url(../images/gradient_grey.gif) repeat-x;
+}
+
+#header img, #header table, #header td {
+  border                : 0px;
+}
+
+#header .banner {
+  width                 : 800px;
+  height                : 130px;
+}
+
+#header .logo {
+  width                 : 180px;
+  height                : 130px;
+}
+
+#sitename {
+  height                : 130px;
+}
+
+#sitename h1 {
+  padding               : 30px 0 0 40px;
+  color                 : black;
+}
+
+#globalnav {
+  padding-left          : 80px;
+  vertical-align        : bottom;
+}
+
+#blobalnav a {
+  color                 : black;
+  font-weight           : bold;
+}
+
+/* Page */
+
+#page {
+	width                 : 980px;
+	margin                : -2px auto;
+	background            : #FFFFFF  url(../images/links_background.gif) repeat-y;
+}
+
+/* Sidebar */
+
+#sidebar {
+	float                 : left;
+  width                 : 130px;                /* 180 - 25x2 in ul margin */
+  background-color      : gray;                 /* in case page is too short */
+  padding               : 5em 25px 15em 25px;   /* a minimum spacing before footer */
+}
+
+#sidebar ul {
+  list-style-type       : none;
+  margin                : 0px;
+  padding               : 0px;
+}
+
+#sidebar li.section {
+  border-bottom         : 1px solid black;
+  margin-bottom         : 0.5em;                /* to make a centered line */
+  padding-bottom        : 0.5em;
+}
+
+/* anchor tags need to be the same in #sidebar and #info */
+#sidebar a, #info a  {
+  text-decoration       : none;
+  color                 : cyan;
+  font-size             : 12px;
+  font-weight           : bold;
+}
+
+#sidebar a:hover, #info a:hover {
+  text-decoration       : none;
+  color                 : cyan;
+  font-size             : 12px;
+  font-weight           : bold;
+}
+
+/* Content */
+#content {
+  width                 : 750px;                /* 780px - 25px r margin - 5px for IE6 */
+  margin-left           : 205px;                /* 180px for links + 25px l margin */
+  padding-bottom        : 2em;
+}
+
+div#content p
+{
+  padding-bottom        : 1em;
+  text-align            : justify;
+}
+
+.title {
+	margin                : 0px;
+	padding               : 2em 0px 1em;
+	font-size             : 180%;
+	font-weight           : bold;
+	color                 : #555555;
+}
+
+.imageleft {
+	float                 : left;
+	margin                : 0px 20px 10px 0px;
+}
+
+.imageright {
+  float                 : right;
+  margin                : 0px 0px 10px 20px;
+}
+
+.caption {
+  font-size             : 80%;
+  color                 : gray;
+  text-align            : left;
+}
+
+.grey {
+  background-color      : gray;
+}
+
+.footnote {
+  font-size             : 80%;
+}
+
+/* Footer */
+
+#footer {
+  clear                 : both;
+	width                 : 980px;
+	height                : 115px;
+	margin                : -2em auto 1em ; /* page will be 1em from bottom of window */
+  padding-bottom        : 40px;           /* 15px + 25px to match padding in #info */
+	font-family           : Arial, Helvetica, sans-serif;
+	font-size             : 85%;
+	text-align            : left;
+	background            : #FFFFFF  url(../images/links_background.gif) repeat-y;
+}
+
+#info {
+	float                 : left;
+	margin                : 0px;
+  width                 : 160px;
+	padding               : 15px 0px 25px 20px;
+	color                 : #000;
+  background-color      : gray;
+	line-height           : 1.5em;
+}
