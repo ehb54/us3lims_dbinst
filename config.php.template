@@ -1,0 +1,45 @@
+<?php
+/*  Database and other configuration information - Required!!  
+ -- Configure the Variables Below --
+
+*/
+
+$org_name           = 'UltraScan3 LIMS portal';
+$org_site           = 'us3_lims.uthscsa.edu';
+$site_author        = 'Dan Zollars, University of Texas Health Science Center';
+$site_keywords      = 'ultrascan analytical ultracentrifugation lims';
+                      # The website keywords (meta tag)
+$site_desc          = 'Website for the UltraScan3 LIMS portal'; # Site description
+
+$admin              = 'Dan Zollars';
+$admin_phone        = 'Office: (210) 767-2761<br />Fax: (210) 567-6595';
+$admin_email        = 'zollarsd@biochem.uthscsa.edu';
+
+$dbusername         = '';  # the name of the MySQL user
+$dbpasswd           = '';  # the password for the MySQL user
+$dbname             = '';  # the name of the database
+$dbhost             = 'localhost'; # the host on which MySQL runs, generally localhost
+
+$top_image          = '#';  # name of the logo to use
+$top_banner         = 'images/#';  # name of the banner at the top
+
+$full_path          = '/var/www/html/ultrascan/us3_lims/';  # Location of the system code
+$upload_dir         = 'data/';
+$disclaimer_file    = ''; # the name of a text file with disclaimer info
+$last_update        = '06/16/2010'; # the date the website was last updated
+$copyright_date     = '2010'; # copyright date
+
+//////////// End of user specific configuration
+
+/* Define our file paths */
+if ( ! defined('HOME_DIR') ) 
+{
+  define('HOME_DIR', $full_path );
+}
+
+if ( ! defined('DEBUG') ) 
+{
+  define('DEBUG', false );
+}
+
+?>

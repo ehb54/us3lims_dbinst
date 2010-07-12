@@ -1,0 +1,145 @@
+/* Main print stylesheet for the application */
+
+body {
+	margin           : 0;
+	padding          : 0;
+	background-color : white;
+  font-family      : Arial, Helvetica, sans-serif;
+	font-size        : 13px;
+	color            : black;
+}
+
+h1 {
+	font-size        : 180%;
+	font-weight      : normal;
+	color            : #c85300;
+  text-align       : center;
+}
+
+h2 {
+  font-size        : 140%;
+  font-weight      : normal;
+  color            : #c85300;
+  text-align       : center;
+}
+
+h3 {
+  font-size        : 100%;
+  font-weight      : bold;
+  color            : black;
+  text-align       : center;
+}
+
+h4, h5, h6 {
+  font-size        : 100%;
+  font-weight      : bold;
+  color            : black;
+  text-align       : left;
+}
+
+#header_print {
+	width: 980px;
+	margin: 0 auto;
+	height: 80px;
+	background-color: #FFFFFF;
+}
+
+#content_print {
+	width            : 980px;
+	margin           : 0 auto;
+	background-color : #FFFFFF;
+}
+
+#footer_print {
+	width            : 980px;
+	margin           : 0 auto;
+	font-size        : 85%;
+	font-family      : Arial, Helvetica, sans-serif;
+	text-align       : left;
+  background-color : white;
+	color            : #000;
+	line-height      : 1.5em;
+  padding-bottom   : 2em;
+}
+
+/* styles for common table formats, print version */
+
+table.style1
+{
+  margin           : 3em auto 0em;
+  font-family      : Verdana, Helvetica, Arial, sans-serif;
+  width            : 90%;
+}
+
+table.style1 td, table.style1 th
+{
+  padding          : 0.2em 0.3em; 
+  font-size        : 12px;
+}
+
+table.style1 thead th
+{
+  text-align       : center;
+  background-color : lightgray;
+  color            : black;
+  font-weight      : bold;
+  border           : 1px solid black;
+}
+
+table.style1 tbody th
+{
+  vertical-align   : top;
+  padding-top      : 1em;
+  text-align       : right;
+  width            : 10em;
+  color            : black;
+  border           : 0px;
+}
+
+table.style1 tbody td
+{
+  vertical-align   : top;
+  background-color : white;
+  border           : 0px;
+}
+
+table.style1 input
+{
+  display          : none;
+}
+
+/* Table within a table */
+table.style1 tbody td table
+{
+  width            : 90%;
+}
+
+/* To alternate colors on a table within a table */
+table.style1 tbody td table tr.odd td
+{
+  background-color : white;
+  border           : 0px;
+}
+
+table.style1 tbody td table tr.even td
+{
+  background-color : lightgray;
+  border           : 0px;
+}
+
+/* To differentiate header on table within a table */
+table.style1 tbody td table thead th
+{
+  text-align       : center;
+  background-color : white
+  color            : black;
+  font-weight      : bold;
+  border           : 0px;
+}
+
+.noprint
+{
+  display          : none;
+}
+
+

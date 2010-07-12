@@ -1,0 +1,19 @@
+Right now we have three general purpose user levels.
+
+User level 0 is a regular user. Level 0 can edit their own 
+profiles. This is the default user level.
+
+User level 1 is a privileged user. 
+
+User level 2 is a data analyst.
+
+User level 3 is a super user. Level 3 can view information
+about other users.
+
+User level 4 is for admin users. They can view or edit information
+about other users.
+
+And then we have one more user level not for general use, the super
+admin. This is user level 5, which is really supposed to be just for
+me to use when I'm developing. It's just like user level 4, and adds a
+MySQL command window.
