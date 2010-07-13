@@ -3,12 +3,19 @@
  *
  * Styles that are common to many files
  *
+ * Pallette colors:
+ *   #1B325F darkest blue
+ *   #2B4E72 dark blue
+ *   #2790B0 teal
+ *   #9CC4E4 light blue
+ *   #94BA65 light green
+ *   #C7BA99 light brown
  */
 
 body {
 	margin                : 0px;
 	padding               : 0px;
-	background-color      : #FFFFFF;      /* Outer frame color */
+	background-color      : #7F7F7F;      /* Outer frame color */
 	font-family           : Georgia, "Times New Roman", Times, serif;
 	font-size             : 13px;
 }
@@ -62,7 +69,7 @@ ul ul ul {
 }
 
 table.style1 {
-  border                : 5px groove #006666; 
+  border                : 5px groove #2B4E72;
   width                 : 90%;
   margin                : 2em 1em;
 }
@@ -71,7 +78,7 @@ table.style1 thead th {
   font-family           : Arial, Helvetica, sans-serif;
   font-size             : 14px;
   font-weight           : bold;
-  background-color      : #006666;      /* banner background color */
+  background-color      : #2B4E72;
   color                 : black;
   line-height           : 1.5;
 }
@@ -135,7 +142,9 @@ a.block:hover {
 #header {
 	width                 : 980px;
 	margin                : 1em auto 0px;   /* page will be 1em from top of window */
-  background            : #FFFFFF  url(../images/gradient_grey.gif) repeat-x;
+  background            : black;
+  border-top            : 7px solid black;
+  border-left           : 7px solid black;
 }
 
 #header img, #header table, #header td {
@@ -166,8 +175,16 @@ a.block:hover {
   vertical-align        : bottom;
 }
 
-#blobalnav a {
-  color                 : black;
+#globalnav a {
+  color                 : white;
+  font-weight           : bold;
+  text-decoration       : none;
+}
+
+#globalnav a:hover {
+  text-decoration       : none;
+  color                 : #2790B0;
+  font-size             : 12px;
   font-weight           : bold;
 }
 
@@ -177,6 +194,8 @@ a.block:hover {
 	width                 : 980px;
 	margin                : -2px auto;
 	background            : #FFFFFF  url(../images/links_background.gif) repeat-y;
+  border-top            : 7px solid black;
+  border-left           : 7px solid black;
 }
 
 /* Sidebar */
@@ -209,7 +228,7 @@ a.block:hover {
 }
 
 #sidebar a:hover, #info a:hover {
-  text-decoration       : none;
+  text-decoration       : underline;
   color                 : cyan;
   font-size             : 12px;
   font-weight           : bold;
