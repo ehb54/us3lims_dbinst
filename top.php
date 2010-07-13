@@ -69,21 +69,14 @@ echo<<<HTML
 
 <!-- begin header -->
 <div id="header">
-  <table cellpadding='0' cellspacing='0'>
-  <tr><td class='logo'><a href="#"><img src="$top_image"
-             alt=""
-             width="160" height="130" /></a></td>
-      <td class='banner'><img src="$top_banner"
-             alt="The 19th International Analytical Ultracentrifugation Conference"
-             width="560" height="89" /></td></tr>
-  <tr style='height:20px;background-color:#gray;'><td></td>
-      <td style='background-color:#DCDCDC;'>
+  <span style='font-size:36px;font-style:italic;font-weight:bold;color:#2790B0;padding:0 1em;'>
+    UltraScan III</span>
+  <span style='font-size:18px;font-weight:bold;color:white;'>
+    Public LIMS Portal</span>
         <div id="globalnav">
           <a href="http://$org_site/index.php">Home</a> |
           <a href="#">Contact Us</a>
         </div>
-      </td></tr>
-  </table>
 </div>
 
 <!-- Begin page content -->
