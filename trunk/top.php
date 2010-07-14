@@ -27,7 +27,7 @@ Website       : http://bioinformatics.uthscsa.edu
 
 Version       : beta
 
-Released      : 3/1/2010
+Released      : 8/1/2010
 
 -->
 
