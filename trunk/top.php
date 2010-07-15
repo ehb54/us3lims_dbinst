@@ -74,8 +74,22 @@ echo<<<HTML
   <span style='font-size:18px;font-weight:bold;color:white;'>
     Public LIMS Portal</span>
         <div id="globalnav">
-          <a href="http://$org_site/index.php">Home</a> |
-          <a href="#">Contact Us</a>
+          <ul class='level1'>
+            <li><a href="http://$org_site/index.php">Home</a></li>
+            <li class='submenu'><a href='#'>Project</a>
+              <ul class='level2'>
+                <li><a href='#'>New Project</a></li>
+                <li class='separator'></li>
+                <li><a href='#'>Enter Peptide Sequence</a></li>
+                <li><a href='#'>Enter Nucleic Acid Sequence</a></li>
+              </ul></li>
+            <li class='submenu'><a href='#'>Analysis</a>
+              <ul class='level2'>
+                <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
+              </ul></li>
+            <li><a href="#">Contact Us</a></li>
+            <li><a href='#'>Help</a></li>
+          </ul>
         </div>
 </div>
 
