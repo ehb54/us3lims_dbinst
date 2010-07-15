@@ -7,7 +7,7 @@
  */
 session_start();
 
-// Are we activated to view this page?
+// Are we authorized to view this page?
 if ( ! isset($_SESSION['id']) )
 {
   header('Location: index.php');

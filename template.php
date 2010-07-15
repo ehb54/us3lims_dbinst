@@ -14,15 +14,20 @@ if ( ! isset($_SESSION['id']) )
   exit();
 } 
 
-if ( $_SESSION['userlevel'] != 6 )    // Admin only
+if ( ($_SESSION['userlevel'] != 3) &&
+     ($_SESSION['userlevel'] != 4) &&
+     ($_SESSION['userlevel'] != 5) )    // super, admin and super admin only
 {
   header('Location: index.php');
   exit();
 } 
 
 include 'config.php';
+include 'db.php';
 
+// Start displaying page
 $page_title = "Template";
+$js = 'js/template.js,js/sorttable.js';
 $css = 'css/template.css';
 include 'top.php';
 include 'links.php';
@@ -37,4 +42,5 @@ include 'links.php';
 
 <?php
 include 'bottom.php';
+exit();
 ?>
