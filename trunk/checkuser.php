@@ -51,6 +51,7 @@ if ( $count == 1 )
   }
 
   $_SESSION['id']           = $personID;
+  $_SESSION['loginID']      = $personID;  // Stays same if user is working on behalf of another
   $_SESSION['firstname']    = $fName;
   $_SESSION['lastname']     = $lName;
   $_SESSION['phone']        = $phone;
