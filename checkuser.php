@@ -51,11 +51,12 @@ if ( $count == 1 )
   }
 
   $_SESSION['id']           = $personID;
-  $_SESSION['loginID']      = $personID;  // Stays same if user is working on behalf of another
+  $_SESSION['loginID']      = $personID;  // This never changes, even if working on behalf of another
   $_SESSION['firstname']    = $fName;
   $_SESSION['lastname']     = $lName;
   $_SESSION['phone']        = $phone;
   $_SESSION['email']        = $email;
+  $_SESSION['submitter_email'] = $email;
   $_SESSION['userlevel']    = $userlevel;
 }
 
