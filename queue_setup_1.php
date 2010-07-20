@@ -7,6 +7,9 @@
  */
 session_start();
 
+// for now
+$_SESSION['id'] = 4;
+
 // Are we authorized to view this page?
 if ( ! isset($_SESSION['id']) )
 {
@@ -23,21 +26,73 @@ if ( ($_SESSION['userlevel'] != 2) &&
   exit();
 } 
 
+if ( isset( $_GET['reset'] ) )
+{
+  unset( $_SESSION['new_submitter'] );
+  unset( $_SESSION['add_owner'] );
+  unset( $_SESSION['new_expID'] );
+  unset( $_SESSION['new_cells'] );
+
+  header( "Location: {$_SERVER[PHP_SELF]}" );
+  exit();
+}
+
 include 'config.php';
 include 'db.php';
+include 'lib/payload_manager.php';
+
+$payload = new payload_manager( $_SESSION );
+
+// Clear the payload
+$payload->clear();
+
+// Reset multiple dataset processing for later
+unset( $_SESSION['separate_datasets'] );
+
+// Get posted information, if any
+// Reset submitter email address, in case previous experiment had different owner, etc.
+$submitter_email = $_SESSION['email'];
+if ( isset( $_POST['submitter_email'] ) )
+{
+  $submitter_email = $_POST['submitter_email'];
+}
+
+else if ( isset( $_SESSION['new_submitter'] ) )
+{
+  $submitter_email = $_SESSION['new_submitter'];
+}
+
+$add_owner = ( isset( $_POST['add_owner'] ) ) ? 1 : 0;
+
+$experimentID = 0;
+if ( isset( $_POST['expID'] ) )
+{
+  $experimentID = $_POST['expID'];
+}
+
+else if ( isset( $_SESSION['new_expID'] ) )
+{
+  $experimentID = $_SESSION['new_expID'];
+}
+
+// Let's see if we should go to the next page
+if ( isset( $_POST['next'] ) )
+{
+  $_SESSION['new_submitter'] = $submitter_email;
+  $_SESSION['add_owner']     = $add_owner;
+  $_SESSION['new_expID']     = $experimentID;
+  $_SESSION['new_cells']     = $_POST['cells'];
+
+  header( "Location: queue_setup_2.php" );
+  exit();
+}
 
 // Start displaying page
 $page_title = "Queue Setup (part 1)";
 $css = 'css/queue_setup.css';
 include 'top.php';
 include 'links.php';
-include 'lib/payload_manager.php';
 include 'lib/motd.php';
-
-$payload = new payload_manager( $_SESSION );
-
-// Clear the payload
-$payload->clear();
 
 ?>
 <!-- Begin page content -->
@@ -49,80 +104,35 @@ $payload->clear();
 // Verify that submission is ok now
 motd_block();
 
-// Reset multiple dataset processing for later
-unset( $_SESSION['separate_datasets'] );
-
-// Reset submitter email address, in case previous experiment had different owner, etc.
-$_SESSION['submitter_email'] = $_SESSION['email'];
-
-// Reset other variables from previous experiment
-unset( $_SESSION['experimentID'] );
-
-// Check if current user is the data owner
-if ( $_SESSION['loginID'] != $_SESSION['id'] )
-{
-  $copy_owner = "<input type='checkbox' name='add_owner' />\n" .
-                  "  <label for='add_owner'>Add e-mail address of data owner?</legend></p>\n";
-}
-
 // If we are here, either userlevel is 4 or it's not blocked
 
-// Get a list of experiments
-$query  = "SELECT experimentID, runID, label " .
-          "FROM   projectPerson, project, experiment " .
-          "WHERE  projectPerson.personID = {$_SESSION['id']} " .
-          "AND    project.projectID = projectPerson.projectID " .
-          "AND    experiment.projectID = project.projectID ";
-$result = mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
-
-$experiment_list = "<select name='experiments'>\n" .
-                   "  <option value='null'>Select an experiment...</option>\n";
-while ( list( $experimentID, $runID, $label ) = mysql_fetch_array( $result ) )
-  $experiment_list .= "  <option value='$experimentID'>$runID $label</option>\n";
-
-$experiment_list .= "</select>\n";
-
-$msg1  = "";
-$msg1a = "";
-if ( isset( $_SESSION['message1'] ) )
+$email_text      = get_email_text();
+$experiment_text = get_experiment_text();
+$cell_text       = get_cell_text();
+$submit_text     = "<p style='padding-bottom:3em;'></p>\n";  // a spacer
+if ( $experimentID != 0 )
 {
-  $msg1  = "<p class='message'>{$_SESSION['message1']}</p>";
-  $msg1a = "<span class='message'>**</span>";
-  unset( $_SESSION['message1'] );
-}
+  $submit_text = <<<HTML
+  <p><input type='button' value='Select Different Experiment'
+            onclick='window.location="{$_SERVER[PHP_SELF]}?reset=true";' /> 
+     <input type='submit' name='next' value='Add to Queue'/>
+  </p>
 
-$msg2  = "";
-$msg2a = "";
-if ( isset( $_SESSION['message2'] ) )
-{
-  $msg2  = "<p class='message'>{$_SESSION['message2']}</p>";
-  $msg2a = "<span class='message'>**</span>";
-  unset( $_SESSION['message2'] );
+HTML;
 }
 
 echo <<<HTML
-  <form action="queue_setup_2.php" method="post">
-  <fieldset>
-    <legend>Initial Queue Setup</legend>
-      <p>Please enter the following information so
-      we can track your queue.<p>
+  <form action="{$_SERVER[PHP_SELF]}" method="post">
+    <fieldset>
+      <legend>Initial Queue Setup</legend>
 
-      <p>Enter the email address you would like notifications sent to:</p>
-      <p>$msg1a<input type="text" name="submitter_email"
-                value="{$_SESSION['submitter_email']}"/>
-         $copy_owner
-      </p>
-      $msg1
-  </fieldset>
+      $email_text
+      $experiment_text
+      $cell_text
 
-  <fieldset>
-    <legend>Select UltraScan Experiment</legend>
-    <p>Select the experiment you would like to add to the Analysis Queue.</p>
-    <p>$msg2a $experiment_list</p>
-    $msg2
-  </fieldset>
-  <p><input type="submit" value="Next"/></p>
+    </fieldset>
+
+    $submit_text
 
   </form>
 
@@ -137,4 +147,137 @@ motd_submit();
 <?php
 include 'bottom.php';
 exit();
+
+function get_email_text()
+{
+  global $submitter_email, $add_owner;
+
+  $msg1  = "";
+  $msg1a = "";
+  if ( isset( $_SESSION['message1'] ) )
+  {
+    $msg1  = "<p class='message'>{$_SESSION['message1']}</p>";
+    $msg1a = "<span class='message'>*</span>";
+    unset( $_SESSION['message1'] );
+  }
+
+  // Check if current user is the data owner
+  $checked = ( $add_owner == 1 ) ? " checked='checked'" : "";
+  if ( $_SESSION['loginID'] != $_SESSION['id'] )
+  {
+    $copy_owner = "<input type='checkbox' name='add_owner'$checked />\n" .
+                  "  <label for='add_owner'>Add e-mail address of data owner?</label>\n";
+  }
+
+  $text = <<<HTML
+        <p>Please enter the following information so
+        we can track your queue.<p>
+
+        <p>Enter the email address you would like notifications sent to:</p>
+        <p>$msg1a<input type="text" name="submitter_email"
+                  value="$submitter_email"/>
+           $copy_owner
+        </p>
+        $msg1
+
+HTML;
+
+  return( $text );
+}
+
+function get_experiment_text()
+{
+  global $experimentID;
+
+  // Get a list of experiments
+  $query  = "SELECT experimentID, runID, label " .
+            "FROM   projectPerson, project, experiment " .
+            "WHERE  projectPerson.personID = {$_SESSION['id']} " .
+            "AND    project.projectID = projectPerson.projectID " .
+            "AND    experiment.projectID = project.projectID ";
+  $result = mysql_query( $query )
+            or die("Query failed : $query<br />\n" . mysql_error());
+
+  $experiment_list = "<select id='expID' name='expID'" .
+                     "  onchange='this.form.submit();'>\n" .
+                     "  <option value='null'>Select an experiment...</option>\n";
+  while ( list( $expID, $runID, $label ) = mysql_fetch_array( $result ) )
+  {
+    $selected = ( $expID == $experimentID )
+              ? " selected='selected'"
+              : "";
+    $experiment_list .= "  <option value='$expID'$selected>$runID $label</option>\n";
+  }
+
+  $experiment_list .= "</select>\n";
+
+  $msg2  = "";
+  $msg2a = "";
+  if ( isset( $_SESSION['message2'] ) )
+  {
+    $msg2  = "<p class='message'>{$_SESSION['message2']}</p>";
+    $msg2a = "<span class='message'>**</span>";
+    unset( $_SESSION['message2'] );
+  }
+
+  $text = <<<HTML
+      <p>Select the UltraScan experiment you would like to add to the Analysis Queue.</p>
+      <p>$msg2a $experiment_list</p>
+      $msg2
+
+HTML;
+
+  return( $text );
+}
+
+function get_cell_text()
+{
+  global $experimentID;
+
+  if ( $experimentID == 0 )
+  {
+    $rawData_list = "<select name='cells[]' multiple='multiple'>\n" .
+                       "  <option value='null'>Select experiment first...</option>\n";
+    $rawData_list .= "</select>\n";
+  }
+
+  else
+  {
+    // We have a legit experimentID, so let's get a list of cells 
+    //  (auc files) in experiment
+    $query  = "SELECT rawDataID, runID, rawData.label " .
+              "FROM   rawData, experiment " .
+              "WHERE  rawData.experimentID = $experimentID " .
+              "AND    rawData.experimentID = experiment.experimentID ";
+    $result = mysql_query( $query )
+              or die("Query failed : $query<br />\n" . mysql_error());
+  
+    $rawData_list = "<select name='cells[]' multiple='multiple'>\n" .
+                       "  <option value='null'>Select cells...</option>\n";
+    while ( list( $rawDataID, $runID, $label ) = mysql_fetch_array( $result ) )
+      $rawData_list .= "  <option value='$rawDataID'>$runID $label</option>\n";
+  
+    $rawData_list .= "</select>\n";
+  }
+
+  $msg3  = "";
+  $msg3a = "";
+  if ( isset( $_SESSION['message3'] ) )
+  {
+    $msg3  = "<p class='message'>{$_SESSION['message3']}</p>";
+    $msg3a = "<span class='message'>***</span>";
+    unset( $_SESSION['message3'] );
+  }
+
+  $text = <<<HTML
+      <p>Select the cells you wish to process.<br />
+      <em>You can select multiple cells at once.</em></p>
+
+      <p>$msg3a $rawData_list</p>
+      $msg3
+
+HTML;
+
+  return( $text );
+}
 ?>
