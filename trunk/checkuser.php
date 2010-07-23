@@ -52,12 +52,17 @@ if ( $count == 1 )
 
   $_SESSION['id']           = $personID;
   $_SESSION['loginID']      = $personID;  // This never changes, even if working on behalf of another
-  $_SESSION['firstname']    = $fName;
-  $_SESSION['lastname']     = $lName;
+  $_SESSION['firstname']    = $fname;
+  $_SESSION['lastname']     = $lname;
   $_SESSION['phone']        = $phone;
   $_SESSION['email']        = $email;
   $_SESSION['submitter_email'] = $email;
   $_SESSION['userlevel']    = $userlevel;
+
+  // Set cluster authorizations
+  $clusterAuth = array();
+  $clusterAuth = explode(":", $clusterAuthorizations );
+  $_SESSION['clusterAuth'] = $clusterAuth;
 }
 
 else if ( $count > 1 )

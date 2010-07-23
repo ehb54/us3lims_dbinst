@@ -79,7 +79,7 @@ table.style1 thead th {
   font-size             : 14px;
   font-weight           : bold;
   background-color      : #2B4E72;
-  color                 : black;
+  color                 : white;
   line-height           : 1.5;
 }
 
@@ -365,3 +365,33 @@ div#content p
   background-color      : gray;
   line-height           : 1.5em;
 }
+
+/* For the cluster lists when submitting jobs */
+fieldset#clusters
+{
+  margin-top : 1em;
+}
+
+fieldset#clusters legend
+{
+  font-size  : large;
+  font-family: verdana, arial, helvetica, sans-serif;
+}
+
+fieldset#clusters td, fieldset#clusters th
+{
+  text-align : center;
+  padding    : 0em 1.5em;
+  font-size  : medium;
+}
+
+fieldset#clusters td.cluster
+{
+  text-align : left;
+}
+
+fieldset#clusters tr.subheader th
+{
+  font-size  : x-small;
+}
+
