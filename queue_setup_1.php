@@ -7,9 +7,6 @@
  */
 session_start();
 
-// for now
-$_SESSION['id'] = 4;
-
 // Are we authorized to view this page?
 if ( ! isset($_SESSION['id']) )
 {
@@ -39,12 +36,6 @@ if ( isset( $_GET['reset'] ) )
 
 include 'config.php';
 include 'db.php';
-include 'lib/payload_manager.php';
-
-$payload = new payload_manager( $_SESSION );
-
-// Clear the payload
-$payload->clear();
 
 // Reset multiple dataset processing for later
 unset( $_SESSION['separate_datasets'] );
@@ -81,7 +72,14 @@ if ( isset( $_POST['next'] ) )
   $_SESSION['new_submitter'] = $submitter_email;
   $_SESSION['add_owner']     = $add_owner;
   $_SESSION['new_expID']     = $experimentID;
-  $_SESSION['new_cells']     = $_POST['cells'];
+
+  // Extract rawDataID and filename from cells[]
+  $_SESSION['new_cells'] = array();
+  foreach( $_POST['cells'] as $cell )
+  {
+    list( $rawDataID, $filename ) = explode( ":", $cell );
+    $_SESSION['new_cells'][$rawDataID] = $filename;
+  }
 
   header( "Location: queue_setup_2.php" );
   exit();
@@ -245,7 +243,7 @@ function get_cell_text()
   {
     // We have a legit experimentID, so let's get a list of cells 
     //  (auc files) in experiment
-    $query  = "SELECT rawDataID, runID, rawData.label " .
+    $query  = "SELECT rawDataID, runID, rawData.label, filename " .
               "FROM   rawData, experiment " .
               "WHERE  rawData.experimentID = $experimentID " .
               "AND    rawData.experimentID = experiment.experimentID ";
@@ -254,8 +252,8 @@ function get_cell_text()
   
     $rawData_list = "<select name='cells[]' multiple='multiple'>\n" .
                        "  <option value='null'>Select cells...</option>\n";
-    while ( list( $rawDataID, $runID, $label ) = mysql_fetch_array( $result ) )
-      $rawData_list .= "  <option value='$rawDataID'>$runID $label</option>\n";
+    while ( list( $rawDataID, $runID, $label, $filename ) = mysql_fetch_array( $result ) )
+      $rawData_list .= "  <option value='$rawDataID:$filename'>$runID $label</option>\n";
   
     $rawData_list .= "</select>\n";
   }

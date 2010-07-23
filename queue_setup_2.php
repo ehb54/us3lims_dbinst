@@ -36,11 +36,29 @@ include 'db.php';
 
 if ( isset( $_POST['save'] ) )
 {
-  // All the edit profiles and models have been saved by now,
-  //  so save the noise data
-  // $noiseIDs is an array of 0 or more noise files
-  foreach ( $_POST['noiseIDs'] as $rawDataID => $noiseIDs )
-    $_SESSION['cells'][$rawDataID]['noiseIDs'] = $noiseIDs;
+  // Verify we have all the info
+  get_setup_2();
+
+  if ( isset( $_POST['noiseIDs'] ) )
+  {
+    foreach ( $_POST['noiseIDs'] as $rawDataID => $noiseIDs )
+      $_SESSION['cells'][$rawDataID]['noiseIDs'] = $noiseIDs;
+  }
+
+  // Now translate into a data structure more useful for sequencing datasets
+  $_SESSION['request'] = array();
+  $count = 0;
+  foreach( $_SESSION['cells'] as $rawDataID => $cell )
+  {
+    $_SESSION['request'][$count]['rawDataID']    = $rawDataID;
+    $_SESSION['request'][$count]['path']         = $cell['path'];
+    $_SESSION['request'][$count]['filename']     = $cell['filename'];
+    $_SESSION['request'][$count]['editedDataID'] = $cell['editedDataID'];
+    $_SESSION['request'][$count]['modelID']      = $cell['modelID'];
+    $_SESSION['request'][$count]['noiseIDs']     = $cell['noiseIDs'];
+
+    $count++;
+  }
 
   header( "Location: queue_setup_3.php" );
   exit();
@@ -58,9 +76,6 @@ $page_title = "Queue Setup (part 2)";
 $css = 'css/queue_setup.css';
 include 'top.php';
 include 'links.php';
-include 'lib/payload_manager.php';
-
-$payload = new payload_manager( $_SESSION );
 
 ?>
 <!-- Begin page content -->
@@ -73,7 +88,6 @@ $payload = new payload_manager( $_SESSION );
 $out_text = "";
 foreach ( $_SESSION['cells'] as $rawDataID => $cell )
 {
-  $cell_text        = get_rawData( $rawDataID );
   $editedData_text  = get_editedData( $rawDataID, $cell['editedDataID'] );
   $model_text       = get_model( $rawDataID, $cell['editedDataID'], 
                                  $cell['modelID'] );
@@ -82,7 +96,7 @@ foreach ( $_SESSION['cells'] as $rawDataID => $cell )
 
   $out_text .= <<<HTML
   <fieldset>
-    <legend>$cell_text</legend>
+    <legend style='font-size:110%;font-weight:bold;'>{$cell['filename']}</legend>
 
     <table cellpadding='3' cellspacing='0'>
     <tr><th>Edit Profile</th>
@@ -202,10 +216,11 @@ function get_setup_1()
   // Set up a temporary data structure
   unset( $_SESSION['cells'] );
   $cells = array();
-  for ( $i = 0; $i < count( $new_cell_array ); $i++ )
+  foreach ( $new_cell_array as $rawDataID => $filename )
   {
-    $rawDataID = $new_cell_array[$i];
     $cells[$rawDataID] = array();
+    $cells[$rawDataID]['path']         = dirname ( $filename );
+    $cells[$rawDataID]['filename']     = basename( $filename );
     $cells[$rawDataID]['editedDataID'] = 0;
     $cells[$rawDataID]['modelID']      = 0;
     $cells[$rawDataID]['noiseIDs']     = array();
@@ -217,25 +232,17 @@ function get_setup_1()
 // Build information from current page
 function get_setup_2()
 {
-  foreach ( $_POST['editedDataID'] as $rawDataID => $editedDataID )
-    $_SESSION['cells'][$rawDataID]['editedDataID'] = $editedDataID;
+  if ( isset( $_POST['editedDataID'] ) )
+  {
+    foreach ( $_POST['editedDataID'] as $rawDataID => $editedDataID )
+      $_SESSION['cells'][$rawDataID]['editedDataID'] = $editedDataID;
+  }
 
-  foreach ( $_POST['modelID'] as $rawDataID => $modelID )
-    $_SESSION['cells'][$rawDataID]['modelID'] = $modelID;
-}
-
-// Get raw data info
-function get_rawData( $rawDataID )
-{
-  $query  = "SELECT runID, rawData.label " .
-            "FROM rawData, experiment " .
-            "WHERE rawDataID = $rawDataID " .
-            "AND rawData.experimentID = experiment.experimentID ";
-  $result = mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
-  list( $runID, $label ) = mysql_fetch_array( $result );
-
-  return( "<span style='font-size:110%;font-weight:bold;'>$runID $label</span>" );
+  if ( isset( $_POST['modelID'] ) )
+  {
+    foreach ( $_POST['modelID'] as $rawDataID => $modelID )
+      $_SESSION['cells'][$rawDataID]['modelID'] = $modelID;
+  }
 }
 
 // Get edit profiles

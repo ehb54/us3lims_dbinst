@@ -81,7 +81,7 @@ class payload_manager
         if ( isset($_SESSION['payload_mgr']) )
         {
             foreach( $_SESSION['payload_mgr'] as $key => $value )
-              $this->payload_add( $key, $value );
+              $this->add( $key, $value );
         }
 
         unset( $_SESSION['payload_mgr'] );
