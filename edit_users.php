@@ -23,7 +23,7 @@ if ( ($_SESSION['userlevel'] != 4) &&
 
 include 'config.php';
 include 'db.php';
-include 'utility.php';
+include 'lib/utility.php';
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))

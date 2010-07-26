@@ -8,7 +8,7 @@
 
 include 'config.php';
 include 'db.php';
-include 'utility.php';
+include 'lib/utility.php';
 
 // Get the information the new user posted
 include 'get_user_info.php';

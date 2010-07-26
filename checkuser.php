@@ -9,7 +9,7 @@ session_start();
 
 include 'config.php';
 include 'db.php';
-include 'utility.php';
+include 'lib/utility.php';
 
 $email  = trim($_POST['email']);
 $passwd = trim($_POST['password']);

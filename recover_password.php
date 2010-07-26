@@ -8,7 +8,7 @@
 
 include 'config.php';
 include 'db.php';
-include 'utility.php';
+include 'lib/utility.php';
 
 $email_address = stripslashes( $_POST['email_address'] );
 

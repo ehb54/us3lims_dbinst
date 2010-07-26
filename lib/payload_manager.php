@@ -17,7 +17,7 @@ class payload_manager
     {
         if ( $key == null ) 
         {
-            return $this->payload['queue'];
+            return $this->payload['queue']['payload'];
         } 
         else 
         {
