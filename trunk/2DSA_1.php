@@ -35,7 +35,7 @@ define( 'DEBUG', true );
 
 include 'config.php';
 include 'db.php';
-include 'utility.php';
+include 'lib/utility.php';
 include 'lib/payload_manager.php';
 include 'lib/analysis.php';
 
@@ -75,7 +75,7 @@ if ( isset($_POST['TIGRE']) )
   if ( $advanceLevel == 0 )
     ; //    check_filesize();
 
-  show_mem( "After pressing TIGRE" );
+//  show_mem( "After pressing TIGRE" );
   header("Location: 2DSA_2.php");
   exit();
 }
@@ -240,60 +240,53 @@ function save_posted_data($dataset_id)
     list( $rotor_stretch ) = mysql_fetch_array( $result );      // should be 1
 
     $payload->add( 'method', '2DSA' );
+    $payload->add( 'cluster', $_SESSION['cluster'] );
 
-    $job = array();
+    $udp                  = array();
+    $udp['port']          = '12335';
+    $udp['server']        = '129.111.140.167';
+    $payload->add( 'udp', $udp );
 
-      $cluster              = array();
-      $cluster              = $_SESSION['cluster'];
-      $job['cluster']       = $cluster;
+    $payload->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
+    $payload->add( 'datasetCount', $num_datasets );
 
-      $udp                  = array();
-      $udp['port']          = '12335';
-      $udp['server']        = '129.111.140.167';
-      $job['udp']           = $udp;
+    $jobrequest           = array();
+    $jobrequest['id']     = 0; // these two will be done later, after HPC 
+    $jobrequest['guid']   = '';// tables have been written to
+    $payload->add( 'request', $jobrequest );
 
-      $job['directory']     = $_SESSION['request'][$dataset_id]['path'];
+    $database             = array();
+    $database['name']     = $dbname;
+    $database['host']     = $dbhost;
+    $database['user_email'] = $_SESSION['email'];
+    $database['submitter_email'] = $_SESSION['submitter_email'];
+    $payload->add( 'database', $database );
 
-      $job['datasetCount']  = $num_datasets;
-
-      $jobrequest           = array();
-      $jobrequest['id']     = 0; // these two will be done later, after HPC 
-      $jobrequest['guid']   = '';// tables have been written to
-      $job['request']       = $jobrequest;
-
-      $database             = array();
-      $database['name']     = $dbname;
-      $database['host']     = $dbhost;
-      $database['user_email'] = $_SESSION['email'];
-      $database['submitter_email'] = $_SESSION['submitter_email'];
-      $job['database']      = $database;
-
-      $job_parameters                     = array();
-      $job_parameters['s_min']            = $_POST['s_value_min'];
-      $job_parameters['s_max']            = $_POST['s_value_max'];
-      $job_parameters['s_resolution']     = $_POST['s_value_res'];
-      $job_parameters['ff0_min']          = $_POST['ff0_min'];
-      $job_parameters['ff0_max']          = $_POST['ff0_max'];
-      $job_parameters['ff0_resolution']   = $_POST['ff0_resolution'];
-      $job_parameters['uniform_grid']     = $_POST['uniform_grid'];
-      $job_parameters['montecarlo_value'] = $_POST['montecarlo_value'];
-      $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
-      $job_parameters['regularization']   = $_POST['regularization'];
-      $job_parameters['meniscus_value']   = ( $_POST['meniscus_option'] == 1 )
-                                          ? $_POST['meniscus-range'] : 0.01;
-      $job_parameters['meniscus_points']  = ( $_POST['meniscus_option'] == 1 )
-                                          ? $_POST['meniscus-value'] : 3;
-      $job_parameters['iterations_value'] = ( $_POST['iterations_option'] == 1 )
-                                          ? $_POST['iterations-value'] : 3;
-      $job_parameters['rinoise_option']   = $_POST['rinoise_option'];
-      $job_parameters['rotor_stretch']    = $rotor_stretch;
-      $job['job_parameters']              = $job_parameters;
-
-    $payload->add( 'job', $job );
+    $job_parameters                     = array();
+    $job_parameters['s_min']            = $_POST['s_value_min'];
+    $job_parameters['s_max']            = $_POST['s_value_max'];
+    $job_parameters['s_resolution']     = $_POST['s_value_res'];
+    $job_parameters['ff0_min']          = $_POST['ff0_min'];
+    $job_parameters['ff0_max']          = $_POST['ff0_max'];
+    $job_parameters['ff0_resolution']   = $_POST['ff0_resolution'];
+    $job_parameters['uniform_grid']     = $_POST['uniform_grid'];
+    $job_parameters['montecarlo_value'] = $_POST['montecarlo_value'];
+    $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
+    $job_parameters['regularization']   = $_POST['regularization'];
+    $job_parameters['meniscus_value']   = ( $_POST['meniscus_option'] == 1 )
+                                        ? $_POST['meniscus-range'] : 0.01;
+    $job_parameters['meniscus_points']  = ( $_POST['meniscus_option'] == 1 )
+                                        ? $_POST['meniscus-value'] : 3;
+    $job_parameters['iterations_value'] = ( $_POST['iterations_option'] == 1 )
+                                        ? $_POST['iterations-value'] : 3;
+    $job_parameters['rinoise_option']   = $_POST['rinoise_option'];
+    $job_parameters['rotor_stretch']    = $rotor_stretch;
+    $job_parameters['experimentID']     = $_SESSION['experimentID'];
+    $payload->add( 'job_parameters', $job_parameters );
 
     $dataset = array();
-      $dataset['files']      = array();   // This will be done later
-      $dataset['parameters'] = array();
+      $dataset[ 0 ]['files']      = array();   // This will be done later
+      $dataset[ 0 ]['parameters'] = array();
   }
 
   // These will be done every time
@@ -302,15 +295,23 @@ function save_posted_data($dataset_id)
   $dataset                                = $payload->get('dataset');
 
   // Add new element to the arrays
-  $parameters                             = array();
-  $parameters                             = $dataset['parameters'];
-  $parameters[$dataset_id]['simpoints']   = $_POST['simpoints-value'];
-  $parameters[$dataset_id]['band_volume'] = $_POST['band_volume-value'];
-  $parameters[$dataset_id]['radial_grid'] = $_POST['radial_grid'];
-  $parameters[$dataset_id]['time_grid']   = $_POST['time_grid'];
+  $parameters                 = array();
+  $parameters                 = $dataset['parameters'];
+  $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
+  $parameters['edit']         = '';
+  $parameters['model']        = '';
+  $parameters['noiseIDs']     = array();
+  $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
+  
+  $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
+  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
+  $parameters['simpoints']    = $_POST['simpoints-value'];
+  $parameters['band_volume']  = $_POST['band_volume-value'];
+  $parameters['radial_grid']  = $_POST['radial_grid'];
+  $parameters['time_grid']    = $_POST['time_grid'];
 
   // Replace arrays with revised datasets
-  $dataset['parameters']                  = $parameters;
+  $dataset[$dataset_id]       = $parameters;
   $payload->add( 'dataset', $dataset );
 
 }
