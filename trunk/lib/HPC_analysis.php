@@ -14,13 +14,13 @@ class HPC_analysis
 {
   function HPC_analysis() {}
 
-  // Takes a payload manager pointer
-  function writeDB( $payload )
+  // Takes a structured array of data created by the payload manager
+  function writeDB( $data )
   {
-    switch( $payload->get('method') )
+    switch( $data['method'] )
     {
       case '2DSA' :
-        return $this->HPCRequest_2DSA( $payload );
+        return $this->HPCRequest_2DSA( $data );
         break;
 
       case '2DSA_MW' :
@@ -43,12 +43,13 @@ class HPC_analysis
   }
 
   // Function to create the HPC Analysis DB entries for the 2DSA analysis
-  function HPCRequest_2DSA( $payload )
+  function HPCRequest_2DSA( $job )
   {
-    $HPCAnalysisRequestID = $this->HPCAnalysisRequest( $payload );
+    $HPCAnalysisRequestID = $this->HPCAnalysisRequest( $job );
 
     // Now the specific 2DSA settings
-    $job_parameters = $payload->get( 'job_parameters' );
+    $job_parameters = array();
+    $job_parameters = $job['job_parameters'];
     $query  = "INSERT INTO 2DSA_Settings SET " .
               "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
               "s_min                = {$job_parameters['s_min']},            " .
@@ -69,13 +70,13 @@ class HPC_analysis
           or die( "Query failed : $query<br />" . mysql_error());
 
     // Finally the HPCDataset and HPCRequestData tables
-    $this->HPCDataset( $HPCAnalysisRequestID, $payload->get( 'dataset' ) );
+    $this->HPCDataset( $HPCAnalysisRequestID, $job['dataset'] );
 
     if ( DEBUG )
     {
       // echo "From HPC_analysis_2DSA...\n";
-      $this->email_log( $payload->get() );
-      // $this->debug_out( $payload->get() );
+      $this->email_log( $job );
+      // $this->debug_out( $job );
       // echo "End of DB update - 2DSA\n";
     }
 
@@ -84,7 +85,7 @@ class HPC_analysis
   }
 
   // Function to create the main HPCAnalysisRequest table entry
-  function HPCAnalysisRequest( $payload )
+  function HPCAnalysisRequest( $job )
   {
     // Get any remaining information we need
     // investigatorGUID
@@ -101,8 +102,6 @@ class HPC_analysis
               or die( "Query failed : $query<br />" . mysql_error());
     list( $submitterGUID ) = mysql_fetch_array( $result );
 
-    $job    = array();
-    $job    = $payload->get();
     $query  = "INSERT INTO HPCAnalysisRequest SET                                    " .
               "HPCAnalysisRequestGUID = UUID(),                                      " .
               "investigatorGUID       = '$investigatorGUID',                         " .
@@ -115,20 +114,8 @@ class HPC_analysis
     mysql_query( $query )
           or die( "Query failed : $query<br />" . mysql_error());
 
-    // Update the payload with new information
-    $HPCAnalysisRequestID = mysql_insert_id();
-    $query  = "SELECT HPCAnalysisRequestGUID FROM HPCAnalysisRequest " .
-              "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />" . mysql_error());
-    list( $HPCAnalysisRequestGUID ) = mysql_fetch_array( $result );
-    $request = array();
-    $request['id']   = $HPCAnalysisRequestID;
-    $request['guid'] = $HPCAnalysisRequestGUID;
-    $payload->add( 'request', $request );
-
     // Return the generated ID
-    return ( $HPCAnalysisRequestID );
+    return ( mysql_insert_id() );
   }
 
   // Function to create the HPCDataset and HPCRequestData table entries

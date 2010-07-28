@@ -27,32 +27,16 @@ class payload_manager
 
     function get_dataset( $index = 0 )
     {
-        $dataset = $this->payload['queue'];
+        $dataset = $this->payload['queue']['payload'];
 
-        // Save only one file
-        $temp    = $dataset['payload']['files'][$index];
-        $dataset['payload']['files'] = array();
-        $dataset['payload']['files'][0] = $temp;
+        // Save only one dataset
+        $temp    = array();
+        $temp    = $dataset['dataset'][$index];
+        $dataset['dataset'] = array();
+        $dataset['dataset'][0] = $temp;
 
-        // Only one setting for simpoints, band_volume, radial_grid
-        //  and time_grid
-        $temp    = $dataset['payload']['simpoints'][$index];
-        $dataset['payload']['simpoints'] = array();
-        $dataset['payload']['simpoints'][0] = $temp;
-
-        $temp    = $dataset['payload']['band_volume'][$index];
-        $dataset['payload']['band_volume'] = array();
-        $dataset['payload']['band_volume'][0] = $temp;
-
-        $temp    = $dataset['payload']['radial_grid'][$index];
-        $dataset['payload']['radial_grid'] = array();
-        $dataset['payload']['radial_grid'][0] = $temp;
-
-        $temp    = $dataset['payload']['time_grid'][$index];
-        $dataset['payload']['time_grid'] = array();
-        $dataset['payload']['time_grid'][0] = $temp;
-
-        $dataset['payload']['count'] = 1;
+        // Change the count to reflect a single dataset
+        $dataset['datasetCount'] = 1;
 
         return $dataset;
     }

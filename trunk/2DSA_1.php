@@ -250,11 +250,6 @@ function save_posted_data($dataset_id)
     $payload->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
     $payload->add( 'datasetCount', $num_datasets );
 
-    $jobrequest           = array();
-    $jobrequest['id']     = 0; // these two will be done later, after HPC 
-    $jobrequest['guid']   = '';// tables have been written to
-    $payload->add( 'request', $jobrequest );
-
     $database             = array();
     $database['name']     = $dbname;
     $database['host']     = $dbhost;
@@ -297,14 +292,15 @@ function save_posted_data($dataset_id)
   // Add new element to the arrays
   $parameters                 = array();
   $parameters                 = $dataset['parameters'];
+  $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
   $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
-  $parameters['edit']         = '';
-  $parameters['model']        = '';
+  $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
+  $parameters['edit']         = substr( $parameters['auc'], 0, strlen($parameters['auc']) - 4 )
+                              . "_edit.xml";  // For now
+  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
   $parameters['noiseIDs']     = array();
   $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
   
-  $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
-  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
   $parameters['simpoints']    = $_POST['simpoints-value'];
   $parameters['band_volume']  = $_POST['band_volume-value'];
   $parameters['radial_grid']  = $_POST['radial_grid'];
