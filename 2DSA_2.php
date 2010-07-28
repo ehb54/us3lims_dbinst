@@ -39,14 +39,45 @@ include 'lib/utility.php';
 include 'lib/payload_manager.php';
 include 'lib/analysis.php';
 include 'lib/HPC_analysis.php';
+include 'lib/file_writer.php';
 
 // Create the payload manager and restore the data
 $payload = new payload_manager( $_SESSION );
 $payload->restore();
 
-// Create the HPC analysis agent and write data to the db
-$HPC = new HPC_analysis();
-$HPCAnalysisRequestID = $HPC->writeDB( $payload );
+// Create the HPC analysis agent and file writer
+$HPC       = new HPC_analysis();
+$file      = new file_writer();
+$filenames = array();
+if ( $_SESSION['separate_datasets'] )
+{
+  $dataset_count = $payload->get( 'datasetCount' );
+  for ( $i = 0; $i < $dataset_count; $i++ )
+  {
+    $HPCAnalysisRequestID = $HPC->writeDB( $payload->get_dataset( $i ) );
+    $filenames[ $i ] = $file->write( $payload->get_dataset( $i ), $HPCAnalysisRequestID );
+  }
+}
+
+else
+{
+  $HPCAnalysisRequestID = $HPC->writeDB( $payload->get() );
+  $filenames[ 0 ] = $file->write( $payload->get(), $HPCAnalysisRequestID );
+}
+
+// EXEC COMMAND FOR TIGRE 
+if ( isset($_SESSION['cluster']) )
+{
+  $cluster = $_SESSION['cluster'];
+  unset( $_SESSION['cluster'] );
+
+  foreach ( $filenames as $filename )
+  {
+    $submit  = "echo gc_tigre $filename $cluster > " .
+               "/share/apps64/ultrascan/etc/us_gridpipe";
+//    exec($submit, $retval);
+  }
+}
 
 // Start displaying page
 $page_title = "2DSA Analysis Submitted";
@@ -59,8 +90,6 @@ include 'links.php';
   <h1 class="title">2DSA Analysis Submitted</h1>
   <!-- Place page content here -->
 
-<?php echo "<p>HPCAnalysisRequestID = $HPCAnalysisRequestID</p>\n"; ?>
-
 <?php 
   if ( isset($message) ) echo "<p class='message'>$message</p>\n";
  ?>
@@ -71,59 +100,48 @@ include 'links.php';
 
   <p><a href="queue_setup_1.php">Submit another request</a></p>
 
+<?php show_mem(); ?>
+
 </div>
 
 <?php
 include 'bottom.php';
 exit();
-?>
-<?php
-/*
-// Write the file(s), accounting for separating datasets
-$file = new file_writer();
-if ( $_SESSION['separate_datasets'] )
+
+// Function to display some debugging info
+function show_mem()
 {
-  $dataset_count = $payload->payload_get( 'count' );
-  for ( $i = 0; $i < $dataset_count; $i++ )
-    $theFiles[ $i ] = $file->write( $payload->payload_get_dataset( $i ) );
-}
-
-else
-  $theFiles[ 0 ] = $file->write( $payload->payload_get() );
-
-if ( DEBUG )
-{
-  echo "<pre>SessionID = " . session_id() . "\n";
-  echo "Time() = " . time() . "\n</pre>\n";
-  echo "<pre>Filenames:\n";
-  foreach ( $theFiles as $theFile )
-    echo "$theFile\n";
-  echo "</pre>\n";
-
-  exit();
-}
-
-// EXEC COMMAND FOR TIGRE 
-if ( isset($_SESSION['cluster']) )
-{
-  $cluster = $_SESSION['cluster'];
-  unset( $_SESSION['cluster'] );
-
-  foreach ( $theFiles as $theFile )
+  if ( DEBUG )
   {
-    $to = "dzollars@gmail.com";
-    $subject = "Logging from demo_ana_8b.php..."; 
-    $e_msg = "SessionID = " . session_id() . "\n";
-    $e_msg .= "Time() = " . time() . "\n\n";
-    $e_msg .= "Filename:\n";
-    $e_msg .= "$theFile\n";
-    mail($to, $subject, $e_msg);
+    global $HPCAnalysisRequestID, $payload, $filenames;
 
-    $submit  = "echo gc_tigre $theFile $cluster > " .
-               "/share/apps64/ultrascan/etc/us_gridpipe";
-    exec($submit, $retval);
+    echo "<pre>SessionID = " . session_id() . "\n";
+    echo "From 2DSA_2.php\n";
+    echo "Time() = " . time() . "\n</pre>\n";
+    echo "<pre>\n" .
+         "HPCAnalysisRequestID = $HPCAnalysisRequestID\n\n" .
+         "Payload... "; 
+    if ( $_SESSION['separate_datasets'] )
+    {
+      $dataset_count = $payload->get( 'datasetCount' );
+      for ( $i = 0; $i < $dataset_count; $i++ )
+      {
+        echo "Payload dataset $i ...\n";
+        print_r( $payload->get_dataset( $i ) );
+      }
+    }
+
+    else
+      print_r( $payload->get() );
+
+    echo "Session variables...";
+    print_r( $_SESSION );
+    echo "</pre>\n";
+
+    echo "<pre>Filenames:\n";
+    foreach ( $filenames as $filename )
+      echo "* $filename\n";
+    echo "</pre>\n";
   }
 }
-
-*/
 ?>
