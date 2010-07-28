@@ -31,7 +31,7 @@ if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
   exit();
 }
 
-define( 'DEBUG', true );
+// define( 'DEBUG', true );
 
 include 'config.php';
 include 'db.php';
@@ -49,6 +49,8 @@ $payload->restore();
 $HPC       = new HPC_analysis();
 $file      = new file_writer();
 $filenames = array();
+
+$files_ok  = true;  // Let's also make sure there weren't any problems writing the files
 if ( $_SESSION['separate_datasets'] )
 {
   $dataset_count = $payload->get( 'datasetCount' );
@@ -56,6 +58,7 @@ if ( $_SESSION['separate_datasets'] )
   {
     $HPCAnalysisRequestID = $HPC->writeDB( $payload->get_dataset( $i ) );
     $filenames[ $i ] = $file->write( $payload->get_dataset( $i ), $HPCAnalysisRequestID );
+    if ( $filenames[ $i ] === false ) $files_ok = false;
   }
 }
 
@@ -63,20 +66,41 @@ else
 {
   $HPCAnalysisRequestID = $HPC->writeDB( $payload->get() );
   $filenames[ 0 ] = $file->write( $payload->get(), $HPCAnalysisRequestID );
+  if ( $filenames[ 0 ] === false ) $files_ok = false;
 }
 
-// EXEC COMMAND FOR TIGRE 
-if ( isset($_SESSION['cluster']) )
+if ( $files_ok )
 {
-  $cluster = $_SESSION['cluster'];
-  unset( $_SESSION['cluster'] );
+  $output_msg = <<<HTML
+  Thank you, your job was accepted to bcf and is currently processing, an
+  email will be sent to {$_SESSION['submitter_email']} when the job is
+  completed.
 
-  foreach ( $filenames as $filename )
+HTML;
+
+  // EXEC COMMAND FOR TIGRE 
+  if ( isset($_SESSION['cluster']) )
   {
-    $submit  = "echo gc_tigre $filename $cluster > " .
-               "/share/apps64/ultrascan/etc/us_gridpipe";
-//    exec($submit, $retval);
+    $cluster = $_SESSION['cluster'];
+    unset( $_SESSION['cluster'] );
+
+    foreach ( $filenames as $filename )
+    {
+      $submit  = "echo gc_tigre $filename $cluster > " .
+                 "/share/apps64/ultrascan/etc/us_gridpipe";
+  //    exec($submit, $retval);
+    }
   }
+}
+
+else
+{
+  $output_msg = <<<HTML
+  Thank you, there have been one or more problems writing the various files necessary
+  for job submission. Please contact your system administrator.
+
+HTML;
+
 }
 
 // Start displaying page
@@ -92,12 +116,10 @@ include 'links.php';
 
 <?php 
   if ( isset($message) ) echo "<p class='message'>$message</p>\n";
+
+  echo "<p>$output_msg</p>\n";
  ?>
   
-  <p>Thank you, your job was accepted to bcf and is currently processing, an
-  email will be sent to <?php echo $_SESSION['queue_email']; ?> when the job is
-  completed.</p>  
-
   <p><a href="queue_setup_1.php">Submit another request</a></p>
 
 <?php show_mem(); ?>

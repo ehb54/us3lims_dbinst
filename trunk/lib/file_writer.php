@@ -15,7 +15,7 @@ class file_writer
   function file_writer() {}
 
   // Takes a structured array of data created by the payload manager
-  function write( $data, $HPCAnalysisRequestID )
+  function write( $job, $HPCAnalysisRequestID )
   {
     // Get the rest of the information we need
     $query  = "SELECT HPCAnalysisRequestGUID FROM HPCAnalysisRequest " .
@@ -23,56 +23,119 @@ class file_writer
     $result = mysql_query( $query )
               or die( "Query failed : $query<br />" . mysql_error());
     list( $HPCAnalysisRequestGUID ) = mysql_fetch_array( $result );
-    $request = array();
-    $request['id']   = $HPCAnalysisRequestID;
-    $request['guid'] = $HPCAnalysisRequestGUID;
 
-    switch( $data['method'] )
-    {
-      case '2DSA' :
-        return $this->write_2DSA( $data, $request );
-        break;
-
-      case '2DSA_MW' :
-        break;
-
-      case 'GA' :
-        break;
-
-      case 'GA_MW' :
-        break;
-
-      case 'GA_SC' :
-        break;
-
-      default :
-        die( "Invalid Selection type: " . __FILE__ . " " . __LINE__ );
-        break;
-
-    }
-  }
-
-  // Function to create the HPC Analysis DB entries for the 2DSA analysis
-  function write_2DSA( $job, $request )
-  {
     // First create a directory with a unique name
-    if ( ! ( $current_dir = $this->create_dir( $request['guid'] ) ) )
+    if ( ! ( $current_dir = $this->create_dir( $HPCAnalysisRequestGUID ) ) )
       return false;
 
     // Write the auc, edit profile, model and noise files
+    // Returns all the filenames used
     if ( ! ( $filenames = $this->write_support_files( $job, $current_dir ) ) )
       return false;
-
-    echo "<pre>\n";
-    echo "Current directory = $current_dir\n";
-    print_r( $filenames );
-    echo "</pre>\n";
 
     // Now write xml file
     $xml_filename = sprintf( "hpcrequest-%s-%s-%05d.xml",
                              $job['database']['host'],
                              $job['database']['name'],
-                             $request['id'] );
+                             $HPCAnalysisRequestID );
+
+    $xml = new XMLWriter();
+    $xml->openMemory();
+    $xml->setIndent( true );
+    $xml->startDocument( '1.0', 'UTF-8', 'yes' );
+    $xml->startDTD( 'US_JobSubmit' );
+    $xml->endDTD();
+    $xml->startElement( 'US_JobSubmit' );
+      $xml->writeAttribute( 'method', $job['method'] );
+      $xml->writeAttribute( 'version', '1.0' );
+
+      $xml->startElement( 'job' );
+        $xml->startElement( 'cluster' );
+          $xml->writeAttribute( 'name', $job['cluster']['name'] );
+          $xml->writeAttribute( 'shortname', $job['cluster']['shortname'] );
+        $xml->endElement(); // cluster
+        $xml->startElement( 'udp' );
+          $xml->writeAttribute( 'port', '12335' );
+          $xml->writeAttribute( 'server', '129.111.140.167' );
+        $xml->endElement(); // udp
+        $xml->startElement( 'directory' );
+          $xml->writeAttribute( 'name', $current_dir );
+        $xml->endElement(); // directory
+        $xml->startElement( 'datasetCount' );
+          $xml->writeAttribute( 'value', $job['datasetCount'] );
+        $xml->endElement(); // datasetCount
+        $xml->startElement( 'requestID' );
+          $xml->writeAttribute( 'id', $HPCAnalysisRequestID );
+        $xml->endElement(); // requestID
+        $xml->startElement( 'database' );
+          $xml->startElement( 'name' );
+            $xml->writeAttribute( 'value', $job['database']['name'] );
+          $xml->endElement(); // name
+          $xml->startElement( 'host' );
+            $xml->writeAttribute( 'value', $job['database']['host'] );
+          $xml->endElement(); // host
+          $xml->startElement( 'user' );
+            $xml->writeAttribute( 'email', $job['database']['user_email'] );
+          $xml->endElement(); // user
+          $xml->startElement( 'submitter' );
+            $xml->writeAttribute( 'email', $job['database']['submitter_email'] );
+          $xml->endElement(); // submitter
+        $xml->endElement(); // database
+
+        // Now we break out and write the job parameters specific to this method
+        $this->writeJobParameters( $xml, $job['method'], $job['job_parameters'] );
+
+      $xml->endElement(); // job
+
+      $xml->writeComment( 'the dataset section is repeated for each dataset' );
+
+      foreach ( $job['dataset'] as $dataset_id => $dataset )
+      {
+        $xml->startElement( 'dataset' );
+          $xml->startElement( 'files' );
+            $xml->startElement( 'auc' );
+              $xml->writeAttribute( 'filename', $filenames[$dataset_id]['auc'] );
+            $xml->endElement(); // auc
+            $xml->startElement( 'edit' );
+              $xml->writeAttribute( 'filename', $filenames[$dataset_id]['edit'] );
+            $xml->endElement(); // edit
+            $xml->startElement( 'model' );
+              $xml->writeAttribute( 'filename', $filenames[$dataset_id]['model'] );
+            $xml->endElement(); // model
+            foreach ( $filenames[$dataset_id]['noise'] as $noiseFile )
+            {
+              $xml->startElement( 'noise' );
+                $xml->writeAttribute( 'filename', $noiseFile );
+              $xml->endElement(); // noise
+            }
+          $xml->endElement(); // files
+          $xml->startElement( 'parameters' );
+            $xml->startElement( 'simpoints' );
+              $xml->writeAttribute( 'value', $dataset['simpoints'] );
+            $xml->endElement(); // simpoints
+            $xml->startElement( 'band_volume' );
+              $xml->writeAttribute( 'value', $dataset['band_volume'] );
+            $xml->endElement(); // band_volume
+            $xml->startElement( 'radial_grid' );
+              $xml->writeAttribute( 'value', $dataset['radial_grid'] );
+            $xml->endElement(); // radial_grid
+            $xml->startElement( 'time_grid' );
+              $xml->writeAttribute( 'value', $dataset['time_grid'] );
+            $xml->endElement(); // time_grid
+          $xml->endElement(); // parameters
+        $xml->endElement(); // dataset
+      }
+
+    $xml->endElement(); // US_JobSubmit
+    $xml->endDocument();
+
+    $fp = fopen( $current_dir . $xml_filename, 'w');
+    fwrite( $fp, $xml->outputMemory() );
+    fclose( $fp );
+
+    // Update database with xml file content
+    $xml_data = file_get_contents( $current_dir . $xml_filename );
+
 
     return( $current_dir . $xml_filename );
   }
@@ -135,6 +198,86 @@ class file_writer
     }
 
     return( $filenames );
+  }
+
+  // Function to decide which job parameters to write
+  function writeJobParameters( $xml, $method, $jobParameters )
+  {
+    switch( $method )
+    {
+      case '2DSA' :
+        $this->write2DSAParameters( $xml, $jobParameters );
+        break;
+
+      case '2DSA_MW' :
+        break;
+
+      case 'GA' :
+        break;
+
+      case 'GA_MW' :
+        break;
+
+      case 'GA_SC' :
+        break;
+
+      default :
+        die( "Invalid Selection type: " . __FILE__ . " " . __LINE__ );
+        break;
+
+    }
+  }
+
+  // Function to write the XML job parameters for the 2DSA analysis
+  function write2DSAParameters( $xml, $parameters )
+  {
+    $xml->startElement( 'jobParameters' );
+      $xml->startElement( 's_min' );
+        $xml->writeAttribute( 'value', $parameters['s_min'] );
+      $xml->endElement(); // s_min
+      $xml->startElement( 's_max' );
+        $xml->writeAttribute( 'value', $parameters['s_max'] );
+      $xml->endElement(); // s_max
+      $xml->startElement( 's_resolution' );
+        $xml->writeAttribute( 'value', $parameters['s_resolution'] );
+      $xml->endElement(); // s_resolution
+      $xml->startElement( 'ff0_min' );
+        $xml->writeAttribute( 'value', $parameters['ff0_min'] );
+      $xml->endElement(); // ff0_min
+      $xml->startElement( 'ff0_max' );
+        $xml->writeAttribute( 'value', $parameters['ff0_max'] );
+      $xml->endElement(); // ff0_max
+      $xml->startElement( 'ff0_resolution' );
+        $xml->writeAttribute( 'value', $parameters['ff0_resolution'] );
+      $xml->endElement(); // ff0_resolution
+      $xml->startElement( 'uniform_grid' );
+        $xml->writeAttribute( 'value', $parameters['uniform_grid'] );
+      $xml->endElement(); // uniform_grid
+      $xml->startElement( 'montecarlo_value' );
+        $xml->writeAttribute( 'value', $parameters['montecarlo_value'] );
+      $xml->endElement(); // montecarlo_value
+      $xml->startElement( 'tinoise_option' );
+        $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
+      $xml->endElement(); // tinoise_option
+      $xml->startElement( 'regularization' );
+        $xml->writeAttribute( 'value', $parameters['regularization'] );
+      $xml->endElement(); // regularization
+      $xml->startElement( 'meniscus_value' );
+        $xml->writeAttribute( 'value', $parameters['meniscus_value'] );
+      $xml->endElement(); // meniscus_value
+      $xml->startElement( 'meniscus_points' );
+        $xml->writeAttribute( 'value', $parameters['meniscus_points'] );
+      $xml->endElement(); // meniscus_points
+      $xml->startElement( 'iterations_value' );
+        $xml->writeAttribute( 'value', $parameters['iterations_value'] );
+      $xml->endElement(); // iterations_value
+      $xml->startElement( 'rinoise_option' );
+        $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
+      $xml->endElement(); // rinoise_option
+      $xml->startElement( 'rotor_stretch' );
+        $xml->writeAttribute( 'value', $parameters['rotor_stretch'] );
+      $xml->endElement(); // rotor_stretch
+    $xml->endElement(); // jobParameters
   }
 
   // Function to create the data subdirectory to write files into
