@@ -295,8 +295,7 @@ function save_posted_data($dataset_id)
   $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
   $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
   $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
-  $parameters['edit']         = substr( $parameters['auc'], 0, strlen($parameters['auc']) - 4 )
-                              . "_edit.xml";  // For now
+  $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
   $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
   $parameters['noiseIDs']     = array();
   $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];

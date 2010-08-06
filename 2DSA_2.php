@@ -58,7 +58,20 @@ if ( $_SESSION['separate_datasets'] )
   {
     $HPCAnalysisRequestID = $HPC->writeDB( $payload->get_dataset( $i ) );
     $filenames[ $i ] = $file->write( $payload->get_dataset( $i ), $HPCAnalysisRequestID );
-    if ( $filenames[ $i ] === false ) $files_ok = false;
+    if ( $filenames[ $i ] === false )
+      $files_ok = false;
+
+    else
+    {
+      // Write the xml file content to the db
+      $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ $i ] ) );
+      $query  = "UPDATE HPCAnalysisRequest " .
+                "SET requestXMLfile = '$xml_content' " .
+                "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
+      mysql_query( $query )
+            or die("Query failed : $query<br />\n" . mysql_error());
+      
+    }
   }
 }
 
@@ -66,7 +79,20 @@ else
 {
   $HPCAnalysisRequestID = $HPC->writeDB( $payload->get() );
   $filenames[ 0 ] = $file->write( $payload->get(), $HPCAnalysisRequestID );
-  if ( $filenames[ 0 ] === false ) $files_ok = false;
+  if ( $filenames[ 0 ] === false )
+    $files_ok = false;
+
+  else
+  {
+    // Write the xml file content to the db
+    $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ 0 ] ) );
+    $query  = "UPDATE HPCAnalysisRequest " .
+              "SET requestXMLfile = '$xml_content' " .
+              "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
+    mysql_query( $query )
+          or die("Query failed : $query<br />\n" . mysql_error());
+    
+  }
 }
 
 if ( $files_ok )

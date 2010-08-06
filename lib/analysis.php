@@ -579,7 +579,7 @@ function check_filesize()
     if ( $file_size > $max_size ) $max_size = $file_size;
   }
 
-  if ( $max_size < 512000 ) return;
+  if ( $max_size < 2000 ) return;
 
   include 'config.php';
 

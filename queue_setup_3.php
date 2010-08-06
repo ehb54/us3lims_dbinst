@@ -282,6 +282,9 @@ function get_model( $modelID )
 // Get the noise files
 function get_noise( $noiseIDs )
 {
+  if ( empty( $noiseIDs ) )
+    return( "" );
+
   $commaIDs = implode(",", $noiseIDs );
   $query  = "SELECT noiseID, modelID, noiseType " .
             "FROM noise " .
