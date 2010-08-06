@@ -54,6 +54,7 @@ if ( isset( $_POST['save'] ) )
     $_SESSION['request'][$count]['path']         = $cell['path'];
     $_SESSION['request'][$count]['filename']     = $cell['filename'];
     $_SESSION['request'][$count]['editedDataID'] = $cell['editedDataID'];
+    $_SESSION['request'][$count]['editFilename'] = $cell['editFilename'];
     $_SESSION['request'][$count]['modelID']      = $cell['modelID'];
     $_SESSION['request'][$count]['noiseIDs']     = $cell['noiseIDs'];
 
@@ -222,6 +223,7 @@ function get_setup_1()
     $cells[$rawDataID]['path']         = dirname ( $filename );
     $cells[$rawDataID]['filename']     = basename( $filename );
     $cells[$rawDataID]['editedDataID'] = 0;
+    $cells[$rawDataID]['editFilename'] = '';
     $cells[$rawDataID]['modelID']      = 0;
     $cells[$rawDataID]['noiseIDs']     = array();
   }
@@ -235,7 +237,17 @@ function get_setup_2()
   if ( isset( $_POST['editedDataID'] ) )
   {
     foreach ( $_POST['editedDataID'] as $rawDataID => $editedDataID )
+    {
       $_SESSION['cells'][$rawDataID]['editedDataID'] = $editedDataID;
+
+      // Get filename too
+      $query  = "SELECT filename FROM editedData " .
+                "WHERE editedDataID = $editedDataID ";
+      $result = mysql_query( $query )
+              or die("Query failed : $query<br />\n" . mysql_error());
+      list( $editFilename ) = mysql_fetch_array( $result );
+      $_SESSION['cells'][$rawDataID]['editFilename'] = $editFilename;
+    }
   }
 
   if ( isset( $_POST['modelID'] ) )
@@ -271,9 +283,14 @@ function get_editedData( $rawDataID, $editedDataID = 0 )
 // Get the models
 function get_model( $rawDataID, $editedDataID, $modelID = 0 )
 {
-  $query  = "SELECT modelID, description " .
-            "FROM model " .
-            "WHERE editedDataID = $editedDataID ";
+  $myID = $_SESSION['id'];
+
+  $query  = "SELECT model.modelID, description " .
+            "FROM   modelPerson, model " .
+            "WHERE  modelPerson.personID = $myID " .
+            "AND    modelPerson.modelID = model.modelID " .
+            "AND    ( editedDataID = $editedDataID || " .
+            "         editedDataID = 1 )";
 
   $result = mysql_query( $query )
           or die("Query failed : $query<br />\n" . mysql_error());
@@ -295,6 +312,13 @@ function get_model( $rawDataID, $editedDataID, $modelID = 0 )
 // Get the noise files
 function get_noise( $rawDataID, $editedDataID, $noiseIDs )
 {
+  // For now
+  $noise      = "<select name='noiseIDs[$rawDataID][]' multiple='multiple' size='3'>\n" .
+                "  <option value='null'>Select noise (disabled)...</option>\n";
+  $noise   .= "</select>\n";
+
+  // For later
+/*
   $query  = "SELECT noiseID, modelID, noiseType " .
             "FROM noise " .
             "WHERE editedDataID = $editedDataID ";
@@ -311,6 +335,7 @@ function get_noise( $rawDataID, $editedDataID, $noiseIDs )
   }
 
   $noise   .= "</select>\n";
+*/
 
   return( $noise );
 }
