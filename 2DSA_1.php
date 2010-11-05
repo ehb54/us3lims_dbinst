@@ -229,16 +229,6 @@ function save_posted_data($dataset_id)
   // A lot of this only gets posted the first time through
   if ( $dataset_id == 0 )
   {
-    // we need the stretch function from the rotor table
-    $query  = "SELECT stretchFunction " .
-              "FROM rawData, experiment, rotor " .
-              "WHERE rawData.rawDataID = {$_SESSION['request'][0]['rawDataID']} " .
-              "AND rawData.experimentID = experiment.experimentID " .
-              "AND experiment.rotorID = rotor.rotorID ";
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />" . mysql_error());
-    list( $rotor_stretch ) = mysql_fetch_array( $result );      // should be 1
-
     $payload->add( 'method', '2DSA' );
     $payload->add( 'cluster', $_SESSION['cluster'] );
 
@@ -275,7 +265,6 @@ function save_posted_data($dataset_id)
     $job_parameters['iterations_value'] = ( $_POST['iterations_option'] == 1 )
                                         ? $_POST['iterations-value'] : 3;
     $job_parameters['rinoise_option']   = $_POST['rinoise_option'];
-    $job_parameters['rotor_stretch']    = $rotor_stretch;
     $job_parameters['experimentID']     = $_SESSION['experimentID'];
     $payload->add( 'job_parameters', $job_parameters );
 
@@ -285,9 +274,62 @@ function save_posted_data($dataset_id)
   }
 
   // These will be done every time
+  $rawDataID = $_SESSION['request'][$dataset_id]['rawDataID'];
+
+  // we need the stretch function from the rotor table
+  $rotor_stretch = "0 0";
+  $query  = "SELECT coeff1, coeff2 " .
+            "FROM rawData, experiment, rotorCalibration " .
+            "WHERE rawData.rawDataID = $rawDataID " .
+            "AND rawData.experimentID = experiment.experimentID " .
+            "AND experiment.rotorCalibrationID = rotorCalibration.rotorCalibrationID ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />" . mysql_error());
+  if ( mysql_num_rows( $result ) > 0 )
+  {
+    list( $coeff1, $coeff2 ) = mysql_fetch_array( $result );      // should be 1
+    $rotor_stretch = "$coeff1 $coeff2";
+  }
+
+  // We need the centerpiece bottom
+  $centerpiece_bottom = 7.3;
+  $centerpiece_shape  = 'standard';
+  $query  = "SELECT shape, bottom " .
+            "FROM rawData, cell, abstractCenterpiece " .
+            "WHERE rawData.rawDataID = $rawDataID " .
+            "AND rawData.experimentID = cell.experimentID " .
+            "AND cell.abstractCenterpieceID = abstractCenterpiece.abstractCenterpieceID ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />" . mysql_error());
+  if ( mysql_num_rows ( $result ) > 0 )
+    list( $centerpiece_shape, $centerpiece_bottom ) = mysql_fetch_array( $result );      // should be 1
+
+  // We also need some information about the solution in this cell
+  $vbar20 = 0.0;
+  $query  = "SELECT commonVbar20 " .
+            "FROM rawData, solution " .
+            "WHERE rawData.rawDataID = $rawDataID " .
+            "AND rawData.solutionID = solution.solutionID ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />" . mysql_error());
+  if ( mysql_num_rows( $result ) > 0 )
+    list( $vbar20 ) = mysql_fetch_array( $result );      // should be 1
+
+  // Finally, some buffer information
+  $density = 0.0;
+  $viscosity = 0.0;
+  $query  = "SELECT viscosity, density " .
+            "FROM rawData, solutionBuffer, buffer " .
+            "WHERE rawData.rawDataID = $rawDataID " .
+            "AND rawData.solutionID = solutionBuffer.solutionID " .
+            "AND solutionBuffer.bufferID = buffer.bufferID ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />" . mysql_error());
+  if ( mysql_num_rows ( $result ) > 0 )
+    list( $viscosity, $density ) = mysql_fetch_array( $result );      // should be 1
 
   // Get arrays with multiple dataset data
-  $dataset                                = $payload->get('dataset');
+  $dataset                    = $payload->get('dataset');
 
   // Add new element to the arrays
   $parameters                 = array();
@@ -296,14 +338,23 @@ function save_posted_data($dataset_id)
   $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
   $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
   $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
-  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
+//  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
   $parameters['noiseIDs']     = array();
   $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
   
   $parameters['simpoints']    = $_POST['simpoints-value'];
-  $parameters['band_volume']  = $_POST['band_volume-value'];
+  $parameters['band_volume']  = ( $centerpiece_shape == 'band_forming' )
+                              ? $_POST['band_volume-value']
+                              : 0.0;
   $parameters['radial_grid']  = $_POST['radial_grid'];
   $parameters['time_grid']    = $_POST['time_grid'];
+
+  // These are simulation parameters looked up in the db
+  $parameters['rotor_stretch'] = $rotor_stretch;
+  $parameters['centerpiece_bottom'] = $centerpiece_bottom;
+  $parameters['vbar20']       = $vbar20;
+  $parameters['density']      = $density;
+  $parameters['viscosity']    = $viscosity;
 
   // Replace arrays with revised datasets
   $dataset[$dataset_id]       = $parameters;

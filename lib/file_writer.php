@@ -64,9 +64,10 @@ class file_writer
         $xml->startElement( 'datasetCount' );
           $xml->writeAttribute( 'value', $job['datasetCount'] );
         $xml->endElement(); // datasetCount
-        $xml->startElement( 'requestID' );
+        $xml->startElement( 'request' );
           $xml->writeAttribute( 'id', $HPCAnalysisRequestID );
-        $xml->endElement(); // requestID
+          $xml->writeAttribute( 'guid', $HPCAnalysisRequestGUID );
+        $xml->endElement(); // request
         $xml->startElement( 'database' );
           $xml->startElement( 'name' );
             $xml->writeAttribute( 'value', $job['database']['name'] );
@@ -99,9 +100,11 @@ class file_writer
             $xml->startElement( 'edit' );
               $xml->writeAttribute( 'filename', $filenames[$dataset_id]['edit'] );
             $xml->endElement(); // edit
+/*
             $xml->startElement( 'model' );
               $xml->writeAttribute( 'filename', $filenames[$dataset_id]['model'] );
             $xml->endElement(); // model
+*/
             foreach ( $filenames[$dataset_id]['noise'] as $noiseFile )
             {
               $xml->startElement( 'noise' );
@@ -122,6 +125,21 @@ class file_writer
             $xml->startElement( 'time_grid' );
               $xml->writeAttribute( 'value', $dataset['time_grid'] );
             $xml->endElement(); // time_grid
+            $xml->startElement( 'rotor_stretch' );
+              $xml->writeAttribute( 'value', $dataset['rotor_stretch'] );
+            $xml->endElement(); // rotor_stretch
+            $xml->startElement( 'centerpiece_bottom' );
+              $xml->writeAttribute( 'value', $dataset['centerpiece_bottom'] );
+            $xml->endElement(); // centerpiece_bottom
+            $xml->startElement( 'vbar20' );
+              $xml->writeAttribute( 'value', $dataset['vbar20'] );
+            $xml->endElement(); // vbar20
+            $xml->startElement( 'density' );
+              $xml->writeAttribute( 'value', $dataset['density'] );
+            $xml->endElement(); // density
+            $xml->startElement( 'viscosity' );
+              $xml->writeAttribute( 'value', $dataset['viscosity'] );
+            $xml->endElement(); // viscosity
           $xml->endElement(); // parameters
         $xml->endElement(); // dataset
       }
@@ -167,6 +185,7 @@ class file_writer
         return false;
       $filenames[$dataset_id]['edit'] = $dataset['edit'];
 
+/*
       // model
       $query  = "SELECT contents FROM model " .
                 "WHERE modelID = {$dataset['modelID']} ";
@@ -179,6 +198,7 @@ class file_writer
       if ( ! $this->create_file( $model_file, $dir, $model_contents ) )
         return false;
       $filenames[$dataset_id]['model'] = $model_file;
+*/
 
       // noise
       foreach ( $dataset['noiseIDs'] as $ndx => $noiseID )
@@ -274,9 +294,6 @@ class file_writer
       $xml->startElement( 'rinoise_option' );
         $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
       $xml->endElement(); // rinoise_option
-      $xml->startElement( 'rotor_stretch' );
-        $xml->writeAttribute( 'value', $parameters['rotor_stretch'] );
-      $xml->endElement(); // rotor_stretch
     $xml->endElement(); // jobParameters
   }
 
