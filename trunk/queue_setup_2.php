@@ -55,7 +55,7 @@ if ( isset( $_POST['save'] ) )
     $_SESSION['request'][$count]['filename']     = $cell['filename'];
     $_SESSION['request'][$count]['editedDataID'] = $cell['editedDataID'];
     $_SESSION['request'][$count]['editFilename'] = $cell['editFilename'];
-    $_SESSION['request'][$count]['modelID']      = $cell['modelID'];
+//    $_SESSION['request'][$count]['modelID']      = $cell['modelID'];
     $_SESSION['request'][$count]['noiseIDs']     = $cell['noiseIDs'];
 
     $count++;
@@ -90,8 +90,10 @@ $out_text = "";
 foreach ( $_SESSION['cells'] as $rawDataID => $cell )
 {
   $editedData_text  = get_editedData( $rawDataID, $cell['editedDataID'] );
+/*
   $model_text       = get_model( $rawDataID, $cell['editedDataID'], 
                                  $cell['modelID'] );
+*/
   $noise_text       = get_noise( $rawDataID, $cell['editedDataID'], 
                                  $cell['noiseIDs'] );
 
@@ -102,8 +104,8 @@ foreach ( $_SESSION['cells'] as $rawDataID => $cell )
     <table cellpadding='3' cellspacing='0'>
     <tr><th>Edit Profile</th>
         <td>$editedData_text</td></tr>
-    <tr><th>Model</th>
-        <td>$model_text</td></tr>
+    <!--tr><th>Model</th>
+        <td>$model_text</td></tr-->
     <tr><th>Noise</th>
         <td>$noise_text</td></tr>
     </table>
@@ -115,7 +117,8 @@ HTML;
 }
 
 echo <<<HTML
-  <h4>Select the edit profile, model and noise files for each cell</h4>
+  <!--h4>Select the edit profile, model and noise files for each cell</h4-->
+  <h4>Select the edit profile each cell</h4>
 
   <div>
   <form action="{$_SERVER[PHP_SELF]}" method="post">
@@ -224,7 +227,7 @@ function get_setup_1()
     $cells[$rawDataID]['filename']     = basename( $filename );
     $cells[$rawDataID]['editedDataID'] = 0;
     $cells[$rawDataID]['editFilename'] = '';
-    $cells[$rawDataID]['modelID']      = 0;
+//    $cells[$rawDataID]['modelID']      = 0;
     $cells[$rawDataID]['noiseIDs']     = array();
   }
 
@@ -250,11 +253,13 @@ function get_setup_2()
     }
   }
 
+/*
   if ( isset( $_POST['modelID'] ) )
   {
     foreach ( $_POST['modelID'] as $rawDataID => $modelID )
       $_SESSION['cells'][$rawDataID]['modelID'] = $modelID;
   }
+*/
 }
 
 // Get edit profiles
@@ -280,6 +285,7 @@ function get_editedData( $rawDataID, $editedDataID = 0 )
   return( $profile );
 }
 
+/*
 // Get the models
 function get_model( $rawDataID, $editedDataID, $modelID = 0 )
 {
@@ -308,6 +314,7 @@ function get_model( $rawDataID, $editedDataID, $modelID = 0 )
 
   return( $model );
 }
+*/
 
 // Get the noise files
 function get_noise( $rawDataID, $editedDataID, $noiseIDs )
@@ -336,7 +343,6 @@ function get_noise( $rawDataID, $editedDataID, $noiseIDs )
 
   $noise   .= "</select>\n";
 */
-
   return( $noise );
 }
 ?>

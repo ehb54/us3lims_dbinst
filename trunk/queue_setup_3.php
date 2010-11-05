@@ -122,7 +122,7 @@ if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] > 0 ) )
   foreach ( $_SESSION['request'] as $removeID => $cellinfo )
   {
     $editedData_text  = get_editedData( $cellinfo['editedDataID'] );
-    $model_text       = get_model( $cellinfo['modelID'] );
+//    $model_text       = get_model( $cellinfo['modelID'] );
     $noise_text       = get_noise( $cellinfo['noiseIDs'] );
 
     $out_text .= <<<HTML
@@ -133,8 +133,8 @@ if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] > 0 ) )
       <table cellpadding='3' cellspacing='0'>
       <tr><th>Edit Profile</th>
           <td>$editedData_text</td></tr>
-      <tr><th>Model</th>
-          <td>$model_text</td></tr>
+      <!--tr><th>Model</th>
+          <td>$model_text</td></tr-->
       <tr><th>Noise</th>
           <td>$noise_text</td></tr>
       </table>
@@ -263,6 +263,7 @@ function get_editedData( $editedDataID )
   return( $profile );
 }
 
+/*
 // Get the models
 function get_model( $modelID )
 {
@@ -278,6 +279,7 @@ function get_model( $modelID )
 
   return( $model );
 }
+*/
 
 // Get the noise files
 function get_noise( $noiseIDs )

@@ -107,13 +107,18 @@ HTML;
   // EXEC COMMAND FOR TIGRE 
   if ( isset($_SESSION['cluster']) )
   {
-    $cluster = $_SESSION['cluster'];
+    $cluster = $_SESSION['cluster']['name'];
     unset( $_SESSION['cluster'] );
 
     foreach ( $filenames as $filename )
     {
+      // Lims 2 method
       $submit  = "echo gc_tigre $filename $cluster > " .
                  "/share/apps64/ultrascan/etc/us_gridpipe";
+
+      $submit = "php submit.php $filename";
+      $output_msg .= "<br />Submit request = $submit<br />";
+      $output_msg .= "Cluster = $cluster<br />";
   //    exec($submit, $retval);
     }
   }
