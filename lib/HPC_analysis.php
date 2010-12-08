@@ -59,12 +59,12 @@ class HPC_analysis
               "ff0_max              = {$job_parameters['ff0_max']},          " .
               "ff0_resolution       = {$job_parameters['ff0_resolution']},   " .
               "uniform_grid         = {$job_parameters['uniform_grid']},     " .
-              "montecarlo_value     = {$job_parameters['montecarlo_value']}, " .
+              "mc_iterations        = {$job_parameters['mc_iterations']}, " .
               "tinoise_option       = {$job_parameters['tinoise_option']},   " .
               "regularization       = {$job_parameters['regularization']},   " .
-              "meniscus_value       = {$job_parameters['meniscus_value']},   " .
+              "meniscus_range       = {$job_parameters['meniscus_range']},   " .
               "meniscus_points      = {$job_parameters['meniscus_points']},  " .
-              "iterations_value     = {$job_parameters['iterations_value']}, " .
+              "max_iterations       = {$job_parameters['max_iterations']}, " .
               "rinoise_option       = {$job_parameters['rinoise_option']}    ";
     mysql_query( $query )
           or die( "Query failed : $query<br />" . mysql_error());

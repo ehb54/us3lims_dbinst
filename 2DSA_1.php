@@ -250,20 +250,20 @@ function save_posted_data($dataset_id)
     $job_parameters                     = array();
     $job_parameters['s_min']            = $_POST['s_value_min'];
     $job_parameters['s_max']            = $_POST['s_value_max'];
-    $job_parameters['s_resolution']     = $_POST['s_value_res'];
+    $job_parameters['s_resolution']     = $_POST['s_resolution'];
     $job_parameters['ff0_min']          = $_POST['ff0_min'];
     $job_parameters['ff0_max']          = $_POST['ff0_max'];
     $job_parameters['ff0_resolution']   = $_POST['ff0_resolution'];
     $job_parameters['uniform_grid']     = $_POST['uniform_grid'];
-    $job_parameters['montecarlo_value'] = $_POST['montecarlo_value'];
+    $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
     $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
     $job_parameters['regularization']   = $_POST['regularization'];
-    $job_parameters['meniscus_value']   = ( $_POST['meniscus_option'] == 1 )
-                                        ? $_POST['meniscus-range'] : 0.01;
+    $job_parameters['meniscus_range']   = ( $_POST['meniscus_option'] == 1 )
+                                        ? $_POST['meniscus_range'] : 0.0;
     $job_parameters['meniscus_points']  = ( $_POST['meniscus_option'] == 1 )
-                                        ? $_POST['meniscus-value'] : 3;
-    $job_parameters['iterations_value'] = ( $_POST['iterations_option'] == 1 )
-                                        ? $_POST['iterations-value'] : 3;
+                                        ? $_POST['meniscus_points'] : 1;
+    $job_parameters['max_iterations']   = ( $_POST['iterations_option'] == 1 )
+                                        ? $_POST['max_iterations'] : 1;
     $job_parameters['rinoise_option']   = $_POST['rinoise_option'];
     $job_parameters['experimentID']     = $_SESSION['experimentID'];
     $payload->add( 'job_parameters', $job_parameters );

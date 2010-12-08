@@ -8,13 +8,13 @@ var meniscus = new Slider(document.getElementById("meniscus-slider"),
 meniscus.setMinimum(3);
 meniscus.setMaximum(30);
 meniscus.setValue(10);
-document.getElementById("meniscus-value").value = meniscus.getValue();
+document.getElementById("meniscus_range").value = meniscus.getValue();
 document.getElementById("meniscus-min").value = meniscus.getMinimum();
 document.getElementById("meniscus-max").value = meniscus.getMaximum();
 
 meniscus.onchange = function () 
 {
-  document.getElementById("meniscus-value").value = meniscus.getValue();
+  document.getElementById("meniscus_range").value = meniscus.getValue();
   document.getElementById("meniscus-min").value = meniscus.getMinimum();
   document.getElementById("meniscus-max").value = meniscus.getMaximum();
 };
@@ -27,13 +27,13 @@ var iterations = new Slider(document.getElementById("iterations-slider"),
 iterations.setMinimum(1);
 iterations.setMaximum(10);
 iterations.setValue(3);
-document.getElementById("iterations-value").value = iterations.getValue();
+document.getElementById("max_iterations").value = iterations.getValue();
 document.getElementById("iterations-min").value = iterations.getMinimum();
 document.getElementById("iterations-max").value = iterations.getMaximum();
 
 iterations.onchange = function () 
 {
-  document.getElementById("iterations-value").value = iterations.getValue();
+  document.getElementById("max_iterations").value = iterations.getValue();
   document.getElementById("iterations-min").value = iterations.getMinimum();
   document.getElementById("iterations-max").value = iterations.getMaximum();
 };
@@ -44,16 +44,16 @@ iterations.onchange = function ()
 try {
 var montecarlo = new Slider(document.getElementById("montecarlo-slider"), 
                             document.getElementById("montecarlo-slider-input"));
-montecarlo.setMinimum(0);
+montecarlo.setMinimum(1);
 montecarlo.setMaximum(100);
-montecarlo.setValue(0);
-document.getElementById("montecarlo_value").value = montecarlo.getValue();
+montecarlo.setValue(1);
+document.getElementById("mc_iterations").value = montecarlo.getValue();
 document.getElementById("montecarlo-min").value = montecarlo.getMinimum();
 document.getElementById("montecarlo-max").value = montecarlo.getMaximum();
 
 montecarlo.onchange = function ()
 {
-        document.getElementById("montecarlo_value").value = montecarlo.getValue();
+        document.getElementById("mc_iterations").value = montecarlo.getValue();
         document.getElementById("montecarlo-min").value = montecarlo.getMinimum();
         document.getElementById("montecarlo-max").value = montecarlo.getMaximum();
 };
@@ -277,14 +277,14 @@ function validate_single( f )
   var contact_bo = "\nIf you have any questions about this policy, please " +
                    "contact Borries Demeler (demeler@biochem.uthscsa.edu).";
 
-  // Some things should only be done if monte carlo is 0
-  var monte_carlo = 0;
-  if ( valid_field(f.montecarlo_value) )
-    monte_carlo = parseInt( f.montecarlo_value.value );
+  // Some things should only be done if monte carlo is 1
+  var monte_carlo = 1;
+  if ( valid_field(f.mc_iterations) )
+    monte_carlo = parseInt( f.mc_iterations.value );
 
   // alert( "monte_carlo value = " + monte_carlo );
 
-  if ( monte_carlo > 0 )
+  if ( monte_carlo > 1 )
   {
     // Meniscus fitting
     var meniscus_option = 0;

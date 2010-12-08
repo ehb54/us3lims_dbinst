@@ -154,6 +154,28 @@ class file_writer
     // Update database with xml file content
     $xml_data = file_get_contents( $current_dir . $xml_filename );
 
+    // Create tar file including all files
+    $files = array();
+    foreach ( $filenames as $filename )
+    {
+      $files[] = $filename['auc'];
+      $files[] = $filename['edit'];
+      // $files[] = $filename['model'];
+      foreach ( $filename['noise'] as $noiseFile )
+        $files[] = $noiseFile;
+
+      $files[] = $xml_filename;
+    }
+
+    $save_cwd = getcwd();         // So we can come back to the current 
+                                  // working directory later
+
+    chdir( $current_dir );
+
+    $fileList = implode( " ", $files );
+    shell_exec( "/bin/tar -cf hpcinput.tar " . $fileList );
+
+    chdir( $save_cwd );
 
     return( $current_dir . $xml_filename );
   }
@@ -273,24 +295,24 @@ class file_writer
       $xml->startElement( 'uniform_grid' );
         $xml->writeAttribute( 'value', $parameters['uniform_grid'] );
       $xml->endElement(); // uniform_grid
-      $xml->startElement( 'montecarlo_value' );
-        $xml->writeAttribute( 'value', $parameters['montecarlo_value'] );
-      $xml->endElement(); // montecarlo_value
+      $xml->startElement( 'mc_iterations' );
+        $xml->writeAttribute( 'value', $parameters['mc_iterations'] );
+      $xml->endElement(); // mc_iterations
       $xml->startElement( 'tinoise_option' );
         $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
       $xml->endElement(); // tinoise_option
       $xml->startElement( 'regularization' );
         $xml->writeAttribute( 'value', $parameters['regularization'] );
       $xml->endElement(); // regularization
-      $xml->startElement( 'meniscus_value' );
-        $xml->writeAttribute( 'value', $parameters['meniscus_value'] );
-      $xml->endElement(); // meniscus_value
+      $xml->startElement( 'meniscus_range' );
+        $xml->writeAttribute( 'value', $parameters['meniscus_range'] );
+      $xml->endElement(); // meniscus_range
       $xml->startElement( 'meniscus_points' );
         $xml->writeAttribute( 'value', $parameters['meniscus_points'] );
       $xml->endElement(); // meniscus_points
-      $xml->startElement( 'iterations_value' );
-        $xml->writeAttribute( 'value', $parameters['iterations_value'] );
-      $xml->endElement(); // iterations_value
+      $xml->startElement( 'max_iterations' );
+        $xml->writeAttribute( 'value', $parameters['max_iterations'] );
+      $xml->endElement(); // max_iterations
       $xml->startElement( 'rinoise_option' );
         $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
       $xml->endElement(); // rinoise_option

@@ -98,6 +98,7 @@ else
 if ( $files_ok )
 {
   $output_msg = <<<HTML
+  <pre>
   Thank you, your job was accepted to bcf and is currently processing, an
   email will be sent to {$_SESSION['submitter_email']} when the job is
   completed.
@@ -107,21 +108,29 @@ HTML;
   // EXEC COMMAND FOR TIGRE 
   if ( isset($_SESSION['cluster']) )
   {
+    global $submit_dir;
+
     $cluster = $_SESSION['cluster']['name'];
     unset( $_SESSION['cluster'] );
 
+    $save_cwd = getcwd();         // So we can come back to the current 
+                                  // working directory later
+
     foreach ( $filenames as $filename )
     {
-      // Lims 2 method
-      $submit  = "echo gc_tigre $filename $cluster > " .
-                 "/share/apps64/ultrascan/etc/us_gridpipe";
+      chdir( dirname( $filename ) );
 
-      $submit = "php submit.php $filename";
-      $output_msg .= "<br />Submit request = $submit<br />";
-      $output_msg .= "Cluster = $cluster<br />";
-  //    exec($submit, $retval);
+      $submit = "php {$submit_dir}submit3.dz.php " . basename( $filename );
+      exec($submit, $retval);
+
+      if ( ! empty( $retval ) )
+        $output_msg .= "<br /><span class='message'>Message from the queue...</span><br />\n" .
+                        print_r( $retval, TRUE ) . " <br />\n";
     }
+
+    chdir( $save_cwd );
   }
+  $output_msg .= "</pre>\n";
 }
 
 else
