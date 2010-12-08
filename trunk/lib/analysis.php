@@ -18,9 +18,9 @@ echo<<<HTML
          <input class="slider-input" id="montecarlo-slider-input"/>
       </div>
       <br/>
-      Value: <input id="montecarlo_value" size='5'
+      Value: <input id="mc_iterations" size='5'
                     onchange="montecarlo.setValue(parseInt(this.value))"
-                    name="montecarlo_value"
+                    name="mc_iterations"
                     value="montecarlo.setValue(parseInt(this.value))"/>
 
       Minimum: <input id="montecarlo-min" size='5'
@@ -122,7 +122,7 @@ echo<<<HTML
        <legend>S-Value Setup</legend>
        <input type="text" value="1" name="s_value_min"/> S-Value Minimum<br/>
        <input type="text" value="10" name="s_value_max"/> S-Value Maximum<br/>
-       <input type="text" value="10" name="s_value_res"/> S-Value Resolution<br/>
+       <input type="text" value="10" name="s_resolution"/> S-Value Resolution (# of grid points)<br/>
     </fieldset>
 HTML;
 }
@@ -152,7 +152,7 @@ echo<<<HTML
       <legend>f/f0 Setup</legend>
       <input type="text" value="1" name="ff0_min"/> f/f0 minimum<br/>
       <input type="text" value="4" name="ff0_max"/> f/f0 maximum<br/>
-      <input type="text" value="10" name="ff0_resolution"/> f/f0 resolution<br/>
+      <input type="text" value="10" name="ff0_resolution"/> f/f0 Resolution (# of grid points)<br/>
     </fieldset>
 HTML;
 }
@@ -206,14 +206,14 @@ echo<<<HTML
           <input type="text" name="meniscus-range" value="0.01"/> Meniscus Fit Range (cm)<br/>
           <br/>
           <fieldset>
-            <legend>Meniscus Grid Points</legend>
+            <legend>Meniscus Range</legend>
             <div class="slider" id="meniscus-slider">
                <input class="slider-input" id="meniscus-slider-input"/>
             </div>
             <br/>
-            Value: <input id="meniscus-value" 
+            Value: <input id="meniscus_range" 
                           onchange="meniscus.setValue(parseInt(this.value))" 
-                          name="meniscus-value" 
+                          name="meniscus_range" 
                           value="meniscus.setValue(parseInt(this.value))"/>
                           
             Minimum: <input id="meniscus-min" 
@@ -242,14 +242,14 @@ echo<<<HTML
         <div style="display:none" id="mag6">
           <br/>
           <fieldset>
-            <legend>Number of Iterations</legend>
+            <legend>Maximum Number of Iterations</legend>
             <div class="slider" id="iterations-slider">
                <input class="slider-input" id="iterations-slider-input"/>
             </div>
             <br/>
-            Value: <input id="iterations-value" 
+            Value: <input id="max_iterations" 
                           onchange="iterations.setValue(parseInt(this.value))" 
-                          name="iterations-value" 
+                          name="max_iterations" 
                           value="iterations.setValue(parseInt(this.value))"/>
                        
             Minimum: <input id="iterations-min" 
