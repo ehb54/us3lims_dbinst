@@ -108,7 +108,6 @@ class HPC_analysis
               "submitterGUID          = '$submitterGUID',                            " .
               "experimentID           = '{$job['job_parameters']['experimentID']}',  " .
               "submitTime             =  NOW(),                                      " .
-              "rotor_stretch          = '{$job['job_parameters']['rotor_stretch']}', " .
               "clusterName            = '{$job['cluster']['name']}',                 " .
               "method                 = '{$job['method']}' ";
     mysql_query( $query )
@@ -129,7 +128,8 @@ class HPC_analysis
                 "simpoints            = {$dataset['simpoints']},    " .
                 "band_volume          = {$dataset['band_volume']},  " .
                 "radial_grid          = {$dataset['radial_grid']},  " .
-                "time_grid            = {$dataset['time_grid']}     " ;
+                "time_grid            = {$dataset['time_grid']},    " .
+                "rotor_stretch        = '{$dataset['rotor_stretch']}' " ;
       mysql_query( $query )
             or die( "Query failed : $query<br />" . mysql_error());
 

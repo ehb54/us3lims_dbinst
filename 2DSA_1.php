@@ -225,6 +225,7 @@ function display_controls()
 function save_posted_data($dataset_id)
 {
   global $payload, $num_datasets, $dbname, $dbhost;
+  global $udpport, $ipaddr;
 
   // A lot of this only gets posted the first time through
   if ( $dataset_id == 0 )
@@ -233,9 +234,9 @@ function save_posted_data($dataset_id)
     $payload->add( 'cluster', $_SESSION['cluster'] );
 
     $udp                  = array();
-    $udp['port']          = '12335';
-    $udp['server']        = '129.111.140.167';
-    $payload->add( 'udp', $udp );
+    $udp['udpport']       = $udpport;
+    $udp['ip']            = $ipaddr;
+    $payload->add( 'server', $udp );
 
     $payload->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
     $payload->add( 'datasetCount', $num_datasets );
