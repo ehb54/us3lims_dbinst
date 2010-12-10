@@ -55,8 +55,8 @@ class file_writer
           $xml->writeAttribute( 'shortname', $job['cluster']['shortname'] );
         $xml->endElement(); // cluster
         $xml->startElement( 'udp' );
-          $xml->writeAttribute( 'port', '12335' );
-          $xml->writeAttribute( 'server', '129.111.140.167' );
+          $xml->writeAttribute( 'port', $job['server']['udpport'] );
+          $xml->writeAttribute( 'server', $job['server']['ip'] );
         $xml->endElement(); // udp
         $xml->startElement( 'directory' );
           $xml->writeAttribute( 'name', $current_dir );
