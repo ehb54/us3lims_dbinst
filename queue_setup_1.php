@@ -188,7 +188,7 @@ function get_experiment_text()
   global $experimentID;
 
   // Get a list of experiments
-  $query  = "SELECT experimentID, runID, label " .
+  $query  = "SELECT experimentID, runID " .
             "FROM   projectPerson, project, experiment " .
             "WHERE  projectPerson.personID = {$_SESSION['id']} " .
             "AND    project.projectID = projectPerson.projectID " .
@@ -198,13 +198,13 @@ function get_experiment_text()
 
   $experiment_list = "<select id='expID' name='expID'" .
                      "  onchange='this.form.submit();'>\n" .
-                     "  <option value='null'>Select an experiment...</option>\n";
-  while ( list( $expID, $runID, $label ) = mysql_fetch_array( $result ) )
+                     "  <option value='null'>Select the run ID...</option>\n";
+  while ( list( $expID, $runID ) = mysql_fetch_array( $result ) )
   {
     $selected = ( $expID == $experimentID )
               ? " selected='selected'"
               : "";
-    $experiment_list .= "  <option value='$expID'$selected>$runID $label</option>\n";
+    $experiment_list .= "  <option value='$expID'$selected>$runID</option>\n";
   }
 
   $experiment_list .= "</select>\n";
@@ -219,7 +219,7 @@ function get_experiment_text()
   }
 
   $text = <<<HTML
-      <p>Select the UltraScan experiment you would like to add to the Analysis Queue.</p>
+      <p>Select the UltraScan experiment (run ID) you would like to add to the Analysis Queue.</p>
       <p>$msg2a $experiment_list</p>
       $msg2
 
@@ -235,7 +235,7 @@ function get_cell_text()
   if ( $experimentID == 0 )
   {
     $rawData_list = "<select name='cells[]' multiple='multiple'>\n" .
-                       "  <option value='null'>Select experiment first...</option>\n";
+                       "  <option value='null'>Select runID first...</option>\n";
     $rawData_list .= "</select>\n";
   }
 
@@ -243,7 +243,7 @@ function get_cell_text()
   {
     // We have a legit experimentID, so let's get a list of cells 
     //  (auc files) in experiment
-    $query  = "SELECT rawDataID, runID, rawData.label, filename " .
+    $query  = "SELECT rawDataID, runID, filename " .
               "FROM   rawData, experiment " .
               "WHERE  rawData.experimentID = $experimentID " .
               "AND    rawData.experimentID = experiment.experimentID ";
@@ -252,8 +252,8 @@ function get_cell_text()
   
     $rawData_list = "<select name='cells[]' multiple='multiple'>\n" .
                        "  <option value='null'>Select cells...</option>\n";
-    while ( list( $rawDataID, $runID, $label, $filename ) = mysql_fetch_array( $result ) )
-      $rawData_list .= "  <option value='$rawDataID:$filename'>$runID $label</option>\n";
+    while ( list( $rawDataID, $runID, $filename ) = mysql_fetch_array( $result ) )
+      $rawData_list .= "  <option value='$rawDataID:$filename'>$runID $filename</option>\n";
   
     $rawData_list .= "</select>\n";
   }
