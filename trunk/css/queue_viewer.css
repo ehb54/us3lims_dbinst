@@ -1,0 +1,63 @@
+/* Stylesheet for queue_viewer.php */
+
+
+#content p.title
+{
+  font-weight      : bold;
+}
+
+#content table
+{
+  border-collapse  : collapse;
+  border           : solid black 1px;
+}
+
+#content table th
+{
+  background-color : #acf;
+  padding          : 4px;
+  text-align       : left;
+  border           : solid black 1px;
+}
+
+#content table td
+{
+  padding          : 4px;
+  border           : solid black 1px;
+}
+
+#content table td.decoration
+{
+  background-color : #bbb;
+}
+
+div.more_info
+{
+  position         : absolute;
+  width            : 160px;
+  margin-left      : 100px;
+  padding          : 15px;
+  background-color : lemonchiffon;
+  border           : 1px solid black;
+  display          : none;
+  font-size        : 80%;
+}
+
+div.more_info div.moreinfo_hdr
+{
+  text-align       : center;
+  font-size        : 80%;
+  font-weight      : bold;
+  line-height      : 0.6;
+}
+
+#content table td.running
+{
+  background-color : #47ff47;
+}
+
+#content table td.queued
+{
+  background-color : #8888ff;
+}
+
