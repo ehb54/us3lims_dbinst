@@ -43,6 +43,7 @@ Released      : 8/1/2010
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
   <link rel="shortcut icon" href="images/favicon.ico" />
   <link href="css/common.css" rel="stylesheet" type="text/css" />
+  <script src=js/main.js type="text/javascript"></script>
 
 HTML;
 

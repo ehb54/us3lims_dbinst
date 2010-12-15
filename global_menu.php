@@ -17,19 +17,20 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
-                <li><a href='#'>New Project</a></li>
+                <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
-                <li><a href='#'>Enter Peptide Sequence</a></li>
-                <li><a href='#'>Enter Nucleic Acid Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Nucleic Acid Sequence</a></li>
               </ul></li>
             <li class='submenu'><a href='#'>Analysis</a>
               <ul class='level2'>
                 <li><a href='queue_setup_1.php'>Queue Setup</a></li>
+                <li><a href='queue_viewer.php'>Queue Viewer</a></li>
                 <li class='separator'></li>
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
               </ul></li>
-            <li><a href="#">Contact Us</a></li>
-            <li><a href='#'>Help</a></li>
+            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
 
@@ -44,19 +45,20 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
-                <li><a href='#'>New Project</a></li>
+                <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
-                <li><a href='#'>Enter Peptide Sequence</a></li>
-                <li><a href='#'>Enter Nucleic Acid Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Nucleic Acid Sequence</a></li>
               </ul></li>
             <li class='submenu'><a href='#'>Analysis</a>
               <ul class='level2'>
                 <li><a href='queue_setup_1.php'>Queue Setup</a></li>
+                <li><a href='queue_viewer.php'>Queue Viewer</a></li>
                 <li class='separator'></li>
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
               </ul></li>
-            <li><a href="#">Contact Us</a></li>
-            <li><a href='#'>Help</a></li>
+            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
 
@@ -71,19 +73,20 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
-                <li><a href='#'>New Project</a></li>
+                <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
-                <li><a href='#'>Enter Peptide Sequence</a></li>
-                <li><a href='#'>Enter Nucleic Acid Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Nucleic Acid Sequence</a></li>
               </ul></li>
             <li class='submenu'><a href='#'>Analysis</a>
               <ul class='level2'>
                 <li><a href='queue_setup_1.php'>Queue Setup</a></li>
+                <li><a href='queue_viewer.php'>Queue Viewer</a></li>
                 <li class='separator'></li>
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
               </ul></li>
-            <li><a href="#">Contact Us</a></li>
-            <li><a href='#'>Help</a></li>
+            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
 
@@ -98,19 +101,20 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
-                <li><a href='#'>New Project</a></li>
+                <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
-                <li><a href='#'>Enter Peptide Sequence</a></li>
-                <li><a href='#'>Enter Nucleic Acid Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Nucleic Acid Sequence</a></li>
               </ul></li>
             <li class='submenu'><a href='#'>Analysis</a>
               <ul class='level2'>
                 <li><a href='queue_setup_1.php'>Queue Setup</a></li>
+                <li><a href='queue_viewer.php'>Queue Viewer</a></li>
                 <li class='separator'></li>
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
               </ul></li>
-            <li><a href="#">Contact Us</a></li>
-            <li><a href='#'>Help</a></li>
+            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
 
@@ -125,13 +129,13 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
-                <li><a href='#'>New Project</a></li>
+                <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
-                <li><a href='#'>Enter Peptide Sequence</a></li>
-                <li><a href='#'>Enter Nucleic Acid Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Nucleic Acid Sequence</a></li>
               </ul></li>
-            <li><a href="#">Contact Us</a></li>
-            <li><a href='#'>Help</a></li>
+            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
 
@@ -146,13 +150,13 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
-                <li><a href='#'>New Project</a></li>
+                <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
-                <li><a href='#'>Enter Peptide Sequence</a></li>
-                <li><a href='#'>Enter Nucleic Acid Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Nucleic Acid Sequence</a></li>
               </ul></li>
-            <li><a href="#">Contact Us</a></li>
-            <li><a href='#'>Help</a></li>
+            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
 
@@ -165,7 +169,7 @@ $global_menu = <<<HTML
         <div id="globalnav">
           <ul class='level1'>
             <li><a href="http://$org_site/index.php">Home</a></li>
-            <li><a href="#">Contact Us</a></li>
+            <li><a href="#" onclick='construction();'>Contact Us</a></li>
           </ul>
         </div>
 
