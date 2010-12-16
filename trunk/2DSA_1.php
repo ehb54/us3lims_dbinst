@@ -31,7 +31,7 @@ if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
   exit();
 }
 
-define( 'DEBUG', true );
+// define( 'DEBUG', true );
 
 include 'config.php';
 include 'db.php';
@@ -120,7 +120,7 @@ include 'links.php';
   <!-- Place page content here -->
 
 <div>
-<form action="<?php echo $_SERVER[PHP_SELF]; ?>" method="post"
+<form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"
       onsubmit="return validate(this, 
                 <?php echo $advanceLevel; ?>, 
                 <?php echo $dataset_id; ?>,

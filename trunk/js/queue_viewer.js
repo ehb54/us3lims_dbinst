@@ -1,5 +1,11 @@
 // JavaScript routines for queue_viewer.php
 
+function update_queue_content()
+{
+  var myAjaxQueue = new Ajax.PeriodicalUpdater('queue_content',
+                    'queue_content.php', {method: 'post', frequency: 20.0, decay: 1});
+}
+
 function show_info( jobid )
 {
   more_info  = document.getElementById( "more_info" + jobid );
