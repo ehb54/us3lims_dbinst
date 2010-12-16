@@ -61,11 +61,14 @@ if ($js)
     echo "  <script src='$javascript' type='text/javascript'></script>\n";
 }
 
+if ( ! isset( $onload ) )
+  $onload = '';
+
 echo<<<HTML
 
 </head>
 
-<body>
+<body $onload>
 
 <!-- begin header -->
 <div id="header">

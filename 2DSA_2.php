@@ -56,8 +56,9 @@ if ( $_SESSION['separate_datasets'] )
   $dataset_count = $payload->get( 'datasetCount' );
   for ( $i = 0; $i < $dataset_count; $i++ )
   {
-    $HPCAnalysisRequestID = $HPC->writeDB( $payload->get_dataset( $i ) );
-    $filenames[ $i ] = $file->write( $payload->get_dataset( $i ), $HPCAnalysisRequestID );
+    $single = $payload->get_dataset( $i );
+    $HPCAnalysisRequestID = $HPC->writeDB( $single );
+    $filenames[ $i ] = $file->write( $single, $HPCAnalysisRequestID );
     if ( $filenames[ $i ] === false )
       $files_ok = false;
 
@@ -65,8 +66,10 @@ if ( $_SESSION['separate_datasets'] )
     {
       // Write the xml file content to the db
       $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ $i ] ) );
+      $edit_filename = $single['dataset'][0]['edit'];
       $query  = "UPDATE HPCAnalysisRequest " .
-                "SET requestXMLfile = '$xml_content' " .
+                "SET requestXMLfile = '$xml_content', " .
+                "editXMLFilename = '$edit_filename' " .
                 "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
       mysql_query( $query )
             or die("Query failed : $query<br />\n" . mysql_error());
@@ -77,8 +80,9 @@ if ( $_SESSION['separate_datasets'] )
 
 else
 {
-  $HPCAnalysisRequestID = $HPC->writeDB( $payload->get() );
-  $filenames[ 0 ] = $file->write( $payload->get(), $HPCAnalysisRequestID );
+  $global = $payload->get();
+  $HPCAnalysisRequestID = $HPC->writeDB( $global );
+  $filenames[ 0 ] = $file->write( $global, $HPCAnalysisRequestID );
   if ( $filenames[ 0 ] === false )
     $files_ok = false;
 
@@ -86,8 +90,10 @@ else
   {
     // Write the xml file content to the db
     $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ 0 ] ) );
+    $edit_filename = $global['dataset'][0]['edit'];
     $query  = "UPDATE HPCAnalysisRequest " .
-              "SET requestXMLfile = '$xml_content' " .
+              "SET requestXMLfile = '$xml_content', " .
+              "editXMLFilename = '$edit_filename' " .
               "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
     mysql_query( $query )
           or die("Query failed : $query<br />\n" . mysql_error());
