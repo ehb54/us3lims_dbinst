@@ -80,9 +80,9 @@ if ( $_SESSION['separate_datasets'] )
 
 else
 {
-  $global = $payload->get();
-  $HPCAnalysisRequestID = $HPC->writeDB( $global );
-  $filenames[ 0 ] = $file->write( $global, $HPCAnalysisRequestID );
+  $globalfit = $payload->get();
+  $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
+  $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
   if ( $filenames[ 0 ] === false )
     $files_ok = false;
 
@@ -90,7 +90,7 @@ else
   {
     // Write the xml file content to the db
     $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ 0 ] ) );
-    $edit_filename = $global['dataset'][0]['edit'];
+    $edit_filename = $globalfit['dataset'][0]['edit'];
     $query  = "UPDATE HPCAnalysisRequest " .
               "SET requestXMLfile = '$xml_content', " .
               "editXMLFilename = '$edit_filename' " .

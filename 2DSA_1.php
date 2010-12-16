@@ -68,6 +68,7 @@ if ( isset($_POST['TIGRE']) )
 
   // get previous payload data and add this session to it
   $payload->restore();
+  $payload->add( 'cluster', $_SESSION['cluster'] );
   save_posted_data($dataset_id);
   $payload->save();
 
@@ -231,7 +232,6 @@ function save_posted_data($dataset_id)
   if ( $dataset_id == 0 )
   {
     $payload->add( 'method', '2DSA' );
-    $payload->add( 'cluster', $_SESSION['cluster'] );
 
     $udp                  = array();
     $udp['udpport']       = $udpport;
