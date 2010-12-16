@@ -107,7 +107,7 @@ class HPC_analysis
               "investigatorGUID       = '$investigatorGUID',                         " .
               "submitterGUID          = '$submitterGUID',                            " .
               "experimentID           = '{$job['job_parameters']['experimentID']}',  " .
-              "submitTime             =  NOW(),                                      " .
+              "submitTime             =  now(),                                      " .
               "clusterName            = '{$job['cluster']['name']}',                 " .
               "method                 = '{$job['method']}' ";
     mysql_query( $query )

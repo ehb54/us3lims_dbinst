@@ -23,16 +23,20 @@ if ( $_SESSION['userlevel'] < 2 )
 include_once 'config.php';
 include_once 'db.php';
 
+$sort_order = 'submitTime';
+if ( isset( $_SESSION['queue_viewer_sort_order'] ) )
+  $sort_order = $_SESSION['queue_viewer_sort_order'];
+
 $content = "<div class='queue_content'>\n";
 
-$query  = "SELECT startTime, queueStatus, lastMessage, updateTime, editXMLFilename, " .
-          "investigatorGUID, submitterGUID, clusterName, method, runID " .
+$query  = "SELECT queueStatus, lastMessage, updateTime, editXMLFilename, " .
+          "investigatorGUID, submitterGUID, submitTime, clusterName, method, runID " .
           "FROM HPCAnalysisResult r, HPCAnalysisRequest q, experiment " .
           "WHERE ( ( queueStatus = 'queued' ) || " .
           "        ( queueStatus = 'running' ) ) " .
           "AND r.HPCAnalysisRequestID = q.HPCAnalysisRequestID " .
           "AND q.experimentID = experiment.experimentID " .
-          "ORDER BY startTime ";
+          "ORDER BY $sort_order ";
 $result = mysql_query( $query )
           or die( "Query failed : $query<br />" . mysql_error());
 
@@ -96,8 +100,8 @@ else
         <th>Analysis Type:</th>
         <td>$method</td></tr>
 
-    <tr><th>Started on:</th>
-        <td>$startTime</td>
+    <tr><th>Submitted on:</th>
+        <td>$submitTime</td>
         <th rowspan='2'>Running on:</th>
         <td rowspan='2'>$clusterName</td></tr>
 

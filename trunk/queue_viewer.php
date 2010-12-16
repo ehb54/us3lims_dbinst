@@ -20,7 +20,19 @@ if ( $_SESSION['userlevel'] < 2 )
   exit();
 } 
 
+if ( isset( $_POST['sort_order'] ) )
+{
+  $_SESSION['queue_viewer_sort_order'] = $_POST['sort_order'];
+
+  header( "Location: {$_SERVER[PHP_SELF]}" );
+  exit();
+}
+
 // define( 'DEBUG', true );
+
+$sort_order = 'submitTime';
+if ( isset( $_SESSION['queue_viewer_sort_order'] ) )
+  $sort_order = $_SESSION['queue_viewer_sort_order'];
 
 include 'config.php';
 include 'db.php';
@@ -40,6 +52,12 @@ include 'links.php';
   <!-- Place page content here -->
 
   <h3>LIMS v3 Queue</h3>
+
+  <table>
+  <tr><th>Sort order</th>
+      <td><?php echo order_select( $sort_order ); ?></td>
+  </table>
+
   <div id='queue_content'></div>
 
   <?php echo page_content2();  ?>
@@ -49,6 +67,34 @@ include 'links.php';
 <?php
 include 'bottom.php';
 exit();
+
+// Function to create a dropdown for sort order
+function order_select( $current_order = NULL )
+{
+  // A list of ways to sort the queue viewer
+  $sortorder = array();
+
+  $sortorder['submitTime']   = 'Time submitted';
+  $sortorder['runID']        = 'Run ID';
+  $sortorder['queueStatus']  = 'Status';
+  $sortorder['method']       = 'Analysis type';
+  $sortorder['updateTime']   = 'Date last updated';
+  $sortorder['clusterName']  = 'Cluster';
+
+  $text  = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n";
+  $text .= "<select name='sort_order' size='1'
+                    onchange='this.form.submit();' >\n";
+  foreach ( $sortorder as $order => $display )
+  {
+    $selected = ( $current_order == $order ) ? " selected='selected'" : "";
+    $text .= "  <option value='$order'$selected>$display</option>\n";
+  }
+
+  $text .= "</select>\n" .
+           "</form>\n";
+
+  return $text;
+}
 
 // A function to generate page content using lims2 methods
 function page_content2()
