@@ -188,23 +188,24 @@ function get_experiment_text()
   global $experimentID;
 
   // Get a list of experiments
-  $query  = "SELECT experimentID, runID " .
-            "FROM   projectPerson, project, experiment " .
-            "WHERE  projectPerson.personID = {$_SESSION['id']} " .
-            "AND    project.projectID = projectPerson.projectID " .
-            "AND    experiment.projectID = project.projectID ";
+  $query  = "SELECT   experimentID, DATE( dateUpdated ) AS udate, runID " .
+            "FROM     projectPerson, project, experiment " .
+            "WHERE    projectPerson.personID = {$_SESSION['id']} " .
+            "AND      project.projectID = projectPerson.projectID " .
+            "AND      experiment.projectID = project.projectID " .
+            "ORDER BY udate DESC, runID ";
   $result = mysql_query( $query )
             or die("Query failed : $query<br />\n" . mysql_error());
 
-  $experiment_list = "<select id='expID' name='expID'" .
+  $experiment_list = "<select id='expID' name='expID' size='10' " .
                      "  onchange='this.form.submit();'>\n" .
-                     "  <option value='null'>Select the run ID...</option>\n";
-  while ( list( $expID, $runID ) = mysql_fetch_array( $result ) )
+                     "  <option value='null'>run ID not selected...</option>\n";
+  while ( list( $expID, $udate, $runID ) = mysql_fetch_array( $result ) )
   {
     $selected = ( $expID == $experimentID )
               ? " selected='selected'"
               : "";
-    $experiment_list .= "  <option value='$expID'$selected>$runID</option>\n";
+    $experiment_list .= "  <option value='$expID'$selected>$udate $runID</option>\n";
   }
 
   $experiment_list .= "</select>\n";
