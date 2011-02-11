@@ -5,6 +5,9 @@
  * Final database update and submission for the 2DSA analysis
  *
  */
+ini_set( "display_startup_errors", "On" );
+ini_set( "display_errors", "On" );
+ini_set( "error_reporting", "E_ALL & E_STRICT" );
 session_start();
 
 // Are we authorized to view this page?
@@ -40,6 +43,8 @@ include 'lib/payload_manager.php';
 include 'lib/analysis.php';
 include 'lib/HPC_analysis.php';
 include 'lib/file_writer.php';
+include 'lib/submit_globus.php';
+include 'lib/submit_gfac.php';
 
 // Create the payload manager and restore the data
 $payload = new payload_manager( $_SESSION );
@@ -114,11 +119,21 @@ HTML;
   // EXEC COMMAND FOR TIGRE 
   if ( isset($_SESSION['cluster']) )
   {
-    global $submit_dir;
-
-    $cluster = $_SESSION['cluster']['name'];
+    $cluster = $_SESSION['cluster']['shortname'];
     unset( $_SESSION['cluster'] );
 
+    // For the moment we are supporting two submission methods.
+    switch ( $cluster )
+    {
+       case 'queenbee' :
+          $job = new submit_gfac();
+          break;
+    
+       default :
+          $job = new submit_globus();
+          break;
+    }
+   
     $save_cwd = getcwd();         // So we can come back to the current 
                                   // working directory later
 
@@ -126,12 +141,16 @@ HTML;
     {
       chdir( dirname( $filename ) );
 
-      $submit = "php {$submit_dir}submit3.dz.php " . basename( $filename );
-      exec($submit, $retval);
+      $job-> clear();
+      $job-> parse_input( basename( $filename ) );
+      $job-> submit();
+      $retval = $job->get_messages();
 
       if ( ! empty( $retval ) )
+      {
         $output_msg .= "<br /><span class='message'>Message from the queue...</span><br />\n" .
-                        print_r( $retval, TRUE ) . " <br />\n";
+                        print_r( $retval, true ) . " <br />\n";
+      }
     }
 
     chdir( $save_cwd );

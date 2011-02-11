@@ -84,9 +84,11 @@ HTML;
       if ( $_SESSION['userlevel'] >= 4         ||
            in_array( $cluster_shortname, $_SESSION['clusterAuth']) )
       {
-        // For now, because only testing on bcf
+        // For now, because only testing on bcf and queenbee
         $checked = ( $cluster_shortname == 'bcf' ) ? " checked='checked'" : "";
-        $disabled = ( $cluster_shortname == 'bcf' ) ? "" : " disabled='disabled'";
+        $disabled = ( $cluster_shortname == 'bcf'        || 
+                      $cluster_shortname == 'queenbee' ) 
+                  ? "" : " disabled='disabled'";
         $text .= "     <tr><td class='cluster'>" .
                  "<input type='radio' name='cluster' value='$cluster:$cluster_shortname'$checked$disabled />\n" .
                  "  $cluster</td><td>$status</td><td>$jobs</td><td>$load</td></tr>\n";
