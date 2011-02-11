@@ -173,7 +173,11 @@ class file_writer
     chdir( $current_dir );
 
     $fileList = implode( " ", $files );
-    shell_exec( "/bin/tar -cf hpcinput.tar " . $fileList );
+    $tarFilename = sprintf( "hpcinput-%s-%s-%05d.tar",
+                             $job['database']['host'],
+                             $job['database']['name'],
+                             $HPCAnalysisRequestID );
+    shell_exec( "/bin/tar -cf $tarFilename " . $fileList );
 
     chdir( $save_cwd );
 
