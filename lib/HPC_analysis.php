@@ -8,80 +8,34 @@
  * Requires session_start();
  */
 
-include_once( "db.php");
+include_once 'db.php';
 
-class HPC_analysis
+abstract class HPC_analysis
 {
-  function HPC_analysis() {}
+  abstract protected function HPCJobParameters( $HPCAnalysisRequestID, $job_parameters );
 
   // Takes a structured array of data created by the payload manager
   function writeDB( $data )
   {
-    switch( $data['method'] )
-    {
-      case '2DSA' :
-        return $this->HPCRequest_2DSA( $data );
-        break;
+    // First the main HPCAnalysisRequest table entry
+    $HPCAnalysisRequestID = $this->HPCAnalysisRequest( $data );
 
-      case '2DSA_MW' :
-        break;
-
-      case 'GA' :
-        break;
-
-      case 'GA_MW' :
-        break;
-
-      case 'GA_SC' :
-        break;
-
-      default :
-        die( "Invalid Selection type: " . __FILE__ . " " . __LINE__ );
-        break;
-
-    }
-  }
-
-  // Function to create the HPC Analysis DB entries for the 2DSA analysis
-  function HPCRequest_2DSA( $job )
-  {
-    $HPCAnalysisRequestID = $this->HPCAnalysisRequest( $job );
-
-    // Now the specific 2DSA settings
-    $job_parameters = array();
-    $job_parameters = $job['job_parameters'];
-    $query  = "INSERT INTO 2DSA_Settings SET " .
-              "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
-              "s_min                = {$job_parameters['s_min']},            " .
-              "s_max                = {$job_parameters['s_max']},            " .
-              "s_resolution         = {$job_parameters['s_resolution']},     " .
-              "ff0_min              = {$job_parameters['ff0_min']},          " .
-              "ff0_max              = {$job_parameters['ff0_max']},          " .
-              "ff0_resolution       = {$job_parameters['ff0_resolution']},   " .
-              "uniform_grid         = {$job_parameters['uniform_grid']},     " .
-              "mc_iterations        = {$job_parameters['mc_iterations']}, " .
-              "tinoise_option       = {$job_parameters['tinoise_option']},   " .
-              "regularization       = {$job_parameters['regularization']},   " .
-              "meniscus_range       = {$job_parameters['meniscus_range']},   " .
-              "meniscus_points      = {$job_parameters['meniscus_points']},  " .
-              "max_iterations       = {$job_parameters['max_iterations']}, " .
-              "rinoise_option       = {$job_parameters['rinoise_option']}    ";
-    mysql_query( $query )
-          or die( "Query failed : $query<br />" . mysql_error());
+    // The job parameters specific to the analysis type
+    $this->HPCJobParameters( $HPCAnalysisRequestID, $data['job_parameters']  );
 
     // Finally the HPCDataset and HPCRequestData tables
-    $this->HPCDataset( $HPCAnalysisRequestID, $job['dataset'] );
+    $this->HPCDataset( $HPCAnalysisRequestID, $data['dataset'] );
 
     if ( DEBUG )
     {
-      // echo "From HPC_analysis_2DSA...\n";
-      $this->email_log( $job );
-      // $this->debug_out( $job );
-      // echo "End of DB update - 2DSA\n";
+      // echo "From HPC_analysis...\n";
+      $this->email_log( $data );
+      // $this->debug_out( $data );
+      // echo "End of DB update\n";
     }
 
     // Return the original analysis ID
-    return( $HPCAnalysisRequestID );
+    return $HPCAnalysisRequestID;
   }
 
   // Function to create the main HPCAnalysisRequest table entry
@@ -210,5 +164,65 @@ class HPC_analysis
     return $msg;
   }
 
+}
+
+/*
+ * A class that writes the 2DSA portion of the data to the DB
+ *  Inherits from HPC_analysis
+ */
+class HPC_2DSA extends HPC_analysis
+{
+  // Function to create the HPC Analysis DB entries for the 2DSA analysis
+  protected function HPCJobParameters( $HPCAnalysisRequestID, $job_parameters )
+  {
+    $query  = "INSERT INTO 2DSA_Settings SET " .
+              "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
+              "s_min                = {$job_parameters['s_min']},            " .
+              "s_max                = {$job_parameters['s_max']},            " .
+              "s_resolution         = {$job_parameters['s_resolution']},     " .
+              "ff0_min              = {$job_parameters['ff0_min']},          " .
+              "ff0_max              = {$job_parameters['ff0_max']},          " .
+              "ff0_resolution       = {$job_parameters['ff0_resolution']},   " .
+              "uniform_grid         = {$job_parameters['uniform_grid']},     " .
+              "mc_iterations        = {$job_parameters['mc_iterations']}, " .
+              "tinoise_option       = {$job_parameters['tinoise_option']},   " .
+              "regularization       = {$job_parameters['regularization']},   " .
+              "meniscus_range       = {$job_parameters['meniscus_range']},   " .
+              "meniscus_points      = {$job_parameters['meniscus_points']},  " .
+              "max_iterations       = {$job_parameters['max_iterations']}, " .
+              "rinoise_option       = {$job_parameters['rinoise_option']}    ";
+    mysql_query( $query )
+          or die( "Query failed : $query<br />" . mysql_error());
+
+  }
+}
+
+/*
+ * A class that writes the GA portion of the data to the DB
+ *  Inherits from HPC_analysis
+ */
+class HPC_GA extends HPC_analysis
+{
+  // Function to create the HPC Analysis DB entries for the GA analysis
+  protected function HPCJobParameters( $HPCAnalysisRequestID, $job_parameters )
+  {
+    $query  = "INSERT INTO GA_Settings SET " .
+              "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
+              "montecarlo_value     = {$job_parameters['mc_iterations']},  " .
+              "demes_value          = {$job_parameters['demes']},          " .
+              "genes_value          = {$job_parameters['population']},     " .
+              "generations_value    = {$job_parameters['generations']},    " .
+              "crossover_value      = {$job_parameters['crossover']},      " .
+              "mutation_value       = {$job_parameters['mutation']},       " .
+              "plague_value         = {$job_parameters['plague']},         " .
+              "elitism_value        = {$job_parameters['elitism']},        " .
+              "migration_value      = {$job_parameters['migration']},      " .
+              "regularization_value = {$job_parameters['regularization']}, " .
+              "seed_value           = {$job_parameters['seed']}            " ;
+//              "                = {$job_parameters['']},            " .
+    mysql_query( $query )
+          or die( "Query failed : $query<br />" . mysql_error());
+
+  }
 }
 ?>

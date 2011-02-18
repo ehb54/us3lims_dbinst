@@ -342,6 +342,10 @@ div#content p
   font-size             : 80%;
 }
 
+fieldset.option_value {
+  background            : #eeeeee;
+}
+
 /* Footer */
 
 #footer {

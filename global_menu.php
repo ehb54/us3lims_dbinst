@@ -28,6 +28,7 @@ $global_menu = <<<HTML
                 <li><a href='queue_viewer.php'>Queue Viewer</a></li>
                 <li class='separator'></li>
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
+                <li><a href='GA_1.php'>GA Analysis</a></li>
               </ul></li>
             <li><a href="#" onclick='construction();'>Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
@@ -56,6 +57,7 @@ $global_menu = <<<HTML
                 <li><a href='queue_viewer.php'>Queue Viewer</a></li>
                 <li class='separator'></li>
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
+                <li><a href='GA_1.php'>GA Analysis</a></li>
               </ul></li>
             <li><a href="#" onclick='construction();'>Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
@@ -84,6 +86,7 @@ $global_menu = <<<HTML
                 <li><a href='queue_viewer.php'>Queue Viewer</a></li>
                 <li class='separator'></li>
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
+                <li><a href='GA_1.php'>GA Analysis</a></li>
               </ul></li>
             <li><a href="#" onclick='construction();'>Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
@@ -112,6 +115,7 @@ $global_menu = <<<HTML
                 <li><a href='queue_viewer.php'>Queue Viewer</a></li>
                 <li class='separator'></li>
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
+                <li><a href='GA_1.php'>GA Analysis</a></li>
               </ul></li>
             <li><a href="#" onclick='construction();'>Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>

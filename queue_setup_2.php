@@ -93,6 +93,10 @@ foreach ( $_SESSION['cells'] as $rawDataID => $cell )
 /*
   $model_text       = get_model( $rawDataID, $cell['editedDataID'], 
                                  $cell['modelID'] );
+
+also, insert below in $out_text
+    <tr><th>Model</th>
+        <td>$model_text</td></tr>
 */
   $noise_text       = get_noise( $rawDataID, $cell['editedDataID'], 
                                  $cell['noiseIDs'] );
@@ -104,8 +108,6 @@ foreach ( $_SESSION['cells'] as $rawDataID => $cell )
     <table cellpadding='3' cellspacing='0'>
     <tr><th>Edit Profile</th>
         <td>$editedData_text</td></tr>
-    <!--tr><th>Model</th>
-        <td>$model_text</td></tr-->
     <tr><th>Noise</th>
         <td>$noise_text</td></tr>
     </table>
@@ -121,7 +123,7 @@ echo <<<HTML
   <h4>Select the edit profile each cell</h4>
 
   <div>
-  <form action="{$_SERVER[PHP_SELF]}" method="post">
+  <form action="{$_SERVER['PHP_SELF']}" method="post">
 
     $out_text
 

@@ -1,8 +1,8 @@
 <?php
 /*
- * 2DSA_1.php
+ * GA_1.php
  *
- * A place to start entering submission parameters for the 2DSA analysis
+ * A place to start entering submission parameters for the GA analysis
  *
  */
 session_start();
@@ -37,7 +37,7 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include 'lib/payload_manager.php';
-include 'lib/controls_2DSA.php';
+include 'lib/controls_GA.php';
 
 // Make sure the advancement level is set
 $advanceLevel = ( isset($_SESSION['advancelevel']) )
@@ -50,10 +50,10 @@ $separate_datasets = ( isset( $_SESSION['separate_datasets'] ) )
 $num_datasets = sizeof( $_SESSION['request'] );
 
 // Create the payload manager
-$payload  = new Payload_2DSA( $_SESSION );
+$payload  = new Payload_GA( $_SESSION );
 
 // Create the display controls
-$controls = new Controls_2DSA();
+$controls = new Controls_GA();
 
 // First, let's see if the "TIGRE" button has been pressed
 if ( isset($_POST['TIGRE']) )
@@ -79,8 +79,8 @@ if ( isset($_POST['TIGRE']) )
   if ( $advanceLevel == 0 )
     ; //    check_filesize();
 
-//  $payload->show();
-  header("Location: 2DSA_2.php");
+  $payload->show();
+  header("Location: GA_2.php");
   exit();
 }
 
@@ -127,9 +127,7 @@ include 'links.php';
 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"
       onsubmit="return validate(this, 
                 <?php echo $advanceLevel; ?>, 
-                <?php echo $dataset_id; ?>,
-                <?php echo $num_datasets; ?>, 
-                <?php echo $separate_datasets; ?>);" >
+                <?php echo $num_datasets; ?>);" >
 
 
 <?php
@@ -166,7 +164,7 @@ include 'links.php';
 </div>
 
 <!-- This must be loaded down here, after all the controls are on the page -->
-<script type='text/javascript' src='js/2DSA.js'></script>
+<script type='text/javascript' src='js/GA.js'></script>
 </div>
 
 <?php

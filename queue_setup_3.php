@@ -122,19 +122,23 @@ if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] > 0 ) )
   foreach ( $_SESSION['request'] as $removeID => $cellinfo )
   {
     $editedData_text  = get_editedData( $cellinfo['editedDataID'] );
-//    $model_text       = get_model( $cellinfo['modelID'] );
+/*    $model_text       = get_model( $cellinfo['modelID'] );
+
+also insert below in $out_text:
+      <tr><th>Model</th>
+          <td>$model_text</td></tr>
+*/
+
     $noise_text       = get_noise( $cellinfo['noiseIDs'] );
 
     $out_text .= <<<HTML
     <fieldset>
       <legend style='font-size:110%;font-weight:bold;'>{$cellinfo['filename']}
-              <a href='{$_SERVER[PHP_SELF]}?removeID=$removeID'>Remove?</a></legend>
+              <a href='{$_SERVER['PHP_SELF']}?removeID=$removeID'>Remove?</a></legend>
 
       <table cellpadding='3' cellspacing='0'>
       <tr><th>Edit Profile</th>
           <td>$editedData_text</td></tr>
-      <!--tr><th>Model</th>
-          <td>$model_text</td></tr-->
       <tr><th>Noise</th>
           <td>$noise_text</td></tr>
       </table>
@@ -205,14 +209,14 @@ HTML;
             onclick='window.location="2DSA_MW_1.php"' disabled='disabled' /></p>
 
   <p><input type="button" value="Setup GA Control"
-            onclick='window.location="GA_1.php"' disabled='disabled' />
+            onclick='window.location="GA_1.php"' />
      <input type="button" value="Setup GA Control with MW Constraint"
             onclick='window.location="GA_MW_1.php"' disabled='disabled' /></p>
 
   <p><input type="button" value="Nonlinear Model GA Control"
             onclick='window.location="GA_SC_1.php"' disabled='disabled' $disabled />
      <input type="button" value="Clear Queue"
-            onclick='window.location="{$_SERVER[PHP_SELF]}?clear=clear"'/></p>
+            onclick='window.location="{$_SERVER['PHP_SELF']}?clear=clear"'/></p>
   </form>
   </div>
 

@@ -1,4 +1,4 @@
-// Javascript for analysis.php
+// Javascript for 2DSA controls
 
 // Protect ourselves in case the controls aren't present
 
