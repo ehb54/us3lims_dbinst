@@ -47,14 +47,14 @@ Released      : 8/1/2010
 
 HTML;
 
-if ($css)
+if ( isset( $css ) )
 {
   $css_files = explode(",", $css);
   foreach ($css_files as $css_file)
     echo "  <link rel='stylesheet' type='text/css' href='$css_file' />\n";
 }
 
-if ($js)
+if ( isset( $js ) )
 {
   $javascripts = explode(",", $js);
   foreach ($javascripts as $javascript)

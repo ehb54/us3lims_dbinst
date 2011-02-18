@@ -1,8 +1,8 @@
 <?php
 /*
- * 2DSA_2.php
+ * GA_2.php
  *
- * Final database update and submission for the 2DSA analysis
+ * Final database update and submission for the GA analysis
  *
  */
 session_start();
@@ -37,22 +37,22 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include 'lib/payload_manager.php';
-include 'lib/controls_2DSA.php';
+include 'lib/controls_GA.php';
 include 'lib/HPC_analysis.php';
 include 'lib/file_writer.php';
 include 'lib/submit_globus.php';
 include 'lib/submit_gfac.php';
 
 // Create the payload manager and restore the data
-$payload = new Payload_2DSA( $_SESSION );
+$payload = new Payload_GA( $_SESSION );
 $payload->restore();
 
 // Information about displaying analysis type on this page
-$controls  = new Controls_2DSA();
+$controls  = new Controls_GA();
 
 // Create the HPC analysis agent and file writer
-$HPC       = new HPC_2DSA();
-$file      = new File_2DSA();
+$HPC       = new HPC_GA();
+$file      = new File_GA();
 $filenames = array();
 $HPCAnalysisRequestID = 0;
 

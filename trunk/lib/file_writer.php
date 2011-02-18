@@ -10,9 +10,10 @@
 
 include_once( "db.php");
 
-class file_writer
+abstract class File_writer
 {
-  function file_writer() {}
+  // Function to write job parameters for a particular analysis type
+  abstract protected function writeJobParameters( $xml, $jobParameters );
 
   // Takes a structured array of data created by the payload manager
   function write( $job, $HPCAnalysisRequestID )
@@ -84,7 +85,7 @@ class file_writer
         $xml->endElement(); // database
 
         // Now we break out and write the job parameters specific to this method
-        $this->writeJobParameters( $xml, $job['method'], $job['job_parameters'] );
+        $this->writeJobParameters( $xml, $job['job_parameters'] );
 
       $xml->endElement(); // job
 
@@ -105,11 +106,14 @@ class file_writer
               $xml->writeAttribute( 'filename', $filenames[$dataset_id]['model'] );
             $xml->endElement(); // model
 */
-            foreach ( $filenames[$dataset_id]['noise'] as $noiseFile )
+            if ( isset( $filenames[$dataset_id]['noise'] ) )
             {
-              $xml->startElement( 'noise' );
-                $xml->writeAttribute( 'filename', $noiseFile );
-              $xml->endElement(); // noise
+              foreach ( $filenames[$dataset_id]['noise'] as $noiseFile )
+              {
+                $xml->startElement( 'noise' );
+                  $xml->writeAttribute( 'filename', $noiseFile );
+                $xml->endElement(); // noise
+              }
             }
           $xml->endElement(); // files
           $xml->startElement( 'parameters' );
@@ -161,8 +165,11 @@ class file_writer
       $files[] = $filename['auc'];
       $files[] = $filename['edit'];
       // $files[] = $filename['model'];
-      foreach ( $filename['noise'] as $noiseFile )
-        $files[] = $noiseFile;
+      if ( isset( $filename['noise'] ) )
+      {
+        foreach ( $filename['noise'] as $noiseFile )
+          $files[] = $noiseFile;
+      }
 
       $files[] = $xml_filename;
     }
@@ -244,83 +251,6 @@ class file_writer
     }
 
     return( $filenames );
-  }
-
-  // Function to decide which job parameters to write
-  function writeJobParameters( $xml, $method, $jobParameters )
-  {
-    switch( $method )
-    {
-      case '2DSA' :
-        $this->write2DSAParameters( $xml, $jobParameters );
-        break;
-
-      case '2DSA_MW' :
-        break;
-
-      case 'GA' :
-        break;
-
-      case 'GA_MW' :
-        break;
-
-      case 'GA_SC' :
-        break;
-
-      default :
-        die( "Invalid Selection type: " . __FILE__ . " " . __LINE__ );
-        break;
-
-    }
-  }
-
-  // Function to write the XML job parameters for the 2DSA analysis
-  function write2DSAParameters( $xml, $parameters )
-  {
-    $xml->startElement( 'jobParameters' );
-      $xml->startElement( 's_min' );
-        $xml->writeAttribute( 'value', $parameters['s_min'] );
-      $xml->endElement(); // s_min
-      $xml->startElement( 's_max' );
-        $xml->writeAttribute( 'value', $parameters['s_max'] );
-      $xml->endElement(); // s_max
-      $xml->startElement( 's_resolution' );
-        $xml->writeAttribute( 'value', $parameters['s_resolution'] );
-      $xml->endElement(); // s_resolution
-      $xml->startElement( 'ff0_min' );
-        $xml->writeAttribute( 'value', $parameters['ff0_min'] );
-      $xml->endElement(); // ff0_min
-      $xml->startElement( 'ff0_max' );
-        $xml->writeAttribute( 'value', $parameters['ff0_max'] );
-      $xml->endElement(); // ff0_max
-      $xml->startElement( 'ff0_resolution' );
-        $xml->writeAttribute( 'value', $parameters['ff0_resolution'] );
-      $xml->endElement(); // ff0_resolution
-      $xml->startElement( 'uniform_grid' );
-        $xml->writeAttribute( 'value', $parameters['uniform_grid'] );
-      $xml->endElement(); // uniform_grid
-      $xml->startElement( 'mc_iterations' );
-        $xml->writeAttribute( 'value', $parameters['mc_iterations'] );
-      $xml->endElement(); // mc_iterations
-      $xml->startElement( 'tinoise_option' );
-        $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
-      $xml->endElement(); // tinoise_option
-      $xml->startElement( 'regularization' );
-        $xml->writeAttribute( 'value', $parameters['regularization'] );
-      $xml->endElement(); // regularization
-      $xml->startElement( 'meniscus_range' );
-        $xml->writeAttribute( 'value', $parameters['meniscus_range'] );
-      $xml->endElement(); // meniscus_range
-      $xml->startElement( 'meniscus_points' );
-        $xml->writeAttribute( 'value', $parameters['meniscus_points'] );
-      $xml->endElement(); // meniscus_points
-      $xml->startElement( 'max_iterations' );
-        $xml->writeAttribute( 'value', $parameters['max_iterations'] );
-      $xml->endElement(); // max_iterations
-      $xml->startElement( 'rinoise_option' );
-        $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
-      $xml->endElement(); // rinoise_option
-    $xml->endElement(); // jobParameters
   }
 
   // Function to create the data subdirectory to write files into
@@ -443,6 +373,116 @@ class file_writer
     }
     $level--;
     return $msg;
+  }
+
+}
+
+/*
+ * A class that writes the 2DSA portion of a control xml file
+ * Inherits from File_writer
+ */
+class File_2DSA extends File_writer
+{
+  // Function to write the XML job parameters for the 2DSA analysis
+  function writeJobParameters( $xml, $parameters )
+  {
+    $xml->startElement( 'jobParameters' );
+      $xml->startElement( 's_min' );
+        $xml->writeAttribute( 'value', $parameters['s_min'] );
+      $xml->endElement(); // s_min
+      $xml->startElement( 's_max' );
+        $xml->writeAttribute( 'value', $parameters['s_max'] );
+      $xml->endElement(); // s_max
+      $xml->startElement( 's_resolution' );
+        $xml->writeAttribute( 'value', $parameters['s_resolution'] );
+      $xml->endElement(); // s_resolution
+      $xml->startElement( 'ff0_min' );
+        $xml->writeAttribute( 'value', $parameters['ff0_min'] );
+      $xml->endElement(); // ff0_min
+      $xml->startElement( 'ff0_max' );
+        $xml->writeAttribute( 'value', $parameters['ff0_max'] );
+      $xml->endElement(); // ff0_max
+      $xml->startElement( 'ff0_resolution' );
+        $xml->writeAttribute( 'value', $parameters['ff0_resolution'] );
+      $xml->endElement(); // ff0_resolution
+      $xml->startElement( 'uniform_grid' );
+        $xml->writeAttribute( 'value', $parameters['uniform_grid'] );
+      $xml->endElement(); // uniform_grid
+      $xml->startElement( 'mc_iterations' );
+        $xml->writeAttribute( 'value', $parameters['mc_iterations'] );
+      $xml->endElement(); // mc_iterations
+      $xml->startElement( 'tinoise_option' );
+        $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
+      $xml->endElement(); // tinoise_option
+      $xml->startElement( 'regularization' );
+        $xml->writeAttribute( 'value', $parameters['regularization'] );
+      $xml->endElement(); // regularization
+      $xml->startElement( 'meniscus_range' );
+        $xml->writeAttribute( 'value', $parameters['meniscus_range'] );
+      $xml->endElement(); // meniscus_range
+      $xml->startElement( 'meniscus_points' );
+        $xml->writeAttribute( 'value', $parameters['meniscus_points'] );
+      $xml->endElement(); // meniscus_points
+      $xml->startElement( 'max_iterations' );
+        $xml->writeAttribute( 'value', $parameters['max_iterations'] );
+      $xml->endElement(); // max_iterations
+      $xml->startElement( 'rinoise_option' );
+        $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
+      $xml->endElement(); // rinoise_option
+    $xml->endElement(); // jobParameters
+  }
+
+}
+
+/*
+ * A class that writes the GA portion of a control xml file
+ * Inherits from File_writer
+ */
+class File_GA extends File_writer
+{
+  // Function to write the XML job parameters for the GA analysis
+  function writeJobParameters( $xml, $parameters )
+  {
+    $xml->startElement( 'jobParameters' );
+      $xml->startElement( 'mc_iterations' );
+        $xml->writeAttribute( 'value', $parameters['mc_iterations'] );
+      $xml->endElement(); // mc_iterations
+      $xml->startElement( 'demes' );
+        $xml->writeAttribute( 'value', $parameters['demes'] );
+      $xml->endElement(); // demes
+      $xml->startElement( 'population' );
+        $xml->writeAttribute( 'value', $parameters['population'] );
+      $xml->endElement(); // population
+      $xml->startElement( 'generations' );
+        $xml->writeAttribute( 'value', $parameters['generations'] );
+      $xml->endElement(); // generations
+      $xml->startElement( 'crossover' );
+        $xml->writeAttribute( 'value', $parameters['crossover'] );
+      $xml->endElement(); // crossover
+      $xml->startElement( 'mutation' );
+        $xml->writeAttribute( 'value', $parameters['mutation'] );
+      $xml->endElement(); // mutation
+      $xml->startElement( 'plague' );
+        $xml->writeAttribute( 'value', $parameters['plague'] );
+      $xml->endElement(); // plague
+      $xml->startElement( 'elitism' );
+        $xml->writeAttribute( 'value', $parameters['elitism'] );
+      $xml->endElement(); // elitism
+      $xml->startElement( 'migration' );
+        $xml->writeAttribute( 'value', $parameters['migration'] );
+      $xml->endElement(); // migration
+      $xml->startElement( 'regularization' );
+        $xml->writeAttribute( 'value', $parameters['regularization'] );
+      $xml->endElement(); // regularization
+      $xml->startElement( 'seed' );
+        $xml->writeAttribute( 'value', $parameters['seed'] );
+      $xml->endElement(); // seed
+/*
+      $xml->startElement( '' );
+        $xml->writeAttribute( 'value', $parameters[''] );
+      $xml->endElement(); // 
+*/
+    $xml->endElement(); // jobParameters
   }
 
 }

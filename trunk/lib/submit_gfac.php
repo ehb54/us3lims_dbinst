@@ -212,6 +212,38 @@ $this->message[] = "End of result text";
  
       mysql_close( $db );
 $this->message[] = "Database $dbname updated: requestID = $requestID";
+
+      // Update global db
+      $db = mysql_connect( $host, "gfac", "backend" );
+
+      if ( ! $db )
+      {
+         $this->message[] = "Cannot open global database on $host\n";
+         exit( 1 );
+      }
+ 
+      if ( ! mysql_select_db( "gfac", $db ) ) 
+      {
+         $this->message[] = "Cannot change to global database gfac\n";
+         exit( 2 );
+      }
+ 
+      // Code to extract experimentID from $xml into $analysisID
+      $analysisID = '';
+      $query  = "INSERT INTO analysis SET " .
+                "analysisID = '$analysisID', " .
+                "time = now() ";
+
+//      $result = mysql_query( $query, $db );
+ 
+      if ( ! $result )
+      {
+         $this->message[] = "Invalid query: " . mysql_error( $db ) . "\n";
+         exit( 4 );
+      }
+ 
+      mysql_close( $db );
+$this->message[] = "Global database gfac updated: analysisID = $analysisID";
    }
 
 }
