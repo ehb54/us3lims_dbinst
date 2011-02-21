@@ -258,6 +258,188 @@ HTML;
 HTML;
   }
 
+  // Function to display the conc_threshold input
+  function conc_threshold_setup()
+  {
+  echo<<<HTML
+        <fieldset class='option_value'>
+          <legend>Concentration Threshold</legend>
+
+          <div class="slider" id="conc_threshold-slider">
+            <input class="slider_input" id="conc_threshold-slider-input"/>
+          </div>
+
+          <br/>
+          Value: <input name="conc_threshold-value" size='5'
+                        value="conc_threshold.setValue(parseInt(this.value))" 
+                        id="conc_threshold-value"
+                        onchange="conc_threshold.setValue(parseInt(this.value))"/>
+          Minimum: <input id="conc_threshold-min" size='5'
+                        onchange="conc_threshold.setMinimum(parseInt(this.value))" 
+                        disabled="disabled"/>
+          Maximum: <input id="conc_threshold-max" size='5'
+                        onchange="conc_threshold.setMaximum(parseInt(this.value))" 
+                        disabled="disabled"/>
+        </fieldset>
+HTML;
+  }
+
+  // Function to display the s_grid input
+  function s_grid_setup()
+  {
+  echo<<<HTML
+        <fieldset class='option_value'>
+          <legend>S Grid</legend>
+
+          <div class="slider" id="s_grid-slider">
+            <input class="slider-input" id="s_grid-slider-input"/>
+          </div>
+
+          <br/>
+          Value: <input name="s_grid-value" size='5'
+                        value="s_grid.setValue(parseInt(this.value))" 
+                        id="s_grid-value"
+                        onchange="s_grid.setValue(parseInt(this.value))"/>
+          Minimum: <input id="s_grid-min" size='5'
+                        onchange="s_grid.setMinimum(parseInt(this.value))" 
+                        disabled="disabled"/>
+          Maximum: <input id="s_grid-max" size='5'
+                        onchange="s_grid.setMaximum(parseInt(this.value))" 
+                        disabled="disabled"/>
+        </fieldset>
+HTML;
+  }
+
+  // Function to display the k_grid input
+  function k_grid_setup()
+  {
+  echo<<<HTML
+        <fieldset class='option_value'>
+          <legend>K Grid</legend>
+
+          <div class="slider" id="k_grid-slider">
+            <input class="slider-input" id="k_grid-slider-input"/>
+          </div>
+
+          <br/>
+          Value: <input name="k_grid-value" size='5'
+                        value="k_grid.setValue(parseInt(this.value))" 
+                        id="k_grid-value"
+                        onchange="k_grid.setValue(parseInt(this.value))"/>
+          Minimum: <input id="k_grid-min" size='5'
+                        onchange="k_grid.setMinimum(parseInt(this.value))" 
+                        disabled="disabled"/>
+          Maximum: <input id="k_grid-max" size='5'
+                        onchange="k_grid.setMaximum(parseInt(this.value))" 
+                        disabled="disabled"/>
+        </fieldset>
+HTML;
+  }
+
+  // Function to display the mutate_sigma input
+  function mutate_sigma_setup()
+  {
+  echo<<<HTML
+        <fieldset class='option_value'>
+          <legend>Mutate Sigma</legend>
+
+          <div class="slider" id="mutate_sigma-slider">
+            <input class="slider-input" id="mutate_sigma-slider-input"/>
+          </div>
+
+          <br/>
+          Value: <input name="mutate_sigma-value" size='5'
+                        value="mutate_sigma.setValue(parseInt(this.value))" 
+                        id="mutate_sigma-value"
+                        onchange="mutate_sigma.setValue(parseInt(this.value))"/>
+          Minimum: <input id="mutate_sigma-min" size='5'
+                        onchange="mutate_sigma.setMinimum(parseInt(this.value))" 
+                        disabled="disabled"/>
+          Maximum: <input id="mutate_sigma-max" size='5'
+                        onchange="mutate_sigma.setMaximum(parseInt(this.value))" 
+                        disabled="disabled"/>
+        </fieldset>
+HTML;
+  }
+
+  // Function to display the mutate_s input
+  function mutate_s_setup()
+  {
+  echo<<<HTML
+        <fieldset class='option_value'>
+          <legend>Mutate s</legend>
+
+          <div class="slider" id="mutate_s-slider">
+            <input class="slider-input" id="mutate_s-slider-input"/>
+          </div>
+
+          <br/>
+          Value: <input name="mutate_s_value" size='5'
+                        value="mutate_s.setValue(parseInt(this.value))" 
+                        id="mutate_s_value"
+                        onchange="mutate_s.setValue(parseInt(this.value))"/>
+          Minimum: <input id="mutate_s-min" size='5'
+                        onchange="mutate_s.setMinimum(parseInt(this.value))" 
+                        disabled="disabled"/>
+          Maximum: <input id="mutate_s-max" size='5'
+                        onchange="mutate_s.setMaximum(parseInt(this.value))" 
+                        disabled="disabled"/>
+        </fieldset>
+HTML;
+  }
+
+  // Function to display the mutate_k input
+  function mutate_k_setup()
+  {
+  echo<<<HTML
+        <fieldset class='option_value'>
+          <legend>Mutate k</legend>
+
+          <div class="slider" id="mutate_k-slider">
+            <input class="slider-input" id="mutate_k-slider-input"/>
+          </div>
+
+          <br/>
+          Value: <input name="mutate_k_value" size='5'
+                        value="mutate_k.setValue(parseInt(this.value))" 
+                        id="mutate_k_value"
+                        onchange="mutate_k.setValue(parseInt(this.value))"/>
+          Minimum: <input id="mutate_k-min" size='5'
+                        onchange="mutate_k.setMinimum(parseInt(this.value))" 
+                        disabled="disabled"/>
+          Maximum: <input id="mutate_k-max" size='5'
+                        onchange="mutate_k.setMaximum(parseInt(this.value))" 
+                        disabled="disabled"/>
+        </fieldset>
+HTML;
+  }
+
+  // Function to display the mutate_sk input
+  function mutate_sk_setup()
+  {
+  echo<<<HTML
+        <fieldset class='option_value'>
+          <legend>Mutate s/k</legend>
+
+          <div class="slider" id="mutate_sk-slider">
+            <input class="slider-input" id="mutate_sk-slider-input"/>
+          </div>
+
+          <br/>
+          Value: <input name="mutate_sk_value" size='5'
+                        value="mutate_sk.setValue(parseInt(this.value))" 
+                        id="mutate_sk_value"
+                        onchange="mutate_sk.setValue(parseInt(this.value))"/>
+          Minimum: <input id="mutate_sk-min" size='5'
+                        onchange="mutate_sk.setMinimum(parseInt(this.value))" 
+                        disabled="disabled"/>
+          Maximum: <input id="mutate_sk-max" size='5'
+                        onchange="mutate_sk.setMaximum(parseInt(this.value))" 
+                        disabled="disabled"/>
+        </fieldset>
+HTML;
+  }
+
   // Function to display controls for one dataset
   function display( $dataset_id, $num_datasets )
   {
@@ -293,6 +475,14 @@ HTML;
       $this->band_volume_input();
       $this->radial_grid_input();
       $this->time_grid_input();
+
+      $this->conc_threshold_setup();
+      $this->s_grid_setup();
+      $this->k_grid_setup();
+      $this->mutate_sigma_setup();
+      $this->mutate_s_setup();
+      $this->mutate_k_setup();
+      $this->mutate_sk_setup();
     }
 
     else

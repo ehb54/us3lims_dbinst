@@ -218,8 +218,14 @@ class HPC_GA extends HPC_analysis
               "elitism_value        = {$job_parameters['elitism']},        " .
               "migration_value      = {$job_parameters['migration']},      " .
               "regularization_value = {$job_parameters['regularization']}, " .
-              "seed_value           = {$job_parameters['seed']}            " ;
-//              "                = {$job_parameters['']},            " .
+              "seed_value           = {$job_parameters['seed']},           " .
+              "conc_threshold       = {$job_parameters['conc_threshold']}, " .
+              "s_grid               = {$job_parameters['s_grid']},         " .
+              "k_grid               = {$job_parameters['k_grid']},         " .
+              "mutate_sigma         = {$job_parameters['mutate_sigma']},   " .
+              "mutate_s             = {$job_parameters['p_mutate_s']},     " .
+              "mutate_k             = {$job_parameters['p_mutate_k']},     " .
+              "mutate_sk            = {$job_parameters['p_mutate_sk']}     " ;
     mysql_query( $query )
           or die( "Query failed : $query<br />" . mysql_error());
 

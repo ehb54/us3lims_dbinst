@@ -69,6 +69,16 @@ if ( isset($_POST['TIGRE']) )
     $_SESSION['cluster']['shortname'] = $cluster_shortname;
   }
 
+  // for now, at home
+/*
+  else
+  {
+    $_SESSION['cluster']              = array();
+    $_SESSION['cluster']['name']      = 'bcf.uthscsa.edu';
+    $_SESSION['cluster']['shortname'] = 'bcf';
+  }
+*/
+
   // get previous payload data and add this session to it
   $payload->restore();
   $payload->add( 'cluster', $_SESSION['cluster'] );

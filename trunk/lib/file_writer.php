@@ -477,11 +477,27 @@ class File_GA extends File_writer
       $xml->startElement( 'seed' );
         $xml->writeAttribute( 'value', $parameters['seed'] );
       $xml->endElement(); // seed
-/*
-      $xml->startElement( '' );
-        $xml->writeAttribute( 'value', $parameters[''] );
-      $xml->endElement(); // 
-*/
+      $xml->startElement( 'conc_threshold' );
+        $xml->writeAttribute( 'value', $parameters['conc_threshold'] );
+      $xml->endElement(); // conc_threshold
+      $xml->startElement( 's_grid' );
+        $xml->writeAttribute( 'value', $parameters['s_grid'] );
+      $xml->endElement(); // s_grid
+      $xml->startElement( 'k_grid' );
+        $xml->writeAttribute( 'value', $parameters['k_grid'] );
+      $xml->endElement(); // k_grid
+      $xml->startElement( 'mutate_sigma' );
+        $xml->writeAttribute( 'value', $parameters['mutate_sigma'] );
+      $xml->endElement(); // mutate_sigma
+      $xml->startElement( 'p_mutate_s' );
+        $xml->writeAttribute( 'value', $parameters['p_mutate_s'] );
+      $xml->endElement(); // p_mutate_s
+      $xml->startElement( 'p_mutate_k' );
+        $xml->writeAttribute( 'value', $parameters['p_mutate_k'] );
+      $xml->endElement(); // p_mutate_k
+      $xml->startElement( 'p_mutate_sk' );
+        $xml->writeAttribute( 'value', $parameters['p_mutate_sk'] );
+      $xml->endElement(); // p_mutate_sk
     $xml->endElement(); // jobParameters
   }
 
