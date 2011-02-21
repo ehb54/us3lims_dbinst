@@ -31,8 +31,12 @@ abstract class Payload_manager
         if ( $key == null ) 
         {
             return $this->payload['queue']['payload'];
-        } 
-        else 
+        }
+
+        else if ( ! array_key_exists( $key, $this->payload['queue']['payload'] ) )
+            return false;
+
+        else
         {
             return $this->payload['queue']['payload'][$key];
         }
@@ -342,13 +346,14 @@ class Payload_GA extends Payload_manager
       $job_parameters['migration']        = $_POST['migration-value'];
       $job_parameters['regularization']   = $_POST['regularization-value'];
       $job_parameters['seed']             = $_POST['seed-value'];
-      // conc_threshold
-      // s_grid
-      // k_grid
-      // mutate_sigma
-      // p_mutate_s
-      // p_mutate_k
-      // p_mutate_sk
+      $job_parameters['conc_threshold']   = $_POST['conc_threshold-value'];
+      $job_parameters['s_grid']           = $_POST['s_grid-value'];
+      $job_parameters['k_grid']           = $_POST['k_grid-value'];
+      $job_parameters['mutate_sigma']     = $_POST['mutate_sigma-value'];
+      $job_parameters['p_mutate_s']       = $_POST['mutate_s_value'];
+      $job_parameters['p_mutate_k']       = $_POST['mutate_k_value'];
+      $job_parameters['p_mutate_sk']      = $_POST['mutate_sk_value'];
+      $job_parameters['experimentID']     = $_SESSION['experimentID'];
       // buckets
       $this->add( 'job_parameters', $job_parameters );
 

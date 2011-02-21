@@ -280,33 +280,158 @@ band_volume.onchange = function ()
 
 } catch(e_band_volume) {}
 
-// Solude Slider setup
+// Concentration Threshhold Slider setup
 try {
-var solude = new Slider(document.getElementById("solude-slider"), 
-                        document.getElementById("solude-slider-input"));
+var conc_threshold          = new Slider(document.getElementById("conc_threshold-slider"), 
+                                document.getElementById("conc_threshold-slider-input"));
 
-solude.setMinimum(5);
-solude.setMaximum(20);
-solude.setValue(3);
-document.getElementById("solude-value").value = solude.getValue();
-document.getElementById("solude-min").value = solude.getMinimum();
-document.getElementById("solude-max").value = solude.getMaximum();
+conc_threshold.setMinimum(-8);
+conc_threshold.setMaximum(-1);
+conc_threshold.setValue(-6);
+document.getElementById("conc_threshold-value").value 
+  = Math.pow(10,conc_threshold.getValue());
+document.getElementById("conc_threshold-min").value 
+  = Math.pow(10,conc_threshold.getMinimum());
+document.getElementById("conc_threshold-max").value 
+  = Math.pow(10,conc_threshold.getMaximum());
 
-solude.onchange = function () 
+conc_threshold.onchange = function () 
 {
-    document.getElementById("solude-value").value = solude.getValue();
-    document.getElementById("solude-min").value = solude.getMinimum();
-    document.getElementById("solude-max").value = solude.getMaximum();
-    sub = document.getElementById("soludes");
-    sub.innerHTML = "";
-    for( i = 0; i < solude.getValue(); i++ ) 
-    {
-        sub.innerHTML += "<input type='text' size='5' name='" + (i+1) + "'/> Solude " + (i+1) + 
-                         "<br/><br/>";
-    }
+        document.getElementById("conc_threshold-value").value
+          = Math.pow(10,conc_threshold.getValue());
+        document.getElementById("conc_threshold-min").value
+          = Math.pow(10,conc_threshold.getMinimum());
+        document.getElementById("conc_threshold-max").value
+          = Math.pow(10,conc_threshold.getMaximum());
 };
 
-} catch(e_solude) {}
+} catch(e_conc_threshold) {}
+
+// S Grid Slider setup
+try {
+var s_grid          = new Slider(document.getElementById("s_grid-slider"), 
+                                document.getElementById("s_grid-slider-input"));
+
+s_grid.setMinimum(10);
+s_grid.setMaximum(200);
+s_grid.setValue(100);
+document.getElementById("s_grid-value").value = s_grid.getValue();
+document.getElementById("s_grid-min").value = s_grid.getMinimum();
+document.getElementById("s_grid-max").value = s_grid.getMaximum();
+
+s_grid.onchange = function () 
+{
+        document.getElementById("s_grid-value").value = s_grid.getValue();
+        document.getElementById("s_grid-min").value = s_grid.getMinimum();
+        document.getElementById("s_grid-max").value = s_grid.getMaximum();
+};
+
+} catch(e_s_grid) {}
+
+// K Grid Slider setup
+try {
+var k_grid          = new Slider(document.getElementById("k_grid-slider"), 
+                                document.getElementById("k_grid-slider-input"));
+
+k_grid.setMinimum(10);
+k_grid.setMaximum(200);
+k_grid.setValue(100);
+document.getElementById("k_grid-value").value = k_grid.getValue();
+document.getElementById("k_grid-min").value = k_grid.getMinimum();
+document.getElementById("k_grid-max").value = k_grid.getMaximum();
+
+k_grid.onchange = function () 
+{
+        document.getElementById("k_grid-value").value = k_grid.getValue();
+        document.getElementById("k_grid-min").value = k_grid.getMinimum();
+        document.getElementById("k_grid-max").value = k_grid.getMaximum();
+};
+
+} catch(e_k_grid) {}
+
+// Mutate Sigma Slider setup
+try {
+var mutate_sigma          = new Slider(document.getElementById("mutate_sigma-slider"), 
+                                document.getElementById("mutate_sigma-slider-input"));
+
+mutate_sigma.setMinimum(10);
+mutate_sigma.setMaximum(40);
+mutate_sigma.setValue(20);
+document.getElementById("mutate_sigma-value").value = mutate_sigma.getValue() / 10.0;
+document.getElementById("mutate_sigma-min").value = mutate_sigma.getMinimum() / 10.0;
+document.getElementById("mutate_sigma-max").value = mutate_sigma.getMaximum() / 10.0;
+
+mutate_sigma.onchange = function () 
+{
+        document.getElementById("mutate_sigma-value").value = mutate_sigma.getValue() / 10.0;
+        document.getElementById("mutate_sigma-min").value = mutate_sigma.getMinimum() / 10.0;
+        document.getElementById("mutate_sigma-max").value = mutate_sigma.getMaximum() / 10.0;
+};
+
+} catch(e_mutate_sigma) {}
+
+// Mutate s Slider setup
+try {
+var mutate_s          = new Slider(document.getElementById("mutate_s-slider"), 
+                                document.getElementById("mutate_s-slider-input"));
+
+mutate_s.setMinimum(0);
+mutate_s.setMaximum(100);
+mutate_s.setValue(20);
+document.getElementById("mutate_s_value").value = mutate_s.getValue();
+document.getElementById("mutate_s-min").value = mutate_s.getMinimum();
+document.getElementById("mutate_s-max").value = mutate_s.getMaximum();
+
+mutate_s.onchange = function () 
+{
+        document.getElementById("mutate_s_value").value = mutate_s.getValue();
+        document.getElementById("mutate_s-min").value = mutate_s.getMinimum();
+        document.getElementById("mutate_s-max").value = mutate_s.getMaximum();
+};
+
+} catch(e_mutate_s) {}
+
+// Mutate k Slider setup
+try {
+var mutate_k          = new Slider(document.getElementById("mutate_k-slider"), 
+                                document.getElementById("mutate_k-slider-input"));
+
+mutate_k.setMinimum(0);
+mutate_k.setMaximum(100);
+mutate_k.setValue(20);
+document.getElementById("mutate_k_value").value = mutate_k.getValue();
+document.getElementById("mutate_k-min").value = mutate_k.getMinimum();
+document.getElementById("mutate_k-max").value = mutate_k.getMaximum();
+
+mutate_k.onchange = function () 
+{
+        document.getElementById("mutate_k_value").value = mutate_k.getValue();
+        document.getElementById("mutate_k-min").value = mutate_k.getMinimum();
+        document.getElementById("mutate_k-max").value = mutate_k.getMaximum();
+};
+
+} catch(e_mutate_k) {}
+
+// Mutate s/k Slider setup
+try {
+var mutate_sk          = new Slider(document.getElementById("mutate_sk-slider"), 
+                                document.getElementById("mutate_sk-slider-input"));
+
+mutate_sk.setMinimum(0);
+mutate_sk.setMaximum(100);
+mutate_sk.setValue(20);
+document.getElementById("mutate_sk_value").value = mutate_sk.getValue();
+document.getElementById("mutate_sk-min").value = mutate_sk.getMinimum();
+document.getElementById("mutate_sk-max").value = mutate_sk.getMaximum();
+
+mutate_sk.onchange = function () 
+{
+        document.getElementById("mutate_sk_value").value = mutate_sk.getValue();
+        document.getElementById("mutate_sk-min").value = mutate_sk.getMinimum();
+        document.getElementById("mutate_sk-max").value = mutate_sk.getMaximum();
+};
+
+} catch(e_mutate_sk) {}
 
 window.onresize = function () 
 {
@@ -319,7 +444,14 @@ window.onresize = function ()
   plague.recalculate();
   elitism.recalculate();
   migration.recalculate();
-  solude.recalculate();
+
+  conc_threshold.recalculate();
+  s_grid.recalculate();
+  k_grid.recalculate();
+  mutate_sigma.recalculate();
+  mutate_s.recalculate();
+  mutate_k.recalculate();
+  mutate_sk.recalculate();
 };
 
 function show_ctl(num) 
@@ -367,6 +499,23 @@ function validate( f, advanceLevel, count_datasets )
   // Handling could be different depending on single or multiple datasets
   // First, checks that are common to both
 
+  // mutate_s, mutate_k, and mutate_sk have to add to 100 or less
+  if ( valid_field(f.mutate_s_value) )
+  {
+    var mutate_s  = parseInt( f.mutate_s_value.value );
+    var mutate_k  = parseInt( f.mutate_k_value.value );
+    var mutate_sk = parseInt( f.mutate_sk_value.value );
+
+    if ( mutate_s + mutate_k + mutate_sk > 100 )
+    {
+      alert( "The sum of the mutate_s, mutate_k and mutate_sk fields " +
+             "must be less than or equal to 100. Please click on ok " +
+             "to return to the submission form and correct one of more " +
+             "of these values." );
+      return( false );
+    }
+  }
+
   // Verify these fields exist
   // Only for GA-MW analysis
   if ( valid_field(f.mw_min) )
@@ -389,29 +538,6 @@ function validate( f, advanceLevel, count_datasets )
 
       f.mw_min.value = mw_max;
       f.mw_max.value = mw_min;
-    }
-  }
-
-  if ( valid_field(f.ff0_min) )
-  {
-    var ff0_min = parseFloat(f.ff0_min.value);
-    var ff0_max = parseFloat(f.ff0_max.value);
-
-    // alert("ff0_min = " + ff0_min +
-    //       "\nff0_max = " + ff0_max);
-
-    if ( ff0_max < ff0_min )
-    {
-      var swap = confirm( "The maximum f/f0-value is less than the minimum " +
-                          "f/f0-value. If you would like to switch them, " +
-                          "please click on OK to continue. If you would " +
-                          "rather edit them yourself, click cancel to " +
-                          "return to the submission form." );
-
-      if ( ! swap ) return( false );
-
-      f.ff0_min.value = ff0_max;
-      f.ff0_max.value = ff0_min;
     }
   }
 

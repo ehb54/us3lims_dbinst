@@ -343,8 +343,8 @@ class jobsubmit
  
       if ( preg_match( "/^GA/", $this->data[ 'method' ] ) )
       {
-         $generations = $parameters[ 'generations_value' ];
-         $genes       = $parameters[ 'genes_value' ];
+         $generations = $parameters[ 'generations' ];
+         $genes       = $parameters[ 'population' ];
  
          // For GA_MW and GA_SC, we don't have the number of
          // solutes, so set it to max for now.
@@ -406,12 +406,13 @@ class jobsubmit
  
    function nodes()
    {
+      $cluster    = $this->data[ 'job' ][ 'cluster_shortname' ];
       $parameters = $this->data[ 'job' ][ 'jobParameters' ];
       $max_nodes  = $this->grid[ $cluster ][ 'maxproc' ];
  
       if ( preg_match( "/^GA/", $this->data[ 'method' ] ) )
       {
-         $nodes = $parameters[ 'demes_value' ] + 1;
+         $nodes = $parameters[ 'demes' ] + 1;
       }
       else  // 2DSA
       {
