@@ -44,9 +44,32 @@ function makeRandomPassword() {
   return $pass;
 }
 
+// A class to keep track of what clusters are available
+class cluster_info
+{
+   public $name;
+   public $short_name;
+   public $queue;
+
+   public function __construct( $n, $s, $q )
+   {
+      $this->name  = $n;
+      $this->short_name = $s;
+      $this->queue = $q;
+   }
+}
+
+$clusters = array( new cluster_info( "bcf.uthscsa.edu",            "bcf",      "normal" ),
+                   new cluster_info( "ranger.tacc.utexas.edu",     "ranger",   "normal" ),
+                   new cluster_info( "ranger.tacc.utexas.edu",     "ranger",   "long"   ),
+                   new cluster_info( "queenbee.loni-lsu.teragrid.org", "queenbee", "workq"  ),
+                   new cluster_info( "lonestar.tacc.teragrid.org", "lonestar", "normal" ) );
+
 // Function to return appropriate clusters
 function tigre()
 {
+  global $clusters;
+
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
 
@@ -63,41 +86,39 @@ function tigre()
   {
     $text .= <<<HTML
     <table>
-    <tr><th>Cluster</th><th>Status</th><th>High Priority<br/>Queue</th>
-        <th>Low Priority<br/>Queue</th></tr>
+    <tr><th>Cluster</th><th>Status</th><th>Queue Name</th> <th>running/queued</th> </tr>
 
-    <tr class='subheader'><th></th><th></th><th>running/queued</th><th>running/queued</th></tr>
+    <!--<tr class='subheader'><th></th><th></th><th>running/queued</th></tr>-->
+
 HTML;
 
-    $checked = " checked='checked'";      // check the first one
-    foreach ( $output as $line )
+    $checked  = " checked='checked'";      // check the first one
+    $disabled = "";                        // set these as constants for now
+    $status   = "up";
+    $jobs     = 0;
+    $load     = 0;
+  
+    foreach ( $clusters as $cluster )
     {
-      list($cluster, $status, $jobs, $load) = explode(" ", $line);
-      $cluster_shortname = substr( $cluster, 0, strpos($cluster, '.') );
-
-      // Make allowance for bigred
-      if ( strncmp( $cluster, "gatekeeper.bigred", 17) == 0 )
-        $cluster_shortname = "bigred";
-
       // Userlevel 4 users can go to all systems; otherwise we check 
       //  authorizations
       if ( $_SESSION['userlevel'] >= 4         ||
-           in_array( $cluster_shortname, $_SESSION['clusterAuth']) )
+           in_array( $cluster->name, $_SESSION['clusterAuth']) )
       {
-        // For now, because only testing on bcf and queenbee
-        $checked = ( $cluster_shortname == 'bcf' ) ? " checked='checked'" : "";
-        $disabled = ( $cluster_shortname == 'bcf'        || 
-                      $cluster_shortname == 'queenbee' ) 
-                  ? "" : " disabled='disabled'";
+        $value = "$cluster->name:$cluster->short_name:$cluster->queue";
         $text .= "     <tr><td class='cluster'>" .
-                 "<input type='radio' name='cluster' value='$cluster:$cluster_shortname'$checked$disabled />\n" .
-                 "  $cluster</td><td>$status</td><td>$jobs</td><td>$load</td></tr>\n";
+                 "<input type='radio' name='cluster' " .
+                 "value='$value'$checked$disabled />" .
+                 "$cluster->name</td>\n         <td>$status</td> <td>$cluster->queue</td>" .
+                 "<td>$jobs / $load</td></tr>\n";
+
         $checked = "";
       }
-    }
+    } 
     $text .= <<<HTML
     </table>
     <p><input class='submit' type='submit' name='TIGRE' value='Submit via TIGRE'/></p>
+
 HTML;
   }
 

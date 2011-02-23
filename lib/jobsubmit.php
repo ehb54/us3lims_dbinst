@@ -333,55 +333,44 @@ class jobsubmit
       $cluster    = $this->data[ 'job' ][ 'cluster_shortname' ];
       $max_time   = $this->grid[ $cluster ][ 'maxtime' ];
  
-      $ti_noise = isset( $parameters[ 'tinoise_option' ] )
-        ? $parameters[ 'tinoise_option' ] > 0 
-        : false;
- 
-      $ri_noise = isset( $parameters[ 'rinoise_option' ] )
-        ? $parameters[ 'rinoise_option' ] > 0
-        : false;
- 
       if ( preg_match( "/^GA/", $this->data[ 'method' ] ) )
       {
+         // Assume 1 sec a basic unit
+
          $generations = $parameters[ 'generations' ];
-         $genes       = $parameters[ 'population' ];
+         $population  = $parameters[ 'population' ];
+
+         // The constant 400 is an empirical value from doing a Hessian
+         // minimumization
+
+         $time        = ( 400 + $population ) * $generations;
  
-         // For GA_MW and GA_SC, we don't have the number of
-         // solutes, so set it to max for now.
-         $solutes     = isset( $parameters[ 'solute_value' ] )
-                      ? $parameters[ 'solute_value' ]
-                      : $max_time;
- 
-         $time = $generations * $genes;
- 
-         if ( $ti_noise || $ri_noise ) 
-            $time  *= $solutes * $solutes;
-         else
-            $time  *= pow( $solutes, 1.3 );
-      
-         $time  = max( $time, 30 );  // Minimum is 30 minutes
-         $time *= 1.5;
- 
-         if ( preg_match( "/^GA_SC/", $this->data[ 'method' ] ) )
-            $time *= 4;
+         $time *= 1.5;  // Pad things a bit
+         $time  = (int)( ($time + 59) / 60 ); // Round up to minutes
       }
       else // 2DSA
       {
-         $time       = 10;
-         $iterations = $parameters[ 'iterations_value' ];
+//         $iterations = $parameters[ 'iterations_value' ];
  
-         if ( $iterations > 0 ) $time *= 1.5 * $iterations;
-      }
+         $ti_noise   = isset( $parameters[ 'tinoise_option' ] )
+                       ? $parameters[ 'tinoise_option' ] > 0 
+                       : false;
+    
+         $ri_noise   = isset( $parameters[ 'rinoise_option' ] )
+                       ? $parameters[ 'rinoise_option' ] > 0
+                       : false;
  
-      $cluster = $this->data[ 'job' ][ 'cluster_shortname' ];
- 
-      switch ( $cluster )
-      {
-         case 'hlrb2'   : $time *=8; break;
-         case 'lonestar': $time *=4; break;
-         case 'ranger'  : $time *=4; break;
-         case 'queenbee': $time *=8; break;
-         case 'bigred'  : $time *=4; break;
+         $time       = 10;  // Base time in minutes
+
+//         if ( $iterations > 0 ) $time *= $iterations;
+
+         if ( isset( $parameters[ 'meniscus_points' ] ) )
+         {
+            $points = $parameters[ 'meniscus_points' ];
+            if ( $points > 0 )  $time *= $points;
+         }
+    
+         if ( $ti_noise || $ri_noise ) $time *= 2;
       }
  
       if ( isset( $parameters[ 'montecarlo_value' ] ) )
@@ -389,14 +378,8 @@ class jobsubmit
          $montecarlo = $parameters[ 'montecarlo_value' ];
          if ( $montecarlo > 0 )  $time *= $montecarlo;
       }
- 
-      if ( isset( $parameters[ 'meniscus_points' ] ) )
-      {
-         $points = $parameters[ 'meniscus_points' ];
-         if ( $points > 0 )  $time *= $points;
-      }
- 
-      if ( $ti_noise || $ri_noise ) $time *= 2;
+
+      $time *= 1.5;  // Padding
  
       $time = max( $time, 5 );         // Minimum time is 5 minutes
       $time = min( $time, $max_time ); // Maximum time is defined for each cluster
@@ -413,9 +396,25 @@ class jobsubmit
       if ( preg_match( "/^GA/", $this->data[ 'method' ] ) )
       {
          $nodes = $parameters[ 'demes' ] + 1;
+
+         switch ( $cluster )
+         {
+            case 'lonestar':
+            case 'queenbee':  
+               $nodes = (int)( ( $nodes + 11 ) / 12 ) * 12;   // 12 nodes per processor
+               break;
+
+            case 'ranger':
+               $nodes = (int)( ( $nodes * 15 ) / 16 ) * 16;   // 16 nodes per processor
+               break;
+
+            default:
+               break;
+         }
       }
       else  // 2DSA
       {
+         /*
          // $k is the number of grid repetitions (equivalently, grid movements) 
          
          $k = pow( $parameters[ 'uniform_grid' ], 2 );
@@ -451,6 +450,25 @@ class jobsubmit
                      ( ( $k / $p ) / ( 1 - $x ) + $r - $L );
  
             if ( $util >= $target_util ) $nodes = $p;
+         }
+         */
+
+         $procs =  ( $parameters[ 'uniform_grid' ] < 12 ) ? 1 : 2;
+
+         switch ( $cluster )
+         {
+            case 'lonestar':
+            case 'queenbee':  
+               $nodes = $procs * 12;   // 12 nodes per processor
+               break;
+
+            case 'ranger':
+               $nodes = $procs * 16;   // 16 nodes per processor
+               break;
+
+            default:
+               $nodes = $max_nodes;    // bcf
+               break;
          }
       }
  
