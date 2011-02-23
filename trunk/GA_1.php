@@ -31,6 +31,13 @@ if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
   exit();
 }
 
+// Verify that there is something in the queue
+if ( ! isset( $_SESSION['request'] ) || sizeof( $_SESSION['request'] ) < 1 )
+{
+  header("Location: queue_setup_1.php");
+  exit();
+}
+
 // define( 'DEBUG', true );
 
 include 'config.php';
@@ -52,45 +59,18 @@ $num_datasets = sizeof( $_SESSION['request'] );
 // Create the payload manager
 $payload  = new Payload_GA( $_SESSION );
 
-// Create the display controls
-$controls = new Controls_GA();
-
-// First, let's see if the "TIGRE" button has been pressed
-if ( isset($_POST['TIGRE']) )
+// Now let's see if the "last" button has been pressed
+if ( isset($_POST['last']) )
 {
-  $dataset_id = $num_datasets - 1;
-
-  // Save cluster information
-  if ( isset($_POST['cluster']) )
-  {
-    list( $cluster_name, $cluster_shortname ) = explode(":", $_POST['cluster'] );
-    $_SESSION['cluster']              = array();
-    $_SESSION['cluster']['name']      = $cluster_name;
-    $_SESSION['cluster']['shortname'] = $cluster_shortname;
-  }
-
-  // for now, at home
-/*
-  else
-  {
-    $_SESSION['cluster']              = array();
-    $_SESSION['cluster']['name']      = 'bcf.uthscsa.edu';
-    $_SESSION['cluster']['shortname'] = 'bcf';
-  }
-*/
+  $dataset_id = ( $_POST['dataset_id'] < $num_datasets - 1 )
+                ? $_POST['dataset_id'] : $num_datasets - 1;
 
   // get previous payload data and add this session to it
   $payload->restore();
-  $payload->add( 'cluster', $_SESSION['cluster'] );
   $payload->acquirePostedData( $dataset_id, $num_datasets );
   $payload->save();
 
-  // Check to see if the file is too big
-  if ( $advanceLevel == 0 )
-    ; //    check_filesize();
-
-  $payload->show();
-  header("Location: GA_2.php");
+  header( "Location: GA_2.php" );
   exit();
 }
 
@@ -118,6 +98,9 @@ else
 
   $payload->save();
 }
+
+// Create the display controls
+$controls = new Controls_GA();
 
 // Start displaying page
 $page_title = $controls->pageTitle();
@@ -161,10 +144,14 @@ include 'links.php';
          "    <input class='submit' type='submit' name='next' value='Next Dataset --&gt;' /></p>\n";
   }
 
-  echo "  </fieldset>\n";
-
+  // Add controls to save the last or only dataset
   if ( $dataset_id == $num_datasets - 1 )
-    echo tigre();
+  {
+    echo "    <input type='hidden' name='dataset_id' value='$dataset_id' />\n" .
+         "    <input class='submit' type='submit' name='last' value='Enter Solute Data--&gt;' /></p>\n";
+  }
+
+  echo "  </fieldset>\n";
 
 ?>
 

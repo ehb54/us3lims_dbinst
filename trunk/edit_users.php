@@ -107,7 +107,7 @@ function do_prior()
   }
 
   $redirect = ($prior == null) ? "" : "?personID=$prior";
-  header("Location: $_SERVER[PHP_SELF]$redirect");
+  header("Location: {$_SERVER['PHP_SELF']}$redirect");
 }
 
 // Function to redirect to next record
@@ -127,7 +127,7 @@ function do_next()
   list($next) = mysql_fetch_array($result);
 
   $redirect = ($next == null) ? "?personID=$personID" : "?personID=$next";
-  header("Location: $_SERVER[PHP_SELF]$redirect");
+  header("Location: {$_SERVER['PHP_SELF']}$redirect");
 }
 
 // Function to create a new record
@@ -140,7 +140,7 @@ function do_new()
     or die("Query failed : $query<br />\n" . mysql_error());
   $new = mysql_insert_id();
 
-  header("Location: $_SERVER[PHP_SELF]?personID=$new");
+  header("Location: {$_SERVER['PHP_SELF']}?personID=$new");
 }
 
 // Function to delete the current record
@@ -153,7 +153,7 @@ function do_delete()
   mysql_query($query)
     or die("Query failed : $query<br />\n" . mysql_error());
 
-  header("Location: $_SERVER[PHP_SELF]");
+  header("Location: {$_SERVER['PHP_SELF']}");
 }
 
 // Function to update the current record
@@ -189,7 +189,7 @@ function do_update()
                            $message .
                            "Changes were not recorded.";
 
-  header("Location: $_SERVER[PHP_SELF]?personID=$personID");
+  header("Location: {$_SERVER['PHP_SELF']}?personID=$personID");
 }
 
 // Function to display and navigate records
@@ -306,7 +306,7 @@ function get_id()
 
   // If we're here, there aren't any records
 echo<<<HTML
-  <form action='{$_SERVER[PHP_SELF]}' method='post'>
+  <form action='{$_SERVER['PHP_SELF']}' method='post'>
   <table cellspacing='0' cellpadding='0' class='style1'>
     <thead>
       <tr><th colspan='2'>Edit Profile</th></tr>

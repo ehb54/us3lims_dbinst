@@ -26,7 +26,6 @@ $this->message[] = "End of submit_gfac.php\n";
    {
       $cluster     = $this->data[ 'job' ][ 'cluster_shortname' ];
       $hostname    = $this->grid[ $cluster ][ 'name' ];
-      $submiturl   = $this->grid[ $cluster ][ 'submiturl' ];
       $httpport    = $this->grid[ $cluster ][ 'httpport' ];
       $workdir     = $this->grid[ $cluster ][ 'workdir' ];
       $userdn      = $this->grid[ $cluster ][ 'userdn' ];
@@ -173,6 +172,9 @@ $this->message[] = "End of result text";
  
    function update_db()
    {
+      global $dbusername, $dbpasswd;
+      global $globaldbname, $globaldbuser, $globaldbpasswd;
+
       $requestID = $this->data[ 'job' ][ 'requestID' ];
       $dbname    = $this->data[ 'db' ][ 'name' ];
       $host      = $this->data[ 'db' ][ 'host' ];
@@ -181,7 +183,7 @@ $this->message[] = "End of result text";
       $epr       = $this->data[ 'eprfile' ];
       $xml       = $this->data[ 'jobxmlfile' ];
  
-      $db = mysql_connect( $host, "us3php", "us3" );
+      $db = mysql_connect( $host, $dbusername, $dbpasswd );
  
       if ( ! $db )
       {
@@ -214,7 +216,7 @@ $this->message[] = "End of result text";
 $this->message[] = "Database $dbname updated: requestID = $requestID";
 
       // Update global db
-      $db = mysql_connect( $host, "gfac", "backend" );
+      $db = mysql_connect( $host, $globaldbuser, $globaldbpasswd );
 
       if ( ! $db )
       {
@@ -222,19 +224,19 @@ $this->message[] = "Database $dbname updated: requestID = $requestID";
          exit( 1 );
       }
  
-      if ( ! mysql_select_db( "gfac", $db ) ) 
+      if ( ! mysql_select_db( $globaldbname, $db ) ) 
       {
-         $this->message[] = "Cannot change to global database gfac\n";
+         $this->message[] = "Cannot change to global database $globaldbname\n";
          exit( 2 );
       }
- 
-      // Code to extract experimentID from $xml into $analysisID
-      $analysisID = '';
+
+      $analysisID = $this->getAnalysisID( $epr );
+$this->message[] = "ExperimentID extracted from EPR file = '$analysisID'\n";
       $query  = "INSERT INTO analysis SET " .
                 "analysisID = '$analysisID', " .
                 "time = now() ";
 
-//      $result = mysql_query( $query, $db );
+      $result = mysql_query( $query, $db );
  
       if ( ! $result )
       {
@@ -243,8 +245,47 @@ $this->message[] = "Database $dbname updated: requestID = $requestID";
       }
  
       mysql_close( $db );
-$this->message[] = "Global database gfac updated: analysisID = $analysisID";
+$this->message[] = "Global database $globaldbname updated: analysisID = $analysisID";
    }
 
+   // function to extract the experimentID from the EPR file
+   function getAnalysisID( $epr )
+   {
+      $analysisID = '';
+
+      $string1    = substr( $epr, strpos( $epr, 'experimentID' ) + 13 ) ;
+      $analysisID = substr( $string1, 0, strpos( $string1, 'experimentID' ) - 2 );
+      return $analysisID;
+
+
+/*
+      // For some reason doing it this way doesn't seem to work
+      $parser = new XMLReader();
+      $parser->xml( $epr );
+
+      while( $parser->read() )
+      {
+         if ( $parser->nodeType == XMLReader::ELEMENT )
+         {
+            $tag = $parser->name;
+echo " tag = $tag\n";
+
+            switch ( $tag )
+            {
+               case 'experimentID':
+                  $analysisID = $parser->value();  // $parser->getString(); ??
+                  break;
+
+               default :
+                  break;
+            }
+         }
+      }
+
+      // If we got here we didn't find it
+      $parser->close();
+      return $analysisID;
+*/
+   }
 }
 ?>

@@ -186,7 +186,6 @@ class HPC_2DSA extends HPC_analysis
               "uniform_grid         = {$job_parameters['uniform_grid']},     " .
               "mc_iterations        = {$job_parameters['mc_iterations']}, " .
               "tinoise_option       = {$job_parameters['tinoise_option']},   " .
-              "regularization       = {$job_parameters['regularization']},   " .
               "meniscus_range       = {$job_parameters['meniscus_range']},   " .
               "meniscus_points      = {$job_parameters['meniscus_points']},  " .
               "max_iterations       = {$job_parameters['max_iterations']}, " .
@@ -228,7 +227,21 @@ class HPC_GA extends HPC_analysis
               "mutate_sk            = {$job_parameters['p_mutate_sk']}     " ;
     mysql_query( $query )
           or die( "Query failed : $query<br />" . mysql_error());
+    $settingsID = mysql_insert_id();
 
+    // Now save the buckets
+    for ( $i = 1; $i <= sizeof( $job_parameters['buckets'] ); $i++ )
+    {
+      $bucket = $job_parameters['buckets'][$i];
+      $query  = "INSERT INTO HPCSoluteData SET " .
+                "GA_SettingsID = $settingsID, " .
+                "s_min         = {$bucket['s_min']}, " .
+                "s_max         = {$bucket['s_max']}, " .
+                "ff0_min       = {$bucket['f_min']}, " .
+                "ff0_max       = {$bucket['f_max']}  " ;
+      mysql_query( $query )
+            or die( "Query failed : $query<br />" . mysql_error());
+    }
   }
 }
 ?>

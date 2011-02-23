@@ -24,7 +24,7 @@ if ( isset( $_POST['sort_order'] ) )
 {
   $_SESSION['queue_viewer_sort_order'] = $_POST['sort_order'];
 
-  header( "Location: {$_SERVER[PHP_SELF]}" );
+  header( "Location: {$_SERVER['PHP_SELF']}" );
   exit();
 }
 

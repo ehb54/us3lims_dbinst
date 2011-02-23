@@ -247,7 +247,6 @@ class Payload_2DSA extends Payload_manager
       $job_parameters['uniform_grid']     = $_POST['uniform_grid'];
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
       $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
-      $job_parameters['regularization']   = $_POST['regularization'];
       $job_parameters['meniscus_range']   = ( $_POST['meniscus_option'] == 1 )
                                           ? $_POST['meniscus_range'] : 0.0;
       $job_parameters['meniscus_points']  = ( $_POST['meniscus_option'] == 1 )
@@ -392,5 +391,18 @@ class Payload_GA extends Payload_manager
 
   }
 
+  // Function to get the posted bucket data on the screen
+  function getBuckets( $count, &$buckets )
+  {
+    $buckets = array();
+    
+    for ( $i = 1; $i <= $count; $i++ )
+    {
+      $buckets[$i]['s_min'] = $_POST[$i.'_min'];
+      $buckets[$i]['s_max'] = $_POST[$i.'_max'];
+      $buckets[$i]['f_min'] = $_POST[$i.'_ff0_min'];
+      $buckets[$i]['f_max'] = $_POST[$i.'_ff0_max'];
+    }
+  }
 }
 ?>

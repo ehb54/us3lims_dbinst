@@ -435,6 +435,11 @@ mutate_sk.onchange = function ()
 
 window.onresize = function () 
 {
+  redraw_controls();
+};
+
+function redraw_controls()
+{
   s.recalculate();
   demes.recalculate();
   genes.recalculate();
@@ -444,6 +449,9 @@ window.onresize = function ()
   plague.recalculate();
   elitism.recalculate();
   migration.recalculate();
+  s.recalculate();
+  simpoints.recalculate();
+  band_volume.recalculate();
 
   conc_threshold.recalculate();
   s_grid.recalculate();
@@ -452,7 +460,7 @@ window.onresize = function ()
   mutate_s.recalculate();
   mutate_k.recalculate();
   mutate_sk.recalculate();
-};
+}
 
 function show_ctl(num) 
 {
@@ -486,6 +494,7 @@ function toggle(area)
     else
       text.textContent = "Hide Advanced Options";
     which.style.display = 'block';
+    redraw_controls();
   }
 
   return false;
@@ -583,5 +592,4 @@ function validate_multiple( f )
 
   return( true );
 }
-
 

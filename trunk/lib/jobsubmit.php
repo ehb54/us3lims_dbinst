@@ -79,7 +79,7 @@ class jobsubmit
    // Deconstructor
    function __destruct()
    {
-      clear();
+      $this->clear();
    }
 
    // Clear out data for another request

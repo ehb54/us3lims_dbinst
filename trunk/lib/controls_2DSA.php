@@ -93,17 +93,6 @@ HTML;
 HTML;
   }
 
-  // Function to display the regularization setup
-  function regularization_setup()
-  {
-  echo<<<HTML
-        <fieldset class='option_value'>
-          <legend>Regularization Setup</legend>
-          <input type="text" value="0" name="regularization"/> Regularization<br/>
-        </fieldset>
-HTML;
-  }
-   
   // Function to display the fit meniscus option
   function fit_meniscus()
   {
@@ -204,7 +193,6 @@ HTML;
 
     if ( $dataset_id == 0 )
     {
-      $this->regularization_setup();
       $this->fit_meniscus();
       $this->iterations_option();
     }

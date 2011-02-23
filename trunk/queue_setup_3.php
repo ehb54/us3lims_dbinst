@@ -51,7 +51,7 @@ if ( isset($_GET['removeID']) )
 
   // Has to be redirected to avoid another removal from the queue just by
   //  refreshing the screen
-  header("Location: $_SERVER[PHP_SELF]");
+  header("Location: {$_SERVER['PHP_SELF']}");
   exit();
 }
 
@@ -60,7 +60,7 @@ if ( isset($_GET['clear']) )
 {
   unset( $_SESSION['request'] );
 
-  header("Location: $_SERVER[PHP_SELF]");
+  header("Location: {$_SERVER['PHP_SELF']}");
   exit();
 }
 
