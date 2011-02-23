@@ -108,7 +108,7 @@ function do_update()
                            $message .
                            "Changes were not recorded.";
 
-  header("Location: $_SERVER[PHP_SELF]");
+  header("Location: {$_SERVER['PHP_SELF']}");
   exit();
 }
 

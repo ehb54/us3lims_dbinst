@@ -60,9 +60,6 @@ montecarlo.onchange = function ()
 
 } catch(e_montecarlo) {}
 
-var band_volume    = new Slider(document.getElementById("band_volume-slider"),
-                                document.getElementById("band_volume-slider-input"));
-
 // Simpoints Slider setup
 try {
 var simpoints      = new Slider(document.getElementById("simpoints-slider"),
@@ -84,6 +81,8 @@ simpoints.onchange = function ()
 } catch(e_simpoints) {}
 
 // Band_volume Slider setup
+var band_volume    = new Slider(document.getElementById("band_volume-slider"),
+                                document.getElementById("band_volume-slider-input"));
 try {
 band_volume.setMinimum(0);
 band_volume.setMaximum(50);
@@ -106,9 +105,17 @@ band_volume.onchange = function ()
 
 window.onresize = function () 
 {
+  redraw_controls();
+};
+
+function redraw_controls()
+{
   meniscus.recalculate();
   iterations.recalculate();
-};
+  montecarlo.recalculate();
+  simpoints.recalculate();
+  band_volume.recalculate();
+}
 
 function show_ctl(num) 
 {
@@ -147,6 +154,7 @@ function toggle(area)
     else
       text.textContent = "Hide Advanced Options";
     which.style.display = 'block';
+    redraw_controls();
   }
 
   return false;

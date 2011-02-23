@@ -414,9 +414,6 @@ class File_2DSA extends File_writer
       $xml->startElement( 'tinoise_option' );
         $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
       $xml->endElement(); // tinoise_option
-      $xml->startElement( 'regularization' );
-        $xml->writeAttribute( 'value', $parameters['regularization'] );
-      $xml->endElement(); // regularization
       $xml->startElement( 'meniscus_range' );
         $xml->writeAttribute( 'value', $parameters['meniscus_range'] );
       $xml->endElement(); // meniscus_range
@@ -498,6 +495,19 @@ class File_GA extends File_writer
       $xml->startElement( 'p_mutate_sk' );
         $xml->writeAttribute( 'value', $parameters['p_mutate_sk'] );
       $xml->endElement(); // p_mutate_sk
+
+      // Now write out the buckets
+      for ( $i = 1; $i <= sizeof( $parameters['buckets'] ); $i++ )
+      {
+        $bucket = $parameters['buckets'][$i];
+        $xml->startElement( 'bucket' );
+          $xml->writeAttribute( 's_min',   $bucket['s_min'] );
+          $xml->writeAttribute( 's_max',   $bucket['s_max'] );
+          $xml->writeAttribute( 'ff0_min', $bucket['f_min'] );
+          $xml->writeAttribute( 'ff0_max', $bucket['f_max'] );
+        $xml->endElement(); // bucket
+      }
+
     $xml->endElement(); // jobParameters
   }
 

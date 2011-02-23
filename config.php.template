@@ -20,6 +20,12 @@ $dbpasswd           = '';  # the password for the MySQL user
 $dbname             = '';  # the name of the database
 $dbhost             = 'localhost'; # the host on which MySQL runs, generally localhost
 
+// Global DB
+$globaldbuser       = '';  # the name of the MySQL user
+$globaldbpasswd     = '';  # the password for the MySQL user
+$globaldbname       = '';  # the name of the database
+$globaldbhost       = 'localhost'; # the host on which MySQL runs, generally localhost
+
 $ipaddr             = '129.111.140.173'; # the external IP address of the host machine
 $udpport            = 12335; # the port to send udp messages to
 

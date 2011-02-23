@@ -31,6 +31,13 @@ if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
   exit();
 }
 
+// Verify that there is something in the queue
+if ( ! isset( $_SESSION['request'] ) || sizeof( $_SESSION['request'] ) < 1 )
+{
+  header("Location: queue_setup_1.php");
+  exit();
+}
+
 // define( 'DEBUG', true );
 
 include 'config.php';

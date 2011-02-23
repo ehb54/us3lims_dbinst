@@ -36,7 +36,8 @@ function motd_submit()
   $fn = "/share/apps64/ultrascan/etc/motd_submit";
 
   // Job submission is normal --- just display a php/html message
-  include $fn;
+  if ( file_exists($fn) ) include $fn;
+
 
 }
 

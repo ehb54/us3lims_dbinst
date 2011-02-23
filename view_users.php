@@ -86,7 +86,7 @@ function do_prior()
   }
 
   $redirect = ($prior == null) ? "" : "?personID=$prior";
-  header("Location: $_SERVER[PHP_SELF]$redirect");
+  header("Location: {$_SERVER['PHP_SELF']}$redirect");
 }
 
 // Function to redirect to next record
@@ -106,7 +106,7 @@ function do_next()
   list($next) = mysql_fetch_array($result);
 
   $redirect = ($next == null) ? "?personID=$personID" : "?personID=$next";
-  header("Location: $_SERVER[PHP_SELF]$redirect");
+  header("Location: {$_SERVER['PHP_SELF']}$redirect");
 }
 
 // Function to display and navigate records
@@ -219,7 +219,7 @@ function get_id()
 
   // If we're here, there aren't any records
 echo<<<HTML
-  <form action='{$_SERVER[PHP_SELF]}' method='post'>
+  <form action='{$_SERVER['PHP_SELF']}' method='post'>
   <table cellspacing='0' cellpadding='0' class='style1'>
     <thead>
       <tr><th colspan='2'>View Profile</th></tr>

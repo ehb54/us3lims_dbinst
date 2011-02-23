@@ -2,7 +2,7 @@
 /*
  * GA_2.php
  *
- * Final database update and submission for the GA analysis
+ * Solute processing, final database update and submission for the GA analysis
  *
  */
 session_start();
@@ -38,144 +38,80 @@ include 'db.php';
 include 'lib/utility.php';
 include 'lib/payload_manager.php';
 include 'lib/controls_GA.php';
-include 'lib/HPC_analysis.php';
-include 'lib/file_writer.php';
-include 'lib/submit_globus.php';
-include 'lib/submit_gfac.php';
 
-// Create the payload manager and restore the data
+// Make sure the advancement level is set
+$advanceLevel = ( isset($_SESSION['advancelevel']) )
+              ? $_SESSION['advancelevel'] : 0;
+
+// Create the payload manager and place to gather bucket data
 $payload = new Payload_GA( $_SESSION );
-$payload->restore();
+$buckets = array();
 
-// Information about displaying analysis type on this page
-$controls  = new Controls_GA();
-
-// Create the HPC analysis agent and file writer
-$HPC       = new HPC_GA();
-$file      = new File_GA();
-$filenames = array();
-$HPCAnalysisRequestID = 0;
-
-$files_ok  = true;  // Let's also make sure there weren't any problems writing the files
-if ( $_SESSION['separate_datasets'] )
+// First, let's see if the "TIGRE" button has been pressed
+if ( isset($_POST['TIGRE']) )
 {
-  $dataset_count = $payload->get( 'datasetCount' );
-  for ( $i = 0; $i < $dataset_count; $i++ )
+  // Save cluster information
+  if ( isset($_POST['cluster']) )
   {
-    $single = $payload->get_dataset( $i );
-    $HPCAnalysisRequestID = $HPC->writeDB( $single );
-    $filenames[ $i ] = $file->write( $single, $HPCAnalysisRequestID );
-    if ( $filenames[ $i ] === false )
-      $files_ok = false;
-
-    else
-    {
-      // Write the xml file content to the db
-      $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ $i ] ) );
-      $edit_filename = $single['dataset'][0]['edit'];
-      $query  = "UPDATE HPCAnalysisRequest " .
-                "SET requestXMLfile = '$xml_content', " .
-                "editXMLFilename = '$edit_filename' " .
-                "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-      mysql_query( $query )
-            or die("Query failed : $query<br />\n" . mysql_error());
-      
-    }
+    list( $cluster_name, $cluster_shortname ) = explode(":", $_POST['cluster'] );
+    $_SESSION['cluster']              = array();
+    $_SESSION['cluster']['name']      = $cluster_name;
+    $_SESSION['cluster']['shortname'] = $cluster_shortname;
   }
-}
 
-else
-{
-  $globalfit = $payload->get();
-  $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
-  $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
-  if ( $filenames[ 0 ] === false )
-    $files_ok = false;
-
+  // for now, at home
+/*
   else
   {
-    // Write the xml file content to the db
-    $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ 0 ] ) );
-    $edit_filename = $globalfit['dataset'][0]['edit'];
-    $query  = "UPDATE HPCAnalysisRequest " .
-              "SET requestXMLfile = '$xml_content', " .
-              "editXMLFilename = '$edit_filename' " .
-              "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-    mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
-    
+    $_SESSION['cluster']              = array();
+    $_SESSION['cluster']['name']      = 'bcf.uthscsa.edu';
+    $_SESSION['cluster']['shortname'] = 'bcf';
   }
+*/
+
+  // Check to see if the file is too big
+  if ( $advanceLevel == 0 )
+    ; //    check_filesize();
+
+  // Restore payload, add buckets to it and then save it
+  $payload->restore();
+  $sol_count = $_POST['solute-value'];
+  $payload->getBuckets( $sol_count, $buckets );
+
+  // Save buckets inside the job parameters section
+  $job_parameters = $payload->get( 'job_parameters' );
+  $job_parameters['buckets'] = $buckets;
+  $payload->add( 'job_parameters', $job_parameters );
+  $payload->add( 'cluster', $_SESSION['cluster'] );
+
+  $payload->show();
+  $payload->save();
+
+  header("Location: GA_3.php");
+  exit();
 }
 
-if ( $files_ok )
-{
-  $output_msg = <<<HTML
-  <pre>
-  Thank you, your job was accepted to bcf and is currently processing, an
-  email will be sent to {$_SESSION['submitter_email']} when the job is
-  completed.
+// Get what payload information we need
+$payload->restore();
+$job_parameters = $payload->get( 'job_parameters' );
+$montecarlo  = $job_parameters['mc_iterations'];
+$controls  = new Controls_GA();
+$controls->initSolutes( $advanceLevel, $montecarlo );
 
-HTML;
+// Process initial bucket file upload, if present
+if ( isset( $_FILES ) )
+  $message = $controls->upload_file( $buckets, $data_dir ); // $data_dir from config.php
 
-  // EXEC COMMAND FOR TIGRE 
-  if ( isset($_SESSION['cluster']) )
-  {
-    $cluster = $_SESSION['cluster']['shortname'];
-    unset( $_SESSION['cluster'] );
-
-    // For the moment we are supporting two submission methods.
-    switch ( $cluster )
-    {
-       case 'queenbee' :
-          $job = new submit_gfac();
-          break;
-    
-       default :
-          $job = new submit_globus();
-          break;
-    }
-   
-    $save_cwd = getcwd();         // So we can come back to the current 
-                                  // working directory later
-
-    foreach ( $filenames as $filename )
-    {
-      chdir( dirname( $filename ) );
-
-      $job-> clear();
-      $job-> parse_input( basename( $filename ) );
-      if ( ! DEBUG ) $job-> submit();
-      $retval = $job->get_messages();
-
-      if ( ! empty( $retval ) )
-      {
-        $output_msg .= "<br /><span class='message'>Message from the queue...</span><br />\n" .
-                        print_r( $retval, true ) . " <br />\n";
-      }
-    }
-
-    chdir( $save_cwd );
-  }
-  $output_msg .= "</pre>\n";
-}
-
-else
-{
-  $output_msg = <<<HTML
-  Thank you, there have been one or more problems writing the various files necessary
-  for job submission. Please contact your system administrator.
-
-HTML;
-
-}
+$show = $payload->show( 0, array() );  // debugging info, if enabled
+$payload->save();
 
 // Start displaying page
-$page_title = $controls->pageTitle() . " Submitted";
+$page_title = "Enter GA Solute Data";
+$js = 'js/analysis.js,js/GA.js,js/GA_2.js';
 include 'top.php';
 include 'links.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";
-$show = $payload->show( $HPCAnalysisRequestID, $filenames );  // debugging info, if enabled
 
 echo <<<HTML
 <!-- Begin page content -->
@@ -185,9 +121,30 @@ echo <<<HTML
   <!-- Place page content here -->
 
   $message
-  <p>$output_msg</p>
 
-  <p><a href="queue_setup_1.php">Submit another request</a></p>
+  <fieldset>
+    <legend>Initialize S-Value Range, Upload file or Specify Manually</legend>
+
+HTML;
+
+  $controls->solute_file_setup();
+  $controls->solute_count_setup();
+
+  echo "<form name='Solutes' action='GA_2.php' method='post' " .
+       "      onsubmit='return validate_solutes( $controls->solute_count );'>\n";
+
+  $controls->solute_setup( $buckets );
+
+  echo tigre();
+
+  echo "</form>\n";
+
+echo <<<HTML
+
+  </fieldset>
+
+  <p><a href="queue_setup_1.php">Submit a different request</a><br />
+     <a href="GA_1.php">Set up the GA analysis</a></p>
 
   $show
 

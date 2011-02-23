@@ -30,7 +30,7 @@ if ( isset( $_GET['reset'] ) )
   unset( $_SESSION['new_expID'] );
   unset( $_SESSION['new_cells'] );
 
-  header( "Location: {$_SERVER[PHP_SELF]}" );
+  header( "Location: {$_SERVER['PHP_SELF']}" );
   exit();
 }
 
@@ -112,7 +112,7 @@ if ( $experimentID != 0 )
 {
   $submit_text = <<<HTML
   <p><input type='button' value='Select Different Experiment'
-            onclick='window.location="{$_SERVER[PHP_SELF]}?reset=true";' /> 
+            onclick='window.location="{$_SERVER['PHP_SELF']}?reset=true";' /> 
      <input type='submit' name='next' value='Add to Queue'/>
   </p>
 
@@ -120,7 +120,7 @@ HTML;
 }
 
 echo <<<HTML
-  <form action="{$_SERVER[PHP_SELF]}" method="post">
+  <form action="{$_SERVER['PHP_SELF']}" method="post">
     <fieldset>
       <legend>Initial Queue Setup</legend>
 
@@ -161,6 +161,7 @@ function get_email_text()
 
   // Check if current user is the data owner
   $checked = ( $add_owner == 1 ) ? " checked='checked'" : "";
+  $copy_owner = '';
   if ( $_SESSION['loginID'] != $_SESSION['id'] )
   {
     $copy_owner = "<input type='checkbox' name='add_owner'$checked />\n" .
