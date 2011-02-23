@@ -54,6 +54,7 @@ abstract class File_writer
         $xml->startElement( 'cluster' );
           $xml->writeAttribute( 'name', $job['cluster']['name'] );
           $xml->writeAttribute( 'shortname', $job['cluster']['shortname'] );
+          $xml->writeAttribute( 'queue', $job['cluster']['queue'] );
         $xml->endElement(); // cluster
         $xml->startElement( 'udp' );
           $xml->writeAttribute( 'port', $job['server']['udpport'] );

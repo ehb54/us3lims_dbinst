@@ -14,6 +14,13 @@ class submit_globus extends jobsubmit
    // Submit the this->data
    function submit()
    {
+      // a preliminary test to see if data is still defined
+      if ( ! isset( $this->data['job']['cluster_shortname'] ) )
+      {
+        $this->message[] = "Data profile is not defined. Return to Queue Setup.\n";
+        return;
+      }
+
       $savedir = getcwd();
       chdir( $this->data['job']['directory'] );
       $this->copy_files    ();

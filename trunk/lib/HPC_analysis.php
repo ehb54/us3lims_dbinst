@@ -56,6 +56,7 @@ abstract class HPC_analysis
               or die( "Query failed : $query<br />" . mysql_error());
     list( $submitterGUID ) = mysql_fetch_array( $result );
 
+    // What about $job['cluster']['shortname'] and $job['cluster']['queue']?
     $query  = "INSERT INTO HPCAnalysisRequest SET                                    " .
               "HPCAnalysisRequestGUID = UUID(),                                      " .
               "investigatorGUID       = '$investigatorGUID',                         " .

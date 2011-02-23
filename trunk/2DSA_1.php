@@ -70,10 +70,11 @@ if ( isset($_POST['TIGRE']) )
   // Save cluster information
   if ( isset($_POST['cluster']) )
   {
-    list( $cluster_name, $cluster_shortname ) = explode(":", $_POST['cluster'] );
+    list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
     $_SESSION['cluster']              = array();
     $_SESSION['cluster']['name']      = $cluster_name;
     $_SESSION['cluster']['shortname'] = $cluster_shortname;
+    $_SESSION['cluster']['queue']     = $queue;
   }
 
   // get previous payload data and add this session to it
