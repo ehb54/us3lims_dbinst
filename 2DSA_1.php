@@ -141,7 +141,7 @@ include 'links.php';
 
 
 <?php
-//  if ( isset($error) ) echo $error;
+// // if ( isset($error) ) echo $error;
 
   $controls->display( $dataset_id, $num_datasets );
 
