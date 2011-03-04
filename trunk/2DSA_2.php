@@ -37,7 +37,6 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include 'lib/payload_manager.php';
-include 'lib/controls_2DSA.php';
 include 'lib/HPC_analysis.php';
 include 'lib/file_writer.php';
 include 'lib/submit_globus.php';
@@ -46,9 +45,6 @@ include 'lib/submit_gfac.php';
 // Create the payload manager and restore the data
 $payload = new Payload_2DSA( $_SESSION );
 $payload->restore();
-
-// Information about displaying analysis type on this page
-$controls  = new Controls_2DSA();
 
 // Create the HPC analysis agent and file writer
 $HPC       = new HPC_2DSA();
@@ -170,7 +166,7 @@ HTML;
 }
 
 // Start displaying page
-$page_title = $controls->pageTitle() . " Submitted";
+$page_title = '2DSA Analysis Submitted';
 include 'top.php';
 include 'links.php';
 
