@@ -221,7 +221,7 @@ abstract class File_writer
 
 /*
       // model
-      $query  = "SELECT contents FROM model " .
+      $query  = "SELECT xml FROM model " .
                 "WHERE modelID = {$dataset['modelID']} ";
       $result = mysql_query( $query )
                 or die( "Query failed : $query<br />" . mysql_error());
@@ -237,7 +237,7 @@ abstract class File_writer
       // noise
       foreach ( $dataset['noiseIDs'] as $ndx => $noiseID )
       {
-        $query  = "SELECT noiseType, noiseVector FROM noise " .
+        $query  = "SELECT noiseType, xml FROM noise " .
                   "WHERE noiseID = $noiseID ";
         $result = mysql_query( $query )
                   or die( "Query failed : $query<br />" . mysql_error());

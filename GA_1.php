@@ -44,7 +44,7 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include 'lib/payload_manager.php';
-include 'lib/controls_GA.php';
+include 'lib/controls.php';
 
 // Make sure the advancement level is set
 $advanceLevel = ( isset($_SESSION['advancelevel']) )
@@ -99,11 +99,8 @@ else
   $payload->save();
 }
 
-// Create the display controls
-$controls = new Controls_GA();
-
 // Start displaying page
-$page_title = $controls->pageTitle();
+$page_title = 'GA Analysis';
 $css = 'css/luna/luna.css';    // This is for the slider
 $js = 'js/analysis.js,js/range.js,js/timer.js,js/slider.js';
 include 'top.php';
@@ -126,7 +123,7 @@ include 'links.php';
 <?php
 //  if ( isset($error) ) echo $error;
 
-  $controls->display( $dataset_id, $num_datasets );
+  display( $dataset_id, $num_datasets );
 
   // Display some information about the current dataset
   echo "  <fieldset>\n" .
@@ -167,4 +164,71 @@ include 'links.php';
 <?php
 include 'bottom.php';
 exit();
+
+// Function to display controls for one dataset
+function display( $dataset_id, $num_datasets )
+{
+?>
+    <fieldset>
+      <legend>Initialize Genetic Algorithm Parameters -
+            <?php echo "{$_SESSION['request'][$dataset_id]['filename']}; " .
+                       "Dataset " . ($dataset_id + 1) . " of $num_datasets";?></legend>
+
+      <?php if ( $dataset_id == 0 ) montecarlo(); ?>
+
+      <p><button onclick="return toggle('advanced');" id='show'>
+        Show Advanced Options</button></p>
+
+      <div id='advanced' style='display:none'>
+
+<?php
+  if ( $dataset_id == 0 )
+  {
+    // First time only
+    demes_setup(); 
+    genes_setup();
+    generations_setup();
+    crossover_percent();
+    mutation_percent();
+    plague_percent();
+    elitism_setup();
+    migration_rate();
+    ga_regularization_setup();
+    random_seed();
+
+    simpoints_input();
+    band_volume_input();
+    radial_grid_input();
+    time_grid_input();
+
+    conc_threshold_setup();
+    s_grid_setup();
+    k_grid_setup();
+    mutate_sigma_setup();
+    mutate_s_setup();
+    mutate_k_setup();
+    mutate_sk_setup();
+  }
+
+  else
+  {
+    // These are displayed each time.
+    simpoints_input();
+    band_volume_input();
+    radial_grid_input();
+    time_grid_input();
+  }
+
+  echo<<<HTML
+    </div>
+
+    <input class="submit" type="button" 
+            onclick='window.location="queue_setup_2.php"' 
+            value="Edit Profiles"/>
+    <input class="submit" type="button" 
+            onclick='window.location="queue_setup_1.php"' 
+            value="Change Experiment"/>
+  </fieldset>
+HTML;
+}
 ?>

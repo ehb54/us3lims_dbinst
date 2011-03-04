@@ -61,6 +61,7 @@ abstract class HPC_analysis
               "HPCAnalysisRequestGUID = UUID(),                                      " .
               "investigatorGUID       = '$investigatorGUID',                         " .
               "submitterGUID          = '$submitterGUID',                            " .
+              "email                  = '{$job['database']['submitter_email']}',     " .
               "experimentID           = '{$job['job_parameters']['experimentID']}',  " .
               "submitTime             =  now(),                                      " .
               "clusterName            = '{$job['cluster']['name']}',                 " .

@@ -44,7 +44,7 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include 'lib/payload_manager.php';
-include 'lib/controls_2DSA.php';
+include 'lib/controls.php';
 
 // Make sure the advancement level is set
 $advanceLevel = ( isset($_SESSION['advancelevel']) )
@@ -58,9 +58,6 @@ $num_datasets = sizeof( $_SESSION['request'] );
 
 // Create the payload manager
 $payload  = new Payload_2DSA( $_SESSION );
-
-// Create the display controls
-$controls = new Controls_2DSA();
 
 // First, let's see if the "TIGRE" button has been pressed
 if ( isset($_POST['TIGRE']) )
@@ -118,7 +115,7 @@ else
 }
 
 // Start displaying page
-$page_title = $controls->pageTitle();
+$page_title = '2DSA Analysis';
 $css = 'css/luna/luna.css';    // This is for the slider
 $js = 'js/analysis.js,js/range.js,js/timer.js,js/slider.js';
 include 'top.php';
@@ -141,9 +138,9 @@ include 'links.php';
 
 
 <?php
-// // if ( isset($error) ) echo $error;
+// if ( isset($error) ) echo $error;
 
-  $controls->display( $dataset_id, $num_datasets );
+  display( $dataset_id, $num_datasets );
 
   // Display some information about the current dataset
   echo "  <fieldset>\n" .
@@ -180,4 +177,56 @@ include 'links.php';
 <?php
 include 'bottom.php';
 exit();
+
+// A function to display controls for one dataset
+function display( $dataset_id, $num_datasets )
+{
+  echo "  <fieldset>" .
+       "    <legend>Initialize 2DSA Parameters - {$_SESSION['request'][$dataset_id]['filename']}" .
+       "            Dataset " . ($dataset_id + 1) . " of $num_datasets</legend>\n";
+
+  if ( $dataset_id == 0 )
+  {
+    s_value_setup();
+    f_f0_setup();
+    uniform_grid_setup();
+    montecarlo();
+    tinoise_option();
+  }
+ 
+  echo<<<HTML
+    <p><button onclick="return toggle('advanced');" id='show'>
+      Show Advanced Options</button></p>
+
+    <div id='advanced' style='display:none;'>
+
+HTML;
+
+  if ( $dataset_id == 0 )
+  {
+    fit_meniscus();
+    iterations_option();
+  }
+
+  simpoints_input();
+  band_volume_input();
+  radial_grid_input();
+  time_grid_input();
+
+  if ( $dataset_id == 0 )
+    rinoise_option();
+
+  echo<<<HTML
+    </div>
+
+    <input class="submit" type="button" 
+            onclick='window.location="queue_setup_2.php"' 
+            value="Edit Profiles"/>
+    <input class="submit" type="button" 
+            onclick='window.location="queue_setup_1.php"' 
+            value="Change Experiment"/>
+  </fieldset>
+HTML;
+  }
+
 ?>
