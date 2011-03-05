@@ -99,9 +99,13 @@ function order_select( $current_order = NULL )
 // A function to generate page content using lims2 methods
 function page_content2()
 {
+  if ( ! file_exists( '/share/apps64/ultrascan/bin64/mpi_status' ) )
+    return;                                             // no lims2 status available
+
   $content = "<h3>LIMS v2 Queue</h2>\n";
 
-  exec("/share/apps64/ultrascan/bin64/mpi_status", $aData, $iRet );
+  //exec("/share/apps64/ultrascan/bin64/mpi_status", $aData, $iRet );
+  $aData = array();
 
   // Print queue status timestamp
   $content .= "<h5>$aData[0]:\n" .
@@ -126,9 +130,9 @@ function page_content2()
     if (is_authorized($jobowner))
     {
       if ($jobtype == "tigre")
-        exec("/share/apps64/ultrascan/bin64/tigre_job_cancel $jobid");
+        //exec("/share/apps64/ultrascan/bin64/tigre_job_cancel $jobid");
       else if ($jobtype == "mpi")
-        exec("/share/apps64/ultrascan/bin64/mpi_job_cancel $jobid");
+        //exec("/share/apps64/ultrascan/bin64/mpi_job_cancel $jobid");
       else
         ;                                         // unsupported job type
 
