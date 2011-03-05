@@ -140,14 +140,15 @@ Content-Transfer-Encoding: base64
 --$boundary
 ";
 
-$this->message[] = "Httpdata:";
-$this->message[] = $httpdata;
+$this->message[] = "Httpdata:
+[suppressed]";
+//$this->message[] = $httpdata;
  
       // Now make the request
       $post = new HttpRequest( $url, HTTP_METH_POST );
       
       $post->setHeaders( $headers );
-      $post->addRawPostData( $httpdata );
+      $post->setBody( $httpdata );
       
       try
       {
@@ -165,36 +166,42 @@ $this->message[] = "Job submitted";
 
       // Process the return info
 $this->message[] = "Result text:";
-$this->message[] = $this->data['eprfile'];
+$epr = htmlspecialchars( $this->data['eprfile'], ENT_QUOTES );
+
+$this->message[] = preg_replace( "/&gt;/", "&gt;\n", $epr );
 $this->message[] = "End of result text";
 
    }
  
    function update_db()
    {
-      global $dbusername, $dbpasswd;
-      global $globaldbname, $globaldbuser, $globaldbpasswd;
+      global $dbusername;
+      global $dbpasswd;
+      global $globaldbname;
+      global $globaldbuser;
+      global $globaldbpasswd;
 
-      $requestID = $this->data[ 'job' ][ 'requestID' ];
-      $dbname    = $this->data[ 'db' ][ 'name' ];
-      $host      = $this->data[ 'db' ][ 'host' ];
-      $user      = $this->data[ 'db' ][ 'user' ];
-      $status    = $this->data[ 'dataset' ][ 'status' ];
-      $epr       = $this->data[ 'eprfile' ];
-      $xml       = $this->data[ 'jobxmlfile' ];
+      $requestID  = $this->data[ 'job' ][ 'requestID' ];
+      $dbname     = $this->data[ 'db' ][ 'name' ];
+      $host       = $this->data[ 'db' ][ 'host' ];
+      $user       = $this->data[ 'db' ][ 'user' ];
+      $status     = $this->data[ 'dataset' ][ 'status' ];
+      $epr        = $this->data[ 'eprfile' ];
+      $analysisID = $this->getAnalysisID( $epr );
+      $xml        = $this->data[ 'jobxmlfile' ];
  
       $db = mysql_connect( $host, $dbusername, $dbpasswd );
  
       if ( ! $db )
       {
          $this->message[] = "Cannot open database on $host\n";
-         exit( 1 );
+         //exit( 1 );
       }
  
       if ( ! mysql_select_db( $dbname, $db ) ) 
       {
          $this->message[] = "Cannot change to database $dbname\n";
-         exit( 2 );
+         //exit( 2 );
       }
  
       $query = "insert into HPCAnalysisResult set "                   .
@@ -202,14 +209,13 @@ $this->message[] = "End of result text";
                "queueStatus='$status', "                              .
                "updateTime=now(), "                                   .
                "jobfile='" . mysql_real_escape_string( $xml ) . "', " .
-               "eprfile='" . mysql_real_escape_string( $epr ) . "'";
+               "gfacID='$analysisID'";
       
       $result = mysql_query( $query, $db );
  
       if ( ! $result )
       {
          $this->message[] = "Invalid query: " . mysql_error( $db ) . "\n";
-         exit( 4 );
       }
  
       mysql_close( $db );
@@ -221,27 +227,24 @@ $this->message[] = "Database $dbname updated: requestID = $requestID";
       if ( ! $db )
       {
          $this->message[] = "Cannot open global database on $host\n";
-         exit( 1 );
       }
  
       if ( ! mysql_select_db( $globaldbname, $db ) ) 
       {
          $this->message[] = "Cannot change to global database $globaldbname\n";
-         exit( 2 );
       }
 
       $analysisID = $this->getAnalysisID( $epr );
 $this->message[] = "ExperimentID extracted from EPR file = '$analysisID'\n";
-      $query  = "INSERT INTO analysis SET " .
-                "analysisID = '$analysisID', " .
-                "time = now() ";
 
-      $result = mysql_query( $query, $db );
+      $cluster = $this->data['job']['cluster_shortname'];
+      $query   = "INSERT INTO analysis SET gfacID='$analysisID', cluster='$cluster'"; 
+      $result  = mysql_query( $query, $db );
  
       if ( ! $result )
       {
          $this->message[] = "Invalid query: " . mysql_error( $db ) . "\n";
-         exit( 4 );
+         //exit( 4 );
       }
  
       mysql_close( $db );
@@ -253,39 +256,22 @@ $this->message[] = "Global database $globaldbname updated: analysisID = $analysi
    {
       $analysisID = '';
 
-      $string1    = substr( $epr, strpos( $epr, 'experimentID' ) + 13 ) ;
-      $analysisID = substr( $string1, 0, strpos( $string1, 'experimentID' ) - 2 );
-      return $analysisID;
-
-
-/*
-      // For some reason doing it this way doesn't seem to work
       $parser = new XMLReader();
       $parser->xml( $epr );
 
       while( $parser->read() )
       {
-         if ( $parser->nodeType == XMLReader::ELEMENT )
+         $type = $parser->nodeType;
+
+         if ( $type == XMLReader::TEXT )
          {
-            $tag = $parser->name;
-echo " tag = $tag\n";
-
-            switch ( $tag )
-            {
-               case 'experimentID':
-                  $analysisID = $parser->value();  // $parser->getString(); ??
-                  break;
-
-               default :
-                  break;
-            }
+            $analysisID = $parser->value;
+            break;
          }
       }
 
-      // If we got here we didn't find it
-      $parser->close();
+      $parser->close();      
       return $analysisID;
-*/
    }
 }
 ?>

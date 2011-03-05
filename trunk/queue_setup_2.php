@@ -274,7 +274,7 @@ function get_editedData( $rawDataID, $editedDataID = 0 )
           or die("Query failed : $query<br />\n" . mysql_error());
 
   $profile    = "<select name='editedDataID[$rawDataID]'" .
-                "  onchange='this.form.submit();'>\n" .
+                "  onchange='this.form.submit();' size='3'>\n" .
                 "  <option value='null'>Select edit profile...</option>\n";
   while ( list( $eID, $label ) = mysql_fetch_array( $result ) )
   {
