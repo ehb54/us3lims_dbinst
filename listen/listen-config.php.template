@@ -1,0 +1,36 @@
+<?php
+
+$work        = "/home/us3/work";         // Directory for working files
+$pipe        = "/home/us3/etc/us3-pipe"; // Full path to pipe
+$logfile     = "/home/us3/etc/udp.log";  // Full path to log file
+$listen_port = 12345;                    // Udp port for supercomputer status
+$dbhost      = "ultrascan3.uthscsa.edu"; // Database host
+
+// Global DB credentials
+$guser       = "gfac";                   // Global database user for GFAC data
+$gpasswd     = "";                       // Password for global database
+$gDB         = "gfac";                   // Global database name
+
+// US3 DB credentials
+$user        = "us3php";                 // US3 Database user
+$passwd      = "";    i                  // US3 Database password
+$DB          = "us3";                    // US3 Database name
+
+$org_name    = "UltraScan3 Admin";       // Organization name for email
+$admin_email = "us3-admin@biochem.uthscsa.edu"; // Admin email address
+
+
+// This is really a library routine
+
+date_default_timezone_set( 'America/Chicago' );
+
+function write_log( $message )
+{
+   global $logfile;
+
+   $log = fopen( $logfile, "a" );
+   fwrite( $log, date( "Y-m-d H:i:s " ) . $message . "\n" );
+   fclose( $log );
+}
+
+?>

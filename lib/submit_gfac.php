@@ -32,11 +32,11 @@ $this->message[] = "End of submit_gfac.php\n";
       $queue       = $this->grid[ $cluster ][ 'queue' ];
      
       $cores       = $this->nodes();
-      $cores       = "16";    // override for now
+      //$cores       = "16";    // override for now
       
       $hostCount   = ceil( $cores / 4 );   // Only bigred
       $maxWallTime = $this->maxwall();
-      $maxWallTime = "60";      // override for now
+      //$maxWallTime = "60";      // override for now
  
       $this->data[ 'cores'       ] = $cores;
       $this->data[ 'maxWallTime' ] = $maxWallTime;
@@ -141,7 +141,7 @@ Content-Transfer-Encoding: base64
 ";
 
 $this->message[] = "Httpdata:
-[suppressed]";
+" .  htmlspecialchars( $xml, ENT_QUOTES );
 //$this->message[] = $httpdata;
  
       // Now make the request
