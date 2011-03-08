@@ -122,6 +122,8 @@ HTML;
     // For the moment we are supporting two submission methods.
     switch ( $cluster )
     {
+       case 'ranger' :
+       case 'lonestar' :
        case 'queenbee' :
           $job = new submit_gfac();
           break;

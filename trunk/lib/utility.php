@@ -59,11 +59,13 @@ class cluster_info
    }
 }
 
-$clusters = array( new cluster_info( "bcf.uthscsa.edu",            "bcf",      "normal" ),
-                   new cluster_info( "ranger.tacc.utexas.edu",     "ranger",   "normal" ),
-                   new cluster_info( "ranger.tacc.utexas.edu",     "ranger",   "long"   ),
-                   new cluster_info( "queenbee.loni-lsu.teragrid.org", "queenbee", "workq"  ),
-                   new cluster_info( "lonestar.tacc.teragrid.org", "lonestar", "normal" ) );
+$clusters = array( 
+  new cluster_info( "ranger.tacc.teragrid.edu",       "ranger",   "normal" ),
+  new cluster_info( "ranger.tacc.teragrid.edu",       "ranger",   "long"   ),
+  new cluster_info( "queenbee.loni-lsu.teragrid.org", "queenbee", "workq"  ),
+  new cluster_info( "lonestar.tacc.teragrid.org",     "lonestar", "normal" ), 
+  new cluster_info( "bcf.uthscsa.edu",                "bcf",      "normal" )
+  );
 
 // Function to return appropriate clusters
 function tigre()
@@ -74,7 +76,7 @@ function tigre()
     return( "" );
 
   $cmd = "/share/apps64/ultrascan/etc/us_get_tigre_sysstat 2> /dev/null";
-  exec( $cmd, $output);
+  //exec( $cmd, $output);
 
   $text = "    <fieldset style='margin-top:1em' id='clusters'>\n" .
           "      <legend>Select TIGRE Cluster</legend>\n";
@@ -109,7 +111,7 @@ HTML;
         $text .= "     <tr><td class='cluster'>" .
                  "<input type='radio' name='cluster' " .
                  "value='$value'$checked$disabled />" .
-                 "$cluster->name</td>\n         <td>$status</td> <td>$cluster->queue</td>" .
+                 "$cluster->short_name</td>\n         <td>$status</td> <td>$cluster->queue</td>" .
                  "<td>$jobs / $load</td></tr>\n";
 
         $checked = "";

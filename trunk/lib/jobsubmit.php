@@ -37,7 +37,7 @@ class jobsubmit
 
       $this->grid[ 'ranger' ] = array 
       (
-        "name"       => "ranger.tacc.utexas.edu",
+        "name"       => "ranger.tacc.teragrid.org",
         "submithost" => "",
         "userdn"     => "",
         "submittype" => "globus",
@@ -53,6 +53,26 @@ class jobsubmit
         "database"   => "us3",
         "maxtime"    => 2880,
         "maxproc"    => 64
+      );
+    
+      $this->grid[ 'lonestar' ] = array 
+      (
+        "name"       => "lonestar.tacc.teragrid.org",
+        "submithost" => "http://gw33.quarry.iu.teragrid.org",
+        "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
+        "submittype" => "http",
+        "globusport" => 0,
+        "httpport"   => 8080,
+        "workdir"    => "/ogce-rest/job/runjob/async",
+        "sshport"    => 22,
+        "factorytype"=> "",
+        "executable" => "",
+        "queue"      => "normal",
+        "udpserver"  => "ultrascan3.uthscsa.edu",
+        "udpport"    => 12233,
+        "database"   => "us3",
+        "maxtime"    => 1440,
+        "maxproc"    => 36
       );
     
       $this->grid[ 'queenbee' ] = array 
@@ -72,7 +92,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60,
-        "maxproc"    => 16
+        "maxproc"    => 24
       );
    }
    
