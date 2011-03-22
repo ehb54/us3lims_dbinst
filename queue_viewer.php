@@ -129,9 +129,9 @@ function page_content2()
     if (is_authorized($jobowner))
     {
       if ($jobtype == "tigre")
-        ; // exec("/share/apps64/ultrascan/bin64/tigre_job_cancel $jobid");
+        exec("/share/apps64/ultrascan/bin64/tigre_job_cancel $jobid");
       else if ($jobtype == "mpi")
-        ; // exec("/share/apps64/ultrascan/bin64/mpi_job_cancel $jobid");
+        exec("/share/apps64/ultrascan/bin64/mpi_job_cancel $jobid");
       else
         ;                                         // unsupported job type
 

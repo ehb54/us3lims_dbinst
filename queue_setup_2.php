@@ -321,30 +321,24 @@ function get_model( $rawDataID, $editedDataID, $modelID = 0 )
 // Get the noise files
 function get_noise( $rawDataID, $editedDataID, $noiseIDs )
 {
-  // For now
-  $noise      = "<select name='noiseIDs[$rawDataID][]' multiple='multiple' size='3'>\n" .
-                "  <option value='null'>Select noise (disabled)...</option>\n";
-  $noise   .= "</select>\n";
+  $noise  = "<select name='noiseIDs[$rawDataID][]' multiple='multiple' size='3'>\n" .
+            "  <option value='null'>Select noise ...</option>\n";
 
-  // For later
-/*
-  $query  = "SELECT noiseID, modelID, noiseType " .
+  $query  = "SELECT noiseID, modelID, noiseType, timeEntered " .
             "FROM noise " .
-            "WHERE editedDataID = $editedDataID ";
+            "WHERE editedDataID = $editedDataID";
 
   $result = mysql_query( $query )
           or die("Query failed : $query<br />\n" . mysql_error());
 
-  $noise      = "<select name='noiseIDs[$rawDataID][]' multiple='multiple' size='3'>\n" .
-                "  <option value='null'>Select noise...</option>\n";
-  while ( list( $nID, $modelID, $noiseType ) = mysql_fetch_array( $result ) )
+  while ( list( $nID, $modelID, $noiseType, $time ) = mysql_fetch_array( $result ) )
   {
     $selected = ( in_array( $nID, $noiseIDs ) ) ? " selected='selected'" : "";
-    $noise .= "  <option value='$nID'$selected>[$nID($modelID)] $noiseType</option>\n";
+    $noise .= "  <option value='$nID'$selected>[$nID] $noiseType - $time</option>\n";
   }
 
   $noise   .= "</select>\n";
-*/
+
   return( $noise );
 }
 ?>

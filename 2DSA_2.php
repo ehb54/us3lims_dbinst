@@ -39,7 +39,7 @@ include 'lib/utility.php';
 include 'lib/payload_manager.php';
 include 'lib/HPC_analysis.php';
 include 'lib/file_writer.php';
-include 'lib/submit_globus.php';
+include 'lib/submit_local.php';
 include 'lib/submit_gfac.php';
 
 // Create the payload manager and restore the data
@@ -107,7 +107,7 @@ if ( $files_ok )
 {
   $output_msg = <<<HTML
   <pre>
-  Thank you, your job was accepted to bcf and is currently processing, an
+  Thank you, your job was accepted and is currently processing. An
   email will be sent to {$_SESSION['submitter_email']} when the job is
   completed.
 
@@ -122,14 +122,14 @@ HTML;
     // For the moment we are supporting two submission methods.
     switch ( $cluster )
     {
-       case 'ranger' :
+       case 'ranger'   :
        case 'lonestar' :
        case 'queenbee' :
           $job = new submit_gfac();
           break;
     
        default :
-          $job = new submit_globus();
+          $job = new submit_local();
           break;
     }
    

@@ -301,7 +301,7 @@ function get_noise( $noiseIDs )
 
   $noise = "";
   while ( list( $nID, $modelID, $noiseType ) = mysql_fetch_array( $result ) )
-    $noise .= "<span>[$nID($modelID)] $noiseType</span><br />\n";
+    $noise .= "<span>[$nID] $noiseType</span><br />\n";
 
   return( $noise );
 }

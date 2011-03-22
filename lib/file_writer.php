@@ -259,9 +259,13 @@ abstract class File_writer
   {
     global $data_dir;
 
+// check for existence
     $dirPath = $data_dir . $dir_name;
     if ( ! mkdir( $dirPath, 0770 ) )
+    {
+      echo "\nmkdir failed\n";
       return false;
+    }
 
     return( $dirPath . "/" );
   }
@@ -269,16 +273,24 @@ abstract class File_writer
   // Function to create and open a file, and write data to it if possible
   function create_file( $filename, $dir, $data )
   {
+    echo "\nIn create_file: filename =  $filename\n";
     $dataFile = $dir . $filename;
 
-    if ( ! $fp = fopen( $dataFile, "a" ) )
+    if ( ! $fp = fopen( $dataFile, "w" ) )
+    {
+      echo "fopen failed\n";
       return false;
+    }
 
     if ( ! is_writable( $dataFile ) )
+    {
+      echo "is_writable failed\n";
       return false;
+    }
 
     if ( fwrite( $fp, $data ) === false )
     {
+      echo "fwrite failed\n";
       fclose( $fp );
       return false;
     }

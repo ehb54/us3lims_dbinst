@@ -18,36 +18,59 @@ class jobsubmit
       $this->grid[ 'bcf' ] = array 
       (
         "name"       => "bcf.uthscsa.edu",
-        "submithost" => "",
-        "userdn"     => "",
-        "submittype" => "globus",
-        "globusport" => 9443,
-        "httpport"   => 0,
-        "workdir"    => "/home/us3",
+        "submittype" => "local",
+        "workdir"    => "/home/us3/work/",  // Need trailing slash
         "sshport"    => 22,
-        "factorytype"=> "PBS",
         "executable" => "us_mpi_analysis.sh",
         "queue"      => "",
         "udpserver"  => "ultrascan3.uthscsa.edu",
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
-        "maxproc"    => 40
+        "maxproc"    => 20
+      );
+
+      $this->grid[ 'alamo' ] = array 
+      (
+        "name"       => "alamo.uthscsa.edu",
+        "submittype" => "local",
+        "workdir"    => "/home/us3/work/",  // Need trailing slash
+        "sshport"    => 22,
+        "executable" => "us_mpi_analysis.sh",
+        "queue"      => "",
+        "udpserver"  => "ultrascan3.uthscsa.edu",
+        "udpport"    => 12233,
+        "database"   => "us3",
+        "maxtime"    => 60000,
+        "maxproc"    => 32
+      );
+
+      $this->grid[ 'laredo' ] = array 
+      (
+        "name"       => "alamo.uthscsa.edu",
+        "submittype" => "local",
+        "workdir"    => "/home/us3/work/",   // Need trailing slash
+        "sshport"    => 22,
+        "executable" => "us_mpi_analysis.sh",
+        "queue"      => "laredo",
+        "udpserver"  => "ultrascan3.uthscsa.edu",
+        "udpport"    => 12233,
+        "database"   => "us3",
+        "maxtime"    => 60000,
+        "maxproc"    => 32
       );
 
       $this->grid[ 'ranger' ] = array 
       (
         "name"       => "ranger.tacc.teragrid.org",
-        "submithost" => "",
-        "userdn"     => "",
-        "submittype" => "globus",
-        "globusport" => 8443,
-        "httpport"   => 0,
-        "workdir"    => "/home/00451/tg457210",
+        "submithost" => "http://gw33.quarry.iu.teragrid.org",
+        "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
+        "submittype" => "http",
+        "httpport"   => 8080,
+        "workdir"    => "/ogce-rest/job/runjob/async",
         "sshport"    => 22,
-        "factorytype"=> "LFS",
         "executable" => "us_mpi_analysis",
-        "queue"      => "",
+        "queue"      => "normal",
         "udpserver"  => "ultrascan3.uthscsa.edu",
         "udpport"    => 12233,
         "database"   => "us3",
@@ -61,12 +84,9 @@ class jobsubmit
         "submithost" => "http://gw33.quarry.iu.teragrid.org",
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
-        "globusport" => 0,
         "httpport"   => 8080,
         "workdir"    => "/ogce-rest/job/runjob/async",
         "sshport"    => 22,
-        "factorytype"=> "",
-        "executable" => "",
         "queue"      => "normal",
         "udpserver"  => "ultrascan3.uthscsa.edu",
         "udpport"    => 12233,
@@ -81,12 +101,9 @@ class jobsubmit
         "submithost" => "http://gw33.quarry.iu.teragrid.org",
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
-        "globusport" => 0,
         "httpport"   => 8080,
         "workdir"    => "/ogce-rest/job/runjob/async",
         "sshport"    => 22,
-        "factorytype"=> "",
-        "executable" => "",
         "queue"      => "workq",
         "udpserver"  => "ultrascan3.uthscsa.edu",
         "udpport"    => 12233,
