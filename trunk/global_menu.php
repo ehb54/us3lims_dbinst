@@ -17,6 +17,7 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
+                <li><a href='view_projects.php'>View Projects</a></li>
                 <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
                 <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
@@ -46,6 +47,7 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
+                <li><a href='view_projects.php'>View Projects</a></li>
                 <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
                 <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
@@ -75,6 +77,7 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
+                <li><a href='view_projects.php'>View Projects</a></li>
                 <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
                 <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
@@ -104,6 +107,7 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
+                <li><a href='view_projects.php'>View Projects</a></li>
                 <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
                 <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
@@ -133,6 +137,7 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
+                <li><a href='view_projects.php'>View Projects</a></li>
                 <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
                 <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
@@ -154,6 +159,7 @@ $global_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
+                <li><a href='view_projects.php'>View Projects</a></li>
                 <li><a href='#' onclick='construction();'>New Project</a></li>
                 <li class='separator'></li>
                 <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
