@@ -145,7 +145,7 @@ echo <<<HTML
       <fieldset style="background: #eeeeee">
         <legend>Select File to Upload</legend>
         <input type="file" name="file-upload" size="30"/>
-        <input type="submit" name="upload_submit" value="Submit"/>
+        <input type="submit" name="upload_submit" value="Load Values"/>
       </fieldset>
     </form>
     <br/><br/>
@@ -290,7 +290,7 @@ function upload_file( &$buckets, $upload_dir )
     for ($j = 0; $j < 4; $j++ )
     {
       $num = trim( $nums[$j] );
-      if ( ereg( '^[-+]?[0-9]*\.?[0-9]*$', $num ) )
+      if ( preg_match( '/^[-+]?[0-9]*\.?[0-9]*$/', $num ) )
         settype( $num, 'float' );
 
       else

@@ -2,6 +2,8 @@
 
 $db        = $argv[ 1 ];;
 $requestID = $argv[ 2 ];
+$gfacID    = "";
+$me        = "cleanup.php";
 
 include "listen-config.php";
 write_log( "cleanup debug db=$db; requestID=$requestID" );
@@ -10,8 +12,8 @@ $us3_link = mysql_connect( $dbhost, $user, $passwd );
 
 if ( ! $us3_link )
 {
-   write_log( "cleanup.php: could not connect: $dbhost, $user, $passwd" );
-   mail_to_user( "fail", "Internal Error $requestID\n$query" );
+   write_log( "$me: could not connect: $dbhost, $user, $passwd" );
+   mail_to_user( "fail", "Internal Error $requestID\nCould not connect to DB" );
    exit( -1 );
 }
 
@@ -19,8 +21,8 @@ $result = mysql_select_db( $db, $us3_link );
 
 if ( ! $result )
 {
-   write_log( "cleanup.php: could not select DB $db" );
-   mail_to_user( "fail", "Internal Error $requestID\n$query" );
+   write_log( "$me: could not select DB $db" );
+   mail_to_user( "fail", "Internal Error $requestID\n$could not select DB $db" );
    exit( -1 );
 }
 
@@ -31,8 +33,8 @@ $result = mysql_query( $query, $us3_link );
 
 if ( ! $result )
 {
-   write_log( "cleanup.php: Bad query: $query" );
-   mail_to_user( "fail", "Internal Error $requestIDi\n$query" );
+   write_log( "$me: Bad query: $query" );
+   mail_to_user( "fail", "Internal Error $requestID\n$query\n" . mysql_error( $us3_link ) );
    exit( -1 );
 }
 
@@ -53,7 +55,7 @@ $result = mysql_query( $query, $us3_link );
 
 if ( ! $result )
 {
-   write_log( "cleanup.php: Bad query: $query" );
+   write_log( "$me: Bad query:\n$query\n" . mysql_error( $us3_link ) );
    exit( -1 );
 }
 list( $cluster, $submittime, $queuestatus, $jobtype ) = mysql_fetch_array( $result );
@@ -66,8 +68,8 @@ $result = mysql_query( $query, $us3_link );
 
 if ( ! $result )
 {
-   write_log( "cleanup.php: Bad query: $query" );
-   mail_to_user( "fail", "Internal Error $requestID" );
+   write_log( "$me: Bad query: $query" );
+   mail_to_user( "fail", "Internal Error $requestID\n$query\n" . mysql_error( $us3_link ) );
    exit( -1 );
 }
 
@@ -84,8 +86,8 @@ $result = mysql_select_db( $gDB, $gfac_link );
 
 if ( ! $result )
 {
-   write_log( "cleanup.php: Could not connect to DB $gDB" );
-   mail_to_user( "fail", "Internal Error $requestID" );
+   write_log( "$me: Could not connect to DB $gDB" );
+   mail_to_user( "fail", "Internal Error $requestID\nCould not connect to DB $gDB" );
    exit( -1 );
 }
 
@@ -103,10 +105,11 @@ while ( true )
 
    $tries++;
 
-   if ( $tries > 40 ) // Wait 10 minutes max
+   if ( $tries > 80 ) // Wait 20 minutes max
    {
-      write_log( "Global DB not updating for GFAC job $gfacID" );
-      mail_to_user( "fail", "Internal Error. Request ID = $requestID" );
+      write_log( "$me: Global DB not updating for GFAC job $gfacID" );
+      mail_to_user( "fail", "Internal Error. Request ID = $requestID\n" .
+                    "Global DB not updating for GFAC job $gfacID" );
       exit( -1 );
    }
    else
@@ -122,8 +125,8 @@ $result = mysql_query( $query, $gfac_link );
 
 if ( ! $result )
 {
-   write_log( "cleanup.php: Bad query: $query" );
-   mail_to_user( "fail", "Internal error " . mysql_query( $gfac_link ) );
+   write_log( "$me: Bad query:\n$query\n" . mysql_error( $gfac_link ) );
+   mail_to_user( "fail", "Internal error " . mysql_error( $gfac_link ) );
    exit( -1 );
 }
 
@@ -132,8 +135,14 @@ list( $stderr, $stdout, $tarfile ) = mysql_fetch_array( $result );
 // Delete data from GFAC DB
 $query = "DELETE from analysis WHERE gfacID='$gfacID'";
 
-// Don't delete for TESTING
-//mysql_query( $query, $gfac_link );
+$result = mysql_query( $query, $gfac_link );
+
+if ( ! $result )
+{
+   // Just log it and continue
+   write_log( "$me: Bad query:\n$query\n" . mysql_error( $gfac_link ) );
+}
+
 mysql_close( $gfac_link );
 
 /////////
@@ -148,21 +157,21 @@ $result = mysql_query( $query, $us3_link );
 
 if ( ! $result )
 {
-   echo "Bad query: $query\n";
-   write_log( "cleanup.php: Bad query: $query" );
-   mail_to_user( "fail", $query );
+   write_log( "$me: Bad query:\n$query\n" . mysql_error( $us3_link ) );
+   mail_to_user( "fail", "Bad query:\n$query\n" . mysql_error( $us3_link ) );
    exit( -1 );
 }
+
 // Save the tarfile and expand it
 
 if ( strlen( $tarfile ) == 0 )
 {
-   write_log( "cleanup.php: No tarfile" );
+   write_log( "$me: No tarfile" );
    mail_to_user( "fail", "No results" );
    exit();
 }
 
-mkdir( "$work/$gfacID" );
+if ( ! is_dir( "$work/$gfacID" ) ) mkdir( "$work/$gfacID", 0770 );
 chdir( "$work/$gfacID" );
 
 $f = fopen( "analysis.tar", "w" );
@@ -178,7 +187,7 @@ if ( $err != 0 )
    exec( "rm -r $gfacID" );
    $output = implode( "\n", $tar_out );
 
-   write_log( "cleanup.php: Bad tarfile: $output" );
+   write_log( "$me: Bad tarfile: $output" );
    mail_to_user( "fail", "Bad tarfile" );
    exit();
 }
@@ -189,15 +198,22 @@ $noiseIDs = array();
 
 foreach ( $files as $file )
 {
-   list( $fn, $meniscus, $mc_iteration, $variance ) = explode( ";", $file );
+   $split = explode( ";", $file );
+
+   if ( count( $split ) > 1 )
+   {
+      list( $fn, $meniscus, $mc_iteration, $variance ) = explode( ";", $file );
    
-   list( $other, $mc_iteration ) = explode( "=", $mc_iteration );
-   list( $other, $variance     ) = explode( "=", $variance );
-   list( $other, $meniscus     ) = explode( "=", $meniscus );
+      list( $other, $mc_iteration ) = explode( "=", $mc_iteration );
+      list( $other, $variance     ) = explode( "=", $variance );
+      list( $other, $meniscus     ) = explode( "=", $meniscus );
+   }
+   else
+      $fn = $file;
 
    if ( filesize( $fn ) < 100 )
    {
-      write_log( "cleanup.php:fn is invalid $fn" );
+      write_log( "$me:fn is invalid $fn" );
       mail_to_user( "fail", "Internal error\n$fn is invalid" );
       exit( -1 );
    }
@@ -214,8 +230,8 @@ foreach ( $files as $file )
       $query = "INSERT INTO noise SET "  .
                "noiseGUID='$noiseGUID'," .
                "modelGUID='$modelGUID'," .
-               "editDataID=1, "          .
-               "modelID=0, "             .
+               "editedDataID=1, "          .
+               "modelID=1, "             .
                "noiseType='$type',"      .
                "xml='" . mysql_real_escape_string( $xml, $us3_link ) . "'";
 
@@ -225,8 +241,8 @@ foreach ( $files as $file )
 
       if ( ! $result )
       {
-         write_log( "cleanup.php: Bad query: $query" );
-         mail_to_user( "fail", "Internal error\n$query" );
+         write_log( "$me: Bad query:\n$query\n" . mysql_error( $us3_link ) );
+         mail_to_user( "fail", "Internal error\n$query\n" . mysql_error( $us3_link ) );
          exit( -1 );
       }
 
@@ -256,12 +272,13 @@ foreach ( $files as $file )
 
       if ( ! $result )
       {
-         write_log( "cleanup.php: Bad query: $query" );
-         mail_to_user( "fail", "Internal error\n$query" );
+         write_log( "$me: Bad query:\n$query " . mysql_error( $us3_link ) );
+         mail_to_user( "fail", "Internal error\n$query\n" . mysql_error( $us3_link ) );
          exit( -1 );
       }
 
       $modelID   = mysql_insert_id( $us3_link );
+      $id        = $modelID;
       $file_type = "model";
 
       $query = "INSERT INTO modelPerson SET " .
@@ -272,14 +289,14 @@ foreach ( $files as $file )
    $query = "INSERT INTO HPCAnalysisResultData SET "       .
             "HPCAnalysisResultID='$HPCAnalysisResultID', " .
             "HPCAnalysisResultType='$file_type', "         .
-            "resultID=$modelID";
+            "resultID=$id";
 
    $result = mysql_query( $query, $us3_link );
 
    if ( ! $result )
    {
-      write_log( "cleanup.php: Bad query: $query" );
-      mail_to_user( "fail", "Internal error\n$query" );
+      write_log( "$me: Bad query:\n$query\n" . mysql_error( $us3_link ) );
+      mail_to_user( "fail", "Internal error\n$query\n" . mysql_error( $us3_link ) );
       exit( -1 );
    }
 }
@@ -300,15 +317,15 @@ foreach ( $noiseIDs as $noiseID )
 
    if ( ! $result )
    {
-      write_log( "cleanup.php: Bad query: $query" );
-      mail_to_user( "fail", "Internal error\n$query" );
+      write_log( "$me: Bad query:\n$query\n" . mysql_error( $us3_link ) );
+      mail_to_user( "fail", "Bad query\n$query\n" . mysql_error( $us3_link ) );
       exit( -1 );
    }
 }
 
 // Clean up
 chdir ( $work );
-exec( "rm -r $gfacID" );
+exec( "rm -rf $gfacID" );
 
 mysql_close( $us3_link );
 
@@ -323,12 +340,14 @@ function mail_to_user( $type, $msg )
    global $email_address;
    global $submittime;
    global $queuestatus;
+   global $status;
    global $cluster;
    global $jobtype;
    global $org_name;
    global $admin_email;
    global $dbhost;
    global $requestID;
+   global $gfacID;
 
    $headers  = "From: $org_name Admin<$admin_email>"     . "\n";
    $headers .= "Cc: $org_name Admin<$admin_email>"       . "\n";
@@ -339,22 +358,28 @@ function mail_to_user( $type, $msg )
 
    // Try to avoid spam filters
    $now = time();
-   $headers .= "Message-ID: <" . $now . "cleanup@$dbhost>$requestID\n";
+   $headers .= "Message-ID: <" . $now . "cleanup@$dbhost>\n";
    $headers .= "X-Mailer: PHP v" . phpversion()         . "\n";
    $headers .= "MIME-Version: 1.0"                      . "\n";
    $headers .= "Content-Transfer-Encoding: 8bit"        . "\n";
 
-   $subject       = "UltraScan Job Notification - $type";
+   $subject       = "UltraScan Job Notification - $type - " . substr( $gfacID, 0, 16 );
    $message       = "
    Your UltraScan job is complete:
 
    Submission Time:  $submittime
+   Analysis ID    :  $gfacID
    Status         :  $queuestatus
+   GFAC Status    :  $status
    Cluster        :  $cluster
    Job Type       :  $jobtype
    ";
 
    if ( $type != "success" ) $message .= "Error Message  :  $msg\n";
+
+   // Handle the error case where an error occurs before fetching the
+   // user's email address
+   if ( $email_address == "" ) $email_address = $admin_email;
 
    mail( $email_address, $subject, $message, $headers );
 }
