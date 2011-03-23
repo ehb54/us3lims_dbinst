@@ -28,14 +28,23 @@ if ( isset( $_POST['sort_order'] ) )
   exit();
 }
 
+include 'config.php';
+include 'db.php';
+include 'lib/cluster_info.php';       // Information about the clusters
+
+if ( isset( $_POST['delete'] ) )
+{
+  do_delete();
+
+  header( "Location: {$_SERVER['PHP_SELF']}" );
+  exit();
+}
+
 // define( 'DEBUG', true );
 
 $sort_order = 'submitTime';
 if ( isset( $_SESSION['queue_viewer_sort_order'] ) )
   $sort_order = $_SESSION['queue_viewer_sort_order'];
-
-include 'config.php';
-include 'db.php';
 
 // Start displaying page
 $page_title = "Queue Viewer";
@@ -95,6 +104,112 @@ function order_select( $current_order = NULL )
 
   return $text;
 }
+
+// A function to delete the selected job
+function do_delete()
+{
+  global $clusters;             // From cluster_info.php
+
+  $cluster  = $_POST['cluster'];
+  $gfacID   = $_POST['gfacID'];
+  $jobEmail = $_POST['jobEmail'];
+
+  // Find out which cluster we're deleting from
+  $found = false;
+  foreach ( $clusters as $ndx => $info )
+  {
+    if ( strcmp( $info['name'], $cluster ) == 0 )
+    {
+      $shortname = $ndx;
+      $host      = $info['submithost'];
+      $port      = $info['httpport'];
+      $workdir   = $info['workdir'];
+      $found     = true;
+      break;
+    }
+  }
+
+  if ( ! $found ) return;
+
+  switch ( $shortname )
+  {
+    case 'ranger'   :
+    case 'lonestar' :
+    case 'queenbee' : 
+
+      $url = "$host:$port$workdir/canceljob/$gfacID";
+      $post = new HttpRequest( $url, HttpRequest::METH_GET );
+
+      $status  = '';      
+      try
+      {
+        $result = $post->send();
+        $status = $post->getResponseBody();  
+      }
+      catch ( HttpException $e )
+      {
+        // Let's update the lastMessage field so the user sees
+        $query  = "UPDATE HPCAnalysisResult SET " .
+                  "lastMessage = 'There has been an error attempting to delete this job' " .
+                  "WHERE gfacID = '$gfacID' ";
+        mysql_query( $query );
+        return;
+      }
+
+      // Get the status response
+      $gfac_status = parse_response( $status );
+      if ( strcmp( $gfac_status, "CANCELED" ) == 0 )
+      {
+        // Let's update the lastMessage field so maybe user sees
+        $query  = "UPDATE HPCAnalysisResult SET " .
+                  "lastMessage = 'This job has been deleted', " .
+                  "queueStatus = 'aborted' " .
+                  "WHERE gfacID = '$gfacID' ";
+        mysql_query( $query );
+      }
+
+      break;
+
+    case 'bcf'      :
+    case 'alamo'    :
+    case 'laredo'   :
+      break;
+
+    default         :
+      break;
+  }
+}
+
+function parse_response( $xml )
+{
+   global $message;
+
+   $status  = "";
+   $message = "";
+
+   $parser = new XMLReader();
+   $parser->xml( $xml );
+
+   while( $parser->read() )
+   {
+      $type = $parser->nodeType;
+
+      if ( $type == XMLReader::ELEMENT )
+         $name = $parser->name;
+
+      else if ( $type == XMLReader::TEXT )
+      {
+         if ( $name == "status" )
+            $status  = $parser->value;
+         else
+            $message = $parser->value;
+      }
+   }
+
+   $parser->close();
+   return $status;
+}
+
 
 // A function to generate page content using lims2 methods
 function page_content2()
