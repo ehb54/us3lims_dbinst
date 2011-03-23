@@ -21,109 +21,229 @@ if ( $_SESSION['userlevel'] < 2 )
 } 
 
 include_once 'config.php';
-include_once 'db.php';
 
+// Start by getting info from global db
+$globaldb = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
+
+if ( ! $globaldb )
+{
+  echo "<p>Cannot open global database on $globaldbhost</p>\n";
+  return;
+}
+
+if ( ! mysql_select_db( $globaldbname, $globaldb ) ) 
+{
+  echo "<p>Cannot change to global database $globaldbname</p>\n";
+  return;
+}
+
+$query  = "SELECT gfacID, us3_db FROM analysis " .
+          "ORDER BY time ";
+$result = mysql_query( $query )
+          or die( "Query failed : $query<br />" . mysql_error());
+if ( mysql_num_rows( $result ) == 0 )
+{
+  echo "<p>No jobs are currently queued.</p>\n";
+  return;
+}
+
+// Get all the info from the global db at once to avoid switching more than necessary
+$global_info = array();
+while ( list( $gfacID, $us3_db ) = mysql_fetch_array( $result ) )
+  $global_info[ $gfacID ] = $us3_db;
+
+// Now get the info we need from each of the local databases
+$display_info = array();
+foreach ( $global_info as $l_gfacID => $db )
+{
+  $info = get_status( $l_gfacID, $db );
+  if ( $info !== false )
+    $display_info[] = $info;
+}
+
+// Sort $display_info according to preferred sort_order
 $sort_order = 'submitTime';
 if ( isset( $_SESSION['queue_viewer_sort_order'] ) )
   $sort_order = $_SESSION['queue_viewer_sort_order'];
+uasort( $display_info, 'cmp' );
 
 $content = "<div class='queue_content'>\n";
 
-$query  = "SELECT queueStatus, lastMessage, updateTime, editXMLFilename, " .
-          "investigatorGUID, submitterGUID, submitTime, clusterName, method, runID " .
-          "FROM HPCAnalysisResult r, HPCAnalysisRequest q, experiment " .
-          "WHERE ( ( queueStatus = 'queued' ) || " .
-          "        ( queueStatus = 'running' ) ) " .
-          "AND r.HPCAnalysisRequestID = q.HPCAnalysisRequestID " .
-          "AND q.experimentID = experiment.experimentID " .
-          "ORDER BY $sort_order ";
-$result = mysql_query( $query )
-          or die( "Query failed : $query<br />" . mysql_error());
+$content .= "<table>\n";
+$content .= "<tr><td colspan='5' class='decoration'><hr/></td></tr>\n";
 
-if ( mysql_num_rows( $result ) == 0 )
-  $content .= "<p>No jobs are currently queued</p>\n";
-
-else
+foreach( $display_info as $display )
 {
-  $content  = "<table>\n";
-  $content .= "<tr><td colspan='5' class='decoration'><hr/></td></tr>\n";
-
-  while( $row = mysql_fetch_array( $result ) )
+  foreach ( $display as $key => $value )
   {
-    foreach ( $row as $key => $value )
-    {
-      $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( nl2br($value)) );
-    }
-
-    $triple = '';
-    if ( ! empty( $row['editXMLFilename'] ) )
-    {
-      $xmlparts = array();
-      $xmlparts = explode( '.', $row['editXMLFilename'] );
-      $triple   =                  '( ' .
-                  $xmlparts[ 3 ] . '/' .
-                  $xmlparts[ 4 ] . '/' .
-                  $xmlparts[ 5 ] . ' )';
-    }
-
-    $query2  = "SELECT email FROM people " .
-               "WHERE personGUID = '$investigatorGUID' ";
-    $result2 = mysql_query( $query2 )
-               or die( "Query failed : $query2<br />" . mysql_error());
-    list( $email ) = mysql_fetch_array( $result2 );
-
-    if ( $investigatorGUID != $submitterGUID )
-    {
-      $query2  = "SELECT email FROM people " .
-                 "WHERE personGUID = '$submitterGUID' ";
-      $result2 = mysql_query( $query2 )
-                 or die( "Query failed : $query2<br />" . mysql_error());
-      list( $submitterEmail ) = mysql_fetch_array( $result2 );
-      $email .= " ($submitterEmail)";
-    }
-
-    $content .= "<tr><th>Run ID:</th>\n" .
-              "<td colspan='3'>$runID $triple</td>\n" .
-              "<td rowspan='6'>\n" .
-              display_buttons() .
-              "</td></tr>\n";
-
-    $content .= <<<HTML
-    <tr><th>Owner:</th>
-        <td colspan='3'>$email</td></tr>
-
-    <tr><th>Last message:</th>
-        <td colspan='3'>$lastMessage</td></tr>
-
-    <tr><th>Status:</th>
-        <td class='$queueStatus'>$queueStatus</td>
-        <th>Analysis Type:</th>
-        <td>$method</td></tr>
-
-    <tr><th>Submitted on:</th>
-        <td>$submitTime</td>
-        <th rowspan='2'>Running on:</th>
-        <td rowspan='2'>$clusterName</td></tr>
-
-    <tr><th>Last Updated:</th>
-        <td>$updateTime</td></tr>
-
-    <tr><td colspan='5' class='decoration'><hr/></td></tr>
-HTML;
+    $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( nl2br($value)) );
   }
 
-  $content .= "</table>\n";
+  $db_info = ( $_SESSION['userlevel'] >= 2 ) ? "$database (ID: $HPCAnalysisRequestID)" : "";
+
+  $content .= "<tr><th>Run ID:</th>\n" .
+            "<td colspan='3'>$runID $triple $db_info</td>\n" .
+            "<td rowspan='6'>\n" .
+            display_buttons( $clusterName, $gfacID, $jobEmail ) .
+            "</td></tr>\n";
+
+  $content .= <<<HTML
+  <tr><th>Owner:</th>
+      <td colspan='3'>$jobEmail</td></tr>
+
+  <tr><th>Last message:</th>
+      <td colspan='3'>$lastMessage</td></tr>
+
+  <tr><th>Status:</th>
+      <td class='$queueStatus'>$queueStatus</td>
+      <th>Analysis Type:</th>
+      <td>$method</td></tr>
+
+  <tr><th>Submitted on:</th>
+      <td>$submitTime</td>
+      <th rowspan='2'>Running on:</th>
+      <td rowspan='2'>$clusterName</td></tr>
+
+  <tr><th>Last Updated:</th>
+      <td>$updateTime</td></tr>
+
+  <tr><td colspan='5' class='decoration'><hr/></td></tr>
+HTML;
 }
+
+$content .= "</table>\n";
 
 $content .= "</div>\n";
 
 echo $content;
+exit();
 
-// A function to optionally generate delete buttons
-function display_buttons()
+// Function to get the information we need from an individual database
+function get_status( $gfacID, $us3_db )
+{
+  global $dbhost;           // From config.php
+  global $dbusername;
+  global $dbpasswd;
+
+  $link = mysql_connect( $dbhost, $dbusername, $dbpasswd );
+  if ( ! $link ) return false;
+
+  $result = mysql_select_db($us3_db, $link);
+  if ( ! $result ) return false;
+
+  // Ok, now get what we can from the HPC tables
+  $query  = "SELECT r.HPCAnalysisRequestID, queueStatus, lastMessage, updateTime, editXMLFilename, " .
+            "investigatorGUID, submitterGUID, submitTime, clusterName, method, runID " .
+            "FROM HPCAnalysisResult r, HPCAnalysisRequest q, experiment " .
+            "WHERE r.gfacID = '$gfacID' " .                                 // limit to 1 record right off
+            "AND r.HPCAnalysisRequestID = q.HPCAnalysisRequestID " .
+            "AND q.experimentID = experiment.experimentID ";
+  $result = mysql_query( $query );
+  if ( ! $result || mysql_num_rows( $result ) == 0 )
+    return false;
+
+  $status = mysql_fetch_array( $result, MYSQL_ASSOC );
+  
+  // Make a few helpful changes
+  $triple = '';
+  if ( ! empty( $status['editXMLFilename'] ) )
+  {
+    $xmlparts = array();
+    $xmlparts = explode( '.', $status['editXMLFilename'] );
+    $triple   =                  '( ' .
+                $xmlparts[ 3 ] . '/' .
+                $xmlparts[ 4 ] . '/' .
+                $xmlparts[ 5 ] . ' )';
+  }
+  unset( $status['editXMLFilename'] );
+  $status['triple'] = $triple;
+
+  $email = '';
+  $query  = "SELECT email FROM people " .
+            "WHERE personGUID = '{$status['investigatorGUID']}' ";
+  $result = mysql_query( $query );
+  if ( $result && mysql_num_rows( $result ) == 1 )
+    list( $jobEmail ) = mysql_fetch_array( $result );
+
+  if ( $status['investigatorGUID'] != $status['submitterGUID'] )
+  {
+    $query  = "SELECT email FROM people " .
+              "WHERE personGUID = '{$status['submitterGUID']}' ";
+    $result = mysql_query( $query );
+    if ( $result && mysql_num_rows( $result ) == 1 )
+    {
+      list( $submitterEmail ) = mysql_fetch_array( $result );
+      $jobEmail .= " ($submitterEmail)";
+    }
+  }
+  $status['jobEmail'] = $jobEmail;
+
+  $status['database'] = $us3_db;
+  $status['gfacID']   = $gfacID;
+
+  return $status;
+}
+
+// A function to compare to items
+function cmp( $a, $b )
+{
+  global $sort_order;
+
+  if ( $a[ $sort_order ] == $b[ $sort_order ] )
+    return 0;
+
+  return ( $a[ $sort_order ] < $b[ $sort_order ] ) ? -1 : 1;
+}
+
+// If current user is authorized to delete this job, display
+//  a delete button
+function display_buttons( $cluster, $gfacID, $jobEmail )
 {
   $buttons = "";
 
+  if ( is_authorized( $jobEmail ) )
+  {
+    // Button to delete current job from the queue
+    $buttons = "<form action='queue_viewer.php' method='post'>\n" .
+               "  <input type='hidden' name='cluster' value='$cluster' />\n" .
+               "  <input type='hidden' name='gfacID' value='$gfacID' />\n" .
+               "  <input type='hidden' name='jobEmail' value='$jobEmail' />\n" .
+               "  <input type='submit' name='delete' value='Delete' />\n" .
+               "</form>\n";
+
+    // Button to resubmit current job to a different cluster
+    /*
+    $buttons .= "<form action='resubmit_analysis.php' method='post'>\n" .
+                "  <input type='hidden' name='cluster' value='$cluster' />\n" .
+                "  <input type='hidden' name='gfacID' value='$gfacID' />\n" .
+                "  <input type='hidden' name='jobEmail' value='$jobEmail' />\n" .
+               ?? "  <input type='hidden' name='HPCID' value='$HPCAnalysisID' />\n" .
+                "  <input type='submit' name='resubmit' value='Resubmit' />\n" .
+                "</form>\n";
+    */
+
+  }
+
   return $buttons;
 }
+
+// Figure out if current user is authorized to delete this job
+function is_authorized( $jobEmail )
+{
+  $authorized = false;
+
+  // $jobEmail could have multiple emails in it
+  $pos = strpos( $jobEmail, $_SESSION['email'] );
+
+  if ($_SESSION['userlevel'] >= 4)
+    $authorized = true;
+
+  else if ( ($_SESSION['userlevel'] >= 2) &&
+       ( $pos !== false ) )
+    $authorized = true;
+
+  return ($authorized);
+}
+
+
 ?>
