@@ -178,6 +178,17 @@ function do_delete()
     default         :
       break;
   }
+
+  // Now switch to global db and delete that entry
+  global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
+  $globaldb = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
+  if ( ! $globaldb ) return;
+
+  if ( ! mysql_select_db( $globaldbname, $globaldb ) ) return;
+
+  $query  = "DELETE FROM analysis " .
+            "WHERE gfacID = '$gfacID' ";
+  mysql_query( $query );
 }
 
 function parse_response( $xml )
