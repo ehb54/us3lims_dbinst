@@ -5,7 +5,7 @@
 */
 
 $org_name           = 'UltraScan3 LIMS portal';
-$org_site           = 'bcf.uthscsa.edu/us3lims_test.uthscsa.edu';
+$org_site           = 'ultrascan3.uthscsa.edu/lims3';
 $site_author        = 'Dan Zollars, University of Texas Health Science Center';
 $site_keywords      = 'ultrascan analytical ultracentrifugation lims';
                       # The website keywords (meta tag)
@@ -21,10 +21,10 @@ $dbname             = '';  # the name of the database
 $dbhost             = 'localhost'; # the host on which MySQL runs, generally localhost
 
 // Global DB
-$globaldbuser       = '';  # the name of the MySQL user
-$globaldbpasswd     = '';  # the password for the MySQL user
-$globaldbname       = '';  # the name of the database
-$globaldbhost       = 'localhost'; # the host on which MySQL runs, generally localhost
+$globaldbuser       = 'gfac';  # the name of the MySQL user
+$globaldbpasswd     = 'backend';  # the password for the MySQL user
+$globaldbname       = 'gfac';  # the name of the database
+$globaldbhost       = 'ultrascan3.uthscsa.edu'; # the host on which MySQL runs, generally localhost
 
 $ipaddr             = '129.111.140.173'; # the external IP address of the host machine
 $udpport            = 12335; # the port to send udp messages to
@@ -32,8 +32,8 @@ $udpport            = 12335; # the port to send udp messages to
 $top_image          = '#';  # name of the logo to use
 $top_banner         = 'images/#';  # name of the banner at the top
 
-$full_path          = '/var/www/html/us3/us3lims_test/';  # Location of the system code
-$data_dir           = '/var/www/html/us3/us3lims_test/data/'; # Full path
+$full_path          = '/srv/www/htdocs/lims3/';  # Location of the system code
+$data_dir           = '/srv/www/htdocs/lims3/data/'; # Full path
 $disclaimer_file    = ''; # the name of a text file with disclaimer info
 
 // Dates
