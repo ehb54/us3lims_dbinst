@@ -51,10 +51,12 @@ include 'links.php';
 $random_password = makeRandomPassword();
 $db_password = md5($random_password);
 
+$uuid = uuid();
 
 // Enter info into the Database.
 $query = "INSERT INTO people " .
-         "SET lname       = '$lname', " .
+         "SET personGUID  = '$uuid', " .
+         "lname           = '$lname', " .
          "fname           = '$fname', " .
          "organization    = '$organization', " .
          "address         = '$address', " .
