@@ -22,14 +22,14 @@ $userid = $_GET['id'];
 settype( $userid, 'int' );       // Removes any remaining characters in URL
 $code   = $_GET['code'];
 
-$query = "UPDATE people SET status='activated' " .
+$query = "UPDATE people SET activated = 1 " .
          "WHERE personID=$userid AND password='$code'";
 mysql_query($query) 
       or die ("Query failed : $query<br/>" . mysql_error());
 
 $query = "SELECT count(*) FROM people " .
          "WHERE personID='$userid' "    .
-         "AND password='$code' AND status='activated'";
+         "AND password='$code' AND activated = 1";
 $result = mysql_query( $query ) 
           or die ( "Query failed : $query<br />" . mysql_error() );
 list( $doublecheck ) = mysql_fetch_row( $result );
