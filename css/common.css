@@ -140,7 +140,7 @@ a.block:hover {
 /* Header */
 
 #header {
-  width                 : 980px;
+  width                 : 1000px;
   margin                : 1em auto 0px;   /* page will be 1em from top of window */
   background            : black;
   border                : solid black;
@@ -152,7 +152,7 @@ a.block:hover {
 }
 
 #header .banner {
-  width                 : 800px;
+  width                 : 820px;
   height                : 130px;
 }
 
@@ -171,9 +171,9 @@ a.block:hover {
 }
 
 #globalnav {
-  padding-left          : 80px;
+  padding-left          : 60px;
   vertical-align        : bottom;
-  width                 : 900px;      /* 980px - the 80px padding */
+  width                 : 940px;      /* 1000px - the 60px padding */
   float                 : left;
   background-color      : black;
 }
@@ -189,12 +189,12 @@ a.block:hover {
   list-style            : none;
   margin                : 0px;
   float                 : left;
-  width                 : 152px;      /* 760px (width of menus) / 5 (number of main menus)
+  width                 : 137px;      /* 820px (width of menus) / 6 (number of main menus)
                                          width could be as much as 900px */
 }
 
 #globalnav li a {
-  width                 : 152px;
+  width                 : 137px;
   padding               : 2px 0px 2px 5px;
   display               : block;
   background-color      : black;
@@ -221,7 +221,7 @@ a.block:hover {
 
 #globalnav ul ul {
   position              : absolute;
-  width                 : 152px;
+  width                 : 137px;
   display               : none;
 }
 
@@ -239,7 +239,7 @@ a.block:hover {
 
 #globalnav ul.level3 {
   top                   : -1px;
-  left                  : 152px;
+  left                  : 137px;
 }
 
 #globalnav ul.level2 li.submenu:hover ul.level3 {
@@ -254,7 +254,7 @@ a.block:hover {
 /* Page */
 
 #page {
-  width                 : 980px;
+  width                 : 1000px;
   margin                : -2px auto;
   background            : #FFFFFF  url(../images/links_background.gif) repeat-y;
   border                : solid black;
@@ -350,7 +350,7 @@ fieldset.option_value {
 
 #footer {
   clear                 : both;
-  width                 : 980px;
+  width                 : 1000px;
   height                : 115px;
   margin                : -2em auto 1em ; /* page will be 1em from bottom of window */
   padding-bottom        : 40px;           /* 15px + 25px to match padding in #info */
