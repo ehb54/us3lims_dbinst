@@ -36,7 +36,7 @@ $this->message[] = "End of submit_gfac.php\n";
       
       $hostCount   = ceil( $cores / 4 );   // Only bigred
       $maxWallTime = $this->maxwall();
-      //$maxWallTime = "60";      // override for now
+      //$maxWallTime = "5";      // override for now
  
       $this->data[ 'cores'       ] = $cores;
       $this->data[ 'maxWallTime' ] = $maxWallTime;
@@ -195,13 +195,13 @@ $this->message[] = "End of result text";
       if ( ! $db )
       {
          $this->message[] = "Cannot open database on $host\n";
-         //exit( 1 );
+         return;
       }
  
       if ( ! mysql_select_db( $dbname, $db ) ) 
       {
          $this->message[] = "Cannot change to database $dbname\n";
-         //exit( 2 );
+         return;
       }
  
       $query = "INSERT INTO HPCAnalysisResult SET "                   .
@@ -214,7 +214,8 @@ $this->message[] = "End of result text";
  
       if ( ! $result )
       {
-         $this->message[] = "Invalid query: " . mysql_error( $db ) . "\n";
+         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $db ) . "\n";
+         return;
       }
  
       mysql_close( $db );
@@ -226,11 +227,13 @@ $this->message[] = "Database $dbname updated: requestID = $requestID";
       if ( ! $db )
       {
          $this->message[] = "Cannot open global database on $host\n";
+         return;
       }
  
       if ( ! mysql_select_db( $globaldbname, $db ) ) 
       {
          $this->message[] = "Cannot change to global database $globaldbname\n";
+         return;
       }
 
       $gfacID = $this->getGfacID( $epr );
@@ -246,7 +249,8 @@ $this->message[] = "ExperimentID extracted from EPR file = '$gfacID'\n";
  
       if ( ! $result )
       {
-         $this->message[] = "Invalid query: " . mysql_error( $db ) . "\n";
+         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $db ) . "\n";
+         return;
       }
  
       mysql_close( $db );

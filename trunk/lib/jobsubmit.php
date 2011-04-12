@@ -62,7 +62,7 @@ class jobsubmit
 
       $this->grid[ 'ranger' ] = array 
       (
-        "name"       => "ranger.tacc.teragrid.org",
+        "name"       => "gatekeeper.ranger.tacc.teragrid.org",
         "submithost" => "http://gw33.quarry.iu.teragrid.org",
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
@@ -377,10 +377,10 @@ class jobsubmit
          $generations = $parameters[ 'generations' ];
          $population  = $parameters[ 'population' ];
 
-         // The constant 400 is an empirical value from doing a Hessian
+         // The constant 125 is an empirical value from doing a Hessian
          // minimumization
 
-         $time        = ( 400 + $population ) * $generations;
+         $time        = ( 125 + $population ) * $generations;
  
          $time *= 1.5;  // Pad things a bit
          $time  = (int)( ($time + 59) / 60 ); // Round up to minutes
@@ -437,6 +437,9 @@ class jobsubmit
          switch ( $cluster )
          {
             case 'lonestar':
+               $nodes = (int)( ( $nodes + 7 ) / 8 ) * 8;   // 8 nodes per processor
+               break;
+
             case 'queenbee':  
                $nodes = (int)( ( $nodes + 11 ) / 12 ) * 12;   // 12 nodes per processor
                break;
@@ -494,8 +497,11 @@ class jobsubmit
 
          switch ( $cluster )
          {
-            case 'lonestar':
             case 'queenbee':  
+               $nodes = ( $procs + 1 ) * 8;   // 8 nodes per processor
+               break;
+
+            case 'lonestar':
                $nodes = $procs * 12;   // 12 nodes per processor
                break;
 
@@ -511,7 +517,7 @@ class jobsubmit
  
       $nodes = max( $nodes, 2 );             // Minimum nodes is 2
       $nodes = min( $nodes, $max_nodes );    // Maximum nodes depends on cluster
- 
+
       return (int)$nodes;
    }
 }

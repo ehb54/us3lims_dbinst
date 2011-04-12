@@ -179,6 +179,12 @@ function do_delete()
       break;
   }
 
+/*
+  We don't need this.  GFAC will update the global DB and the error_handler
+  will then delete the record.  If we delete it here, GFAC will create 
+  an incomplete record in the gfac.analysis table.
+
+
   // Now switch to global db and delete that entry
   global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
   $globaldb = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
@@ -189,6 +195,7 @@ function do_delete()
   $query  = "DELETE FROM analysis " .
             "WHERE gfacID = '$gfacID' ";
   mysql_query( $query );
+*/
 }
 
 function parse_response( $xml )

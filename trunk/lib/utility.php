@@ -60,11 +60,12 @@ class cluster_info
 }
 
 $clusters = array( 
-  new cluster_info( "ranger.tacc.teragrid.edu",       "ranger",   "normal" ),
-  new cluster_info( "ranger.tacc.teragrid.edu",       "ranger",   "long"   ),
-  new cluster_info( "queenbee.loni-lsu.teragrid.org", "queenbee", "workq"  ),
-  new cluster_info( "lonestar.tacc.teragrid.org",     "lonestar", "normal" ), 
-  new cluster_info( "bcf.uthscsa.edu",                "bcf",      "normal" )
+  new cluster_info( "gatekeeper.ranger.tacc.teragrid.edu", "ranger",   "normal" ),
+  new cluster_info( "gatekeeper.ranger.tacc.teragrid.edu", "ranger",   "long"   ),
+  new cluster_info( "queenbee.loni-lsu.teragrid.org",      "queenbee", "workq"  ),
+  new cluster_info( "lonestar.tacc.teragrid.org",          "lonestar", "normal" ), 
+  new cluster_info( "bcf.uthscsa.edu",                     "bcf",      "normal" ),
+  new cluster_info( "alamo.uthscsa.edu",                   "alamo",    "normal" )
   );
 
 // Function to return appropriate clusters
@@ -79,7 +80,7 @@ function tigre()
   //exec( $cmd, $output);
 
   $text = "    <fieldset style='margin-top:1em' id='clusters'>\n" .
-          "      <legend>Select TIGRE Cluster</legend>\n";
+          "      <legend>Select Cluster</legend>\n";
 
   // Double check cluster authorizations
   if ( $_SESSION['userlevel'] >= 4         ||
@@ -119,7 +120,7 @@ HTML;
     } 
     $text .= <<<HTML
     </table>
-    <p><input class='submit' type='submit' name='TIGRE' value='Submit via TIGRE'/></p>
+    <p><input class='submit' type='submit' name='TIGRE' value='Submit'/></p>
 
 HTML;
   }
