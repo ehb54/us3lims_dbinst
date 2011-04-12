@@ -8,9 +8,16 @@
 require_once 'lib/jobsubmit.php';
 
 class submit_local extends jobsubmit
-{
-   // Submit the this->data
-   function submit()
+{ 
+   private $workdir;
+   private $tarfile;
+   private $requestID;
+   private $port;
+   private $address;
+   private $cluster;
+   
+    // Submit the this->data
+    function submit()
    {
       // a preliminary test to see if data is still defined
       if ( ! isset( $this->data[ 'job' ][ 'cluster_shortname' ] ) )
@@ -31,101 +38,177 @@ $this->message[] = "End of submit_local.php\n";
    // Copy needed files to supercomputer
    function copy_files()
    {
-      $cluster   = $this->data[ 'job' ][ 'cluster_shortname' ];
-      $requestID = $this->data[ 'job' ][ 'requestID' ];
-      $jobid     = $cluster . sprintf( "-%06d", $requestID );
-      $workdir   = $this->grid[ $cluster ][ 'workdir' ] . $jobid;
-      $address   = $this->grid[ $cluster ][ 'name' ];
-      $port      = $this->grid[ $cluster ][ 'sshport' ]; 
-      $tarFilename = sprintf( "hpcinput-%s-%s-%05d.tar",
+      $this->cluster   = $this->data[ 'job' ][ 'cluster_shortname' ];
+      $this->requestID = $this->data[ 'job' ][ 'requestID' ];
+      $jobid           = $this->cluster . sprintf( "-%06d", $this->requestID );
+      $this->workdir   = $this->grid[ $this->cluster ][ 'workdir' ] . $jobid;
+      $this->address   = $this->grid[ $this->cluster ][ 'name' ];
+      $this->port      = $this->grid[ $this->cluster ][ 'sshport' ]; 
+      $this->tarfile   = sprintf( "hpcinput-%s-%s-%05d.tar",
                                $this->data['db']['host'],
                                $this->data['db']['name'],
                                $this->data['job']['requestID'] );
       
       // Create working directory
-      $cmd = "ssh -p $port -x $address mkdir -p $workdir";
-      shell_exec( $cmd );
+      $cmd    = "ssh -p $this->port -x us3@$this->address mkdir -p $this->workdir";
+      $output = shell_exec( $cmd );
  
       // Copy tar file
-      $cmd = "scp -P 22 $tarFilename $address:" . $workdir;
-      shell_exec( $cmd );
+      $cmd    = "scp -P $this->port $this->tarfile us3@$this->address:" . $this->workdir;
+      $output = shell_exec( $cmd );
+
+      //  Create pbs file
+      $pbsfile = $this->create_pbs();
+      $cmd     = "scp -P $this->port $pbsfile us3@$this->address:" . $this->workdir;
+      $output = shell_exec( $cmd );
+      
 $this->message[] = "Files copied";
    }
  
+   // Create a pbs file
+   function create_pbs()
+   {
+      $pbsfile = "us3.pbs";
+      $wall    = $this->maxwall();
+
+      $hours   = (int)( $wall / 60 );
+      $mins    = (int)( $wall % 60 );
+
+      $walltime = sprintf( "%02.2d:%02.2d:00", $hours, $mins );  // 01:09:00
+
+      switch( $this->cluster )
+      {
+        case 'bcf':
+         $libpath = "/share/apps64/openmpi/lib";
+         $nodes   = $this->grid[ $this->cluster ][ 'maxproc' ];
+         $path    = "/share/apps64/openmpi/bin";
+         break;
+
+        default:
+         $libpath = "/share/apps/openmpi/lib:/share/apps/qt4/lib";
+         $nodes   = "8:ppn=4";
+         $path    = "/share/apps/openmpi/bin";
+         break;
+      }
+
+      $contents = 
+      "#! /bin/bash\n"                                      .
+      "#\n"                                                 . 
+      "#PBS -N US3_Job\n"                                   .
+      "#PBS -l nodes=$nodes,walltime=$walltime\n"           .
+      "#PBS -V\n"                                           .
+      "#PBS -o $this->workdir/stdout\n"                     .
+      "#PBS -e $this->workdir/stderr\n"                     .
+      "\n"                                                  .
+      "export LD_LIBRARY_PATH=$libpath:\$LD_LIBRARY_PATH\n" .
+      "export PATH=$path:\$PATH\n"                          .
+      "\n"                                                  .
+      "# Turn off extraneous mpi debug output\n"            .
+      "export OMPI_MCA_mpi_param_check=0\n"                 . 
+      "export OMPI_MCA_mpi_show_handle_leaks=0\n"           .
+      "export OMPI_MCA_mpi_show_mca_params=0\n"             .
+      "\n"                                                  .
+      "cd $this->workdir\n"                                 .
+      "mpirun -np $nodes /home/us3/bin/us_mpi_analysis $this->tarfile\n";
+
+      $this->data[ 'pbsfile' ] = $contents;
+
+      $h = fopen( $pbsfile, "w" );
+      fwrite( $h, $contents );
+      fclose( $h );
+
+      return $pbsfile;
+   }
+
    // Schedule the job
    function submit_job()
    {
       date_default_timezone_set( "America/Chicago" );
-      $term = '-term ' . date( 'm/d/Y', strtotime( '+1 month' ) );
  
-      $cluster = $this->data[ 'job' ][ 'cluster_shortname' ];
-      $name    = $this->grid[ $cluster ][ 'name' ];
-      $port    = $this->grid[ $cluster ][ 'localport' ];
- 
-      $factory = "-F https://" . $name . ":" . $port .
-                 "/wsrf/services/ManagedJobFactoryService";
- 
-      $factory_type = "-factory-type " . $this->grid[ $cluster ][ 'factorytype' ];
-      
-      $cmd = "qsub -submit -batch $term $factory $factory_type -f $this->jobfile" .
-             " 2> $this->jobfile.status";
-      $this->data[ 'eprfile' ] = shell_exec( $cmd );
-      // Check submit status
-      $status = file( "$this->jobfile.status" );
- 
-      // Line 1 should be "Submitting job...Done."
-      if ( preg_match( "/Done/i", $status[ 0 ] ) )
-         $this->data[ 'dataset' ][ 'status' ] = "queued";
-      else
-      {
-         $this->data[ 'dataset' ][ 'status' ] = "failed";
-      }
+      $cmd   = "ssh -p $this->port -x us3@$this->address qsub $this->workdir/us3.pbs";
+      $jobid = shell_exec( $cmd );
+      $this->data[ 'eprfile' ] = rtrim( $jobid );;
+
 $this->message[] = "Job submitted";
-$this->message[] = "Status:";
-$this->message[] = $status;
-$this->message[] = "Result file:";
-$this->message[] = $this->data['eprfile'];
+$this->message[] = "Job ID:" . $this->data[ 'eprfile' ];
    }
  
    function update_db()
    {
-      $requestID = $this->data[ 'job' ][ 'requestID' ];
-      $dbname    = $this->data[ 'db' ][ 'name' ];
-      $host      = $this->data[ 'db' ][ 'host' ];
-      $user      = $this->data[ 'db' ][ 'user' ];
-      $status    = $this->data[ 'dataset' ][ 'status' ];
- 
-      $db = mysql_connect( $host, "us3php", "us3" );
+      global $globaldbuser;
+      global $globaldbpasswd;
+      global $globaldbhost;
+      global $globaldbname;
+
+      global $dbusername;
+      global $dbpasswd;
+      global $dbhost;
+      global $dbname;
+
+      $db = mysql_connect( $dbhost, $dbusername, $dbpasswd );
  
       if ( ! $db )
       {
-         $this->message[] = "Cannot open database on $host\n";
-         exit( 1 );
+         $this->message[] = "Cannot open database on $dbhost\n";
+         return;
       }
  
       if ( ! mysql_select_db( $dbname, $db ) ) 
       {
          $this->message[] = "Cannot change to database $dbname\n";
-         exit( 2 );
+         return;
       }
  
-      $query = "insert into HPCAnalysisResult set "                   .
-               "HPCAnalysisRequestID='$requestID', "                  .
-               "queueStatus='$status', "                              .
-               "updateTime=now(), "                                   .
-               "jobfile='" . mysql_real_escape_string( $xml ) . "', " .
-               "eprfile='" . mysql_real_escape_string( $epr ) . "'";
+      $pbs = mysql_real_escape_string( $this->data[ 'pbsfile' ] );
+
+      $query = "INSERT INTO HPCAnalysisResult SET "        .
+               "HPCAnalysisRequestID='$this->requestID', " .
+               "jobfile='$pbs', "                          .
+               "gfacID='" . $this->data[ 'eprfile' ]      . "'";
       
       $result = mysql_query( $query, $db );
  
       if ( ! $result )
       {
-         $this->message[] = "Invalid query: " . mysql_error( $db ) . "\n";
-         exit( 4 );
+         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $db ) . "\n";
+         return;
       }
  
       mysql_close( $db );
-$this->message[] = "Database $dbname updated: requestID = $requestID";
+
+      // Insert initial data into global DB
+      $db = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
+ 
+      if ( ! $db )
+      {
+         $this->message[] = "Cannot open database on $globaldbhost\n";
+         return;
+      }
+ 
+      if ( ! mysql_select_db( $globaldbname, $db ) ) 
+      {
+         $this->message[] = "Cannot change to database $globaldbname\n";
+         return;
+      }
+ 
+      $pbs = mysql_real_escape_string( $this->data[ 'pbsfile' ] );
+
+      $query = "INSERT INTO analysis SET "                    .
+               "gfacID='"  . $this->data[ 'eprfile' ] . "', " .
+               "cluster='" . $this->cluster           . "', " .
+               "us3_db='$dbname'";
+
+      $result = mysql_query( $query, $db );
+ 
+      if ( ! $result )
+      {
+         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $db ) . "\n";
+         return;
+      }
+ 
+      mysql_close( $db );
+
+$this->message[] = "Database $dbname updated: requestID = $this->requestID";
    }
 }
 ?>

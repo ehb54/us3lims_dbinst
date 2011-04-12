@@ -718,7 +718,7 @@ function mutate_sk_setup()
 {
 echo<<<HTML
       <fieldset class='option_value'>
-        <legend>Mutate s/k</legend>
+        <legend>Mutate s and k</legend>
 
         <div class="slider" id="mutate_sk-slider">
           <input class="slider-input" id="mutate_sk-slider-input"/>

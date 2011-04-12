@@ -273,7 +273,7 @@ abstract class File_writer
   // Function to create and open a file, and write data to it if possible
   function create_file( $filename, $dir, $data )
   {
-    echo "\nIn create_file: filename =  $filename\n";
+    //echo "\nIn create_file: filename =  $filename\n";
     $dataFile = $dir . $filename;
 
     if ( ! $fp = fopen( $dataFile, "w" ) )

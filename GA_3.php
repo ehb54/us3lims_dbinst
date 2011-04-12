@@ -56,8 +56,8 @@ $files_ok  = true;  // Let's also make sure there weren't any problems writing t
 
 if ( $_SESSION[ 'separate_datasets' ] )
 {
-echo "Payload\n<pre>";
-print_r( $payload->get() );
+//echo "Payload\n<pre>";
+//print_r( $payload->get() );
 
   $dataset_count = $payload->get( 'datasetCount' );
 
@@ -147,7 +147,7 @@ HTML;
     $save_cwd = getcwd();         // So we can come back to the current 
                                   // working directory later
 
-print_r( $filenames );echo "</pre>";
+//print_r( $filenames );echo "</pre>";
 //exit();
 
     foreach ( $filenames as $filename )
