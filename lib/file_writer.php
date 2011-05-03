@@ -136,15 +136,23 @@ abstract class File_writer
             $xml->startElement( 'centerpiece_bottom' );
               $xml->writeAttribute( 'value', $dataset['centerpiece_bottom'] );
             $xml->endElement(); // centerpiece_bottom
-            $xml->startElement( 'vbar20' );
-              $xml->writeAttribute( 'value', $dataset['vbar20'] );
-            $xml->endElement(); // vbar20
-            $xml->startElement( 'density' );
-              $xml->writeAttribute( 'value', $dataset['density'] );
-            $xml->endElement(); // density
-            $xml->startElement( 'viscosity' );
-              $xml->writeAttribute( 'value', $dataset['viscosity'] );
-            $xml->endElement(); // viscosity
+
+            $xml->startElement( 'solution' );
+              $xml->startElement( 'buffer' );
+                $xml->writeAttribute( 'density', $dataset['density'] );
+                $xml->writeAttribute( 'viscosity', $dataset['viscosity'] );
+              $xml->endElement(); // buffer
+              foreach( $dataset['analytes'] as $analyte )
+              {
+                $xml->startElement( 'analyte' );
+                  $xml->writeAttribute( 'vbar20', $analyte['vbar']   );
+                  $xml->writeAttribute( 'amount', $analyte['amount'] );
+                  $xml->writeAttribute( 'mw',     $analyte['mw']     );
+                  $xml->writeAttribute( 'type',   $analyte['type']   );
+                $xml->endElement(); // analyte
+              }
+        
+            $xml->endElement(); //solution
           $xml->endElement(); // parameters
         $xml->endElement(); // dataset
       }
