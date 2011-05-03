@@ -124,16 +124,24 @@ abstract class Payload_manager
       if ( mysql_num_rows ( $result ) > 0 )
         list( $centerpiece_shape, $centerpiece_bottom ) = mysql_fetch_array( $result );      // should be 1
       
-      // We also need some information about the solution in this cell
-      $vbar20 = 0.0;
-      $query  = "SELECT commonVbar20 " .
-                "FROM rawData, solution " .
+      // We also need some information about the analytes in this cell
+      $analytes = array();
+      $query  = "SELECT type, vbar, molecularWeight, amount " .
+                "FROM rawData, solutionAnalyte, analyte " .
                 "WHERE rawData.rawDataID = $rawDataID " .
-                "AND rawData.solutionID = solution.solutionID ";
+                "AND rawData.solutionID = solutionAnalyte.solutionID " .
+                "AND solutionAnalyte.analyteID = analyte.analyteID ";
       $result = mysql_query( $query )
                 or die( "Query failed : $query<br />" . mysql_error());
-      if ( mysql_num_rows( $result ) > 0 )
-        list( $vbar20 ) = mysql_fetch_array( $result );      // should be 1
+      while ( list( $type, $vbar, $mw, $amount ) = mysql_fetch_array( $result ) )
+      {
+        $analyte['type']   = $type;
+        $analyte['vbar']   = $vbar;
+        $analyte['mw']     = $mw;
+        $analyte['amount'] = $amount;
+
+        $analytes[] = $analyte;
+      }
       
       // Finally, some buffer information
       $density = 0.0;
@@ -152,9 +160,9 @@ abstract class Payload_manager
       $params['rotor_stretch'] = $rotor_stretch;
       $params['centerpiece_bottom'] = $centerpiece_bottom;
       $params['centerpiece_shape']  = $centerpiece_shape;
-      $params['vbar20']       = $vbar20;
       $params['density']      = $density;
       $params['viscosity']    = $viscosity;
+      $params['analytes']     = $analytes;
 
     }
 
