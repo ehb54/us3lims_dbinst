@@ -19,14 +19,14 @@ function validate( form )
   var errors = 0;
 
   // First name is required
-  if ( trim( form.firstName.value ) == "" )
+  if ( trim( form.fname.value ) == "" )
   {
     msg += "--first name is missing\n";
     errors++;
   }
 
   // Last name is required
-  if ( trim( form.lastName.value ) == "" )
+  if ( trim( form.lname.value ) == "" )
   {
     msg += "--last name is missing\n";
     errors++;
@@ -84,7 +84,7 @@ function validate( form )
   // Email address is required
   if ( trim( form.email.value ) == "")
   {
-    msg += "Email Address not specified\n";
+    msg += "--email address is missing\n";
     errors++;
   }
   else 
@@ -98,7 +98,7 @@ function validate( form )
            )
          )
     {
-    msg += "Invalid Email Address\n";
+    msg += "--email address is invalid\n";
     errors++;
     }
   }

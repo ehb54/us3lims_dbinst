@@ -38,12 +38,6 @@ else if (isset($_POST['next']))
   exit();
 }
 
-else if (isset($_POST['new']))
-{
-  do_new();
-  exit();
-}
-
 else if (isset($_POST['delete']))
 {
   do_delete();
@@ -53,6 +47,12 @@ else if (isset($_POST['delete']))
 else if (isset($_POST['update']))
 {
   do_update();
+  exit();
+}
+
+else if (isset($_POST['create']))
+{
+  do_create();
   exit();
 }
 
@@ -75,6 +75,9 @@ include 'links.php';
 // Edit or display a record
 if (isset($_POST['edit']))
   edit_record();
+
+else if (isset($_POST['new']))
+  do_new();
 
 else
   display_record();
@@ -130,19 +133,6 @@ function do_next()
   header("Location: {$_SERVER['PHP_SELF']}$redirect");
 }
 
-// Function to create a new record
-function do_new()
-{
-  // Insert an ID
-  $query = "INSERT INTO people (lname, fname, activated) " .
-           "VALUES ('Last', 'First', 1 ) ";
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
-  $new = mysql_insert_id();
-
-  header("Location: {$_SERVER['PHP_SELF']}?personID=$new");
-}
-
 // Function to delete the current record
 function do_delete()
 {
@@ -190,6 +180,48 @@ function do_update()
                            "Changes were not recorded.";
 
   header("Location: {$_SERVER['PHP_SELF']}?personID=$personID");
+}
+
+// Function to create a new record
+function do_create()
+{
+  include 'get_user_info.php';
+
+  $guid = uuid();
+
+  if ( empty($message) )
+  {
+
+    $query = "INSERT INTO people " .
+             "SET lname      = '$lname',          " .
+             "fname          = '$fname',          " .
+             "personGUID     = '$guid',           " .
+             "organization   = '$organization',   " .
+             "address        = '$address',        " .
+             "city           = '$city',           " .
+             "state          = '$state',          " .
+             "zip            = '$zip',            " .
+             "country        = '$country',        " .
+             "phone          = '$phone',          " .
+             "email          = '$email',          " .
+             "userlevel      = 0,                 " .
+             "activated      = 1,                 " .
+             "signup         = NOW()              ";    // use the default cluster auths
+
+    mysql_query($query)
+          or die("Query failed : $query<br />\n" . mysql_error());
+    $new = mysql_insert_id();
+
+    header("Location: {$_SERVER['PHP_SELF']}?personID=$new");
+    return;
+  }
+
+  else
+    $_SESSION['message'] = "The following errors were noted:<br />" .
+                           $message .
+                           "Record was not recorded.";
+
+  header("Location: {$_SERVER['PHP_SELF']}");
 }
 
 // Function to display and navigate records
@@ -412,6 +444,60 @@ echo<<<HTML
                    maxlength='64' value='$email' /></td></tr>
     <tr><th>Userlevel:</th>
         <td>$userlevel_text</td></tr>
+
+    </tbody>
+  </table>
+  </form>
+
+HTML;
+}
+
+// Function to create a new record
+function do_new()
+{
+echo<<<HTML
+  <form action="{$_SERVER['PHP_SELF']}" method="post"
+        onsubmit="return validate(this);">
+  <table cellspacing='0' cellpadding='10' class='style1'>
+    <thead>
+      <tr><th colspan='8'>Create a New Profile</th></tr>
+    </thead>
+    <tfoot>
+      <tr><td colspan='2'><input type='submit' name='create' value='Create' />
+                          <input type='reset' /></td></tr>
+    </tfoot>
+    <tbody>
+
+    <tr><th>First Name:</th>
+        <td><input type='text' name='fname' size='40'
+                   maxlength='64' /></td></tr>
+    <tr><th>Last Name:</th>
+        <td><input type='text' name='lname' size='40'
+                   maxlength='64' /></td></tr>
+    <tr><th>Organization:</th>
+        <td><input type='text' name='organization' size='40'
+                   maxlength='128' /></td></tr>
+    <tr><th>Address:</th>
+        <td><input type='text' name='address' size='40'
+                   maxlength='128' /></td></tr>
+    <tr><th>City:</th>
+        <td><input type='text' name='city' size='40'
+                   maxlength='64' /></td></tr>
+    <tr><th>State (Province):</th>
+        <td><input type='text' name='state' size='40'
+                   maxlength='64' /></td></tr>
+    <tr><th>Postal Code (Zip):</th>
+        <td><input type='text' name='zip' size='40'
+                   maxlength='16' /></td></tr>
+    <tr><th>Country:</th>
+        <td><input type='text' name='country' size='40'
+                   maxlength='64' /></td></tr>
+    <tr><th>Phone:</th>
+        <td><input type='text' name='phone' size='40'
+                   maxlength='64' /></td></tr>
+    <tr><th>Email:</th>
+        <td><input type='text' name='email' size='40'
+                   maxlength='64' /></td></tr>
 
     </tbody>
   </table>
