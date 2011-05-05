@@ -70,6 +70,7 @@ $query = "INSERT INTO people " .
          "userlevel       = 0, " .
          "activated       = 0, " .
          "signup          = now() ";
+
 $result = mysql_query($query) 
           or die( "Query failed : $query<br/>" . mysql_error() );
 $userid = mysql_insert_id();
