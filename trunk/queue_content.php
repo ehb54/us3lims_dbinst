@@ -104,7 +104,7 @@ foreach( $display_info as $display )
       <th rowspan='2'>Running on:</th>
       <td rowspan='2'>$clusterName</td></tr>
 
-  <tr><th>Last Updated:</th>
+  <tr><th>Last Status Change:</th>
       <td>$updateTime</td></tr>
 
   <tr><td colspan='5' class='decoration'><hr/></td></tr>
