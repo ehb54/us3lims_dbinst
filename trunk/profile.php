@@ -117,7 +117,7 @@ function display_record()
 {
   $ID = $_SESSION['id'];
 
-  $query  = "SELECT lname, fname, organization " .
+  $query  = "SELECT lname, fname, organization, " .
             "address, city, state, zip, country, phone, email " .
             "FROM people " .
             "WHERE personID = $ID ";
