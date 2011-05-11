@@ -1,6 +1,7 @@
 <?php
 
-include "listen-config.php";
+include "/home/us3/bin/listen-config.php";
+$me = "listen.php";
 
 $socket = socket_create(  AF_INET,  SOCK_DGRAM,  SOL_UDP );
 
@@ -8,14 +9,16 @@ $socket = socket_create(  AF_INET,  SOCK_DGRAM,  SOL_UDP );
 if ( ! socket_bind( $socket, 0, $listen_port ) )
 {
   $msg = "listen bind failed: " . socket_strerror( socket_last_error( $socket ) );
-  write_log( $msg );
+  write_log( "$me: $msg" );
 
   exit();
 };
 
 $handle = fopen( $pipe, "r+" );
 
-$cmd = "nohup php manage-us3-pipe.php 2>/dev/null >>manage.log </dev/null &";
+$php = "/usr/bin/php";
+
+$cmd = "nohup $php $home/bin/manage-us3-pipe.php 2>&1 >>$home/etc/manage.log </dev/null &";
 exec( $cmd );
 
 do
