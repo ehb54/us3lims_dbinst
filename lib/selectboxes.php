@@ -35,4 +35,33 @@ function project_status_select( $select_name, $current_status = NULL )
   return $text;
 }
 
+// Function to create a dropdown of user levels
+function userlevel_select( $userlevel = 0 )
+{
+  // Create userlevel drop down
+  $ulimit = ( $_SESSION['userlevel'] == 5 ) ? 5 : 4;
+  $text = "<select name='userlevel'>\n";
+  for ( $x = 0; $x <= $ulimit; $x++ )
+  {
+    $selected = ( $userlevel == $x ) ? " selected='selected'" : "";
+    $text    .= "  <option value='$x'$selected>$x</option>\n";
+  }
+  $text .= "</select>\n";
+
+  return $text;
+}
+
+// Function to display list box of AdvanceLevels
+function advancelevel_select( $level = 0 )
+{
+  $text = "<select name='advancelevel'>\n";
+  for ( $x = 0; $x <= 1; $x++ )
+  {
+    $selected = ( $level == $x ) ? " selected='selected'" : "";
+    $text    .= "  <option value='$x'$selected>$x</option>\n";
+  }
+  $text .= "</select>\n";
+
+  return $text;
+}
 

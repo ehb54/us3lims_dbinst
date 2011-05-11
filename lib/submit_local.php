@@ -40,7 +40,7 @@ $this->message[] = "End of submit_local.php\n";
    {
       $this->cluster   = $this->data[ 'job' ][ 'cluster_shortname' ];
       $this->requestID = $this->data[ 'job' ][ 'requestID' ];
-      $jobid           = $this->cluster . sprintf( "-%06d", $this->requestID );
+      $jobid           = $this->data[ 'db' ][ 'name' ] . sprintf( "-%06d", $this->requestID );
       $this->workdir   = $this->grid[ $this->cluster ][ 'workdir' ] . $jobid;
       $this->address   = $this->grid[ $this->cluster ][ 'name' ];
       $this->port      = $this->grid[ $this->cluster ][ 'sshport' ]; 
@@ -50,17 +50,29 @@ $this->message[] = "End of submit_local.php\n";
                                $this->data['job']['requestID'] );
       
       // Create working directory
-      $cmd    = "ssh -p $this->port -x us3@$this->address mkdir -p $this->workdir";
-      $output = shell_exec( $cmd );
+      $output = array();
+      $cmd    = "ssh -p $this->port -x us3@$this->address mkdir -p $this->workdir 2>&1";
+
+$this->message[] = "cmd: $cmd\n";
+
+      exec( $cmd, $output, $status );
+
+$this->message[] = "cmd output: " . implode( "\n", $output ) . "\n";
  
       // Copy tar file
-      $cmd    = "scp -P $this->port $this->tarfile us3@$this->address:" . $this->workdir;
-      $output = shell_exec( $cmd );
+      $cmd    = "scp -P $this->port $this->tarfile us3@$this->address:$this->workdir 2>&1";
+
+$this->message[] = "cmd: $cmd\n";
+      exec( $cmd, $output, $status );
+$this->message[] = "cmd output: " . implode( "\n", $output ) . "\n";
 
       //  Create pbs file
       $pbsfile = $this->create_pbs();
-      $cmd     = "scp -P $this->port $pbsfile us3@$this->address:" . $this->workdir;
-      $output = shell_exec( $cmd );
+      $cmd     = "scp -P $this->port $pbsfile us3@$this->address:$this->workdir 2>&1";
+
+$this->message[] = "cmd: $cmd\n";
+      exec( $cmd, $output, $status );
+$this->message[] = "cmd output: " . implode( "\n", $output ) . "\n";
       
 $this->message[] = "Files copied";
    }
@@ -125,8 +137,10 @@ $this->message[] = "Files copied";
    {
       date_default_timezone_set( "America/Chicago" );
  
-      $cmd   = "ssh -p $this->port -x us3@$this->address qsub $this->workdir/us3.pbs";
-      $jobid = shell_exec( $cmd );
+      $cmd   = "ssh -p $this->port -x us3@$this->address qsub $this->workdir/us3.pbs 2>&1";
+$this->message[] = "cmd: $cmd\n";
+      $jobid = exec( $cmd, $output, $status );
+$this->message[] = "cmd output: " . implode( "\n", $output ) . "\n";
       $this->data[ 'eprfile' ] = rtrim( $jobid );;
 
 $this->message[] = "Job submitted";

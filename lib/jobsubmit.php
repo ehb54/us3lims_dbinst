@@ -27,7 +27,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
-        "maxproc"    => 20
+        "maxproc"    => 16
       );
 
       $this->grid[ 'alamo' ] = array 
