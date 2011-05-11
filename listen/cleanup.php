@@ -6,7 +6,7 @@ $gfacID    = "";
 $me        = "cleanup.php";
 
 include "listen-config.php";
-write_log( "cleanup debug db=$db; requestID=$requestID" );
+write_log( "$me: debug db=$db; requestID=$requestID" );
 
 $us3_link = mysql_connect( $dbhost, $user, $passwd );
 
@@ -46,10 +46,16 @@ $result = mysql_query( $query, $us3_link );
 
 list( $personID ) = mysql_fetch_array( $result );
 
+/*
 $query  = "SELECT clusterName, submitTime, queueStatus, method "              .
           "FROM HPCAnalysisRequest h LEFT JOIN HPCAnalysisResult "            .
           "ON h.HPCAnalysisRequestID=HPCAnalysisResult.HPCAnalysisRequestID " .
           "WHERE h.HPCAnalysisRequestID=$requestID";
+*/
+$query  = "SELECT clusterName, submitTime, queueStatus, method "              .
+          "FROM HPCAnalysisRequest h, HPCAnalysisResult r "                   .
+          "WHERE h.HPCAnalysisRequestID=$requestID "                          .
+          "AND h.HPCAnalysisRequestID=r.HPCAnalysisRequestID";
 
 $result = mysql_query( $query, $us3_link );
 
@@ -58,6 +64,13 @@ if ( ! $result )
    write_log( "$me: Bad query:\n$query\n" . mysql_error( $us3_link ) );
    exit( -1 );
 }
+
+if ( mysql_num_rows( $result ) == 0 )
+{
+   write_log( "$me: US3 Table error - No records for requestID: $requestID" );
+   exit( -1 );
+}
+
 list( $cluster, $submittime, $queuestatus, $jobtype ) = mysql_fetch_array( $result );
 
 // Get the GFAC ID
@@ -91,14 +104,26 @@ if ( ! $result )
    exit( -1 );
 }
 
-
 while ( true )
 {
-   $query = "SELECT status FROM analysis " .
+   $query = "SELECT status, cluster, id FROM analysis " .
             "WHERE gfacID='$gfacID'";
 
-   $result         = mysql_query( $query, $gfac_link );
-   list( $status ) = mysql_fetch_array( $result );
+   $result = mysql_query( $query, $gfac_link );
+   if ( ! $result )
+   {
+      write_log( "$me: Could not select GFAC status for $gfacID" );
+      mail_to_user( "fail", "Could not select GFAC status for $gfacID" );
+      exit( -1 );
+   }
+   
+   list( $status, $cluster, $id ) = mysql_fetch_array( $result );
+
+   if ( $cluster == 'bcf'  || $cluster == 'alamo' )
+   {
+         get_local_files( $gfac_link, $cluster, $requestID, $id, $gfacID );
+         break;
+   }
 
    if ( $status == "KILLED" || $status == "COMPLETE" || $status == "FAILED" )
       break;
@@ -168,7 +193,15 @@ if ( strlen( $tarfile ) == 0 )
 {
    write_log( "$me: No tarfile" );
    mail_to_user( "fail", "No results" );
-   exit();
+   exit( -1 );
+}
+
+// Shouldn't happen
+if ( ! is_dir( "$work" ) )
+{
+   write_log( "$me: $work directory does not exist" );
+   mail_to_user( "fail", "$work directory does not exist" );
+   exit( -1 );
 }
 
 if ( ! is_dir( "$work/$gfacID" ) ) mkdir( "$work/$gfacID", 0770 );
@@ -187,9 +220,9 @@ if ( $err != 0 )
    exec( "rm -r $gfacID" );
    $output = implode( "\n", $tar_out );
 
-   write_log( "$me: Bad tarfile: $output" );
-   mail_to_user( "fail", "Bad tarfile" );
-   exit();
+   write_log( "$me: Bad output tarfile: $output" );
+   mail_to_user( "fail", "Bad output file" );
+   exit( -1 );
 }
 
 // Insert the model files and noise files
@@ -333,7 +366,7 @@ mysql_close( $us3_link );
 // Send email 
 
 mail_to_user( "success", "" );
-exit();
+exit( 0 );
 
 function mail_to_user( $type, $msg )
 {
@@ -408,4 +441,63 @@ function parse_xml( $xml, $type )
    return $results;
 }
 
+function get_local_files( $gfac_link, $cluster, $requestID, $id, $gfacID )
+{
+   global $work;
+   global $me;
+   global $db;
+   global $status;
+
+   // Figure out local working directory
+   if ( ! is_dir( "$work/$gfacID" ) ) mkdir( "$work/$gfacID", 0770 );
+   chdir( "$work/$gfacID" );
+
+   // Figure out remote directory
+   $remoteDir = sprintf( "$work/$db-%06d", $requestID );
+
+   // Get stdout, stderr, output/analysis-results.tar
+   $output = array();
+   $cmd = "scp us3@$cluster.uthscsa.edu:$remoteDir/stdout . 2>&1";
+
+   exec( $cmd, $output, $stat );
+   if ( $stat != 0 ) 
+      write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
+     
+   $cmd = "scp us3@$cluster.uthscsa.edu:$remoteDir/stderr . 2>&1";
+   exec( $cmd, $output, $stat );
+   if ( $stat != 0 ) 
+      write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
+
+   $cmd = "scp us3@$cluster.uthscsa.edu:$remoteDir/output/analysis-results.tar . 2>&1";
+   exec( $cmd, $output, $stat );
+   if ( $stat != 0 ) 
+      write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
+
+   // Write the files to gfacDB
+   if ( file_exists( "stderr" ) ) $stderr  = file_get_contents( "stderr" );
+   if ( file_exists( "stdout" ) ) $stdout  = file_get_contents( "stdout" );
+   if ( file_exists( "analysis-results.tar" ) ) 
+      $tarfile = file_get_contents( "analysis-results.tar" );
+
+   $query = "UPDATE analysis SET " .
+            "stderr='"  . mysql_real_escape_string( $stderr,  $gfac_link ) . "'," .
+            "stdout='"  . mysql_real_escape_string( $stdout,  $gfac_link ) . "'," .
+            "tarfile='" . mysql_real_escape_string( $tarfile, $gfac_link ) . "'";
+
+   $result = mysql_query( $query, $gfac_link );
+
+   if ( ! $result )
+   {
+      write_log( "$me: Bad query:\n$query\n" . mysql_error( $gfac_link ) );
+      echo "Bad query\n";
+      exit( -1 );
+   }
+
+   $status = "COMPLETE";
+
+   // Delete the temporary files
+   if ( file_exists( "stderr" ) )               unlink ( "stderr" );
+   if ( file_exists( "stdout" ) )               unlink ( "stdout" );
+   if ( file_exists( "analysis-results.tar" ) ) unlink ( "analysis-results.tar" );
+}
 ?>

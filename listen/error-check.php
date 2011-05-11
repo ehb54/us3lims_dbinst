@@ -38,10 +38,28 @@ for ( $i = 0; $i < $rows; $i++ )
    list( $gfacID, $us3_db, $cluster, $status, $queue_msg, $time, $submittime ) 
             = mysql_fetch_array( $result );
 
+   // Don't worry about this entry if it's already been logged
+   if ( substr( $queue_msg, 0, 7 ) == "Handled" ) continue;
+
+   // Sometimes during testing, the us3_db entry is not set
+   if ( strlen( $us3_db ) == 0 ) 
+   {
+      write_log( "$me: GFAC DB is NULL - $gfacID" );
+      mail_to_admin( "fail", "GFAC DB is NULL\n$gfacID" );
+
+      $query = "UPDATE analysis SET queue_msg='Handled' WHERE gfacID='$gfacID'";
+      $result = mysql_query( $query, $gfac_link );
+
+      if ( ! $result )
+         write_log( "$me: Query failed $query - " .  mysql_error( $gfac_link ) );
+
+      continue;
+   }
+
    switch ( $status )
    {
       case "SUBMITTED": 
-         submitted( $time, $queue_msg );
+         submitted( $time );
          break;  
 
       case "RUNNING":
@@ -52,7 +70,7 @@ for ( $i = 0; $i < $rows; $i++ )
          complete();
          break;
 
-      case "KILLED":
+      case "CANCELLED":
       case "FAILED":
          failed();
          break;
@@ -64,15 +82,13 @@ for ( $i = 0; $i < $rows; $i++ )
 
 exit();
 
-function submitted( $updatetime, $queue_msg )
+function submitted( $updatetime )
 {
    global $me;
    global $gfac_link;
    global $gfacID;
 
    $now = time();
-
-   if ( substr( $queue_msg, 0, 7 ) == "Handled" ) return;
 
    if ( $updatetime + 86400 < $now )
    {
@@ -93,10 +109,11 @@ function running()
    global $gfacID;
    global $message;
    global $updateTime;
+   global $cluster;
 
    $now = time();
 
-   get_us3_data();  // Sets $updatetime
+   get_us3_data();  // Sets $updatetime also
 
    if ( $updateTime + 600 > $now ) return;
 
@@ -104,29 +121,48 @@ function running()
 
    // Get job status.  If running then ignore the job for now, otherwise 
    // the job failed.
-  
-   $url = "http://gw33.quarry.iu.teragrid.org:8080/ogce-rest/job/jobstatus/$gfacID";
-   try
+   
+   if ( preg_match( "/^US3-Experiment/i", $gfacID ) )
    {
-      $post = new HttpRequest( $url, HttpRequest::METH_GET );
-      $http = $post->send();
-      $xml  = $post->getResponseBody();      
-   }
-   catch ( HttpException $e )
-   {
-      write_log( "$me: Status not available - marking failed -  $gfacID" );
-      failed();
-      return;
-   }
+      $url = "http://gw33.quarry.iu.teragrid.org:8080/ogce-rest/job/jobstatus/$gfacID";
+      try
+      {
+         $post = new HttpRequest( $url, HttpRequest::METH_GET );
+         $http = $post->send();
+         $xml  = $post->getResponseBody();      
+      }
+      catch ( HttpException $e )
+      {
+         write_log( "$me: Status not available - marking failed -  $gfacID" );
+         failed();
+         return;
+      }
 
-   // Parse the result
-   $message = "";                         // Set in next line
-   $gfac_status = parse_response( $xml );
+      // Parse the result
+      $message = "";                         // Set in next line
+      $gfac_status = parse_response( $xml );
 
-   if ( $gfac_status != "ACTIVE" ) 
+      if ( $gfac_status != "ACTIVE" ) 
+      {
+         write_log( "$me: Job failed - $gfac_status - $gfacID - $message" );
+         failed();
+      }
+   }
+   else // Local job
    {
-      write_log( "$me: Job failed - $gfac_status - $gfacID - $message" );
-      failed();
+      $system = "$cluster.uthscsa.edu";
+      $cmd    = "/usr/bin/ssh -x us3@$system qstat -a $gfacID 2>&1";
+
+      $result = exec( $cmd );
+
+      if ( $result != ""  ||  ! preg_match( "/^Unknown/", $result ) )
+      {
+         $values = preg_split( "/\s+/", $result );
+         if ( $values[ 9 ] == "R" ) return;       // Still running
+      }
+
+      // At this point, the job may have completed or failed.  Just clean up.
+      cleanup();
    }
 }
 
@@ -167,10 +203,15 @@ function failed()
 function cleanup()
 {
    global $us3_db;
+   global $home;
 
    $requestID = get_us3_data();
+   if ( $requestID == 0 ) return;
 
-   $cmd = "nohup php cleanup.php $us3_db $requestID 2>/dev/null >>cleanup.log </dev/null &";
+   $php     = "/usr/bin/php";
+   $cleanup = "$home/bin/cleanup.php";
+  
+   $cmd = "nohup $php $cleanup $us3_db $requestID 2>&1 >>$home/etc/cleanup.log </dev/null &";
    exec( $cmd );
 }
 
@@ -193,13 +234,14 @@ function get_us3_data()
       exit();
    }
 
+
    $result = mysql_select_db( $us3_db, $us3_link );
 
    if ( ! $result )
    {
       write_log( "$me: could not select DB $us3_db" );
-      mail_to_admin( "fail", "Could not select DB $us3_db" );
-      exit();
+      mail_to_admin( "fail", "Could not select DB $us3_db, $dbhost, $user, $passwd" );
+      return 0;
    }
 
    $query = "SELECT HPCAnalysisRequestID, UNIX_TIMESTAMP(updateTime) " .
