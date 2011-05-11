@@ -24,6 +24,8 @@ if ( ($_SESSION['userlevel'] != 4) &&
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+include 'lib/selectboxes.php';
+include 'lib/cluster_info.php';
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
@@ -150,8 +152,30 @@ function do_delete()
 function do_update()
 {
   include 'get_user_info.php';
-  $personID  = $_POST['personID'];
-  $userlevel = $_POST['userlevel'];
+  $personID     = $_POST['personID'];
+  $activated    = ( $_POST['activated'] == 'on' ) ? 1 : 0;
+  $userlevel    = $_POST['userlevel'];
+  $advancelevel = $_POST['advancelevel'];
+
+  // Get cluster information
+  global $clusters;
+  $userClusterAuth = array();
+  foreach ( $clusters as $clusterName => $cluster )
+  {
+    if ( isset($_POST[$clusterName]) == 'on' )
+      $userClusterAuth[] = $clusterName;
+  }
+
+  $clusterAuth = implode( ":", $userClusterAuth );
+
+  // Get operator permissions
+  $instrumentIDs = array();
+  foreach( $_POST as $ndx => $value )
+  {
+    list( $prefix, $instrumentID ) = explode( "_", $ndx );
+    if ( $prefix == 'inst' && $value == 'on' )
+      $instrumentIDs[] = $instrumentID;
+  }
 
   if ( empty($message) )
   {
@@ -167,11 +191,34 @@ function do_update()
              "country        = '$country',        " .
              "phone          = '$phone',          " .
              "email          = '$email',          " .
-             "userlevel      = '$userlevel'       " .
+             "activated      = '$activated',      " .
+             "userlevel      = '$userlevel',      " .
+             "advancelevel   = '$advancelevel',   " .
+             "clusterAuthorizations = '$clusterAuth'    " .
              "WHERE personID =  $personID         ";
 
     mysql_query($query)
           or die("Query failed : $query<br />\n" . mysql_error());
+
+    // Now delete operator permissions, because we're going to redo it
+    $query  = "DELETE FROM permits " .
+              "WHERE personID = $personID ";
+
+    mysql_query($query)
+          or die("Query failed : $query<br />\n" . mysql_error());
+
+    // Now add the new ones
+    foreach ( $instrumentIDs as $instrumentID )
+    {
+      $query  = "INSERT INTO permits " .
+                "SET instrumentID = $instrumentID, " .
+                "personID         = $personID ";
+
+      mysql_query($query)
+            or die("Query failed : $query<br />\n" . mysql_error());
+
+    }
+
   }
 
   else
@@ -205,6 +252,7 @@ function do_create()
              "phone          = '$phone',          " .
              "email          = '$email',          " .
              "userlevel      = 0,                 " .
+             "advancelevel   = 0,                 " .
              "activated      = 1,                 " .
              "signup         = NOW()              ";    // use the default cluster auths
 
@@ -234,7 +282,7 @@ function display_record()
 
   $query  = "SELECT lname, fname, organization, " .
             "address, city, state, zip, country, phone, email, " .
-            "userlevel " .
+            "activated, userlevel, advancelevel, clusterAuthorizations " .
             "FROM people " .
             "WHERE personID = $personID ";
   $result = mysql_query($query) 
@@ -247,7 +295,24 @@ function display_record()
     $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( $value ));
   }
 
-  $userlevel = $row['userlevel']; // 0 translates to null
+  $userlevel    = $row['userlevel'];    // 0 translates to null
+  $advancelevel = $row['advancelevel']; // 0 translates to null
+  $activated    = ( $row['activated'] == 1 ) ? "yes" : "no";
+  $clusterAuth  = explode( ":", $row['clusterAuthorizations'] );
+  $clusterAuthorizations = implode( ", ", $clusterAuth );
+
+  // Operator permissions
+  $query  = "SELECT name " .
+            "FROM permits, instrument " .
+            "WHERE permits.personID = $personID " .
+            "AND permits.instrumentID = instrument.instrumentID ";
+  $result = mysql_query($query) 
+            or die("Query failed : $query<br />\n" . mysql_error());
+
+  $instruments = array();
+  while ( list( $instName ) = mysql_fetch_array( $result ) )
+    $instruments[] = $instName;
+  $instruments_text = implode( ", ", $instruments );
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
@@ -303,8 +368,16 @@ echo<<<HTML
           <td>$phone</td></tr>
       <tr><th>Email:</th>
           <td>$email</td></tr>
+      <tr><th>Activated:</th>
+          <td>$activated</td></tr>
       <tr><th>Userlevel:</th>
           <td>$userlevel</td></tr>
+      <tr><th>Advance Level:</th>
+          <td>$advancelevel</td></tr>
+      <tr><th>Cluster Authorizations:</th>
+          <td>$clusterAuthorizations</td></tr>
+      <tr><th>Instrument Permissions:</th>
+          <td>$instruments_text</td></tr>
     </tbody>
   </table>
   </form>
@@ -367,7 +440,7 @@ function edit_record()
 
   $query  = "SELECT lname, fname, organization, " .
             "address, city, state, zip, country, phone, email, " .
-            "userlevel " .
+            "activated, userlevel, advancelevel, clusterAuthorizations " .
             "FROM people " .
             "WHERE personID = $personID ";
   $result = mysql_query($query) 
@@ -386,18 +459,72 @@ function edit_record()
   $phone           =                                 $row['phone'];
   $email           =                    stripslashes($row['email']);
   $userlevel       =                                 $row['userlevel'];
+  $advancelevel    =                                 $row['advancelevel'];
+  $clusterAuth     =                                 $row['clusterAuthorizations'];
 
-  // Create userlevel drop down
-  $ulimit = ( $_SESSION['userlevel'] == 5 ) ? 5 : 4;
-  $userlevel_text = "<select name='userlevel'>\n" .
-                    "  <option value='0'>None selected...</option>\n";
-  for ( $x = 0; $x <= $ulimit; $x++ )
-  {
-    $selected = ( $userlevel == $x ) ? " selected='selected'" : "";
-    $userlevel_text .= "  <option value='$x'$selected>$x</option>\n";
-  }
-  $userlevel_text .= "</select>\n";
+  // Create dropdowns
+  $userlevel_text    = userlevel_select( $userlevel );
+  $advancelevel_text = advancelevel_select( $advancelevel );
+  $activated_chk     = ( $row['activated'] == 1 ) ? " checked='checked'" : "";
+  $activated_text    = "<input type='checkbox'name='activated'$activated_chk />";
     
+  // Figure out checks for cluster authorizations
+  global $clusters;
+  foreach ( $clusters as $clusterName => $cluster )
+  {
+    // This produces variables like this: $checked_bcf, $checked_alamo, etc.
+    $checked_cluster  = "checked_$clusterName";
+    $$checked_cluster = ( strpos($clusterAuth, $clusterName) === false ) ? "" : "checked='checked'";
+  }
+
+  $cluster_table = "<table cellspacing='0' cellpadding='5' class='noborder'>\n";
+  foreach ( $clusters as $clusterName => $cluster )
+  {
+    $checked_cluster  = "checked_$clusterName";
+    $cluster_table   .= "  <tr><td>$clusterName:</td>\n" .
+                        "      <td><input type='checkbox' name='$clusterName' {$$checked_cluster} /></td>\n" .
+                        "  </tr>\n";
+  }
+  $cluster_table .= "</table>\n";
+
+  // A list of all the instruments
+  $query  = "SELECT instrumentID, name " .
+            "FROM instrument ";
+  $result = mysql_query($query) 
+            or die("Query failed : $query<br />\n" . mysql_error());
+  $instruments = array();
+  while ( list( $instrumentID, $instName ) = mysql_fetch_array( $result ) )
+    $instruments[ $instrumentID ] = $instName;
+
+  // A list of current user operator permissions
+  $query  = "SELECT instrumentID " .
+            "FROM permits " .
+            "WHERE personID = $personID " ;
+  $result = mysql_query($query) 
+            or die("Query failed : $query<br />\n" . mysql_error());
+  $instrAuth = array();
+  while ( list( $instrumentID ) = mysql_fetch_array( $result ) )
+    $instrAuth[] = $instrumentID;
+  $instrAuth_text = implode( ":", $instrAuth );
+
+  foreach ( $instruments as $instrumentID => $instName )
+  {
+    // This produces variables like this: $checked_1, $checked_2, based on ID's
+    $checked_instr  = "checked_$instrumentID";
+    $instrID        = "$instrumentID";   // as a string
+    $$checked_instr = ( strpos( $instrAuth_text, $instrID ) === false ) ? "" : "checked='checked'";
+  }
+
+  $instrument_table = "<table cellspacing='0' cellpadding='5' class='noborder'>\n";
+  foreach ( $instruments as $instrumentID => $instName )
+  {
+    $checked_instrument  = "checked_$instrumentID";
+    $instrument_table   .= "  <tr><td>$instName:</td>\n" .
+                           "      <td><input type='checkbox' name='inst_$instrumentID' {$$checked_instrument} /></td>\n" .
+                           "  </tr>\n";
+  }
+  $instrument_table .= "</table>\n";
+
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"
         onsubmit="return validate(this);">
@@ -442,8 +569,16 @@ echo<<<HTML
     <tr><th>Email:</th>
         <td><input type='text' name='email' size='40'
                    maxlength='64' value='$email' /></td></tr>
+    <tr><th>Activated:</th>
+        <td>$activated_text</td></tr>
     <tr><th>Userlevel:</th>
         <td>$userlevel_text</td></tr>
+    <tr><th>Advance Level:</th>
+        <td>$advancelevel_text</td></tr>
+    <tr><th>Cluster Authorizations:</th>
+        <td>$cluster_table</td></tr>
+    <tr><th>Instrument Permissions:</th>
+        <td>$instrument_table</td></tr>
 
     </tbody>
   </table>
