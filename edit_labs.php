@@ -45,6 +45,12 @@ else if (isset($_POST['new']))
   exit();
 }
 
+else if (isset($_POST['delete']))
+{
+  do_delete();
+  exit();
+}
+
 // Are we being directed here from a push button?
 if (isset($_POST['update']))
 {
@@ -64,6 +70,11 @@ include 'links.php';
 
   <h1 class="title">Edit Labs</h1>
   <!-- Place page content here -->
+  <?php if ( isset($_SESSION['message']) )
+        {
+          echo "<p class='message'>{$_SESSION['message']}</p>\n";
+          unset($_SESSION['message']);
+        } ?>
 
 <?php
 // Edit or display a record
@@ -141,17 +152,58 @@ function do_new()
   exit();
 }
 
+// Function to delete the current record
+function do_delete()
+{
+  $labID = $_POST['labID'];
+
+  // Tests to see if the current lab can be deleted
+  $found  = false;
+  $query  = "SELECT COUNT(*) FROM instrument " .
+            "WHERE labID = $labID ";
+  $result = mysql_query($query)
+            or die("Query failed : $query<br />\n" . mysql_error());
+  list( $count ) = mysql_fetch_array( $result );
+  if ( $count > 0 ) $found = true;
+
+  $query  = "SELECT COUNT(*) FROM experiment " .
+            "WHERE labID = $labID ";
+  $result = mysql_query($query)
+            or die("Query failed : $query<br />\n" . mysql_error());
+  list( $count ) = mysql_fetch_array( $result );
+  if ( $count > 0 ) $found = true;
+
+  $query  = "SELECT COUNT(*) FROM rotor " .
+            "WHERE labID = $labID ";
+  $result = mysql_query($query)
+            or die("Query failed : $query<br />\n" . mysql_error());
+  list( $count ) = mysql_fetch_array( $result );
+  if ( $count > 0 ) $found = true;
+
+  if ( ! $found )
+  {
+    $query  = "DELETE FROM lab " .
+              "WHERE labID = $labID ";
+    mysql_query($query)
+      or die("Query failed : $query<br />\n" . mysql_error());
+  }
+
+  else
+    $_SESSION['message'] = "This lab cannot be deleted while instruments, " .
+                           "rotors, or labs are associated with it.\n";
+
+  header("Location: $_SERVER[PHP_SELF]");
+}
+
 // Function to update the current record
 function do_update()
 {
   $labID       =                         $_POST['labID'];
   $name        = addslashes(htmlentities($_POST['name']));
-  $building    = addslashes(htmlentities($_POST['building']));
-  $room        = addslashes(htmlentities($_POST['room']));
+  $contact     = addslashes(htmlentities($_POST['contact']));
   $query = "UPDATE lab " .
            "SET name  = '$name', " .
-           "building  = '$building', " .
-           "room  = '$room', " .
+           "building  = '$contact', " .
            "dateUpdated  = NOW() " .
            "WHERE labID = $labID ";
 
@@ -170,7 +222,7 @@ function display_record()
   if ($labID === false)
     return;
 
-  $query  = "SELECT name, building, room " .
+  $query  = "SELECT name, building AS contact " .
             "FROM lab " .
             "WHERE labID = $labID ";
   $result = mysql_query($query) 
@@ -191,10 +243,10 @@ function display_record()
   $query  = "SELECT labID, name FROM lab ORDER BY name";
   $result = mysql_query($query)
             or die("Query failed : $query<br />\n" . mysql_error());
-  while (list($t_id, $t_something) = mysql_fetch_array($result))
+  while (list($t_id, $t_name) = mysql_fetch_array($result))
   {
     $selected = ($labID == $t_id) ? " selected='selected'" : "";
-    $nav_listbox .= "  <option$selected value='$t_id'>$t_something</option>\n";
+    $nav_listbox .= "  <option$selected value='$t_id'>$t_name</option>\n";
   }
   $nav_listbox .= "</select>\n";
 
@@ -210,16 +262,15 @@ echo<<<HTML
                           <input type='submit' name='next' value='&gt;' />
                           <input type='submit' name='new' value='New' />
                           <input type='submit' name='edit' value='Edit' />
+                          <input type='submit' name='delete' value='Delete' />
                           <input type='hidden' name='labID' value='$labID' />
           </td></tr>
     </tfoot>
     <tbody>
-      <tr><th>Name:</th>
+      <tr><th>Facility Name:</th>
           <td>$name</td></tr>
-      <tr><th>Building:</th>
-          <td>$building</td></tr>
-      <tr><th>Room:</th>
-          <td>$room</td></tr>
+      <tr><th>Contact Information:</th>
+          <td>$contact</td></tr>
     </tbody>
   </table>
   </form>
@@ -287,7 +338,7 @@ function edit_record()
     return;
   }
 
-  $query  = "SELECT name, building, room " .
+  $query  = "SELECT name, building AS contact " .
             "FROM lab " .
             "WHERE labID = $labID ";
   $result = mysql_query($query) 
@@ -296,13 +347,12 @@ function edit_record()
   $row = mysql_fetch_array($result);
 
 
-  $name                = html_entity_decode( stripslashes( $row['name'] ) );
-  $building            = html_entity_decode( stripslashes( $row['building'] ) );
-  $room                = html_entity_decode( stripslashes( $row['room'] ) );
+  $name    = html_entity_decode( stripslashes( $row['name'] ) );
+  $contact = html_entity_decode( stripslashes( $row['contact'] ) );
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post">
-  <table cellspacing='0' cellpadding='0' class='style1'>
+  <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
       <tr><th colspan='8'>Edit Labs</th></tr>
     </thead>
@@ -314,15 +364,12 @@ echo<<<HTML
     <tbody>
 
 
-    <tr><th>Name:</th>
-        <td><textarea name='name' rows='6' cols='65' 
-                      wrap='virtual'>$name</textarea></td></tr>
-    <tr><th>Building:</th>
-        <td><textarea name='building' rows='6' cols='65' 
-                      wrap='virtual'>$building</textarea></td></tr>
-    <tr><th>Room:</th>
-        <td><textarea name='room' rows='6' cols='65' 
-                      wrap='virtual'>$room</textarea></td></tr>
+    <tr><th>Facility Name:</th>
+        <td><input type='text' name='name' size='40' 
+                   maxlength='255' value='$name' /></td></tr>
+    <tr><th>Contact Information:</th>
+        <td><textarea name='contact' rows='6' cols='65' 
+                      wrap='virtual'>$contact</textarea></td></tr>
 
     </tbody>
   </table>

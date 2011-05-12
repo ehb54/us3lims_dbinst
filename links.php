@@ -39,6 +39,8 @@ HTML;
     echo <<<HTML
       <li><a href='http://$org_site/view_users.php'>View User Info</a></li>
       <li class='section'><a href='http://$org_site/view_all.php'>View All Users</a></li>
+      <li><a href='edit_labs.php'>Edit Labs</a></li>
+      <li class='section'><a href='#' onclick='construction();'>Edit Instruments</a></li>
 
 HTML;
   }
@@ -51,6 +53,8 @@ HTML;
       <li><a href='http://$org_site/edit_users.php'>Edit User Info</a></li>
       <li><a href='http://$org_site/view_users.php'>View User Info</a></li>
       <li class='section'><a href='http://$org_site/view_all.php'>View All Users</a></li>
+      <li><a href='edit_labs.php'>Edit Labs</a></li>
+      <li class='section'><a href='#' onclick='construction();'>Edit Instruments</a></li>
 
 HTML;
   }
@@ -64,6 +68,8 @@ HTML;
       <li><a href='http://$org_site/edit_users.php'>Edit User Info</a></li>
       <li><a href='http://$org_site/view_users.php'>View User Info</a></li>
       <li class='section'><a href='http://$org_site/view_all.php'>View All Users</a></li>
+      <li><a href='edit_labs.php'>Edit Labs</a></li>
+      <li class='section'><a href='#' onclick='construction();'>Edit Instruments</a></li>
 
 HTML;
   }
