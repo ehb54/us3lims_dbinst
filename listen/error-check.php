@@ -211,7 +211,7 @@ function cleanup()
    $php     = "/usr/bin/php";
    $cleanup = "$home/bin/cleanup.php";
   
-   $cmd = "nohup $php $cleanup $us3_db $requestID 2>&1 >>$home/etc/cleanup.log </dev/null &";
+   $cmd = "nohup $php $cleanup $us3_db $requestID >>$home/etc/cleanup.log 2>&1 </dev/null &";
    exec( $cmd );
 }
 
@@ -328,5 +328,4 @@ function mail_to_admin( $type, $msg )
 
    mail( $admin_email, $subject, $message, $headers );
 }
-
 ?>

@@ -163,7 +163,7 @@ function update_db( $dbhost, $db, $action, $message, $requestID )
    {
       $cleanup = "$home/bin/cleanup.php";
       $php     = "/usr/bin/php";
-      $cmd = "nohup $php $cleanup $db $requestID 2>&1 >>$home/etc/cleanup.log </dev/null &";
+      $cmd = "nohup $php $cleanup $db $requestID >>$home/etc/cleanup.log 2>&1 </dev/null &";
       write_log( "$me: $cmd" );
       exec( $cmd );
    }
