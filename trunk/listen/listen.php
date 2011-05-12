@@ -10,7 +10,6 @@ if ( ! socket_bind( $socket, 0, $listen_port ) )
 {
   $msg = "listen bind failed: " . socket_strerror( socket_last_error( $socket ) );
   write_log( "$me: $msg" );
-
   exit();
 };
 
@@ -18,7 +17,8 @@ $handle = fopen( $pipe, "r+" );
 
 $php = "/usr/bin/php";
 
-$cmd = "nohup $php $home/bin/manage-us3-pipe.php 2>&1 >>$home/etc/manage.log </dev/null &";
+$cmd = "nohup $php $home/bin/manage-us3-pipe.php >>$home/etc/manage.log 2>&1 </dev/null &";
+
 exec( $cmd );
 
 do
