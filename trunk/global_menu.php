@@ -30,9 +30,9 @@ $global_menu = <<<HTML
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
                 <li><a href='GA_1.php'>GA Analysis</a></li>
               </ul></li>
-            <li class='submenu'><a href='#'>Facilities</a>
+            <li class='submenu'><a href='#'>Unused Menu</a>
               <ul class='level2'>
-                <li><a href='edit_labs.php'>Edit Labs</a></li>
+                <li><a href='#' onclick='construction();'>Menu Item</a></li>
               </ul></li>
             <li><a href="#" onclick='construction();'>Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
@@ -63,9 +63,9 @@ $global_menu = <<<HTML
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
                 <li><a href='GA_1.php'>GA Analysis</a></li>
               </ul></li>
-            <li class='submenu'><a href='#'>Facilities</a>
+            <li class='submenu'><a href='#'>Unused Menu</a>
               <ul class='level2'>
-                <li><a href='edit_labs.php'>Edit Labs</a></li>
+                <li><a href='#' onclick='construction();'>Menu Item</a></li>
               </ul></li>
             <li><a href="#" onclick='construction();'>Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
@@ -96,9 +96,9 @@ $global_menu = <<<HTML
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
                 <li><a href='GA_1.php'>GA Analysis</a></li>
               </ul></li>
-            <li class='submenu'><a href='#'>Facilities</a>
+            <li class='submenu'><a href='#'>Unused Menu</a>
               <ul class='level2'>
-                <li><a href='edit_labs.php'>Edit Labs</a></li>
+                <li><a href='#' onclick='construction();'>Menu Item</a></li>
               </ul></li>
             <li><a href="#" onclick='construction();'>Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
