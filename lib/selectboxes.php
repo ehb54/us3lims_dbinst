@@ -65,3 +65,26 @@ function advancelevel_select( $level = 0 )
   return $text;
 }
 
+// Function to create a dropdown for available labs
+function lab_select( $select_name, $current_lab = NULL )
+{
+  $query  = "SELECT labID, name " .
+            "FROM lab " .
+            "ORDER BY name ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />" . mysql_error() );
+
+  if ( mysql_num_rows( $result ) == 0 ) return "";
+
+  $text = "<select name='$select_name' size='1'>\n";
+  while ( list( $labID, $name ) = mysql_fetch_array( $result ) )
+  {
+    $selected = ( $current_lab == $labID ) ? " selected='selected'" : "";
+    $text .= "  <option value='$labID'$selected>$name</option>\n";
+  }
+
+  $text .= "</select>\n";
+
+  return $text;
+}
+
