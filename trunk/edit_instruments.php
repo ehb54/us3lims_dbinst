@@ -1,8 +1,8 @@
 <?php
 /*
- * edit_labs.php
+ * edit_instruments.php
  *
- * A place to edit/update the lab table
+ * A place to edit/update the instrument table
  *
  */
 session_start();
@@ -24,7 +24,6 @@ if ( ( $_SESSION['userlevel'] != 3 ) &&
 
 include 'config.php';
 include 'db.php';
-include 'lib/utility.php';
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
@@ -58,16 +57,17 @@ else if (isset($_POST['create']))
 }
 
 // Start displaying page
-$page_title = 'Edit Labs';
-$js = 'js/edit_labs.js';
+$page_title = 'Edit Instruments';
+$js = 'js/edit_instruments.js';
 include 'top.php';
 include 'links.php';
+include 'lib/selectboxes.php';
 
 ?>
 <!-- Begin page content -->
 <div id='content'>
 
-  <h1 class="title">Edit Labs</h1>
+  <h1 class="title">Edit Instruments</h1>
   <!-- Place page content here -->
   <?php if ( isset($_SESSION['message']) )
         {
@@ -96,9 +96,9 @@ exit();
 // Function to redirect to prior record
 function do_prior()
 {
-  $labID = $_POST['labID'];
+  $instrumentID = $_POST['instrumentID'];
 
-  $query  = "SELECT labID FROM lab " .
+  $query  = "SELECT instrumentID FROM instrument " .
             "ORDER BY name ";
   $result = mysql_query($query)
       or die("Query failed : $query<br />\n" . mysql_error());
@@ -106,7 +106,7 @@ function do_prior()
   // Find prior record
   $current = null;
   list($current) = mysql_fetch_array($result);
-  while ($current != null && $labID != $current)
+  while ($current != null && $instrumentID != $current)
   {
     $prior = $current;
     list($current) = mysql_fetch_array($result);
@@ -120,20 +120,20 @@ function do_prior()
 // Function to redirect to next record
 function do_next()
 {
-  $labID = $_POST['labID'];
+  $instrumentID = $_POST['instrumentID'];
 
-  $query  = "SELECT labID FROM lab " .
+  $query  = "SELECT instrumentID FROM instrument " .
             "ORDER BY name ";
   $result = mysql_query($query)
       or die("Query failed : $query<br />\n" . mysql_error());
 
   // Find next record
   $next = null;
-  while ($labID != $next)
+  while ($instrumentID != $next)
     list($next) = mysql_fetch_array($result);
   list($next) = mysql_fetch_array($result);
 
-  $redirect = ($next == null) ? "?ID=$labID" : "?ID=$next";
+  $redirect = ($next == null) ? "?ID=$instrumentID" : "?ID=$next";
   header("Location: $_SERVER[PHP_SELF]$redirect");
   exit();
 }
@@ -141,42 +141,28 @@ function do_next()
 // Function to delete the current record
 function do_delete()
 {
-  $labID = $_POST['labID'];
+  $instrumentID = $_POST['instrumentID'];
 
-  // Tests to see if the current lab can be deleted
-  $found  = false;
-  $query  = "SELECT COUNT(*) FROM instrument " .
-            "WHERE labID = $labID ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  list( $count ) = mysql_fetch_array( $result );
-  if ( $count > 0 ) $found = true;
+  // Add checks here to prevent deleting records that can't be deleted
 
   $query  = "SELECT COUNT(*) FROM experiment " .
-            "WHERE labID = $labID ";
+            "WHERE instrumentID = $instrumentID ";
   $result = mysql_query($query)
             or die("Query failed : $query<br />\n" . mysql_error());
   list( $count ) = mysql_fetch_array( $result );
-  if ( $count > 0 ) $found = true;
-
-  $query  = "SELECT COUNT(*) FROM rotor " .
-            "WHERE labID = $labID ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  list( $count ) = mysql_fetch_array( $result );
-  if ( $count > 0 ) $found = true;
-
-  if ( ! $found )
+  if ( $count == 0 )
   {
-    $query  = "DELETE FROM lab " .
-              "WHERE labID = $labID ";
+    // Ok to delete
+    $query  = "DELETE FROM permits " .
+              "WHERE instrumentID = $instrumentID ";
+    mysql_query($query)
+      or die("Query failed : $query<br />\n" . mysql_error());
+
+    $query = "DELETE FROM instrument " .
+             "WHERE instrumentID = $instrumentID ";
     mysql_query($query)
       or die("Query failed : $query<br />\n" . mysql_error());
   }
-
-  else
-    $_SESSION['message'] = "This lab cannot be deleted while instruments, " .
-                           "rotors, or labs are associated with it.\n";
 
   header("Location: $_SERVER[PHP_SELF]");
 }
@@ -184,33 +170,37 @@ function do_delete()
 // Function to update the current record
 function do_update()
 {
-  $labID       =                         $_POST['labID'];
-  $name        = addslashes(htmlentities($_POST['name']));
-  $contact     = addslashes(htmlentities($_POST['contact']));
-  $query = "UPDATE lab " .
-           "SET name  = '$name', " .
-           "building  = '$contact', " .
+  $ID = $_SESSION['id'];
+
+  $instrumentID        =                                $_POST['instrumentID'];
+  $labID               =                                $_POST['labID'];
+  $name                =        addslashes(htmlentities($_POST['name']));
+  $serialNumber        =        addslashes(htmlentities($_POST['serialNumber']));
+  $query = "UPDATE instrument " .
+           "SET labID  = $labID, " .
+           "name  = '$name', " .
+           "serialNumber  = '$serialNumber', " .
            "dateUpdated  = NOW() " .
-           "WHERE labID = $labID ";
+           "WHERE instrumentID = $instrumentID ";
 
   mysql_query($query)
     or die("Query failed : $query<br />\n" . mysql_error());
 
-  header("Location: $_SERVER[PHP_SELF]?ID=$labID");
+  header("Location: $_SERVER[PHP_SELF]?ID=$instrumentID");
   exit();
 }
 
 // Function to create a new record
 function do_create()
 {
-  $guid = uuid();
 
-  $name        = addslashes(htmlentities($_POST['name']));
-  $contact     = addslashes(htmlentities($_POST['contact']));
-  $query = "INSERT INTO lab " .
-           "SET labGUID = '$guid', " .
+  $labID               =                                $_POST['labID'];
+  $name                =        addslashes(htmlentities($_POST['name']));
+  $serialNumber        =        addslashes(htmlentities($_POST['serialNumber']));
+  $query = "INSERT INTO instrument " .
+           "SET labID  = $labID, " .
            "name  = '$name', " .
-           "building  = '$contact', " .
+           "serialNumber  = '$serialNumber', " .
            "dateUpdated  = NOW() ";
 
   mysql_query($query)
@@ -224,13 +214,15 @@ function do_create()
 function display_record()
 {
   // Find a record to display
-  $labID = get_id();
-  if ($labID === false)
+  $instrumentID = get_id();
+  if ($instrumentID === false)
     return;
 
-  $query  = "SELECT name, building AS contact " .
-            "FROM lab " .
-            "WHERE labID = $labID ";
+  $query  = "SELECT i.labID, i.name AS name, serialNumber, " .
+            "lab.name AS labName " .
+            "FROM instrument i, lab " .
+            "WHERE instrumentID = $instrumentID " .
+            "AND i.labID = lab.labID ";
   $result = mysql_query($query) 
             or die("Query failed : $query<br />\n" . mysql_error());
 
@@ -246,12 +238,12 @@ function display_record()
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
                   "        onchange='get_lab(this);' >" .
                   "  <option value='null'>None selected...</option>\n";
-  $query  = "SELECT labID, name FROM lab ORDER BY name";
+  $query  = "SELECT instrumentID, name FROM instrument ORDER BY name";
   $result = mysql_query($query)
             or die("Query failed : $query<br />\n" . mysql_error());
   while (list($t_id, $t_name) = mysql_fetch_array($result))
   {
-    $selected = ($labID == $t_id) ? " selected='selected'" : "";
+    $selected = ($instrumentID == $t_id) ? " selected='selected'" : "";
     $nav_listbox .= "  <option$selected value='$t_id'>$t_name</option>\n";
   }
   $nav_listbox .= "</select>\n";
@@ -260,7 +252,7 @@ echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
-      <tr><th colspan='8'>Edit Labs</th></tr>
+      <tr><th colspan='8'>Edit Instruments</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>Jump to: $nav_listbox
@@ -269,14 +261,16 @@ echo<<<HTML
                           <input type='submit' name='new' value='New' />
                           <input type='submit' name='edit' value='Edit' />
                           <input type='submit' name='delete' value='Delete' />
-                          <input type='hidden' name='labID' value='$labID' />
+                          <input type='hidden' name='instrumentID' value='$instrumentID' />
           </td></tr>
     </tfoot>
     <tbody>
-      <tr><th>Facility Name:</th>
+      <tr><th>Lab:</th>
+          <td>$labName</td></tr>
+      <tr><th>Instrument Name:</th>
           <td>$name</td></tr>
-      <tr><th>Contact Information:</th>
-          <td>$contact</td></tr>
+      <tr><th>Serial Number:</th>
+          <td>$serialNumber</td></tr>
     </tbody>
   </table>
   </form>
@@ -292,7 +286,7 @@ function get_id()
     return( $_GET['ID'] );
 
   // We don't know which record, so just find the first one
-  $query  = "SELECT labID FROM lab " .
+  $query  = "SELECT instrumentID FROM instrument " .
             "ORDER BY name " .
             "LIMIT 1 ";
   $result = mysql_query($query)
@@ -300,8 +294,8 @@ function get_id()
 
   if (mysql_num_rows($result) == 1)
   {
-    list($labID) = mysql_fetch_array($result);
-    return( $labID );
+    list($instrumentID) = mysql_fetch_array($result);
+    return( $instrumentID );
   }
 
   // If we're here, there aren't any records
@@ -309,7 +303,7 @@ echo<<<HTML
   <form action='{$_SERVER[PHP_SELF]}' method='post'>
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
-      <tr><th colspan='2'>Edit Labs</th></tr>
+      <tr><th colspan='2'>Edit Instruments</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'><input type='submit' name='new' value='New' />
@@ -332,10 +326,10 @@ function edit_record()
 {
   // Get the record we need to edit
   if ( isset( $_POST['edit'] ) )
-    $labID = $_POST['labID'];
+    $instrumentID = $_POST['instrumentID'];
 
   else if ( isset( $_GET['edit'] ) )
-    $labID = $_GET['edit'];
+    $instrumentID = $_GET['edit'];
 
   else
   {
@@ -344,38 +338,42 @@ function edit_record()
     return;
   }
 
-  $query  = "SELECT name, building AS contact " .
-            "FROM lab " .
-            "WHERE labID = $labID ";
+  $query  = "SELECT labID, name, serialNumber  " .
+            "FROM instrument " .
+            "WHERE instrumentID = $instrumentID ";
   $result = mysql_query($query) 
             or die("Query failed : $query<br />\n" . mysql_error());
 
   $row = mysql_fetch_array($result);
 
+  $labID               =                                   $row['labID'];
+  $name                = html_entity_decode( stripslashes( $row['name'] ) );
+  $serialNumber        = html_entity_decode( stripslashes( $row['serialNumber'] ) );
 
-  $name    = html_entity_decode( stripslashes( $row['name'] ) );
-  $contact = html_entity_decode( stripslashes( $row['contact'] ) );
+  $lab_text = lab_select( "labID", $labID );
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post">
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
-      <tr><th colspan='8'>Edit Labs</th></tr>
+      <tr><th colspan='8'>Edit Instruments</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'><input type='submit' name='update' value='Update' />
-                          <input type='hidden' name='labID' value='$labID' />
+                          <input type='hidden' name='instrumentID' value='$instrumentID' />
                           <input type='reset' /></td></tr>
     </tfoot>
     <tbody>
 
 
-    <tr><th>Facility Name:</th>
-        <td><input type='text' name='name' size='40' 
-                   maxlength='255' value='$name' /></td></tr>
-    <tr><th>Contact Information:</th>
-        <td><textarea name='contact' rows='6' cols='65' 
-                      wrap='virtual'>$contact</textarea></td></tr>
+    <tr><th>Lab:</th>
+        <td>$lab_text</td></tr>
+    <tr><th>Instrument Name:</th>
+        <td><textarea name='name' rows='6' cols='65' 
+                      wrap='virtual'>$name</textarea></td></tr>
+    <tr><th>Serial Number:</th>
+        <td><textarea name='serialNumber' rows='6' cols='65' 
+                      wrap='virtual'>$serialNumber</textarea></td></tr>
 
     </tbody>
   </table>
@@ -388,11 +386,13 @@ HTML;
 function do_new()
 {
 
+  $lab_text = lab_select( "labID" );
+
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post">
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
-      <tr><th colspan='8'>Edit Labs</th></tr>
+      <tr><th colspan='8'>Edit Instruments</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'><input type='submit' name='create' value='Create' />
@@ -401,13 +401,14 @@ echo<<<HTML
     <tbody>
 
 
-    <tr><th>Name:</th>
-        <td><input type='text' name='name' size='40' 
-                   maxlength='256' /></td></tr>
-    <tr><th>Contact Information:</th>
-        <td><textarea name='contact' rows='6' cols='65' 
+    <tr><th>Lab:</th>
+        <td>$lab_text</td></tr>
+    <tr><th>Instrument Name:</th>
+        <td><textarea name='name' rows='6' cols='65' 
                       wrap='virtual'></textarea></td></tr>
-
+    <tr><th>Serial Number:</th>
+        <td><textarea name='serialNumber' rows='6' cols='65' 
+                      wrap='virtual'></textarea></td></tr>
 
     </tbody>
   </table>
