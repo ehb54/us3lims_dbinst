@@ -387,8 +387,6 @@ class jobsubmit
       }
       else // 2DSA
       {
-//         $iterations = $parameters[ 'iterations_value' ];
- 
          $ti_noise   = isset( $parameters[ 'tinoise_option' ] )
                        ? $parameters[ 'tinoise_option' ] > 0 
                        : false;
@@ -397,9 +395,7 @@ class jobsubmit
                        ? $parameters[ 'rinoise_option' ] > 0
                        : false;
  
-         $time       = 10;  // Base time in minutes
-
-//         if ( $iterations > 0 ) $time *= $iterations;
+         $time       = 20;  // Base time in minutes
 
          if ( isset( $parameters[ 'meniscus_points' ] ) )
          {
