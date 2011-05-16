@@ -92,25 +92,12 @@ abstract class HPC_analysis
       $HPCDatasetID = mysql_insert_id();
 
       // Now for the HPCRequestData table
-      /*
-      if ( isset( $dataset['modelID'] ) && $dataset['modelID'] > 0 )
-      {
-        $query  = "INSERT INTO HPCRequestData SET      " .
-                  "HPCDatasetID       = $HPCDatasetID, " .
-                  "dataType           = 'model',       " .
-                  "dataID             = {$dataset['modelID']} " ;
-        mysql_query( $query )
-              or die( "Query failed : $query<br />" . mysql_error());
-      }
-      */
       if ( isset( $dataset['noiseIDs'][ 0 ] ) && $dataset['noiseIDs'][ 0 ] > 0 )
       {
         foreach ( $dataset['noiseIDs'] as $noiseID )
         {
           $query  = "INSERT INTO HPCRequestData SET      " .
                     "HPCDatasetID       = $HPCDatasetID, " .
-            //        "dataType           = 'noise',       " .
-            //        "dataID             = $noiseID       " ;
                     "noiseID             = $noiseID       " ;
           mysql_query( $query )
                 or die( "Query failed : $query<br />" . mysql_error());
