@@ -10,14 +10,14 @@ function emailsyntax_is_valid($email)
 {
   list($local, $domain) = explode("@", $email);
 
-  $pattern_local  = '^([0-9a-z]*([-|_]?[0-9a-z]+)*)' .
-                    '(([-|_]?)\.([-|_]?)[0-9a-z]*([-|_]?[0-9a-z]+)+)*([-|_]?)$';
+  $pattern_local  = '/^([0-9a-z]*([-|_]?[0-9a-z]+)*)' .
+                    '(([-|_]?)\.([-|_]?)[0-9a-z]*([-|_]?[0-9a-z]+)+)*([-|_]?)$/i';
 
-  $pattern_domain = '^([0-9a-z]+([-]?[0-9a-z]+)*)' .
-                    '(([-]?)\.([-]?)[0-9a-z]*([-]?[0-9a-z]+)+)*\.[a-z]{2,4}$';
+  $pattern_domain = '/^([0-9a-z]+([-]?[0-9a-z]+)*)' .
+                    '(([-]?)\.([-]?)[0-9a-z]*([-]?[0-9a-z]+)+)*\.[a-z]{2,4}$/i';
 
-  $match_local  = eregi($pattern_local, $local);
-  $match_domain = eregi($pattern_domain, $domain);
+  $match_local  = preg_match($pattern_local, $local);
+  $match_domain = preg_match($pattern_domain, $domain);
 
   if ( $match_local && $match_domain )
   {
@@ -50,12 +50,18 @@ class cluster_info
    public $name;
    public $short_name;
    public $queue;
+   public $running;
+   public $queued;
+   public $status;
 
    public function __construct( $n, $s, $q )
    {
-      $this->name  = $n;
+      $this->name       = $n;
       $this->short_name = $s;
-      $this->queue = $q;
+      $this->queue      = $q;
+      $this->running    = "*";
+      $this->queued     = "*";
+      $this->status     = "*";
    }
 }
 
@@ -67,6 +73,31 @@ $clusters = array(
   new cluster_info( "bcf.uthscsa.edu",                     "bcf",      "normal" ),
   new cluster_info( "alamo.uthscsa.edu",                   "alamo",    "normal" )
   );
+
+
+$gfac_link = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
+$result    = mysql_select_db( $globaldbname, $gfac_link );
+
+$query     = "SELECT cluster, running, queued, status FROM cluster_status";
+$result    = mysql_query( $query, $gfac_link );
+
+while ( list( $cluster, $running, $queued, $status ) = mysql_fetch_row( $result ) )
+{
+   foreach( $clusters as $c )
+   {
+      if ( $c->short_name == $cluster )
+      {
+         $c->running = $running;
+         $c->queued  = $queued;
+         $c->status  = $status;
+      }
+   }
+}
+
+mysql_close( $gfac_link );
+
+// Reset default db
+include "db.php";
 
 // Function to return appropriate clusters
 function tigre()
@@ -112,8 +143,10 @@ HTML;
         $text .= "     <tr><td class='cluster'>" .
                  "<input type='radio' name='cluster' " .
                  "value='$value'$checked$disabled />" .
-                 "$cluster->short_name</td>\n         <td>$status</td> <td>$cluster->queue</td>" .
-                 "<td>$jobs / $load</td></tr>\n";
+                 "$cluster->short_name</td>\n" .
+                 "<td>$cluster->status</td> " .
+                 "<td>$cluster->queue</td>"   .
+                 "<td>$cluster->running / $cluster->queued</td></tr>\n";
 
         $checked = "";
       }
