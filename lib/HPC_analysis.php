@@ -41,18 +41,20 @@ abstract class HPC_analysis
   // Function to create the main HPCAnalysisRequest table entry
   function HPCAnalysisRequest( $job )
   {
+    global $link;
+
     // Get any remaining information we need
     // investigatorGUID
     $query  = "SELECT personGUID FROM people " .
               "WHERE personID = {$_SESSION['id']} ";
-    $result = mysql_query( $query )
+    $result = mysql_query( $query, $link )
               or die( "Query failed : $query<br />" . mysql_error());
     list( $investigatorGUID ) = mysql_fetch_array( $result );
 
     // submitterGUID
     $query  = "SELECT personGUID FROM people " .
               "WHERE personID = {$_SESSION['loginID']} ";
-    $result = mysql_query( $query )
+    $result = mysql_query( $query, $link )
               or die( "Query failed : $query<br />" . mysql_error());
     list( $submitterGUID ) = mysql_fetch_array( $result );
 
@@ -182,6 +184,7 @@ class HPC_2DSA extends HPC_analysis
               "meniscus_points      = {$job_parameters['meniscus_points']},  " .
               "max_iterations       = {$job_parameters['max_iterations']}, " .
               "rinoise_option       = {$job_parameters['rinoise_option']}    ";
+
     mysql_query( $query )
           or die( "Query failed : $query<br />" . mysql_error());
 

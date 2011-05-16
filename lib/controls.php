@@ -24,11 +24,9 @@ echo<<<HTML
                     value="montecarlo.setValue(parseInt(this.value))"/>
 
       Minimum: <input id="montecarlo-min" size='5'
-                      onchange="montecarlo.setMinimum(parseInt(this.value))"
                       disabled="disabled"/>
 
       Maximum: <input id="montecarlo-max" size='5'
-                      onchange="montecarlo.setMaximum(parseInt(this.value))"
                       disabled="disabled"/>
     </fieldset>
 HTML;
@@ -50,10 +48,8 @@ echo<<<HTML
                       name="simpoints-value" 
                       value="simpoints.setValue(parseInt(this.value))"/>
         Minimum: <input id="simpoints-min"  size='5'
-                      onchange="simpoints.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="simpoints-max"  size='5'
-                      onchange="simpoints.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -74,10 +70,8 @@ echo<<<HTML
                       name="band_volume-value" 
                       value="band_volume.setValue(parseInt(this.value))"/>
         Minimum: <input id="band_volume-min"  size='5'
-                      onchange="band_volume.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="band_volume-max"  size='5'
-                      onchange="band_volume.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -250,25 +244,23 @@ echo<<<HTML
                
         <div style="display:none" id="mag5">
           <br/>
-          <input type="text" name="meniscus_range" value="0.01"/> Meniscus Fit Range (cm)<br/>
+          <input type="text" name="meniscus_range" value="0.01"/>Meniscus Fit Range (cm)<br/>
           <br/>
           <fieldset>
-            <legend>Meniscus Range</legend>
+            <legend>Meniscus Point Count</legend>
             <div class="slider" id="meniscus-slider">
                <input class="slider-input" id="meniscus-slider-input"/>
             </div>
             <br/>
-            Value: <input id="meniscus_range" 
+            Value: <input id="meniscus_points" size='5'
                           onchange="meniscus.setValue(parseInt(this.value))" 
-                          name="meniscus_range" 
+                          name="meniscus_points" 
                           value="meniscus.setValue(parseInt(this.value))"/>
                           
-            Minimum: <input id="meniscus-min" 
-                            onchange="meniscus.setMinimum(parseInt(this.value))" 
+            Minimum: <input id="meniscus-min" size='5'
                             disabled="disabled"/>
                             
-            Maximum: <input id="meniscus-max" 
-                            onchange="meniscus.setMaximum(parseInt(this.value))" 
+            Maximum: <input id="meniscus-max" size='5'
                             disabled="disabled"/>
           </fieldset>
         </div>
@@ -294,17 +286,15 @@ echo<<<HTML
                <input class="slider-input" id="iterations-slider-input"/>
             </div>
             <br/>
-            Value: <input id="max_iterations" 
+            Value: <input id="max_iterations" size='5'
                           onchange="iterations.setValue(parseInt(this.value))" 
                           name="max_iterations" 
                           value="iterations.setValue(parseInt(this.value))"/>
                        
-            Minimum: <input id="iterations-min" 
-                            onchange="iterations.setMinimum(parseInt(this.value))" 
+            Minimum: <input id="iterations-min" size='5'
                             disabled="disabled"/>
                       
-            Maximum: <input id="iterations-max" 
-                            onchange="iterations.setMaximum(parseInt(this.value))" 
+            Maximum: <input id="iterations-max" size='5'
                             disabled="disabled"/>                                        
           </fieldset>
         </div>
@@ -331,10 +321,8 @@ echo<<<HTML
                       id="demes-value"
                       onchange="demes.setValue(parseInt(this.value))"/>
         Minimum: <input id="demes-min" size='5'
-                      onchange="demes.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="demes-max" size='5'
-                      onchange="demes.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -356,10 +344,8 @@ echo<<<HTML
                       id="genes-value"
                       onchange="genes.setValue(parseInt(this.value))"/>
         Minimum: <input id="genes-min" size='5'
-                      onchange="genes.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="genes-max" size='5'
-                      onchange="genes.setMaximum(parseInt(this.value))"
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -380,10 +366,8 @@ echo<<<HTML
                       id="h-value" 
                       onchange="s.setValue(parseInt(this.value))"/>
         Minimum: <input id="h-min" size='5'
-                      onchange="s.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="h-max" size='5'
-                      onchange="s.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -404,10 +388,8 @@ echo<<<HTML
                       id="crossover-value" 
                       onchange="crossover.setValue(parseInt(this.value))"/>
         Minimum: <input id="crossover-min" size='5'
-                      onchange="crossover.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="crossover-max" size='5'
-                      onchange="crossover.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -428,10 +410,8 @@ echo<<<HTML
                       id="mutation-value" 
                       onchange="mutation.setValue(parseInt(this.value))"/>
         Minimum: <input id="mutation-min" size='5'
-                      onchange="mutation.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="mutation-max" size='5'
-                      onchange="mutation.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -452,10 +432,8 @@ echo<<<HTML
                       name="plague-value" 
                       value="plague.setValue(parseInt(this.value))"/>
         Minimum: <input id="plague-min" size='5'
-                      onchange="plague.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="plague-max" size='5'
-                      onchange="plague.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -476,10 +454,8 @@ echo<<<HTML
                       name="elitism-value" 
                       value="elitism.setValue(parseInt(this.value))"/>
         Minimum: <input id="elitism-min" size='5'
-                      onchange="elitism.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="elitism-max" size='5'
-                      onchange="elitism.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -500,10 +476,8 @@ echo<<<HTML
                       name="migration-value" 
                       value="migration.setValue(parseInt(this.value))"/>
         Minimum: <input id="migration-min" size='5'
-                      onchange="migration.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="migration-max" size='5'
-                      onchange="migration.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -524,10 +498,8 @@ echo<<<HTML
                       name="regularization-value" 
                       value="regularization.setValue(parseInt(this.value))"/>
         Minimum: <input id="regularization-min" size='5'
-                      onchange="regularization.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="regularization-max" size='5'
-                      onchange="regularization.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -548,10 +520,8 @@ echo<<<HTML
                       name="seed-value" 
                       value="seed.setValue(parseInt(this.value))"/>
         Minimum: <input id="seed-min" size='5'
-                      onchange="seed.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="seed-max" size='5'
-                      onchange="seed.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -574,10 +544,8 @@ echo<<<HTML
                       id="conc_threshold-value"
                       onchange="conc_threshold.setValue(parseInt(this.value))"/>
         Minimum: <input id="conc_threshold-min" size='5'
-                      onchange="conc_threshold.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="conc_threshold-max" size='5'
-                      onchange="conc_threshold.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -600,10 +568,8 @@ echo<<<HTML
                       id="s_grid-value"
                       onchange="s_grid.setValue(parseInt(this.value))"/>
         Minimum: <input id="s_grid-min" size='5'
-                      onchange="s_grid.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="s_grid-max" size='5'
-                      onchange="s_grid.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -626,10 +592,8 @@ echo<<<HTML
                       id="k_grid-value"
                       onchange="k_grid.setValue(parseInt(this.value))"/>
         Minimum: <input id="k_grid-min" size='5'
-                      onchange="k_grid.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="k_grid-max" size='5'
-                      onchange="k_grid.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -652,10 +616,8 @@ echo<<<HTML
                       id="mutate_sigma-value"
                       onchange="mutate_sigma.setValue(parseInt(this.value))"/>
         Minimum: <input id="mutate_sigma-min" size='5'
-                      onchange="mutate_sigma.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="mutate_sigma-max" size='5'
-                      onchange="mutate_sigma.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -678,10 +640,8 @@ echo<<<HTML
                       id="mutate_s_value"
                       onchange="mutate_s.setValue(parseInt(this.value))"/>
         Minimum: <input id="mutate_s-min" size='5'
-                      onchange="mutate_s.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="mutate_s-max" size='5'
-                      onchange="mutate_s.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -704,10 +664,8 @@ echo<<<HTML
                       id="mutate_k_value"
                       onchange="mutate_k.setValue(parseInt(this.value))"/>
         Minimum: <input id="mutate_k-min" size='5'
-                      onchange="mutate_k.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="mutate_k-max" size='5'
-                      onchange="mutate_k.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -730,10 +688,8 @@ echo<<<HTML
                       id="mutate_sk_value"
                       onchange="mutate_sk.setValue(parseInt(this.value))"/>
         Minimum: <input id="mutate_sk-min" size='5'
-                      onchange="mutate_sk.setMinimum(parseInt(this.value))" 
                       disabled="disabled"/>
         Maximum: <input id="mutate_sk-max" size='5'
-                      onchange="mutate_sk.setMaximum(parseInt(this.value))" 
                       disabled="disabled"/>
       </fieldset>
 HTML;

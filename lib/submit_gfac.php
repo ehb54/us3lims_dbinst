@@ -190,15 +190,15 @@ $this->message[] = "End of result text";
       $gfacID     = $this->getGfacID( $epr );
       $xml        = $this->data[ 'jobxmlfile' ];
  
-      $db = mysql_connect( $host, $dbusername, $dbpasswd );
+      $link = mysql_connect( $host, $dbusername, $dbpasswd );
  
-      if ( ! $db )
+      if ( ! $link )
       {
          $this->message[] = "Cannot open database on $host\n";
          return;
       }
  
-      if ( ! mysql_select_db( $dbname, $db ) ) 
+      if ( ! mysql_select_db( $dbname, $link ) ) 
       {
          $this->message[] = "Cannot change to database $dbname\n";
          return;
@@ -210,27 +210,27 @@ $this->message[] = "End of result text";
                "jobfile='" . mysql_real_escape_string( $xml ) . "', " .
                "gfacID='$gfacID'";
       
-      $result = mysql_query( $query, $db );
+      $result = mysql_query( $query, $link );
  
       if ( ! $result )
       {
-         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $db ) . "\n";
+         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $result ) . "\n";
          return;
       }
  
-      mysql_close( $db );
+      mysql_close( $link );
 $this->message[] = "Database $dbname updated: requestID = $requestID";
 
       // Update global db
-      $db = mysql_connect( $host, $globaldbuser, $globaldbpasswd );
+      $gfac_link = mysql_connect( $host, $globaldbuser, $globaldbpasswd );
 
-      if ( ! $db )
+      if ( ! $gfac_link )
       {
          $this->message[] = "Cannot open global database on $host\n";
          return;
       }
  
-      if ( ! mysql_select_db( $globaldbname, $db ) ) 
+      if ( ! mysql_select_db( $globaldbname, $gfac_link ) ) 
       {
          $this->message[] = "Cannot change to global database $globaldbname\n";
          return;
@@ -245,15 +245,15 @@ $this->message[] = "ExperimentID extracted from EPR file = '$gfacID'\n";
                  "gfacID='$gfacID', "        .
                  "cluster='$cluster', "      .
                  "us3_db='$dbname'"; 
-      $result  = mysql_query( $query, $db );
+      $result  = mysql_query( $query, $gfac_link );
  
       if ( ! $result )
       {
-         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $db ) . "\n";
+         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $result ) . "\n";
          return;
       }
  
-      mysql_close( $db );
+      mysql_close( $gfac_link );
 $this->message[] = "Global database $globaldbname updated: gfacID = $gfacID";
    }
 

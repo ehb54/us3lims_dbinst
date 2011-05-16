@@ -8,13 +8,13 @@ var meniscus = new Slider(document.getElementById("meniscus-slider"),
 meniscus.setMinimum(3);
 meniscus.setMaximum(30);
 meniscus.setValue(10);
-document.getElementById("meniscus_range").value = meniscus.getValue();
+document.getElementById("meniscus_points").value = meniscus.getValue();
 document.getElementById("meniscus-min").value = meniscus.getMinimum();
 document.getElementById("meniscus-max").value = meniscus.getMaximum();
 
 meniscus.onchange = function () 
 {
-  document.getElementById("meniscus_range").value = meniscus.getValue();
+  document.getElementById("meniscus_points").value = meniscus.getValue();
   document.getElementById("meniscus-min").value = meniscus.getMinimum();
   document.getElementById("meniscus-max").value = meniscus.getMaximum();
 };
