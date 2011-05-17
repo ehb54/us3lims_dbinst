@@ -14,7 +14,15 @@ if ( $userlevel == 5 ) // super admin
 $global_menu = <<<HTML
         <div id="globalnav">
           <ul class='level1'>
-            <li><a href="http://$org_site/index.php">Home</a></li>
+            <li class='submenu'><a href="http://$org_site/index.php">Home</a>
+              <ul class='level2'>
+                <li><a href='http://www.ultrascan.uthscsa.edu'>UltraScan Software</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/manual'>UltraScan Manual</a></li>
+                <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
+                       AUC Hardware User Guide</a></li>
+                <li><a href='contacts.php'>Contacts</a></li>
+                <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
+              </ul></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
                 <li><a href='view_projects.php'>View/Edit Projects</a></li>
@@ -47,7 +55,15 @@ else if ( $userlevel == 4 ) // admin
 $global_menu = <<<HTML
         <div id="globalnav">
           <ul class='level1'>
-            <li><a href="http://$org_site/index.php">Home</a></li>
+            <li class='submenu'><a href="http://$org_site/index.php">Home</a>
+              <ul class='level2'>
+                <li><a href='http://www.ultrascan.uthscsa.edu'>UltraScan Software</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/manual'>UltraScan Manual</a></li>
+                <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
+                       AUC Hardware User Guide</a></li>
+                <li><a href='contacts.php'>Contacts</a></li>
+                <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
+              </ul></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
                 <li><a href='view_projects.php'>View/Edit Projects</a></li>
@@ -80,7 +96,15 @@ else if ( $userlevel == 3 ) // super user
 $global_menu = <<<HTML
         <div id="globalnav">
           <ul class='level1'>
-            <li><a href="http://$org_site/index.php">Home</a></li>
+            <li class='submenu'><a href="http://$org_site/index.php">Home</a>
+              <ul class='level2'>
+                <li><a href='http://www.ultrascan.uthscsa.edu'>UltraScan Software</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/manual'>UltraScan Manual</a></li>
+                <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
+                       AUC Hardware User Guide</a></li>
+                <li><a href='contacts.php'>Contacts</a></li>
+                <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
+              </ul></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
                 <li><a href='view_projects.php'>View/Edit Projects</a></li>
@@ -113,7 +137,15 @@ else if ( $userlevel == 2 ) // analyst
 $global_menu = <<<HTML
         <div id="globalnav">
           <ul class='level1'>
-            <li><a href="http://$org_site/index.php">Home</a></li>
+            <li class='submenu'><a href="http://$org_site/index.php">Home</a>
+              <ul class='level2'>
+                <li><a href='http://www.ultrascan.uthscsa.edu'>UltraScan Software</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/manual'>UltraScan Manual</a></li>
+                <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
+                       AUC Hardware User Guide</a></li>
+                <li><a href='contacts.php'>Contacts</a></li>
+                <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
+              </ul></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
                 <li><a href='view_projects.php'>View/Edit Projects</a></li>
@@ -142,7 +174,15 @@ else if ( $userlevel == 1 ) // privileged user
 $global_menu = <<<HTML
         <div id="globalnav">
           <ul class='level1'>
-            <li><a href="http://$org_site/index.php">Home</a></li>
+            <li class='submenu'><a href="http://$org_site/index.php">Home</a>
+              <ul class='level2'>
+                <li><a href='http://www.ultrascan.uthscsa.edu'>UltraScan Software</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/manual'>UltraScan Manual</a></li>
+                <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
+                       AUC Hardware User Guide</a></li>
+                <li><a href='contacts.php'>Contacts</a></li>
+                <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
+              </ul></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
                 <li><a href='view_projects.php'>View/Edit Projects</a></li>
@@ -163,7 +203,15 @@ else if ( $userlevel == 0 ) // regular user
 $global_menu = <<<HTML
         <div id="globalnav">
           <ul class='level1'>
-            <li><a href="http://$org_site/index.php">Home</a></li>
+            <li class='submenu'><a href="http://$org_site/index.php">Home</a>
+              <ul class='level2'>
+                <li><a href='http://www.ultrascan.uthscsa.edu'>UltraScan Software</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/manual'>UltraScan Manual</a></li>
+                <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
+                       AUC Hardware User Guide</a></li>
+                <li><a href='contacts.php'>Contacts</a></li>
+                <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
+              </ul></li>
             <li class='submenu'><a href='#'>Project</a>
               <ul class='level2'>
                 <li><a href='view_projects.php'>View/Edit Projects</a></li>
@@ -184,7 +232,15 @@ else // not logged in, userlevel not 0-5 for some reason, etc.
 $global_menu = <<<HTML
         <div id="globalnav">
           <ul class='level1'>
-            <li><a href="http://$org_site/index.php">Home</a></li>
+            <li class='submenu'><a href="http://$org_site/index.php">Home</a>
+              <ul class='level2'>
+                <li><a href='http://www.ultrascan.uthscsa.edu'>UltraScan Software</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/manual'>UltraScan Manual</a></li>
+                <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
+                       AUC Hardware User Guide</a></li>
+                <li><a href='contacts.php'>Contacts</a></li>
+                <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
+              </ul></li>
             <li><a href="#" onclick='construction();'>Contact Us</a></li>
           </ul>
         </div>

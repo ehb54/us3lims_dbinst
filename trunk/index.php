@@ -18,39 +18,38 @@ include 'links.php';
 
   <h1 class="title"><?php echo $org_name; ?></h1>
 
-  <div class="imageright">
-    <table cellpadding="0" cellspacing="0">
-    <tr><td><img src="#" alt="A photo" 
-            width="0" height="0"/></td></tr>
-    <tr><td class='caption'>A caption</td></tr>
-    </table>
-  </div>
-  <h3><em>Welcome to the Portal for the UltraScan Laboratory Information Management System!</em></h3>
+  <h3><em>Welcome to the TeraGrid Science Gateway for UltraScan!</em></h3>
 
-<p> This website provides public database support for users of the <a
-href='http://www.ultrascan.uthscsa.edu'>UltraScan software</a>.  You can use this
-portal to store your sedimentation data and associated data for your
-experiments in the UltraScan LIMS, and share your data in a public forum with
-colleagues.  For users of UltraScan's 2-dimensional spectrum analysis and
-genetic algorithm analysis, we also offer access to high performance computing
-facilities available at UTHSCSA through this portal. Such services are made
-available on a first come, first serve basis, and may be restricted when excess
-computer capacity is not available. You will need to contact the <a
-href='mailto:demeler@biochem.uthscsa.edu'>facility director</a> to obtain all
-necessary passwords to use these services.</p>
+<p> This website offers access to the UltraScan
+Laboratory Information Management System (USLIMS), a <a
+href='https://www.teragrid.org/web/science-gateways/'> TeraGrid Science
+Gateway</a> supported by an allocation through a TeraGrid community
+account. This system provides web and database support for users of the
+<a href='http://www.ultrascan.uthscsa.edu'>UltraScan software</a>. You
+can use this portal to access data associated with your sedimentation
+experiments, and share your data with collaborators. Authorized users
+can also use this site to model analytical ultracentrifugation experiments
+with UltraScan's high-performance analysis modules by submitting
+analysis jobs to computing clusters available at the University of
+Texas Health Science Center and TeraGrid sites at the Texas Advanced
+Computing Center and at Indiana University.  These services are made
+available through an NSF TeraGrid community account (see below for
+funding credits).  To obtain access to this resource please contact the
+<a href='mailto:demeler@biochem.uthscsa.edu'>project director</a>.  </p>
 
 <p><b>DISCLAIMER:</b></p>
 
-<p>We do not take any responsibility for data loss due to hardware failure,
-software error, operator error or other cause. It is your responsibility to
-always make backups of your data. You are free to use our facility at no cost.
-Support is provided via the <a
+<p>We do not take any responsibility for data loss due to hardware
+failure, software error, operator error or other cause. It is
+your responsibility to always make backups of your data. You are
+free to use this resource at no cost.  Support is provided via the <a
 href="http://www.ultrascan.uthscsa.edu/mailman/listinfo/ultrascan">UltraScan
-mailing list</a>. Please keep in mind that we cannot warrant for the security
-of your data. You assume all risks involved with placing your data on our
-server. This server is a public service, and information placed on this server
-can be shared by other users. If you need a private, secure database please
-contact us to make arrangements for such a service.</p>
+mailing list</a>. Please keep in mind that we cannot guarantee the
+security of your data. You assume all risks involved with placing your
+data on our server. This site is a public service, and can not guarantee
+that information placed on this server will always remain private.  If you
+need a private, secure database please contact us to make arrangements
+for such a service.</p>
 
 <p> Funding for this facility is provided through multiple sources:</p>
 
@@ -71,6 +70,7 @@ contact us to make arrangements for such a service.</p>
   <li><a href='http://www.nih.gov'>The National Institutes of Health</a>, Grant NCRR-R01RR022200 (to Borries Demeler)</li>
 
 </ul>
+
 <p> When publishing, please credit our facility as follows:</p>
 <ul>
 <p>
@@ -84,27 +84,30 @@ Texas Advanced Computing Center supported by NSF Teragrid Grant<br/>
 </b>
 </ul>
 
-<p>Please forward the link to each manuscript citing our facility to
-<a href='mailto:demeler@biochem.uthscsa.edu'>demeler@biochem.uthscsa.edu</a></p>
+<p>Please enter the link to each manuscript citing this resource on the
+<a href='http://www.ultrascan.uthscsa.edu/ultrascan-refs.html'>UltraScan
+submission website</a>.</p>
 
-
-<p> Thank you for visiting and feel free to send us your comments!</p>
 
 <p><a href='mailto:demeler@biochem.uthscsa.edu'>Borries Demeler, Ph.D.</a><br/>
-Associate Professor<br/>
-Facility Director</p>
+Associate Professor<br/> 
+UltraScan Project Director</p>
 
+<hr>
+<h3>The UltraScan TeraGrid Science Gateway and LIMS system is supported by the
+following Institutions:</h3>
 <table cellspacing='0px' cellpadding='0px' class='imagelinks'>
   <tr><td><img src='images/teragrid.png'></td>
       <td><img src='images/TACC.gif'></td></tr>
   <tr><td><a href='http://www.teragrid.org/'>Teragrid</a></td>
       <td><a href='http://www.tacc.utexas.edu'>
              Texas Advanced<br />Computing Center</a></td></tr>
-  <tr><td colspan='2' style='padding-top:2em;'><img src='images/uthscsa.gif'></td></tr>
-  <tr><td colspan='2'><a href='http://www.uthscsa.edu'>
-              The University of Texas<br />Health Science Center</a></td></tr>
+  <tr><td style='padding-top:2em;'><img src='images/uthscsa.gif'></td>
+      <td><img src='images/iu.png'></td></tr>
+  <tr><td><a href='http://www.uthscsa.edu'>
+              The University of Texas<br />Health Science Center</a></td>
+		<td><a href=http://www.iu.edu/>Indiana University</a></td></tr>
 </table>
-
 
 </div>
 

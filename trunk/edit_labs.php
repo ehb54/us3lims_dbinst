@@ -57,6 +57,12 @@ else if (isset($_POST['create']))
   exit();
 }
 
+else if (isset($_POST['create']))
+{
+  do_create();
+  exit();
+}
+
 // Start displaying page
 $page_title = 'Edit Labs';
 $js = 'js/edit_labs.js';
