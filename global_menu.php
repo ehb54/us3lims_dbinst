@@ -42,7 +42,7 @@ $global_menu = <<<HTML
               <ul class='level2'>
                 <li><a href='#' onclick='construction();'>Menu Item</a></li>
               </ul></li>
-            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href="contactus.php">Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
@@ -83,7 +83,7 @@ $global_menu = <<<HTML
               <ul class='level2'>
                 <li><a href='#' onclick='construction();'>Menu Item</a></li>
               </ul></li>
-            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href="contactus.php">Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
@@ -124,7 +124,7 @@ $global_menu = <<<HTML
               <ul class='level2'>
                 <li><a href='#' onclick='construction();'>Menu Item</a></li>
               </ul></li>
-            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href="contactus.php">Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
@@ -161,7 +161,7 @@ $global_menu = <<<HTML
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
                 <li><a href='GA_1.php'>GA Analysis</a></li>
               </ul></li>
-            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href="contactus.php">Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
@@ -190,7 +190,7 @@ $global_menu = <<<HTML
                 <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
                 <li><a href='#' onclick='construction();'>Enter Nucleic Acid Sequence</a></li>
               </ul></li>
-            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href="contactus.php">Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
@@ -219,7 +219,7 @@ $global_menu = <<<HTML
                 <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
                 <li><a href='#' onclick='construction();'>Enter Nucleic Acid Sequence</a></li>
               </ul></li>
-            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href="contactus.php">Contact Us</a></li>
             <li><a href='#' onclick='construction();'>Help</a></li>
           </ul>
         </div>
@@ -241,7 +241,7 @@ $global_menu = <<<HTML
                 <li><a href='contacts.php'>Contacts</a></li>
                 <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
               </ul></li>
-            <li><a href="#" onclick='construction();'>Contact Us</a></li>
+            <li><a href="contactus.php">Contact Us</a></li>
           </ul>
         </div>
 
