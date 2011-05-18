@@ -74,17 +74,17 @@ The $org_name Admins.
 This is an automated response, do not reply!";
 
 $now = time();
-$headers = "From: $org_name Admin<$admin_email>"     . "\r\n";
+$headers = "From: $org_name Admin<$admin_email>"     . "\n";
 
 // Set the reply address
-$headers .= "Reply-To: $org_name<$admin_email>"      . "\r\n";
-$headers .= "Return-Path: $org_name<$admin_email>"   . "\r\n";
+$headers .= "Reply-To: $org_name<$admin_email>"      . "\n";
+$headers .= "Return-Path: $org_name<$admin_email>"   . "\n";
 
 // Try to avoid spam filters
-$headers .= "Message-ID: <" . $now . "info@" . $_SERVER['SERVER_NAME'] . ">\r\n";
-$headers .= "X-Mailer: PHP v" . phpversion()         . "\r\n";
-$headers .= "MIME-Version: 1.0"                      . "\r\n";
-$headers .= "Content-Transfer-Encoding: 8bit"        . "\r\n";
+$headers .= "Message-ID: <" . $now . "info@" . $_SERVER['SERVER_NAME'] . ">\n";
+$headers .= "X-Mailer: PHP v" . phpversion()         . "\n";
+$headers .= "MIME-Version: 1.0"                      . "\n";
+$headers .= "Content-Transfer-Encoding: 8bit"        . "\n";
 
 mail( $email_address, $subject, $message, $headers );
 
