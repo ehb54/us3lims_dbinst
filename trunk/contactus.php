@@ -8,6 +8,7 @@
 session_start();
 
 include 'config.php';
+include 'lib/utility.php';
 
 // Start displaying page
 $page_title = "Contact Us";
@@ -19,7 +20,36 @@ include 'links.php';
 <div id='content'>
 
   <h1 class="title">Contact Us</h1>
+  <!-- Place page content here -->
 
+<?php
+// Have we logged in already?
+if ( isset( $_SESSION['userlevel'] ) )
+  enter_comment();
+
+// No, have we entered the captcha text?
+else if ( ! isset( $_POST['captcha'] ) )
+  do_captcha();
+
+// Yes, so do they match?
+else if ( $_POST['captcha'] == $_SESSION['captcha'] )
+  enter_comment();
+
+// Ok, they don't match
+else
+  do_captcha( "Entered text doesn&rsquo;t match." );
+
+?>
+</div>
+
+<?php
+include 'bottom.php';
+exit();
+
+// Function to request comment information from the user
+function enter_comment()
+{
+  echo <<<HTML
     <fieldset><legend>Send us your comments:</legend> 
     <form action="sendcomments.php" method="post"
 		      onsubmit="return validate(this);" >
@@ -59,9 +89,38 @@ include 'links.php';
     </fieldset>
     </form>
 
-</div>
+HTML;
+}
 
-<?php
-include 'bottom.php';
-exit();
+// Function to display a captcha and request human input
+function do_captcha( $msg = "" )
+{
+  $message = ( empty( $msg ) ) ? "" : "<p style='color:red;'>$msg</p>";
+
+  // Let's just use the random password function we already have
+  $pw = makeRandomPassword();
+  $_SESSION['captcha'] = $pw;
+
+echo<<<HTML
+  <div id='captcha'>
+
+  $message
+
+  <img src='create_captcha.php' alt='Captcha image' />
+
+  <form action="{$_SERVER['PHP_SELF']}" method="post">
+    <h3>Please enter the code above to proceed to the comment form</h3>
+
+    <p><input type='text' name='captcha' size='40' maxlength='10' /></p>
+
+    <p><input type='submit' name='enter_request' value='Enter Request' />
+       <input type='reset' /></p>
+
+  </form>
+
+  </div>
+
+HTML;
+}
+
 ?>
