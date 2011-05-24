@@ -84,7 +84,7 @@ foreach( $display_info as $display )
   $content .= "<tr><th>Run ID:</th>\n" .
             "<td colspan='3'>$runID $triple $db_info</td>\n" .
             "<td rowspan='6'>\n" .
-            display_buttons( $clusterName, $gfacID, $jobEmail ) .
+            display_buttons( $database, $clusterName, $gfacID, $jobEmail ) .
             "</td></tr>\n";
 
   $content .= <<<HTML
@@ -121,11 +121,8 @@ exit();
 // Function to get the information we need from an individual database
 function get_status( $gfacID, $us3_db )
 {
-  global $dbhost;           // From config.php
-  global $dbusername;
-  global $dbpasswd;
-
-  $link = mysql_connect( $dbhost, $dbusername, $dbpasswd );
+  // Using credentials that will work for all databases
+  $link = mysql_connect( 'ultrascan3.uthscsa.edu', 'us3php', 'us3' );
   if ( ! $link ) return false;
 
   $result = mysql_select_db($us3_db, $link);
@@ -197,11 +194,11 @@ function cmp( $a, $b )
 
 // If current user is authorized to delete this job, display
 //  a delete button
-function display_buttons( $cluster, $gfacID, $jobEmail )
+function display_buttons( $current_db, $cluster, $gfacID, $jobEmail )
 {
   $buttons = "";
 
-  if ( is_authorized( $jobEmail ) )
+  if ( is_authorized( $current_db, $jobEmail ) )
   {
     // Button to delete current job from the queue
     $buttons = "<form action='queue_viewer.php' method='post'>\n" .
@@ -228,20 +225,28 @@ function display_buttons( $cluster, $gfacID, $jobEmail )
 }
 
 // Figure out if current user is authorized to delete this job
-function is_authorized( $jobEmail )
+function is_authorized( $current_db, $jobEmail )
 {
+  global $dbname;             // The database we're logged into
   $authorized = false;
-
+  
   // $jobEmail could have multiple emails in it
   $pos = strpos( $jobEmail, $_SESSION['email'] );
 
-  if ($_SESSION['userlevel'] >= 4)
+  // Userlevel 5 is always authorized
+  if ($_SESSION['userlevel'] >= 5)
     $authorized = true;
 
+  // Userlevel 4 is authorized within his own database
+  else if ( ($_SESSION['userlevel'] == 4) &&
+            ($current_db == $dbname)      )
+    $authorized = true;
+
+  // Userlevels 2, 3 are authorized for their own jobs
   else if ( ($_SESSION['userlevel'] >= 2) &&
-       ( $pos !== false ) )
+            ($pos !== false)              )
     $authorized = true;
-
+   
   return ($authorized);
 }
 
