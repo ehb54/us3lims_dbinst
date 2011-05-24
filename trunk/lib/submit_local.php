@@ -96,6 +96,12 @@ $this->message[] = "Files copied";
          $path    = "/share/apps64/openmpi/bin";
          break;
 
+        case 'alamo':
+         $libpath = "/share/apps/openmpi/lib";
+         $nodes   = $this->grid[ $this->cluster ][ 'maxproc' ];
+         $path    = "/share/apps/openmpi/bin";
+         break;
+
         default:
          $libpath = "/share/apps/openmpi/lib:/share/apps/qt4/lib";
          $nodes   = "8:ppn=4";
