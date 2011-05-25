@@ -123,7 +123,8 @@ echo <<<HTML
   <h4>Select the edit profile each cell</h4>
 
   <div>
-  <form action="{$_SERVER['PHP_SELF']}" method="post">
+  <a name='setup_form'></a>
+  <form action="{$_SERVER['PHP_SELF']}#setup_form" method="post">
 
     $out_text
 
@@ -255,6 +256,15 @@ function get_setup_2()
     }
   }
 
+  if ( isset( $_POST['noiseIDs'] ) )
+  {
+    foreach( $_POST['noiseIDs'] as $rawDataID => $noiseIDs )
+      unset( $_SESSION['cells'][$rawDataID]['noiseIDs'] );
+
+    foreach( $_POST['noiseIDs'] as $rawDataID => $noiseIDs )
+      $_SESSION['cells'][$rawDataID]['noiseIDs'] = $noiseIDs;   // each of these is an array
+  }
+
 /*
   if ( isset( $_POST['modelID'] ) )
   {
@@ -321,7 +331,8 @@ function get_model( $rawDataID, $editedDataID, $modelID = 0 )
 // Get the noise files
 function get_noise( $rawDataID, $editedDataID, $noiseIDs )
 {
-  $noise  = "<select name='noiseIDs[$rawDataID][]' multiple='multiple' size='3'>\n" .
+  $noise  = "<select name='noiseIDs[$rawDataID][]' multiple='multiple'" .
+            "  onchange='this.form.submit();' size='3'>\n" .
             "  <option value='null'>Select noise ...</option>\n";
 
   $query  = "SELECT noiseID, modelID, noiseType, timeEntered " .
