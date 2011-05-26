@@ -69,7 +69,7 @@ if ( isset( $_POST['save'] ) )
 if ( isset( $_SESSION['new_submitter'] ) )
   get_setup_1();
 
-else // no, gathering info from here
+else   // no, gathering info from here
   get_setup_2();
 
 // Start displaying page
@@ -87,6 +87,7 @@ include 'links.php';
 <?php
 
 $out_text = "";
+$count_anchors = 0;        // just for creating some named anchors
 foreach ( $_SESSION['cells'] as $rawDataID => $cell )
 {
   $editedData_text  = get_editedData( $rawDataID, $cell['editedDataID'] );
@@ -102,6 +103,8 @@ also, insert below in $out_text
                                  $cell['noiseIDs'] );
 
   $out_text .= <<<HTML
+
+  <a name='anchor_$count_anchors'></a>
   <fieldset>
     <legend style='font-size:110%;font-weight:bold;'>{$cell['filename']}</legend>
 
@@ -116,6 +119,21 @@ also, insert below in $out_text
 
 HTML;
 
+   $count_anchors++;
+
+}
+
+// calculate anchor to jump to
+$anchor_no = 0;
+foreach ( $_SESSION['cells'] as $cell )
+  if ( $cell['editedDataID'] != 0 ) $anchor_no++;
+
+if ( $anchor_no < 3 ) $anchor = "setup_form";
+
+else
+{
+  $anchor_no -= 2;
+  $anchor = "anchor_$anchor_no";
 }
 
 echo <<<HTML
@@ -124,7 +142,7 @@ echo <<<HTML
 
   <div>
   <a name='setup_form'></a>
-  <form action="{$_SERVER['PHP_SELF']}#setup_form" method="post">
+  <form action="{$_SERVER['PHP_SELF']}#$anchor" method="post">
 
     $out_text
 
