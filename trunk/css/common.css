@@ -318,6 +318,14 @@ div#content p
   color                 : #555555;
 }
 
+.secondary {
+  margin                : 0px;
+  padding               : 2em 0px 1em;
+  font-size             : 120%;
+  font-weight           : bold;
+  color                 : black;
+}
+
 .imageleft {
   float                 : left;
   margin                : 0px 20px 10px 0px;
