@@ -38,19 +38,19 @@ h2 {
 h3 {
   font-family           : Arial, Helvetica, sans-serif;
   font-size             : 1.4em;
-  color                 : dimgray;
+  color                 : black;
   margin-top            : 20px;
 }
 
 h4, h5, h6 {
-  font-family           : Arial, Helvetica, sans-serif;
+  font-family           : Arial, Helvetica, Sans-serif;
   font-size             : 1.2em;
   font-weight           : bold;
-  color                 : gray;
+  color                 : black;
 }
 
 p, ul, ol, dd, div, td {
-  font-family           : Verdana, arial, Sans-serif;
+  font-family           : Arial, Helvetica, Sans-serif;
   color                 : black;
   font-size             : 12px;
   line-height           : 1.5;
@@ -98,13 +98,16 @@ table.noborder td {
 
 a  {
   text-decoration       : none;
-  color                 : dimgray;
-  font-size             : 12px;
+  color                 : #000099;
   font-weight           : bold;
 }
 
 a:hover {
   text-decoration       : underline;
+}
+
+a:visited {
+  color                 : #551a8b;
 }
 
 a.block {
@@ -145,6 +148,7 @@ a.block:hover {
   background            : black;
   border                : solid black;
   border-width          : 10px 2px 0px 2px;
+  border-width          : 5px 0px 5px 0px;
 }
 
 #header img, #header table, #header td {
@@ -172,6 +176,7 @@ a.block:hover {
 
 #globalnav {
   padding-left          : 60px;
+  text-align            : left;
   vertical-align        : bottom;
   width                 : 940px;      /* 1000px - the 60px padding */
   float                 : left;
@@ -204,13 +209,13 @@ a.block:hover {
 }
 
 #globalnav li.separator {
-  background-color      : #2790B0;
+  background-color      : cyan;
   padding               : 1px 0px;
 }
 
 #globalnav li a:hover {
   text-decoration       : none;
-  color                 : #2790B0;
+  color                 : cyan;
   font-size             : 12px;
   font-weight           : bold;
 }
@@ -234,7 +239,7 @@ a.block:hover {
 }
 
 #globalnav ul.level1 li.submenu ul.level2 li a:hover {
-  color                 : #2790B0;
+  color                 : cyan;
 }
 
 #globalnav ul.level3 {
@@ -255,10 +260,10 @@ a.block:hover {
 
 #page {
   width                 : 1000px;
-  margin                : -2px auto;
+  margin                : auto;
   background            : #FFFFFF  url(../images/links_background.gif) repeat-y;
   border                : solid black;
-  border-width          : 10px 2px 2px 2px;
+  border-width          : 0px 0px 0px 0px;
 }
 
 /* Sidebar */
@@ -266,7 +271,7 @@ a.block:hover {
 #sidebar {
   float                 : left;
   width                 : 130px;                /* 180 - 25x2 in ul margin */
-  background-color      : #7F7F7F;              /* in case page is too short */
+  background            : #7F7F7F url(../images/black-grey-gradient.png) repeat-x;
   padding               : 5em 25px 15em 25px;   /* a minimum spacing before footer */
 }
 
@@ -285,7 +290,7 @@ a.block:hover {
 /* anchor tags need to be the same in #sidebar and #info */
 #sidebar a, #info a  {
   text-decoration       : none;
-  color                 : cyan;
+  color                 : white;
   font-size             : 12px;
   font-weight           : bold;
 }

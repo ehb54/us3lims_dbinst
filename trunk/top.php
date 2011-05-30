@@ -43,7 +43,7 @@ Released      : 8/1/2010
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
   <link rel="shortcut icon" href="images/favicon.ico" />
   <link href="css/common.css" rel="stylesheet" type="text/css" />
-  <script src=js/main.js type="text/javascript"></script>
+  <script src="js/main.js" type="text/javascript"></script>
 
 HTML;
 
@@ -71,11 +71,10 @@ echo<<<HTML
 <body $onload>
 
 <!-- begin header -->
-<div id="header">
-  <span style='font-size:36px;font-style:italic;font-weight:bold;color:#2790B0;padding:0 1em;'>
-    UltraScan III</span>
-  <span style='font-size:18px;font-weight:bold;color:white;'>
-    Public LIMS Portal</span>
+<div id="header" style='text-align:center;'> 
+   <img src='images/UltraScan3-LIMS-banner.png' alt='UltraScan3 banner' />
+   <span style='font-size:20px;font-weight:bold;color:white;padding:0 1em;'>
+    $org_name</span>
     $global_menu
 </div>
 

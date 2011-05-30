@@ -16,9 +16,7 @@ include 'links.php';
 ?>
 <div id='content'>
 
-  <h1 class="title"><?php echo $org_name; ?></h1>
-
-  <h3><em>Welcome to the TeraGrid Science Gateway for UltraScan!</em></h3>
+  <h1 class="title">Welcome to the TeraGrid Science Gateway for UltraScan!</h1>
 
 <p> This website offers access to the UltraScan
 Laboratory Information Management System (USLIMS), a <a
@@ -72,17 +70,13 @@ for such a service.</p>
 </ul>
 
 <p> When publishing, please credit our facility as follows:</p>
-<ul>
-<p>
-<b>
+
+<p><b>
 Calculations were performed on the UltraScan LIMS cluster at the<br/>
 Bioinformatics Core Facility at the University of Texas Health<br/>
 Science Center at San Antonio and the Lonestar cluster at the<br/>
 Texas Advanced Computing Center supported by NSF Teragrid Grant<br/>
-#MCB070038 (to Borries Demeler)."</p>
-
-</b>
-</ul>
+#MCB070038 (to Borries Demeler)."</b></p>
 
 <p>Please enter the link to each manuscript citing this resource on the
 <a href='http://www.ultrascan.uthscsa.edu/ultrascan-refs.html'>UltraScan
@@ -93,20 +87,19 @@ submission website</a>.</p>
 Associate Professor<br/> 
 UltraScan Project Director</p>
 
-<hr>
 <h3>The UltraScan TeraGrid Science Gateway and LIMS system is supported by the
 following Institutions:</h3>
 <table cellspacing='0px' cellpadding='0px' class='imagelinks'>
-  <tr><td><img src='images/teragrid.png'></td>
-      <td><img src='images/TACC.gif'></td></tr>
+  <tr><td><img src='images/teragrid.png' alt='Teragrid logo' /></td>
+      <td><img src='images/TACC.gif' alt='TACC logo' /></td></tr>
   <tr><td><a href='http://www.teragrid.org/'>Teragrid</a></td>
       <td><a href='http://www.tacc.utexas.edu'>
              Texas Advanced<br />Computing Center</a></td></tr>
-  <tr><td style='padding-top:2em;'><img src='images/uthscsa.gif'></td>
-      <td><img src='images/iu.png'></td></tr>
+  <tr><td style='padding-top:2em;'><img src='images/uthscsa.gif' alt='UTHSCSA logo' /></td>
+      <td><img src='images/iu.png' alt='Indiana University logo' /></td></tr>
   <tr><td><a href='http://www.uthscsa.edu'>
               The University of Texas<br />Health Science Center</a></td>
-		<td><a href=http://www.iu.edu/>Indiana University</a></td></tr>
+		<td><a href='http://www.iu.edu/'>Indiana University</a></td></tr>
 </table>
 
 </div>
