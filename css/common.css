@@ -140,6 +140,10 @@ a.block:hover {
   color                 : #FF0000;        /* red */
 }
 
+.toggle {
+  display               : none;
+}
+
 /* Header */
 
 #header {

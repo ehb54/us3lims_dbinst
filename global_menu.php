@@ -64,7 +64,9 @@ HTML;
 $resources_menu = <<<HTML
             <li class='submenu'><a href='#'>Resources -></a>
               <ul class='level3'>
-                <li><a href='#'>A Resource</a></li>
+                <li><a href='buffer_pH.php'>PO4 Buffer pH</a></li>
+                <li><a href='buffer_extinction.php'>Buffer Extinction</a></li>
+                <li><a href='compatibility_guide.php'>Compatibility Guide</a></li>
               </ul></li>
 
 HTML;
@@ -77,6 +79,7 @@ $help_menu = <<<HTML
                 <li class='separator'></li>
                 <li><a href='http://www.ultrascan.uthscsa.edu'>UltraScan Software</a></li>
                 <li><a href='http://www.ultrascan.uthscsa.edu/manual'>UltraScan Manual</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/tutorials.html'>Tutorials</a></li>
                 <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
                        AUC Hardware User Guide</a></li>
                 <li><a href='contacts.php'>Contacts</a></li>
@@ -189,7 +192,13 @@ $global_menu = <<<HTML
           <ul class='level1'>
             $home_menu
             $contactus_menu
-            $help_menu
+            <li class='submenu'><a href='#'>Help</a>
+              <ul class='level2'>
+                <li><a href='http://www.ultrascan.uthscsa.edu'>UltraScan Software</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/manual'>UltraScan Manual</a></li>
+                <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
+              </ul></li>
+
           </ul>
         </div>
 

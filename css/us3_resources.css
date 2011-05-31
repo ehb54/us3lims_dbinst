@@ -1,0 +1,43 @@
+/*
+ * us3_resources.css
+ *
+ * Styles common to the resources subdirectory
+ *
+ */
+
+table.resources
+{
+  float            : left;
+  margin           : 2em;
+  border-collapse  : collapse;
+  border           : solid gray 0.1em;
+  width            : 16em;
+}
+
+div#content caption
+{
+  font-weight      : bold;
+  font-style       : italic;
+  margin           : 0em 2em 1em;
+  text-align       : center;
+  width            : 16em;
+}
+
+table.resources td, table.resources th
+{
+  text-align       : center;
+  border           : solid #999 2px;
+  border-style     : ridge;
+  padding          : 0.1em 0.2em;
+}
+
+table.resources thead th
+{
+  background-color : #5ef;
+}
+
+table.resources tr.lowUV
+{
+  background-color : #E6E6FA;       /* lavender */
+}
+
