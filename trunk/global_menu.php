@@ -19,8 +19,7 @@ $projects_menu = <<<HTML
               <ul class='level2'>
                 <li><a href='view_projects.php'>View/Edit Projects</a></li>
                 <li class='separator'></li>
-                <li><a href='#' onclick='construction();'>Enter Peptide Sequence</a></li>
-                <li><a href='#' onclick='construction();'>Enter Nucleic Acid Sequence</a></li>
+                <li><a href='#' onclick='construction();'>Enter Image</a></li>
               </ul></li>
 
 HTML;
@@ -77,8 +76,10 @@ $help_menu = <<<HTML
                 $background_menu
                 $resources_menu
                 <li class='separator'></li>
-                <li><a href='http://www.ultrascan.uthscsa.edu'>UltraScan Software</a></li>
-                <li><a href='http://www.ultrascan.uthscsa.edu/manual'>UltraScan Manual</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/ultrascan3/download.php'>
+                        UltraScan Software</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/ultrascan3/manual'>
+                        UltraScan Manual</a></li>
                 <li><a href='http://www.ultrascan.uthscsa.edu/tutorials.html'>Tutorials</a></li>
                 <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
                        AUC Hardware User Guide</a></li>
