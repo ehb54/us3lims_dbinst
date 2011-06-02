@@ -28,6 +28,7 @@ if ( $_SESSION['userlevel'] < 1 )
 
 include 'config.php';
 include 'db.php';
+include 'lib/utility.php';
 
 // Are we being directed here from a push button?
 if (isset($_POST['new']))
