@@ -244,7 +244,7 @@ echo<<<HTML
                
         <div style="display:none" id="mag5">
           <br/>
-          <input type="text" name="meniscus_range" value="0.01"/>Meniscus Fit Range (cm)<br/>
+          <input type="text" name="meniscus_range" value="0.03"/>Meniscus Fit Range (cm)<br/>
           <br/>
           <fieldset>
             <legend>Meniscus Point Count</legend>
