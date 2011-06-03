@@ -49,7 +49,7 @@ h4, h5, h6 {
   color                 : black;
 }
 
-p, ul, ol, dd, div, td {
+p, ul, ol, dd, div, td, input, textarea, select {
   font-family           : Arial, Helvetica, Sans-serif;
   color                 : black;
   font-size             : 12px;
