@@ -160,10 +160,8 @@ function do_delete()
       $gfac_status = parse_response( $status );
       if ( strcmp( $gfac_status, "CANCELED" ) == 0 )
       {
-        // Let's update the lastMessage field so maybe user sees
-        $query  = "UPDATE HPCAnalysisResult SET " .
-                  "lastMessage = 'This job has been deleted', " .
-                  "queueStatus = 'aborted' " .
+        // Let's delete the record
+        $query  = "DELETE FROM HPCAnalysisResult " .
                   "WHERE gfacID = '$gfacID' ";
         mysql_query( $query );
       }
