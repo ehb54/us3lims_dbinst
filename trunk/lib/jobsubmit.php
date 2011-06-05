@@ -406,9 +406,9 @@ class jobsubmit
          if ( $ti_noise || $ri_noise ) $time *= 2;
       }
  
-      if ( isset( $parameters[ 'montecarlo_value' ] ) )
+      if ( isset( $parameters[ 'mc_iterations' ] ) )
       {
-         $montecarlo = $parameters[ 'montecarlo_value' ];
+         $montecarlo = $parameters[ 'mc_iterations' ];
          if ( $montecarlo > 0 )  $time *= $montecarlo;
       }
 
