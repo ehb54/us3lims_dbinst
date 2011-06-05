@@ -156,13 +156,25 @@ function do_delete()
         return;
       }
 
-      // Get the status response
+      // Verify that the request has completed normally
+      if ( $result->responseCode != 200 )
+      {
+        $lastMessage = "GFAC error: " . $result->responseStatus .
+                       " ( " . $result->responseCode . " )";
+        $query = "UPDATE HPCAnalysisResult SET " .
+                 "lastMessage = '$lastMessage' ";
+        mysql_query( $query );
+        return;
+      }
+
       $gfac_status = parse_response( $status );
       if ( strcmp( $gfac_status, "CANCELED" ) == 0 )
       {
-        // Let's delete the record
-        $query  = "DELETE FROM HPCAnalysisResult " .
-                  "WHERE gfacID = '$gfacID' ";
+        // Let's update the lastMessage field so maybe user sees 
+        $query  = "UPDATE HPCAnalysisResult SET " . 
+                  "lastMessage = 'This job has been deleted', " . 
+                  "queueStatus = 'aborted' " . 
+                  "WHERE gfacID = '$gfacID' " ;
         mysql_query( $query );
       }
 
@@ -178,10 +190,12 @@ function do_delete()
   }
 
 /*
-  We don't need this.  GFAC will update the global DB and the error_handler
-  will then delete the record.  If we delete it here, GFAC will create 
+  We shouldn't need this.  GFAC should update the global DB and the error_handler
+  should then delete the record.  If we delete it here, GFAC will create 
   an incomplete record in the gfac.analysis table.
 
+  However, for now let's make sure the global db has the record marked canceled.
+*/
 
   // Now switch to global db and delete that entry
   global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
@@ -190,10 +204,15 @@ function do_delete()
 
   if ( ! mysql_select_db( $globaldbname, $globaldb ) ) return;
 
-  $query  = "DELETE FROM analysis " .
+  $query  = "UPDATE analysis " .
+            "SET status = 'CANCELLED' " .
             "WHERE gfacID = '$gfacID' ";
+
+//  $query  = "DELETE FROM analysis " .
+//            "WHERE gfacID = '$gfacID' ";
   mysql_query( $query );
-*/
+
+  mysql_close( $globaldb );
 }
 
 function parse_response( $xml )

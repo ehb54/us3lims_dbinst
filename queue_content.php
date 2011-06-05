@@ -198,6 +198,19 @@ function display_buttons( $current_db, $cluster, $gfacID, $jobEmail )
 {
   $buttons = "";
 
+  // For now, since the GFAC cancel_job method is not working
+  return "";
+
+  // Let's see if the current job has already been deleted
+  $query  = "SELECT COUNT( queueStatus ) FROM HPCAnalysisResult " .
+            "WHERE gfacID = '$gfacID' " .
+            "AND queueStatus = 'aborted' ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />" . mysql_error());
+  list( $count ) = mysql_fetch_array( $result );
+  if ( $count > 0 )
+    return "";
+
   if ( is_authorized( $current_db, $jobEmail ) )
   {
     // Button to delete current job from the queue
