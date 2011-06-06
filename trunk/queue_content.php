@@ -69,6 +69,9 @@ uasort( $display_info, 'cmp' );
 
 $content = "<div class='queue_content'>\n";
 
+$count_jobs = count( $display_info );
+$content .= "<p>There are $count_jobs job(s) queued.</p>\n";
+
 $content .= "<table>\n";
 $content .= "<tr><td colspan='5' class='decoration'><hr/></td></tr>\n";
 
