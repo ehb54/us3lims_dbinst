@@ -1,0 +1,33 @@
+/*
+ * admin.css
+ *
+ * Styles common to the admin programs
+ *
+ */
+
+table.admin
+{
+  margin           : 2em;
+  border-collapse  : collapse;
+}
+
+div#content caption
+{
+  font-weight      : bold;
+  margin           : 2em 2em 0em;
+  text-align       : center;
+}
+
+table.admin td, table.admin th
+{
+  text-align       : left;
+  border           : 0px;
+  padding          : 0.1em 0.2em;
+}
+
+table.admin thead th
+{
+  background-color : #2790B0; /* teal */
+  color            : black;
+}
+
