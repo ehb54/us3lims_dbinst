@@ -62,7 +62,7 @@ function experiment_select( $select_name, $current_ID = NULL )
             "FROM experiment, projectPerson, people " .
             "WHERE experiment.projectID = projectPerson.projectID " .
             "AND projectPerson.personID = people.personID " .
-            "ORDER BY runID ";
+            "ORDER BY lname, runID ";
   $result = mysql_query( $query )
             or die( "Query failed : $query<br />" . mysql_error() );
 
@@ -230,7 +230,7 @@ HTML;
            "</table>\n";
 
   $editIDs_csv = implode( ", ", $editIDs );
-  $query  = "SELECT model.modelID, editedDataID, modelGUID, personID " .
+  $query  = "SELECT model.modelID, editedDataID, modelGUID, variance, meniscus, personID " .
             "FROM model LEFT JOIN modelPerson " .
             "ON ( model.modelID = modelPerson.modelID ) " .
             "WHERE editedDataID IN ( $editIDs_csv ) " .
@@ -248,6 +248,8 @@ HTML;
     <tr><th>ID</th>
         <th>GUID</th>
         <th>Edit ID</th>
+        <th>Variance</th>
+        <th>Meniscus</th>
         <th>Owner ID</th>
     </tr>
   </thead>
@@ -257,7 +259,7 @@ HTML;
 HTML;
 
   $modelIDs = array();
-  while ( list ( $modelID, $editID, $GUID, $personID ) = mysql_fetch_array( $result ) )
+  while ( list ( $modelID, $editID, $GUID, $variance, $meniscus, $personID ) = mysql_fetch_array( $result ) )
   {
     $modelIDs[] = $modelID;
 
@@ -265,6 +267,8 @@ HTML;
     <tr><td>$modelID</td>
         <td>$GUID</td>
         <td>$editID</td>
+        <td>$variance</td>
+        <td>$meniscus</td>
         <td>$personID</td>
     </tr>
 
