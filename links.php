@@ -17,12 +17,14 @@ HTML;
 $admin5_menu = <<<HTML
     <li><a href='http://$org_site/mysql_admin.php'>MySQL</a></li>
     <li><a href='http://$org_site/runID_info.php'>Info by Run ID</a></li>
+    <li><a href='http://$org_site/orphans.php'>Orphan Report</a></li>
     <li class='section'><a href='http://$org_site/check_db.php'>Check DB Linkage</a></li>
 
 HTML;
 
 $admin4_menu = <<<HTML
     <li><a href='http://$org_site/runID_info.php'>Info by Run ID</a></li>
+    <li><a href='http://$org_site/orphans.php'>Orphan Report</a></li>
     <li class='section'><a href='http://$org_site/check_db.php'>Check DB Linkage</a></li>
 
 HTML;
