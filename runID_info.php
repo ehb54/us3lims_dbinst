@@ -43,6 +43,9 @@ include 'links.php';
     $text .= runID_info( $_POST['experimentID'] );
   }
 
+  else if ( isset( $_GET['RequestID'] ) )
+    $text = HPCDetail( $_GET['RequestID'] );
+
   else
     $text  = experiment_select( 'experimentID' );
 
@@ -400,7 +403,7 @@ HTML;
     $requestIDs[]  = $ID;
 
     $text .= <<<HTML
-    <tr><td>$ID</td>
+    <tr><td><a href='{$_SERVER['PHP_SELF']}?RequestID=$ID'>$ID</a></td>
         <td>$GUID</td>
         <td>$filename</td>
         <td>$submit</td>
@@ -539,4 +542,63 @@ HTML;
 
   return $text;
 }
+
+function HPCDetail( $requestID )
+{
+  $query = "SELECT * FROM HPCAnalysisRequest WHERE HPCAnalysisRequestID=$requestID";
+  $result = mysql_query( $query )
+           or die( "Query failed : $query<br />\n" . mysql_error());
+  $row = mysql_fetch_assoc( $result );
+  $row['requestXMLFile'] = '<pre>' . htmlentities( $row['requestXMLFile'] ) . '</pre>';
+
+  $text = <<<HTML
+  <table cellspacing='0' cellpadding='0' class='admin'>
+  <caption>HPC Request Detail</caption>
+
+HTML;
+
+  foreach ($row as $key => $value)
+  {
+    $text .= "  <tr><th>$key</th><td>$value</td></tr>\n";
+  }
+
+  $text .= "</table>\n";
+  
+  $query = "SELECT * FROM HPCAnalysisResult WHERE HPCAnalysisRequestID=$requestID";
+  $result = mysql_query( $query )
+           or die( "Query failed : $query<br />\n" . mysql_error());
+  $row = mysql_fetch_assoc( $result );
+  $row['jobfile'] = '<pre>' . htmlentities( $row['jobfile'] ) . '</pre>';
+  $row['stderr']  = '<pre>' . htmlentities( $row['stderr'] ) . '</pre>';
+
+  $len_stdout = strlen( $row[ 'stdout' ] );
+  $stderr     = $row[ 'stderr' ];
+  $len_stderr = strlen( $row[ 'stderr' ] );
+  unset( $row[ 'stdout' ] );
+  unset( $row[ 'stderr' ] );
+  
+  $text .= <<<HTML
+  <a name='runDetail'></a>
+  <table cellspacing='0' cellpadding='0' class='admin'>
+  <caption>HPC Result Detail</caption>
+
+HTML;
+
+  foreach ($row as $key => $value)
+  {
+    $text .= "  <tr><th>$key</th><td>$value</td></tr>\n";
+  }
+
+  $link = "<a href='{$_SERVER[ 'PHP_SELF' ]}?RequestID=$requestID&stderr=t#runDetail'>Length stderr</a>";
+  $text .= "  <tr><th>Length stdout</th><td>$len_stdout</td></tr>\n";
+  $text .= "  <tr><th>$link</th><td>$len_stderr</td></tr>\n";
+  
+  if ( isset( $_GET[ 'stderr' ] ) ) 
+    $text .= "  <tr><th>stderr</th><td>$stderr</td></tr>\n";
+
+  $text .= "</table>\n";
+
+  return $text;
+}
+
 ?>
