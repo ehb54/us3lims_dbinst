@@ -14,7 +14,8 @@ if ( ! isset($_SESSION['id']) )
   exit();
 } 
 
-if ( ($_SESSION['userlevel'] != 5) )    // super admin only
+if ( ($_SESSION['userlevel'] != 4) &&
+     ($_SESSION['userlevel'] != 5) )    // admin and super admin only
 {
   header('Location: index.php');
   exit();
