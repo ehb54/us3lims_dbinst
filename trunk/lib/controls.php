@@ -311,8 +311,11 @@ echo<<<HTML
       <fieldset class='option_value'>
         <legend>Demes</legend>
 
+        <table class='noborder' >
+        <tr><td>
+
         <div class="slider" id="demes-slider">
-          <input class="slider-input" id="demes-slider-input"/>
+          <input class="slider-input" id="demes-slider-input"/> 
         </div>
 
         <br/>
@@ -324,6 +327,18 @@ echo<<<HTML
                       disabled="disabled"/>
         Maximum: <input id="demes-max" size='5'
                       disabled="disabled"/>
+
+        </td>
+
+        <td style='width:50%;'>
+          Note: The actual number of
+          demes is dependent on the capacity and the architecture of the selected back end system.  
+          Generally, demes + 1 will be adjusted upward in units of 8, 12, or 16, but limited
+          to the capacity of the system.
+        </td></tr>
+
+        </table>
+
       </fieldset>
 HTML;
 }
