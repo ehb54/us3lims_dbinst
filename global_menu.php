@@ -76,11 +76,11 @@ $help_menu = <<<HTML
                 $background_menu
                 $resources_menu
                 <li class='separator'></li>
-                <li><a href='http://www.ultrascan.uthscsa.edu/ultrascan3/download.php'>
+                <li><a href='http://www.ultrascan3.uthscsa.edu/download.php'>
                         UltraScan Software</a></li>
-                <li><a href='http://www.ultrascan.uthscsa.edu/ultrascan3/manual'>
+                <li><a href='http://www.ultrascan3.uthscsa.edu/manual'>
                         UltraScan Manual</a></li>
-                <li><a href='http://www.ultrascan.uthscsa.edu/tutorials.html'>Tutorials</a></li>
+                <li><a href='http://www.ultrascan.uthscsa.edu/tutorials.php'>Tutorials</a></li>
                 <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
                        AUC Hardware User Guide</a></li>
                 <li><a href='contacts.php'>Contacts</a></li>
@@ -195,9 +195,9 @@ $global_menu = <<<HTML
             $contactus_menu
             <li class='submenu'><a href='#'>Help</a>
               <ul class='level2'>
-                <li><a href='http://www.ultrascan.uthscsa.edu/ultrascan3/download.php'>
+                <li><a href='http://www.ultrascan3.uthscsa.edu/download.php'>
                         UltraScan Software</a></li>
-                <li><a href='http://www.ultrascan.uthscsa.edu/ultrascan3/manual'>
+                <li><a href='http://www.ultrascan3.uthscsa.edu/manual'>
                         UltraScan Manual</a></li>
                 <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
                        AUC Hardware User Guide</a></li>

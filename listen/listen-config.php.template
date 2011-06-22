@@ -4,7 +4,7 @@ $work        = "/home/us3/work";
 $pipe        = "/home/us3/etc/us3-pipe";
 $logfile     = "/home/us3/etc/udp.log";
 $listen_port = 12233;
-$dbhost      = "ultrascan3.uthscsa.edu";
+$dbhost      = "ultrascan.uthscsa.edu";
 
 // Global DB credentials
 $guser       = "";
