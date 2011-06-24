@@ -39,13 +39,8 @@ $monitor_menu = <<<HTML
             <li class='submenu'><a href='#'>Status Monitor</a>
               <ul class='level2'>
                 <li><a href='queue_viewer.php'>Queue Status</a></li>
-                <li><a href='http://grid.uthscsa.edu'>UTHSCSA Cluster Status</a></li>
+                <li><a href='http://grid.uthscsa.edu'>Cluster Status</a></li>
               </ul></li>
-
-HTML;
-
-$contactus_menu = <<<HTML
-            <li><a href="contactus.php">Contact Us</a></li>
 
 HTML;
 
@@ -82,8 +77,9 @@ $help_menu = <<<HTML
                         UltraScan Manual</a></li>
                 <li><a href='http://www.ultrascan.uthscsa.edu/tutorials.php'>Tutorials</a></li>
                 <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
-                       AUC Hardware User Guide</a></li>
+                       AUC Hardware Guide</a></li>
                 <li><a href='contacts.php'>Contacts</a></li>
+                <li><a href="contactus.php">Contact Us</a></li>
                 <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
               </ul></li>
 
@@ -98,7 +94,6 @@ $global_menu = <<<HTML
             $projects_menu
             $analysis_menu
             $monitor_menu
-            $contactus_menu
             $help_menu
           </ul>
         </div>
@@ -115,7 +110,6 @@ $global_menu = <<<HTML
             $projects_menu
             $analysis_menu
             $monitor_menu
-            $contactus_menu
             $help_menu
           </ul>
         </div>
@@ -132,7 +126,6 @@ $global_menu = <<<HTML
             $projects_menu
             $analysis_menu
             $monitor_menu
-            $contactus_menu
             $help_menu
           </ul>
         </div>
@@ -148,7 +141,6 @@ $global_menu = <<<HTML
             $home_menu
             $projects_menu
             $analysis_menu
-            $contactus_menu
             $help_menu
           </ul>
         </div>
@@ -163,7 +155,6 @@ $global_menu = <<<HTML
           <ul class='level1'>
             $home_menu
             $projects_menu
-            $contactus_menu
             $help_menu
           </ul>
         </div>
@@ -178,7 +169,6 @@ $global_menu = <<<HTML
           <ul class='level1'>
             $home_menu
             $projects_menu
-            $contactus_menu
             $help_menu
           </ul>
         </div>
@@ -192,7 +182,6 @@ $global_menu = <<<HTML
         <div id="globalnav">
           <ul class='level1'>
             $home_menu
-            $contactus_menu
             <li class='submenu'><a href='#'>Help</a>
               <ul class='level2'>
                 <li><a href='http://www.ultrascan3.uthscsa.edu/download.php'>
@@ -202,6 +191,7 @@ $global_menu = <<<HTML
                 <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
                        AUC Hardware User Guide</a></li>
                 <li><a href='http://www.ultrascan.uthscsa.edu/tutorials.html'>Tutorials</a></li>
+                <li><a href="contactus.php">Contact Us</a></li>
                 <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
               </ul></li>
 
