@@ -151,7 +151,6 @@ a.block:hover {
   margin                : 1em auto 0px;   /* page will be 1em from top of window */
   background            : black;
   border                : solid black;
-  border-width          : 10px 2px 0px 2px;
   border-width          : 5px 0px 5px 0px;
 }
 
@@ -179,12 +178,13 @@ a.block:hover {
 }
 
 #globalnav {
-  padding-left          : 60px;
-  text-align            : left;
+  padding-left          : 180px;
+  text-align            : center;
   vertical-align        : bottom;
-  width                 : 940px;      /* 1000px - the 60px padding */
+  width                 : 820px;      /* 1000px - the 190px padding */
   float                 : left;
   background-color      : black;
+  height                : 37px;
 }
 
 /* Let's get these list items to align across the top */
@@ -198,23 +198,23 @@ a.block:hover {
   list-style            : none;
   margin                : 0px;
   float                 : left;
-  width                 : 137px;      /* 820px (width of menus) / 6 (number of main menus)
+  width                 : auto;      /* 820px (width of menus) / 6 (number of main menus)
                                          width could be as much as 900px */
 }
 
 #globalnav li a {
   width                 : 137px;
-  padding               : 2px 0px 2px 5px;
+  padding               : 0px;
   display               : block;
-  background-color      : black;
+  background            : #7F7F7F url(../images/button-gradient.png) repeat-x;
   color                 : white;
   font-weight           : bold;
   text-decoration       : none;
+  height                : 37px;
 }
 
 #globalnav li.separator {
   background-color      : cyan;
-  padding               : 1px 0px;
 }
 
 #globalnav li a:hover {
@@ -228,6 +228,12 @@ a.block:hover {
   width                 : auto;
 }
 
+#globalnav ul a {
+  width                 : 137px;
+  height                : 20px;
+  padding               : 5px 0px;
+}
+
 #globalnav ul ul {
   position              : absolute;
   width                 : 137px;
@@ -236,6 +242,9 @@ a.block:hover {
 
 #globalnav ul.level1 li.submenu ul.level2 li a {
   color                 : white;
+  margin-left           : 0px;
+  height                : 30px;
+  padding               : 3px 0px 0px 0px;
 }
 
 #globalnav ul.level1 li.submenu:hover ul.level2 {
@@ -270,25 +279,54 @@ a.block:hover {
   border-width          : 0px 0px 0px 0px;
 }
 
+#page_search {
+  width                 : 1000px;
+  margin                : auto;
+  background            : #FFFFFF;
+  border                : solid black;
+  border-width          : 0px 0px 0px 0px;
+}
+
 /* Sidebar */
 
 #sidebar {
   float                 : left;
-  width                 : 130px;                /* 180 - 25x2 in ul margin */
+  width                 : 150px;                /* 180 - 15x2 in ul margin */
   background            : #7F7F7F url(../images/black-grey-gradient.png) repeat-x;
-  padding               : 5em 25px 15em 25px;   /* a minimum spacing before footer */
+  padding               : 2em 15px 2em 15px;   /* a minimum spacing before footer */
+  color                 : white;
+}
+
+#sidebar ul {
+  margin-top: -2px;
+  list-style-type       : none;
+  margin                : 0px;
+  padding               : 0px;
+  line-height           : 1.5em;
 }
 
 #sidebar ul {
   list-style-type       : none;
   margin                : 0px;
   padding               : 0px;
+  line-height           : 1.5em;
+}
+
+#sidebar ul ul{
+  list-style-type       : disc;
+  margin                : 0px;
+  margin                : 0.5em 0px 1em 30px;
+  padding               : 0px;
+  color                 : white;
+  line-height           : 1.2em;
 }
 
 #sidebar li.section {
-  border-bottom         : 1px solid black;
-  margin-bottom         : 0.5em;                /* to make a centered line */
-  padding-bottom        : 0.5em;
+  padding-bottom        : 1.5em;
+  color                 : white;
+  font-size             : 12px;
+  font-weight           : bold;
+  background-color      : transparent;
 }
 
 /* anchor tags need to be the same in #sidebar and #info */
@@ -300,9 +338,41 @@ a.block:hover {
 }
 
 #sidebar a:hover, #info a:hover {
-  text-decoration       : underline;
+  text-decoration       : none;
   color                 : cyan;
   font-size             : 12px;
+  font-weight           : bold;
+}
+
+#sidebar li {
+  width                 : 140px;
+  background            : #7F7F7F url(../images/button-gradient.png) repeat-x;
+  margin-left           : 0px;
+  color                 : white;
+  height                : 20px;
+  padding               : 6px;
+  font-size             : 13px;
+  font-weight           : bold;
+}
+
+#sidebar li a {
+  margin                : 0px;
+  width                 : 140px;
+  color                 : white;
+  height                : 20px;
+  padding               : 6px;
+  font-size             : 13px;
+  font-weight           : bold;
+}
+
+#sidebar li a:hover {
+  background            : white url(../images/button-gradient-hover.png) repeat-x;
+  margin                : 0px;
+  width                 : 140px;
+  color                 : cyan;
+  height                : 20px;
+  padding               : 6px;
+  font-size             : 13px;
   font-weight           : bold;
 }
 
@@ -310,6 +380,12 @@ a.block:hover {
 #content {
   width                 : 750px;                /* 780px - 25px r margin - 5px for IE6 */
   margin-left           : 205px;                /* 180px for links + 25px l margin */
+  padding-bottom        : 2em;
+}
+
+#content_search {
+  width                 : 955px;               /* 780px - 25px r margin - 5px for IE6 */
+  margin-left           : 20px;                /* 180px for links + 25px l margin */
   padding-bottom        : 2em;
 }
 
@@ -368,22 +444,23 @@ fieldset.option_value {
 #footer {
   clear                 : both;
   width                 : 1000px;
-  height                : 115px;
+  height                : 30px;
   margin                : -2em auto 1em ; /* page will be 1em from bottom of window */
-  padding-bottom        : 40px;           /* 15px + 25px to match padding in #info */
+  padding-bottom        : 0px;            /* 15px + 25px to match padding in #info */
   font-family           : Arial, Helvetica, sans-serif;
   font-size             : 85%;
-  text-align            : left;
+  text-align            : center;
   background            : #FFFFFF  url(../images/links_background.gif) repeat-y;
 }
 
 #info {
   float                 : left;
   margin                : 0px;
-  width                 : 160px;
-  padding               : 15px 0px 25px 20px;
+  width                 : 130px;
+  height                : 30px;
+  padding               : 0px 25px 0px 25px;
   color                 : #000;
-  background-color      : gray;
+  background-color      : #7F7F7F;
   line-height           : 1.5em;
 }
 

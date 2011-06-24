@@ -8,6 +8,7 @@ include 'config.php';
 include 'global_menu.php';
 
 if (!isset($page_title)) $page_title = '';
+if (!isset($page_css  )) $page_css   = 'page';
 
 echo<<<HTML
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -18,7 +19,7 @@ echo<<<HTML
 Description   : Website designed and implemented by Dan Zollars 
                 and Borries Demeler, 2010
 
-Copyright     : Copyright (c), 2010
+Copyright     : Copyright (c), 2011
                 Bioinformatics Core Facility
                 Department of Biochemistry
                 UTHSCSA
@@ -28,7 +29,7 @@ Website       : http://bioinformatics.uthscsa.edu
 
 Version       : beta
 
-Released      : 8/1/2010
+Released      : 6/30/2011
 
 -->
 
@@ -71,15 +72,37 @@ echo<<<HTML
 <body $onload>
 
 <!-- begin header -->
-<div id="header" style='text-align:center;'> 
-   <img src='images/UltraScan3-LIMS-banner.png' alt='UltraScan3 banner' />
+<div id="header" style='text-align:center;'>
+   <table class='noborder'>
+   <tr><td><img src='images/USLIMS3-banner.png' alt='USLims 3 banner' /></td>
+       <td style='vertical-align:center;'>
+
+       <div id="cse-search-form" style="width: 100%;">Loading</div>
+       <script src="http://www.google.com/jsapi" type="text/javascript"></script>
+       <script type="text/javascript"> 
+         google.load('search', '1', {language : 'en', style : google.loader.themes.MINIMALIST});
+         google.setOnLoadCallback(function() {
+           var customSearchControl = new google.search.CustomSearchControl('007201445830912588415:jg05a0rix7y');
+           customSearchControl.setResultSetSize(google.search.Search.FILTERED_CSE_RESULTSET);
+           var options = new google.search.DrawOptions();
+           options.enableSearchboxOnly("http://$org_site/search.php");    
+           customSearchControl.draw('cse-search-form', options);
+         }, true);
+       </script>
+
+          <!--form action='search.php' method='post'>
+            <input type='submit' value='Search' />
+            <input type='text' name='search_text' size='30' />
+          </form--></td></tr>
+   </table>
    <span style='font-size:20px;font-weight:bold;color:white;padding:0 1em;'>
     $org_name</span>
     $global_menu
 </div>
 
 <!-- Begin page content -->
-<div id='page'>
+<div id='$page_css'>
 
 HTML;
+
 ?>
