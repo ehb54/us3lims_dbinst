@@ -23,7 +23,7 @@ Laboratory Information Management System (USLIMS), a <a
 href='https://www.teragrid.org/web/science-gateways/'> TeraGrid Science
 Gateway</a> supported by an allocation through a TeraGrid community
 account. This system provides web and database support for users of the
-<a href='http://www.ultrascan.uthscsa.edu'>UltraScan software</a>. You
+<a href='http://ultrascan.uthscsa.edu'>UltraScan software</a>. You
 can use this portal to access data associated with your sedimentation
 experiments, and share your data with collaborators. Authorized users
 can also use this site to model analytical ultracentrifugation experiments
@@ -41,7 +41,7 @@ funding credits).  To obtain access to this resource please contact the
 failure, software error, operator error or other cause. It is
 your responsibility to always make backups of your data. You are
 free to use this resource at no cost.  Support is provided via the <a
-href="http://www.ultrascan.uthscsa.edu/mailman/listinfo/ultrascan">UltraScan
+href="http://ultrascan.uthscsa.edu/mailman/listinfo/ultrascan">UltraScan
 mailing list</a>. Please keep in mind that we cannot guarantee the
 security of your data. You assume all risks involved with placing your
 data on our server. This site is a public service, and can not guarantee
@@ -79,7 +79,7 @@ Texas Advanced Computing Center supported by NSF Teragrid Grant<br/>
 #MCB070038 (to Borries Demeler)."</b></p>
 
 <p>Please enter the link to each manuscript citing this resource on the
-<a href='http://www.ultrascan.uthscsa.edu/ultrascan-refs.html'>UltraScan
+<a href='http://ultrascan.uthscsa.edu/ultrascan-refs.html'>UltraScan
 submission website</a>.</p>
 
 
