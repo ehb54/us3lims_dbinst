@@ -58,9 +58,6 @@ $help_menu = <<<HTML
             <li class='submenu'><a href='#'>Help</a>
               <ul class='level2'>
                 $resources_menu
-                <li class='separator'></li>
-                <li><a href='contacts.php'>Contacts</a></li>
-                <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
               </ul></li>
 
 HTML;
@@ -162,11 +159,6 @@ $global_menu = <<<HTML
         <div id="globalnav">
           <ul class='level1'>
             $home_menu
-            <li class='submenu'><a href='#'>Help</a>
-              <ul class='level2'>
-                <li><a href='contacts.php'>Contacts</a></li>
-                <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
-              </ul></li>
 
           </ul>
         </div>

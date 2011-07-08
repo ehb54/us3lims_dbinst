@@ -264,11 +264,6 @@ a.block:hover {
   display               : block;
 }
 
-/* doesn't show up */
-#globalnav li.submenu li.submenu {
-  background-image      : url(../images/submenu.gif);
-}
-
 /* Page */
 
 #page {

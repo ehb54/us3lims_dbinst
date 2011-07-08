@@ -106,7 +106,7 @@ motd_block();
 $email_text      = get_email_text();
 $experiment_text = get_experiment_text();
 $cell_text       = get_cell_text();
-$submit_text     = "<p style='padding-footer:3em;'></p>\n";  // a spacer
+$submit_text     = "<p style='padding-bottom:3em;'></p>\n";  // a spacer
 if ( $experimentID != 0 )
 {
   $submit_text = <<<HTML

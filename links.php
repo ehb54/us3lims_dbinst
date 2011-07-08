@@ -52,8 +52,13 @@ HTML;
 
 $myinfo_menu = <<<HTML
       <li><a href='http://$org_site/profile.php?edit=12'>Change My Info</a></li>
-      <li><a href='http://$org_site/logout.php'>Logout</a></li>
 
+HTML;
+
+$general_menu = <<<HTML
+      <li><a href="partners.php">Partners</a></li>
+      <li><a href='contacts.php'>Contacts</a></li>
+      <li><a href='mailto:$admin_email'>Webmaster</a></li>
 HTML;
 
 if ( $userlevel == 5 )  // level 5 = super admin ( developer )
@@ -65,6 +70,8 @@ if ( $userlevel == 5 )  // level 5 = super admin ( developer )
     $edituser_menu
     $hardware_menu
     $myinfo_menu
+    $general_menu
+      <li><a href='http://$org_site/logout.php'>Logout</a></li>
   </ul>
 
 HTML;
@@ -79,6 +86,8 @@ else if ( $userlevel == 4 )  // userlevel 4 = admin
     $edituser_menu
     $hardware_menu
     $myinfo_menu
+    $general_menu
+      <li><a href='http://$org_site/logout.php'>Logout</a></li>
   </ul>
 
 HTML;
@@ -92,6 +101,8 @@ else if ( $userlevel == 3 )  // userlevel 3 = superuser
     $viewuser_menu
     $hardware_menu
     $myinfo_menu
+    $general_menu
+      <li><a href='http://$org_site/logout.php'>Logout</a></li>
   </ul>
 
 HTML;
@@ -103,6 +114,8 @@ else if ( $userlevel == 2 )  // userlevel 2 = Data analyst
   <ul>
     $home_menu
     $myinfo_menu
+    $general_menu
+      <li><a href='http://$org_site/logout.php'>Logout</a></li>
   </ul>
 
 HTML;
@@ -114,6 +127,8 @@ else if ( $userlevel == 1 )  // level 1 = privileged user
   <ul>
     $home_menu
     $myinfo_menu
+    $general_menu
+      <li><a href='http://$org_site/logout.php'>Logout</a></li>
   </ul>
 
 HTML;
@@ -125,6 +140,8 @@ else if ( $userlevel == 0 )  // level 0 = regular user
   <ul>
     $home_menu
     $myinfo_menu
+    $general_menu
+      <li><a href='http://$org_site/logout.php'>Logout</a></li>
   </ul>
 
 HTML;
@@ -135,6 +152,7 @@ else // not logged in
   $sidebar_menu = <<<HTML
   <ul>
     $home_menu
+    $general_menu
     <li><a href='https://$org_site/login.php'>Login</a></li>
   </ul>
 
