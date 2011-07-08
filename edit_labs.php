@@ -66,8 +66,7 @@ else if (isset($_POST['create']))
 // Start displaying page
 $page_title = 'Edit Labs';
 $js = 'js/edit_labs.js';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 ?>
 <!-- Begin page content -->
@@ -96,7 +95,7 @@ else
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Function to redirect to prior record

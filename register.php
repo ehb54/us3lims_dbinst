@@ -40,8 +40,7 @@ if ( $count > 0 )
 
 // Now we can start drawing the page
 $page_title = "New Account Registration";
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <div id='content'>
 
@@ -131,5 +130,5 @@ echo "<p>Your login information has been mailed to your email address.\n" .
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 ?>

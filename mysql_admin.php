@@ -24,8 +24,7 @@ include 'config.php';
 include 'db.php';
 
 $page_title = 'MySQL Administration';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <div id='content'>
 
@@ -143,7 +142,7 @@ else
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 function SQL_input_form($last_query = "")

@@ -12,7 +12,8 @@ include 'config.php';
 // Start displaying page
 $page_title = "Search Results";
 $page_css   = "page_search";
-include 'top.php';
+$nolinks    = true;
+include 'header.php';
 ?>
 <!-- Begin page content -->
 <div id='content_search'>
@@ -50,6 +51,6 @@ include 'top.php';
 </div>
 
 <?php
-//include 'bottom.php';
+//include 'footer.php';
 exit();
 ?>

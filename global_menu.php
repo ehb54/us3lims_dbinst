@@ -44,17 +44,6 @@ $monitor_menu = <<<HTML
 
 HTML;
 
-$background_menu = <<<HTML
-            <li class='submenu'><a href='#'>Background -></a>
-              <ul class='level3'>
-                <li><a href='overview.php'>Overview</a></li>
-                <li><a href='examples.php'>Examples</a></li>
-                <li><a href='velocity.php'>Velocity</a></li>
-                <li><a href='equilibrium.php'>Equilibrium</a></li>
-              </ul></li>
-
-HTML;
-
 $resources_menu = <<<HTML
             <li class='submenu'><a href='#'>Resources -></a>
               <ul class='level3'>
@@ -68,18 +57,9 @@ HTML;
 $help_menu = <<<HTML
             <li class='submenu'><a href='#'>Help</a>
               <ul class='level2'>
-                $background_menu
                 $resources_menu
                 <li class='separator'></li>
-                <li><a href='http://www.ultrascan3.uthscsa.edu/download.php'>
-                        UltraScan Software</a></li>
-                <li><a href='http://www.ultrascan3.uthscsa.edu/manual'>
-                        UltraScan Manual</a></li>
-                <li><a href='http://www.ultrascan.uthscsa.edu/tutorials.php'>Tutorials</a></li>
-                <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
-                       AUC Hardware Guide</a></li>
                 <li><a href='contacts.php'>Contacts</a></li>
-                <li><a href="contactus.php">Contact Us</a></li>
                 <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
               </ul></li>
 
@@ -184,14 +164,7 @@ $global_menu = <<<HTML
             $home_menu
             <li class='submenu'><a href='#'>Help</a>
               <ul class='level2'>
-                <li><a href='http://www.ultrascan3.uthscsa.edu/download.php'>
-                        UltraScan Software</a></li>
-                <li><a href='http://www.ultrascan3.uthscsa.edu/manual'>
-                        UltraScan Manual</a></li>
-                <li><a href='http://ultrascan.uthscsa.edu/AUCuserGuideVolume-1-Hardware.pdf'>
-                       AUC Hardware User Guide</a></li>
-                <li><a href='http://www.ultrascan.uthscsa.edu/tutorials.html'>Tutorials</a></li>
-                <li><a href="contactus.php">Contact Us</a></li>
+                <li><a href='contacts.php'>Contacts</a></li>
                 <li><a href='mailto:demeler@biochem.uthscsa.edu'>Feedback</a></li>
               </ul></li>
 

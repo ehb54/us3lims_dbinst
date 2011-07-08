@@ -59,8 +59,7 @@ else if (isset($_POST['create']))
 // Start displaying page
 $page_title = 'Edit Instruments';
 $js = 'js/edit_instruments.js';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 include 'lib/selectboxes.php';
 
 ?>
@@ -90,7 +89,7 @@ else
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Function to redirect to prior record

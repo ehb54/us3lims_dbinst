@@ -186,8 +186,7 @@ HTML;
 
 // Start displaying page
 $page_title = 'GA Analysis Submitted';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";
 $show = $payload->show( $HPCAnalysisRequestID, $filenames );  // debugging info, if enabled
@@ -211,7 +210,7 @@ echo <<<HTML
 
 HTML;
 
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 ?>

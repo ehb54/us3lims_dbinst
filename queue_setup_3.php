@@ -105,8 +105,7 @@ include 'db.php';
 // Start displaying page
 $page_title = "Queue Setup (completed)";
 $css = 'css/queue_setup.css';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 ?>
 <!-- Begin page content -->
@@ -249,7 +248,7 @@ HTML;
 
 <?php
 
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Get edit profiles

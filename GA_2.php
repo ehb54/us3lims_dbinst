@@ -124,8 +124,7 @@ $payload->save();
 // Start displaying page
 $page_title = "Enter GA Solute Data";
 $js = 'js/analysis.js,js/GA.js,js/GA_2.js';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";
 
@@ -185,7 +184,7 @@ echo <<<HTML
 
 HTML;
 
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Function to display a varying number of solutes

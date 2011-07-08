@@ -118,8 +118,7 @@ else
 $page_title = '2DSA Analysis';
 $css = 'css/luna/luna.css';    // This is for the slider
 $js = 'js/analysis.js,js/range.js,js/timer.js,js/slider.js';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 ?>
 <!-- Begin page content -->
@@ -175,7 +174,7 @@ include 'links.php';
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // A function to display controls for one dataset

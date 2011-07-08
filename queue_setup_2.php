@@ -75,8 +75,7 @@ else   // no, gathering info from here
 // Start displaying page
 $page_title = "Queue Setup (part 2)";
 $css = 'css/queue_setup.css';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 ?>
 <!-- Begin page content -->
@@ -156,7 +155,7 @@ HTML;
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Get information from queue_setup_1.php

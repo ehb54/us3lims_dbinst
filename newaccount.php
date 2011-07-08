@@ -11,8 +11,7 @@ include_once 'db.php';
 
 $page_title = 'New Account';
 $js = 'js/edit_users.js';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 
 <div id='content'>
@@ -85,5 +84,5 @@ echo<<<HTML
 
 HTML;
 
-include 'bottom.php';
+include 'footer.php';
 ?>

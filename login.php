@@ -9,8 +9,7 @@
 include_once 'config.php';
 
 $page_title = "Login";
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 if (! isset($message) ) $message = "";
 
@@ -46,5 +45,5 @@ echo<<<HTML
 
 HTML;
 
-include 'bottom.php';
+include 'footer.php';
 ?>

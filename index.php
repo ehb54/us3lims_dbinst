@@ -11,8 +11,7 @@ include 'config.php';
 
 $page_title = "Welcome!";
 $css = 'css/index.css';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <div id='content'>
 
@@ -105,5 +104,5 @@ following Institutions:</h3>
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 ?>

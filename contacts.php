@@ -11,8 +11,7 @@ include 'config.php';
 
 // Start displaying page
 $page_title = "Contacts";
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 echo <<<HTML
 <!-- Begin page content -->
@@ -61,6 +60,6 @@ echo <<<HTML
 
 HTML;
 
-include 'bottom.php';
+include 'footer.php';
 exit();
 ?>

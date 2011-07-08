@@ -29,8 +29,7 @@ include 'db.php';
 $page_title = "Template";
 $js = 'js/template.js,js/sorttable.js';
 $css = 'css/template.css';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <!-- Begin page content -->
 <div id='content'>
@@ -41,6 +40,6 @@ include 'links.php';
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 ?>
