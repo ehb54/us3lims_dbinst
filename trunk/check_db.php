@@ -26,8 +26,7 @@ include 'db.php';
 
 // Start displaying page
 $page_title = 'Database Consistency Check';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 echo "<div id='content'>\n";
 echo "<pre>\n\n";
@@ -139,6 +138,6 @@ while ( list( $id, $reqID, $guid, $status, $time )
 
 
 echo "</pre></div>\n";
-include 'bottom.php';
+include 'footer.php';
 exit();
 ?>

@@ -26,8 +26,7 @@ include 'db.php';
 
 // Start displaying page
 $page_title = 'HPC Request Data';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 echo "<div id='content'>\n";
 echo "<pre>\n\n";
@@ -137,6 +136,6 @@ else
 
 //echo "</pre>\n";
 echo "</div>\n";
-include 'bottom.php';
+include 'footer.php';
 exit();
 ?>

@@ -42,8 +42,7 @@ else if (isset($_POST['next']))
 // Start displaying page
 $page_title = 'View Users';
 $js = 'js/view_users.js';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <div id='content'>
 
@@ -63,7 +62,7 @@ display_record();
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Function to redirect to prior record

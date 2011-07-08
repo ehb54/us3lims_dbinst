@@ -27,8 +27,7 @@ include 'db.php';
 // Start displaying page
 $page_title = "Info by Run ID";
 $css = 'css/admin.css';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <!-- Begin page content -->
 <div id='content'>
@@ -55,7 +54,7 @@ include 'links.php';
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Function to create a dropdown for available runIDs

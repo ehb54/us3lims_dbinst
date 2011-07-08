@@ -9,8 +9,7 @@
 include 'config.php';
 
 $page_title = 'Create Password';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <div id='content'>
 
@@ -31,5 +30,5 @@ include 'links.php';
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 ?>

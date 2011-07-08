@@ -28,8 +28,7 @@ if (isset($_POST['update']))
 // Start displaying page
 $page_title = 'My Profile';
 $js = 'js/edit_users.js';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <div id='content'>
 
@@ -54,7 +53,7 @@ else
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Function to update the current record

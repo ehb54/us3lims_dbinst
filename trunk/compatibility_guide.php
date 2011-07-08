@@ -321,8 +321,7 @@ include 'config.php';
 // Start displaying page
 $page_title = "Chemical Compatibility Guide";
 $css = 'css/us3_resources.css';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 
 echo <<<HTML
 <!-- Begin page content -->
@@ -376,6 +375,6 @@ echo <<<HTML
 
 HTML;
 
-include 'bottom.php';
+include 'footer.php';
 exit();
 ?>

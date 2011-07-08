@@ -28,8 +28,7 @@ include 'db.php';
 // Start displaying page
 $page_title = 'View Users';
 $js = 'js/export.js,js/sorttable.js';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <div id='content'>
 
@@ -46,7 +45,7 @@ $_SESSION['print_text']  = $table;
 ?>
   </div>
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Function to create a table of all records

@@ -58,8 +58,7 @@ if (isset($_POST['update']))
 // Start displaying page
 $page_title = 'Edit My Projects';
 $js = 'js/edit_projects.js';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 include 'lib/selectboxes.php';
 
 ?>
@@ -81,7 +80,7 @@ else
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Function to redirect to prior record

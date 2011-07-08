@@ -51,8 +51,7 @@ $page_title = "Queue Viewer";
 $js     = 'js/prototype.js,js/queue_viewer.js';
 $onload = "onload='update_queue_content();'";
 $css    = 'css/queue_viewer.css';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <!-- Begin page content -->
 <div id='content'>
@@ -74,7 +73,7 @@ include 'links.php';
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // Function to create a dropdown for sort order

@@ -27,8 +27,7 @@ include 'db.php';
 // Start displaying page
 $page_title = "Orphans";
 $css = 'css/admin.css';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <!-- Begin page content -->
 <div id='content'>
@@ -45,7 +44,7 @@ include 'links.php';
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 
 // A function to retrieve orphan information

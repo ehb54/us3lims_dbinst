@@ -12,8 +12,7 @@ include 'config.php';
 // Start displaying page
 $page_title = "Buffer Extinction Profiles";
 $css = 'css/us3_resources.css';
-include 'top.php';
-include 'links.php';
+include 'header.php';
 ?>
 <!-- Begin page content -->
 <div id='content'>
@@ -128,6 +127,6 @@ include 'links.php';
 </div>
 
 <?php
-include 'bottom.php';
+include 'footer.php';
 exit();
 ?>
