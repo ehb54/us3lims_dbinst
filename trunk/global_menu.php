@@ -54,14 +54,6 @@ $resources_menu = <<<HTML
 
 HTML;
 
-$help_menu = <<<HTML
-            <li class='submenu'><a href='#'>Help</a>
-              <ul class='level2'>
-                $resources_menu
-              </ul></li>
-
-HTML;
-
 if ( $userlevel == 5 ) // super admin
 {
 $global_menu = <<<HTML
@@ -71,7 +63,6 @@ $global_menu = <<<HTML
             $projects_menu
             $analysis_menu
             $monitor_menu
-            $help_menu
           </ul>
         </div>
 
@@ -87,7 +78,6 @@ $global_menu = <<<HTML
             $projects_menu
             $analysis_menu
             $monitor_menu
-            $help_menu
           </ul>
         </div>
 
@@ -103,7 +93,6 @@ $global_menu = <<<HTML
             $projects_menu
             $analysis_menu
             $monitor_menu
-            $help_menu
           </ul>
         </div>
 
@@ -118,7 +107,6 @@ $global_menu = <<<HTML
             $home_menu
             $projects_menu
             $analysis_menu
-            $help_menu
           </ul>
         </div>
 
@@ -132,7 +120,6 @@ $global_menu = <<<HTML
           <ul class='level1'>
             $home_menu
             $projects_menu
-            $help_menu
           </ul>
         </div>
 
@@ -146,7 +133,6 @@ $global_menu = <<<HTML
           <ul class='level1'>
             $home_menu
             $projects_menu
-            $help_menu
           </ul>
         </div>
 
