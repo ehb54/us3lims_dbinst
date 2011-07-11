@@ -99,7 +99,7 @@ echo<<<HTML
 
 HTML;
 
-include '../../common/topmenu.php';
+include 'topmenu.php';
 
 echo<<<HTML
 </div>
