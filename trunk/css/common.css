@@ -198,13 +198,12 @@ a.block:hover {
   list-style            : none;
   margin                : 0px;
   float                 : left;
-  width                 : auto;      /* 820px (width of menus) / 6 (number of main menus)
-                                         width could be as much as 900px */
+  width                 : auto; /* 820px (width of menus) / 6 (number of main menus) width could be as much as 900px */
 }
 
 #globalnav li a {
   width                 : 137px;
-  padding               : 0px;
+  padding               : 0px 0px 0px 0px;
   display               : block;
   background            : #7F7F7F url(../images/button-gradient.png) repeat-x;
   color                 : white;
@@ -224,14 +223,10 @@ a.block:hover {
   font-weight           : bold;
 }
 
-#globalnav>ul a {
-  width                 : auto;
-}
-
 #globalnav ul a {
-  width                 : 137px;
+  width                 : 130px;
   height                : 20px;
-  padding               : 5px 0px;
+  padding               : 5px 0px 5px 0px;
 }
 
 #globalnav ul ul {
@@ -264,6 +259,11 @@ a.block:hover {
   display               : block;
 }
 
+/* doesn't show up */
+#globalnav li.submenu li.submenu {
+  background-image      : url(../images/submenu.gif);
+}
+
 /* Page */
 
 #page {
@@ -284,91 +284,43 @@ a.block:hover {
 
 /* Sidebar */
 
-#sidebar {
+div#sidebar {
   float                 : left;
-  width                 : 150px;                /* 180 - 15x2 in ul margin */
+  width                 : 156px;                /* 180 - 12x2 in padding */
   background            : #7F7F7F url(../images/black-grey-gradient.png) repeat-x;
-  padding               : 2em 15px 2em 15px;   /* a minimum spacing before footer */
+  padding               : 1em 12px 2em;   /* a minimum spacing all round */
   color                 : white;
 }
 
-#sidebar ul {
-  margin-top: -2px;
-  list-style-type       : none;
-  margin                : 0px;
-  padding               : 0px;
-  line-height           : 1.5em;
-}
-
-#sidebar ul {
-  list-style-type       : none;
-  margin                : 0px;
-  padding               : 0px;
-  line-height           : 1.5em;
-}
-
-#sidebar ul ul{
-  list-style-type       : disc;
-  margin                : 0px;
-  margin                : 0.5em 0px 1em 30px;
-  padding               : 0px;
-  color                 : white;
-  line-height           : 1.2em;
-}
-
-#sidebar li.section {
-  padding-bottom        : 1.5em;
-  color                 : white;
-  font-size             : 12px;
-  font-weight           : bold;
+div#sidebar h4 {
+  margin                : 0;
+  padding-top           : 1em;
   background-color      : transparent;
-}
-
-/* anchor tags need to be the same in #sidebar and #info */
-#sidebar a, #info a  {
-  text-decoration       : none;
+  font-family           : Arial, Helvetica, Sans-serif;
   color                 : white;
-  font-size             : 12px;
+  font-size             : 1.2em;
   font-weight           : bold;
 }
 
-#sidebar a:hover, #info a:hover {
-  text-decoration       : none;
-  color                 : cyan;
-  font-size             : 12px;
-  font-weight           : bold;
-}
-
-#sidebar li {
+div#sidebar a {
   width                 : 140px;
-  background            : #7F7F7F url(../images/button-gradient.png) repeat-x;
-  margin-left           : 0px;
-  color                 : white;
   height                : 20px;
+  background            : transparent url(../images/button-gradient.png) repeat-x;
+  display               : block;
+  margin                : 0;
   padding               : 6px;
+  color                 : white;
   font-size             : 13px;
   font-weight           : bold;
+  text-decoration       : none;
 }
 
-#sidebar li a {
-  margin                : 0px;
-  width                 : 140px;
-  color                 : white;
-  height                : 20px;
-  padding               : 6px;
-  font-size             : 13px;
-  font-weight           : bold;
-}
-
-#sidebar li a:hover {
+#sidebar a:hover {
   background            : white url(../images/button-gradient-hover.png) repeat-x;
-  margin                : 0px;
-  width                 : 140px;
   color                 : cyan;
-  height                : 20px;
-  padding               : 6px;
   font-size             : 13px;
   font-weight           : bold;
+  text-decoration       : none;
 }
 
 /* Content */
