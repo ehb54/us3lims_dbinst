@@ -9,70 +9,48 @@
 
 $userlevel = ( isset( $_SESSION['userlevel'] ) ) ? $_SESSION['userlevel'] : -1;
 
-$home_menu = <<<HTML
-    <li class='section'><a href="http://$org_site/index.php">Welcome!</a></li>
+$projects_menu = <<<HTML
+  <h4>Project</h4>
+  <a href='view_projects.php'>View/Edit Projects</a>
+  <a href='#' onclick='construction();'>Enter Image</a>
 
 HTML;
 
-$admin5_menu = <<<HTML
-    <li><a href='http://$org_site/mysql_admin.php'>MySQL</a></li>
-    <li><a href='http://$org_site/runID_info.php'>Info by Run ID</a></li>
-    <li><a href='http://$org_site/orphans.php'>Orphan Report</a></li>
-    <li><a href='http://$org_site/HPC_requests.php'>HPC Report</a></li>
-    <li class='section'><a href='http://$org_site/check_db.php'>Check DB Linkage</a></li>
+$analysis_menu = <<<HTML
+  <h4>Analysis</h4>
+  <a href='queue_setup_1.php'>Queue Setup</a>
+  <a href='2DSA_1.php'>2DSA Analysis</a>
+  <a href='GA_1.php'>GA Analysis</a>
 
 HTML;
 
-$admin4_menu = <<<HTML
-    <li><a href='http://$org_site/runID_info.php'>Info by Run ID</a></li>
-    <li><a href='http://$org_site/orphans.php'>Orphan Report</a></li>
-    <li><a href='http://$org_site/HPC_requests.php'>HPC Report</a></li>
-    <li class='section'><a href='http://$org_site/check_db.php'>Check DB Linkage</a></li>
-
-HTML;
-
-$viewuser_menu = <<<HTML
-      <li><a href='http://$org_site/view_users.php'>View User Info</a></li>
-      <li class='section'><a href='http://$org_site/view_all.php'>View All Users</a></li>
-
-HTML;
-
-$edituser_menu = <<<HTML
-      <li><a href='http://$org_site/edit_users.php'>Edit User Info</a></li>
-      <li><a href='http://$org_site/view_users.php'>View User Info</a></li>
-      <li class='section'><a href='http://$org_site/view_all.php'>View All Users</a></li>
-
-HTML;
-
-$hardware_menu = <<<HTML
-      <li><a href='edit_labs.php'>Edit Labs</a></li>
-      <li class='section'><a href='edit_instruments.php'>Edit Instruments</a></li>
-
-HTML;
-
-$myinfo_menu = <<<HTML
-      <li><a href='http://$org_site/profile.php?edit=12'>Change My Info</a></li>
+$monitor_menu = <<<HTML
+  <h4>Status Monitor</h4>
+  <a href='queue_viewer.php'>Queue Status</a>
+  <a href='http://grid.uthscsa.edu'>Cluster Status</a>
 
 HTML;
 
 $general_menu = <<<HTML
-      <li><a href="partners.php">Partners</a></li>
-      <li><a href='contacts.php'>Contacts</a></li>
-      <li><a href='mailto:$admin_email'>Webmaster</a></li>
+  <h4>General</h4>
+  <a href='http://$org_site/profile.php?edit=12'>Change My Info</a>
+  <a href="partners.php">Partners</a>
+  <a href='contacts.php'>Contacts</a>
+  <a href='mailto:$admin_email'>Webmaster</a>
+  <a href='http://$org_site/logout.php'>Logout</a>
+
 HTML;
 
 if ( $userlevel == 5 )  // level 5 = super admin ( developer )
 {
   $sidebar_menu = <<<HTML
-  <ul>
-    $home_menu
-    $admin5_menu
-    $edituser_menu
-    $hardware_menu
-    $myinfo_menu
-    $general_menu
-      <li><a href='http://$org_site/logout.php'>Logout</a></li>
-  </ul>
+  <h4>Navigation</h4>
+  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href='http://$org_site/admin_links.php'>Admin Info</a>
+  $projects_menu
+  $analysis_menu
+  $monitor_menu
+  $general_menu
 
 HTML;
 }
@@ -80,15 +58,13 @@ HTML;
 else if ( $userlevel == 4 )  // userlevel 4 = admin
 {
   $sidebar_menu = <<<HTML
-  <ul>
-    $home_menu
-    $admin4_menu
-    $edituser_menu
-    $hardware_menu
-    $myinfo_menu
-    $general_menu
-      <li><a href='http://$org_site/logout.php'>Logout</a></li>
-  </ul>
+  <h4>Navigation</h4>
+  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href='http://$org_site/admin_links.php'>Admin Info</a>
+  $projects_menu
+  $analysis_menu
+  $monitor_menu
+  $general_menu
 
 HTML;
 }
@@ -96,14 +72,13 @@ HTML;
 else if ( $userlevel == 3 )  // userlevel 3 = superuser
 {
   $sidebar_menu = <<<HTML
-  <ul>
-    $home_menu
-    $viewuser_menu
-    $hardware_menu
-    $myinfo_menu
-    $general_menu
-      <li><a href='http://$org_site/logout.php'>Logout</a></li>
-  </ul>
+  <h4>Navigation</h4>
+  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href='http://$org_site/admin_links.php'>Admin Info</a>
+  $projects_menu
+  $analysis_menu
+  $monitor_menu
+  $general_menu
 
 HTML;
 }
@@ -111,12 +86,11 @@ HTML;
 else if ( $userlevel == 2 )  // userlevel 2 = Data analyst
 {
   $sidebar_menu = <<<HTML
-  <ul>
-    $home_menu
-    $myinfo_menu
-    $general_menu
-      <li><a href='http://$org_site/logout.php'>Logout</a></li>
-  </ul>
+  <h4>Navigation</h4>
+  <a href="http://$org_site/index.php">Welcome!</a>
+  $projects_menu
+  $analysis_menu
+  $general_menu
 
 HTML;
 }
@@ -124,12 +98,10 @@ HTML;
 else if ( $userlevel == 1 )  // level 1 = privileged user
 {
   $sidebar_menu = <<<HTML
-  <ul>
-    $home_menu
-    $myinfo_menu
-    $general_menu
-      <li><a href='http://$org_site/logout.php'>Logout</a></li>
-  </ul>
+  <h4>Navigation</h4>
+  <a href="http://$org_site/index.php">Welcome!</a>
+  $projects_menu
+  $general_menu
 
 HTML;
 }
@@ -137,12 +109,10 @@ HTML;
 else if ( $userlevel == 0 )  // level 0 = regular user
 {
   $sidebar_menu = <<<HTML
-  <ul>
-    $home_menu
-    $myinfo_menu
-    $general_menu
-      <li><a href='http://$org_site/logout.php'>Logout</a></li>
-  </ul>
+  <h4>Navigation</h4>
+  <a href="http://$org_site/index.php">Welcome!</a>
+  $projects_menu
+  $general_menu
 
 HTML;
 }
@@ -150,11 +120,11 @@ HTML;
 else // not logged in
 {
   $sidebar_menu = <<<HTML
-  <ul>
-    $home_menu
-    $general_menu
-    <li><a href='https://$org_site/login.php'>Login</a></li>
-  </ul>
+  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href="partners.php">Partners</a>
+  <a href='contacts.php'>Contacts</a>
+  <a href='mailto:$admin_email'>Webmaster</a>
+  <a href='https://$org_site/login.php'>Login</a>
 
 HTML;
 }

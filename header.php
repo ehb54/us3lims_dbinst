@@ -5,7 +5,6 @@
  */
 
 include 'config.php';
-include 'global_menu.php';
 
 if (!isset($page_title)) $page_title = '';
 if (!isset($page_css  )) $page_css   = 'page';
@@ -97,7 +96,12 @@ echo<<<HTML
    </table>
    <span style='font-size:20px;font-weight:bold;color:white;padding:0 1em;'>
     $org_name</span>
-    $global_menu
+
+HTML;
+
+include '../../common/topmenu.php';
+
+echo<<<HTML
 </div>
 
 <!-- Begin page content -->
