@@ -74,9 +74,9 @@ echo<<<HTML
 <div id="header" style='text-align:center;'>
    <table class='noborder'>
    <tr><td><img src='images/USLIMS3-banner.png' alt='USLims 3 banner' /></td>
-       <td style='vertical-align:center;'>
+       <td style='vertical-align:center'>
 
-       <div id="cse-search-form" style="width: 100%;">Loading</div>
+       <div id="cse-search-form" style="width: 400px;">Loading</div>
        <script src="http://www.google.com/jsapi" type="text/javascript"></script>
        <script type="text/javascript"> 
          google.load('search', '1', {language : 'en', style : google.loader.themes.MINIMALIST});
@@ -89,10 +89,8 @@ echo<<<HTML
          }, true);
        </script>
 
-          <!--form action='search.php' method='post'>
-            <input type='submit' value='Search' />
-            <input type='text' name='search_text' size='30' />
-          </form--></td></tr>
+       </td>
+   </tr>
    </table>
    <span style='font-size:20px;font-weight:bold;color:white;padding:0 1em;'>
     $org_name</span>

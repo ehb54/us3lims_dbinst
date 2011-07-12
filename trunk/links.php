@@ -136,7 +136,7 @@ echo<<<HTML
   $sidebar_menu
 
   <!-- A spacer -->
-  <div style='padding-bottom:20em;'></div>
+  <!--div style='padding-bottom:20em;'></div-->
 
 </div>
 HTML;
