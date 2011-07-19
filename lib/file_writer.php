@@ -415,8 +415,12 @@ class File_2DSA extends File_writer
         $xml->writeAttribute( 'value', $parameters['s_max'] );
       $xml->endElement(); // s_max
       $xml->startElement( 's_resolution' );
-        $xml->writeAttribute( 'value', $parameters['s_resolution'] );
-      $xml->endElement(); // s_resolution
+        $xml->writeAttribute( 'value', $parameters['s_grid_points'] / 
+                                       $parameters['uniform_grid']  );
+      $xml->endElement(); // old-style s_resolution
+      $xml->startElement( 's_grid_points' );
+        $xml->writeAttribute( 'value', $parameters['s_grid_points'] );
+      $xml->endElement(); // s_grid_points
       $xml->startElement( 'ff0_min' );
         $xml->writeAttribute( 'value', $parameters['ff0_min'] );
       $xml->endElement(); // ff0_min
@@ -424,8 +428,12 @@ class File_2DSA extends File_writer
         $xml->writeAttribute( 'value', $parameters['ff0_max'] );
       $xml->endElement(); // ff0_max
       $xml->startElement( 'ff0_resolution' );
-        $xml->writeAttribute( 'value', $parameters['ff0_resolution'] );
-      $xml->endElement(); // ff0_resolution
+        $xml->writeAttribute( 'value', $parameters['ff0_grid_points'] /
+                                       $parameters['uniform_grid']    );
+      $xml->endElement(); // old-style ff0_resolution
+      $xml->startElement( 'ff0_grid_points' );
+        $xml->writeAttribute( 'value', $parameters['ff0_grid_points'] );
+      $xml->endElement(); // ff0_grid_points
       $xml->startElement( 'uniform_grid' );
         $xml->writeAttribute( 'value', $parameters['uniform_grid'] );
       $xml->endElement(); // uniform_grid
@@ -447,6 +455,12 @@ class File_2DSA extends File_writer
       $xml->startElement( 'rinoise_option' );
         $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
       $xml->endElement(); // rinoise_option
+      $xml->startElement( 'debug_timings' );
+        $xml->writeAttribute( 'value', $parameters['debug_timings'] );
+      $xml->endElement(); // debug_timings
+      $xml->startElement( 'debug_level' );
+        $xml->writeAttribute( 'value', $parameters['debug_level'] );
+      $xml->endElement(); // debug_level
     $xml->endElement(); // jobParameters
   }
 
@@ -516,6 +530,12 @@ class File_GA extends File_writer
       $xml->startElement( 'p_mutate_sk' );
         $xml->writeAttribute( 'value', $parameters['p_mutate_sk'] );
       $xml->endElement(); // p_mutate_sk
+      $xml->startElement( 'debug_timings' );
+        $xml->writeAttribute( 'value', $parameters['debug_timings'] );
+      $xml->endElement(); // debug_timings
+      $xml->startElement( 'debug_level' );
+        $xml->writeAttribute( 'value', $parameters['debug_level'] );
+      $xml->endElement(); // debug_level
 
       // Now write out the buckets
       for ( $i = 1; $i <= sizeof( $parameters['buckets'] ); $i++ )

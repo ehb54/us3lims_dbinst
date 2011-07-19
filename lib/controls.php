@@ -106,6 +106,30 @@ echo<<<HTML
 HTML;
 }
 
+// Function to display debug options
+function debug_option()
+{
+echo<<<HTML
+      <fieldset class='option_value'>
+        <legend>Debug Options</legend>
+        <input type='checkbox' name='debug_timings' id='debug_timings'/> 
+          Debug Timings
+        <br/>
+        <fieldset>
+          <legend>Debug Level</legend>
+          <div class="slider" id="debug_slider">
+             <input class="slider-input" id="debug_slider_input"/>
+          </div>
+          <br/>
+          Value: <input id="debug_level" size='5'
+                        onchange="debug_level.setValue(parseInt(this.value))" 
+                        name="debug_level" 
+                        value="debug_level.setValue(parseInt(this.value))"/>
+        </fieldset>
+      </fieldset>
+HTML;
+}
+
 // Function to check the file sizes
 function check_filesize()
 {
@@ -154,15 +178,15 @@ HTML;
 
 // Controls that are used in the 2DSA Analysis
 
-// Function to display s-value setup
-function s_value_setup()
+// Function to display s grid points
+function s_grid_points()
 {
 echo<<<HTML
-    <fieldset class='option_value'class='option_value'>
-       <legend>S-Value Setup</legend>
+    <fieldset class='option_value'>
+       <legend>S-Value Resolution</legend>
        <input type="text" value="1" name="s_value_min"/> S-Value Minimum<br/>
        <input type="text" value="10" name="s_value_max"/> S-Value Maximum<br/>
-       <input type="text" value="10" name="s_resolution"/> S-Value Resolution (# of grid points)<br/>
+       <input type="text" value="60" name="s_grid_points"/> S-Value Resolution (total grid points)<br/>
     </fieldset>
 HTML;
 }
@@ -185,14 +209,14 @@ HTML;
 }
 
 // function to display f/f0 setup
-function f_f0_setup()
+function ff0_grid_points()
 {
 echo<<<HTML
     <fieldset class='option_value'>
-      <legend>f/f0 Setup</legend>
-      <input type="text" value="1" name="ff0_min"/> f/f0 minimum<br/>
-      <input type="text" value="4" name="ff0_max"/> f/f0 maximum<br/>
-      <input type="text" value="10" name="ff0_resolution"/> f/f0 Resolution (# of grid points)<br/>
+      <legend>f/f0 Resolution</legend>
+      <input type="text" value="1" name="ff0_min"/> f/f0 Minimum<br/>
+      <input type="text" value="4" name="ff0_max"/> f/f0 Maximum<br/>
+      <input type="text" value="60" name="ff0_grid_points"/> f/f0 Resolution (total grid points)<br/>
     </fieldset>
 HTML;
 }

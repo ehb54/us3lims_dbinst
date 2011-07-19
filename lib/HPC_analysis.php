@@ -173,10 +173,10 @@ class HPC_2DSA extends HPC_analysis
               "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
               "s_min                = {$job_parameters['s_min']},            " .
               "s_max                = {$job_parameters['s_max']},            " .
-              "s_resolution         = {$job_parameters['s_resolution']},     " .
+              "s_resolution         = {$job_parameters['s_grid_points']},    " .
               "ff0_min              = {$job_parameters['ff0_min']},          " .
               "ff0_max              = {$job_parameters['ff0_max']},          " .
-              "ff0_resolution       = {$job_parameters['ff0_resolution']},   " .
+              "ff0_resolution       = {$job_parameters['ff0_grid_points']},  " .
               "uniform_grid         = {$job_parameters['uniform_grid']},     " .
               "mc_iterations        = {$job_parameters['mc_iterations']}, " .
               "tinoise_option       = {$job_parameters['tinoise_option']},   " .

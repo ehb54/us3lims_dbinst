@@ -186,8 +186,8 @@ function display( $dataset_id, $num_datasets )
 
   if ( $dataset_id == 0 )
   {
-    s_value_setup();
-    f_f0_setup();
+    s_grid_points();
+    ff0_grid_points();
     uniform_grid_setup();
     montecarlo();
     tinoise_option();
@@ -205,6 +205,8 @@ HTML;
   {
     fit_meniscus();
     iterations_option();
+
+    debug_option();
   }
 
   simpoints_input();

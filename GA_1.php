@@ -207,6 +207,8 @@ function display( $dataset_id, $num_datasets )
     mutate_s_setup();
     mutate_k_setup();
     mutate_sk_setup();
+
+    debug_option();
   }
 
   else
