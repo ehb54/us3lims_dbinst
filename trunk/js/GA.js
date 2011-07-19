@@ -433,6 +433,21 @@ mutate_sk.onchange = function ()
 
 } catch(e_mutate_sk) {}
 
+try {
+var debug_level = new Slider(document.getElementById("debug_slider"), 
+                             document.getElementById("debug_slider_input"));
+debug_level.setMinimum(0);
+debug_level.setMaximum(4);
+debug_level.setValue(0);
+document.getElementById("debug_level").value = debug_level.getValue();
+
+debug_level.onchange = function () 
+{
+  document.getElementById("debug_level").value = debug_level.getValue();
+};
+
+} catch(e_debug_level) {}
+
 window.onresize = function () 
 {
   redraw_controls();
@@ -460,6 +475,8 @@ function redraw_controls()
   mutate_s.recalculate();
   mutate_k.recalculate();
   mutate_sk.recalculate();
+
+  debug_level.recalculate();
 }
 
 function show_ctl(num) 

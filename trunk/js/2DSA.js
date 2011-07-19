@@ -40,6 +40,21 @@ iterations.onchange = function ()
 
 } catch(e_iterations) {}
 
+try {
+var debug_level = new Slider(document.getElementById("debug_slider"), 
+                             document.getElementById("debug_slider_input"));
+debug_level.setMinimum(0);
+debug_level.setMaximum(4);
+debug_level.setValue(0);
+document.getElementById("debug_level").value = debug_level.getValue();
+
+debug_level.onchange = function () 
+{
+  document.getElementById("debug_level").value = debug_level.getValue();
+};
+
+} catch(e_debug_level) {}
+
 //Montecarlo Slider setup
 try {
 var montecarlo = new Slider(document.getElementById("montecarlo-slider"), 
@@ -112,6 +127,7 @@ function redraw_controls()
 {
   meniscus.recalculate();
   iterations.recalculate();
+  debug_level.recalculate();
   montecarlo.recalculate();
   simpoints.recalculate();
   band_volume.recalculate();
@@ -205,10 +221,26 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
       return( false );
     }
 
+    // |s_value_min| out of range (most likely < -10000) 
+    if ( Math.abs(s_value_min) > 10000 )
+    {
+      alert( "Absolute value of s-min must be <= 10000" );
+      f.s_value_min.focus();
+      return( false );
+    }
+
     // |s_max| >= 0.1
     if ( Math.abs(s_value_max) < 0.1 )
     {
       alert( "Absolute value of s-max must be >= 0.1" );
+      f.s_value_max.focus();
+      return( false );
+    }
+
+    // |s_max| out of range
+    if ( Math.abs(s_value_max) > 10000 )
+    {
+      alert( "Absolute value of s-max must be <= 10000" );
       f.s_value_max.focus();
       return( false );
     }
@@ -221,7 +253,6 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
              "This range is excluded from the 2DSA analysis.");
       return( false );
     }
-
   }
 
   // Verify these fields exist
