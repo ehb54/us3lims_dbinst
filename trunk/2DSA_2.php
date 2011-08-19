@@ -119,17 +119,24 @@ HTML;
     $cluster = $_SESSION['cluster']['shortname'];
     unset( $_SESSION['cluster'] );
 
-    // For the moment we are supporting two submission methods.
+    // Currently we are supporting two submission methods.
     switch ( $cluster )
     {
-       case 'ranger'   :
-       case 'lonestar' :
-       case 'queenbee' :
-          $job = new submit_gfac();
+       case 'bcf-local'   :
+       case 'alamo-local' :
+          $job = new submit_local();
           break;
     
-       default :
-          $job = new submit_local();
+       case 'lonestar' :
+       case 'ranger'   :
+       case 'alamo'    :
+       case 'bcf'      :
+          $job = new submit_gfac();
+          break;
+
+       default         :
+          $output_msg .= "<br /><span class='message'>Unsupported cluster $cluster!</span><br />\n";
+          $filenames = array();
           break;
     }
    

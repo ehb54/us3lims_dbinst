@@ -18,11 +18,29 @@ class jobsubmit
       $this->grid[ 'bcf' ] = array 
       (
         "name"       => "bcf.uthscsa.edu",
+        "submithost" => "http://gw33.quarry.iu.teragrid.org",
+        "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
+        "submittype" => "http",
+        "httpport"   => 8080,
+        "workdir"    => "/ogce-rest/job/runjob/async",
+        "sshport"    => 22,
+        "executable" => "us_mpi_analysis",
+        "queue"      => "default",
+        "udpserver"  => "uslims3.uthscsa.edu",
+        "udpport"    => 12233,
+        "database"   => "us3",
+        "maxtime"    => 60000,
+        "maxproc"    => 16
+      );
+    
+      $this->grid[ 'bcf-local' ] = array 
+      (
+        "name"       => "bcf.uthscsa.edu",
         "submittype" => "local",
         "workdir"    => "/home/us3/work/",  // Need trailing slash
         "sshport"    => 22,
         "executable" => "us_mpi_analysis.sh",
-        "queue"      => "",
+        "queue"      => "default",
         "udpserver"  => "uslims3.uthscsa.edu",
         "udpport"    => 12233,
         "database"   => "us3",
@@ -32,27 +50,30 @@ class jobsubmit
 
       $this->grid[ 'alamo' ] = array 
       (
-        "name"       => "alamo.uthscsa.edu",
-        "submittype" => "local",
-        "workdir"    => "/home/us3/work/",  // Need trailing slash
+        "name"       => "alamo.biochemistry.uthscsa.edu",
+        "submithost" => "http://gw33.quarry.iu.teragrid.org",
+        "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
+        "submittype" => "http",
+        "httpport"   => 8080,
+        "workdir"    => "/ogce-rest/job/runjob/async",
         "sshport"    => 22,
-        "executable" => "us_mpi_analysis.sh",
-        "queue"      => "",
+        "executable" => "us_mpi_analysis",
+        "queue"      => "normal",
         "udpserver"  => "uslims3.uthscsa.edu",
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
         "maxproc"    => 32
       );
-
-      $this->grid[ 'laredo' ] = array 
+    
+      $this->grid[ 'alamo-local' ] = array 
       (
         "name"       => "alamo.uthscsa.edu",
         "submittype" => "local",
-        "workdir"    => "/home/us3/work/",   // Need trailing slash
+        "workdir"    => "/home/us3/work/",  // Need trailing slash
         "sshport"    => 22,
         "executable" => "us_mpi_analysis.sh",
-        "queue"      => "laredo",
+        "queue"      => "",
         "udpserver"  => "uslims3.uthscsa.edu",
         "udpport"    => 12233,
         "database"   => "us3",
@@ -93,23 +114,6 @@ class jobsubmit
         "database"   => "us3",
         "maxtime"    => 1440,
         "maxproc"    => 36
-      );
-    
-      $this->grid[ 'queenbee' ] = array 
-      (
-        "name"       => "queenbee.loni-lsu.teragrid.org",
-        "submithost" => "http://gw33.quarry.iu.teragrid.org",
-        "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
-        "submittype" => "http",
-        "httpport"   => 8080,
-        "workdir"    => "/ogce-rest/job/runjob/async",
-        "sshport"    => 22,
-        "queue"      => "workq",
-        "udpserver"  => "uslims3.uthscsa.edu",
-        "udpport"    => 12233,
-        "database"   => "us3",
-        "maxtime"    => 60,
-        "maxproc"    => 24
       );
    }
    
@@ -412,6 +416,12 @@ class jobsubmit
          if ( $montecarlo > 0 )  $time *= $montecarlo;
       }
 
+      if ( isset( $parameters[ 'max_iterations' ] ) )
+      {
+         $mxiters = $parameters[ 'max_iterations' ];
+         if ( $mxiters > 0 )  $time *= $mxiters;
+      }
+
       $time *= 1.5;  // Padding
  
       $time = max( $time, 5 );         // Minimum time is 5 minutes
@@ -434,10 +444,6 @@ class jobsubmit
          {
             case 'lonestar':
                $nodes = (int)( ( $nodes + 7 ) / 8 ) * 8;   // 8 nodes per processor
-               break;
-
-            case 'queenbee':  
-               $nodes = (int)( ( $nodes + 11 ) / 12 ) * 12;   // 12 nodes per processor
                break;
 
             case 'ranger':
@@ -493,10 +499,6 @@ class jobsubmit
 
          switch ( $cluster )
          {
-            case 'queenbee':  
-               $nodes = ( $procs + 1 ) * 8;   // 8 nodes per processor
-               break;
-
             case 'lonestar':
                $nodes = $procs * 12;   // 12 nodes per processor
                break;
