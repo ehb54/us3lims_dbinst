@@ -34,7 +34,6 @@ $this->message[] = "End of submit_gfac.php\n";
       $cores       = $this->nodes();
       //$cores       = "16";    // override for now
       
-      $hostCount   = ceil( $cores / 4 );   // Only bigred
       $maxWallTime = $this->maxwall();
       //$maxWallTime = "5";      // override for now
  
@@ -54,13 +53,6 @@ $this->message[] = "End of submit_gfac.php\n";
             $writer ->startElement( 'processorcount' );
             $writer ->text( $cores );
             $writer ->endElement();
- 
-            if ( $cluster == 'bigred' )
-            {
-               $writer ->startElement( 'hostcount' );
-               $writer ->text( $hostCount );
-               $writer ->endElement();
-            }
  
             $writer ->startElement( 'queuename' );
             $writer ->text( $queue );

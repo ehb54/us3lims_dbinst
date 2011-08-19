@@ -2,7 +2,7 @@
 /*
  * submit_local.php
  *
- * Submits an analysis to a local system (bcf/alamo/laredo)
+ * Submits an analysis to a local system (bcf/alamo)
  *
  */
 require_once 'lib/jobsubmit.php';
@@ -90,13 +90,13 @@ $this->message[] = "Files copied";
 
       switch( $this->cluster )
       {
-        case 'bcf':
+        case 'bcf-local':
          $libpath = "/share/apps64/openmpi/lib";
          $nodes   = $this->grid[ $this->cluster ][ 'maxproc' ];
          $path    = "/share/apps64/openmpi/bin";
          break;
 
-        case 'alamo':
+        case 'alamo-local':
          $libpath = "/share/apps/openmpi/lib";
          $nodes   = $this->grid[ $this->cluster ][ 'maxproc' ];
          $path    = "/share/apps/openmpi/bin";

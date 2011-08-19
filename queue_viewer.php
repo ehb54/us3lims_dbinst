@@ -132,9 +132,15 @@ function do_delete()
 
   switch ( $shortname )
   {
-    case 'ranger'   :
-    case 'lonestar' :
-    case 'queenbee' : 
+    case 'bcf-local'   :
+    case 'alamo-local' :
+      // Add code to get status from local jobs
+      break;
+
+    case 'ranger'      :
+    case 'lonestar'    :
+    case 'alamo'       :
+    case 'bcf'         :
 
       $url = "$host:$port$workdir/canceljob/$gfacID";
       $post = new HttpRequest( $url, HttpRequest::METH_GET );
@@ -179,13 +185,9 @@ function do_delete()
 
       break;
 
-    case 'bcf'      :
-    case 'alamo'    :
-    case 'laredo'   :
+    default            :
       break;
 
-    default         :
-      break;
   }
 
 /*

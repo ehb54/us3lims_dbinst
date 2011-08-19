@@ -66,12 +66,13 @@ class cluster_info
 }
 
 $clusters = array( 
-  new cluster_info( "gatekeeper.ranger.tacc.teragrid.edu", "ranger",   "normal" ),
-  new cluster_info( "gatekeeper.ranger.tacc.teragrid.edu", "ranger",   "long"   ),
-  new cluster_info( "queenbee.loni-lsu.teragrid.org",      "queenbee", "workq"  ),
-  new cluster_info( "lonestar.tacc.teragrid.org",          "lonestar", "normal" ), 
-  new cluster_info( "bcf.uthscsa.edu",                     "bcf",      "normal" ),
-  new cluster_info( "alamo.uthscsa.edu",                   "alamo",    "normal" )
+  new cluster_info( "gatekeeper.ranger.tacc.teragrid.edu", "ranger",      "normal"  ),
+  new cluster_info( "gatekeeper.ranger.tacc.teragrid.edu", "ranger",      "long"    ),
+  new cluster_info( "lonestar.tacc.teragrid.org",          "lonestar",    "normal"  ), 
+  new cluster_info( "bcf.uthscsa.edu",                     "bcf",         "default" ),
+  new cluster_info( "alamo.biochemistry.uthscsa.edu",      "alamo",       "normal"  ),
+  new cluster_info( "bcf.uthscsa.edu",                     "bcf-local",   "default" ),
+  new cluster_info( "alamo.uthscsa.edu",                   "alamo-local", "normal"  )
   );
 
 

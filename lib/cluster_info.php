@@ -11,6 +11,16 @@ $clusters = array();   // Information about the clusters
 $clusters[ 'bcf' ] = array 
 (
   "name"       => "bcf.uthscsa.edu",
+  "submittype" => "http",
+  "submithost" => "http://gw33.quarry.iu.teragrid.org",
+  "httpport"   => 8080,
+  "sshport"    => 22,
+  "workdir"    => "/ogce-rest/job" 
+);
+
+$clusters[ 'bcf-local' ] = array 
+(
+  "name"       => "bcf.uthscsa.edu",
   "submittype" => "local",
   "submithost" => "",
   "httpport"   => 0,
@@ -20,22 +30,22 @@ $clusters[ 'bcf' ] = array
 
 $clusters[ 'alamo' ] = array 
 (
-  "name"       => "alamo.uthscsa.edu",
-  "submittype" => "local",
-  "submithost" => "",
-  "httpport"   => 0,
+  "name"       => "alamo.biochemistry.uthscsa.edu",
+  "submittype" => "http",
+  "submithost" => "http://gw33.quarry.iu.teragrid.org",
+  "httpport"   => 8080,
   "sshport"    => 22,
-  "workdir"    => "/home/us3/work/"   // Need trailing slash
+  "workdir"    => "/ogce-rest/job" 
 );
 
-$clusters[ 'laredo' ] = array 
+$clusters[ 'alamo-local' ] = array 
 (
   "name"       => "alamo.uthscsa.edu",
   "submittype" => "local",
   "submithost" => "",
   "httpport"   => 0,
   "sshport"    => 22,
-  "workdir"    => "/home/us3/work/"    // Need trailing slash
+  "workdir"    => "/home/us3/work/"   // Need trailing slash
 );
 
 $clusters[ 'ranger' ] = array 
@@ -58,12 +68,3 @@ $clusters[ 'lonestar' ] = array
   "workdir"    => "/ogce-rest/job" 
 );
 
-$clusters[ 'queenbee' ] = array 
-(
-  "name"       => "queenbee.loni-lsu.teragrid.org",
-  "submittype" => "http",
-  "submithost" => "http://gw33.quarry.iu.teragrid.org",
-  "httpport"   => 8080,
-  "sshport"    => 22,
-  "workdir"    => "/ogce-rest/job/" 
-);
