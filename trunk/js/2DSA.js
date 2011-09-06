@@ -47,10 +47,14 @@ debug_level.setMinimum(0);
 debug_level.setMaximum(4);
 debug_level.setValue(0);
 document.getElementById("debug_level").value = debug_level.getValue();
+document.getElementById("debug_level_min").value = debug_level.getMinimum();
+document.getElementById("debug_level_max").value = debug_level.getMaximum();
 
 debug_level.onchange = function () 
 {
   document.getElementById("debug_level").value = debug_level.getValue();
+  document.getElementById("debug_level_min").value = debug_level.getMinimum();
+  document.getElementById("debug_level_max").value = debug_level.getMaximum();
 };
 
 } catch(e_debug_level) {}

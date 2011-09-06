@@ -125,6 +125,13 @@ echo<<<HTML
                         onchange="debug_level.setValue(parseInt(this.value))" 
                         name="debug_level" 
                         value="debug_level.setValue(parseInt(this.value))"/>
+
+          Minimum: <input id='debug_level_min' size='5'
+                        disabled='disabled' />
+
+          Maximum: <input id='debug_level_max' size='5'
+                        disabled='disabled' />
+
         </fieldset>
       </fieldset>
 HTML;
