@@ -519,9 +519,6 @@ function toggle(area)
 
 function validate( f, advanceLevel, count_datasets )
 {
-  // Advanced users don't go through these tests
-  if ( advanceLevel > 0 ) return( true );
-
   // Handling could be different depending on single or multiple datasets
   // First, checks that are common to both
 
@@ -586,6 +583,9 @@ function validate_single( f )
 
 function validate_multiple( f )
 {
+  // Advanced users don't go through these tests
+  if ( advanceLevel > 0 ) return( true );
+
   var contact_bo = "\nIf you have any questions about this policy, please " +
                    "contact Borries Demeler (demeler@biochem.uthscsa.edu).";
 
