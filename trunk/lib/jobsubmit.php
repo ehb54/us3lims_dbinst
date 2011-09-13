@@ -58,7 +58,7 @@ class jobsubmit
         "workdir"    => "/ogce-rest/job/runjob/async",
         "sshport"    => 22,
         "executable" => "us_mpi_analysis",
-        "queue"      => "normal",
+        "queue"      => "default",
         "udpserver"  => "uslims3.uthscsa.edu",
         "udpport"    => 12233,
         "database"   => "us3",
@@ -443,14 +443,15 @@ class jobsubmit
          switch ( $cluster )
          {
             case 'lonestar':
-               $nodes = (int)( ( $nodes + 7 ) / 8 ) * 8;   // 8 nodes per processor
+               $nodes = (int)( ( $nodes + 11 ) / 12 ) * 12;   // 12 nodes per processor
                break;
 
             case 'ranger':
-               $nodes = (int)( ( $nodes * 15 ) / 16 ) * 16;   // 16 nodes per processor
+               $nodes = (int)( ( $nodes + 15 ) / 16 ) * 16;   // 16 nodes per processor
                break;
 
             default:
+               $nodes = (int)( ( $nodes + 7 ) / 8 ) * 8;     // 8 nodes per processor
                break;
          }
       }

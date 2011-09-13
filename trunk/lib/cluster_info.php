@@ -6,6 +6,8 @@
  *
  */
 
+$serviceURL = "http://gw33.quarry.iu.teragrid.org:8080/ogce-rest/job";
+
 $clusters = array();   // Information about the clusters
 
 $clusters[ 'bcf' ] = array 
