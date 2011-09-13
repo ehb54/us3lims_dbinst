@@ -23,6 +23,7 @@ if ( ( $_SESSION['userlevel'] != 4 ) &&
 
 include 'config.php';
 include 'db.php';
+include 'lib/cluster_info.php';
 
 // Start displaying page
 $page_title = 'HPC Request Data';
@@ -120,22 +121,75 @@ else
    echo "Length stdout           : $len_stdout\n";
    echo "$link           : $len_stderr\n";
    
-   if ( isset( $_GET[ 'stderr' ] ) ) 
+   if ( isset( $_GET['stderr'] ) ) 
      echo "\nstderr:\n\n{$row[ 'stderr' ]}\n";
 
-   
-   echo "</pre>\n\n";
+   // If gfacID fits the right format for a GFAC job, a status request link:
+   $link2 = "<a href=\"{$_SERVER['PHP_SELF']}?RequestID=$reqID&jobstatus=t\">Show GFAC Status</a>";
+   $link3 = "<a href=\"{$_SERVER['PHP_SELF']}?RequestID=$reqID\">Hide GFAC Status</a>";
 
+   if ( isset( $_GET['jobstatus'] ) )
+   {
+      echo "$link3\n";
+      echo getJobstatus( $row['gfacID'] );
+   }
 
-
-
-
+   else
+      echo "$link2\n";
 
 }
 
-
-//echo "</pre>\n";
+echo "</pre>\n";
 echo "</div>\n";
 include 'footer.php';
 exit();
+
+// Function to get the jobstatus xml and parse for important items
+function getJobstatus( $gfacID )
+{
+  global $serviceURL;
+
+  $url = "$serviceURL/jobstatus/$gfacID";
+
+  if ( ! preg_match( "/^US3-Experiment/", $gfacID ) )
+     return "Not a GFAC ID";
+
+  $r = new HttpRequest( $url, HttpRequest::METH_GET );
+
+  try
+  {
+     $result = $r->send();
+     $xml    = $result->getBody();
+  }
+  catch ( HttpException $e )
+  {
+    return "Job status unavailable ( code $e )\n";
+  }
+
+   $time   = date( "F d, Y H:i:s", time() );
+   $status = "GFAC status request submitted on $time\n";
+
+   $parser = new XMLReader();
+   $parser->xml( $xml );
+
+   while( $parser->read() )
+   {
+      $type = $parser->nodeType;
+
+      if ( $type == XMLReader::ELEMENT )
+         $name = $parser->name;
+
+      else if ( $type == XMLReader::TEXT )
+      {
+         if ( $name == "status" )
+            $status .= "status: $parser->value\n";
+         else if ( $name = "message" )
+            $status .= "message: " . wordwrap( $parser->value ) . "\n";
+      }
+   }
+
+   $parser->close();
+   return $status;
+
+}
 ?>
