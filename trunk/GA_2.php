@@ -100,7 +100,7 @@ $mc_iterations  = $job_parameters['mc_iterations'];
 $max_buckets = 100;
 
 if ( $advanceLevel == 0 )
-  $max_buckets = ( $mc_iterations == 1 ) ? 25 : 10;
+  $max_buckets = ( $mc_iterations == 1 ) ? 50 : 15;
 
 // Process changes in the number of solutes
 // $solute_count can be between 1 and $max_buckets
@@ -257,12 +257,13 @@ function upload_file( &$buckets, $upload_dir )
            "Acceptable values: " .
            "Minimum: 1 ~ Maximum: $max_buckets.";
 
-    if ( $max_buckets == 25 )
+    if ( $max_buckets == 50 || $max_buckets == 15 )
     {
-      $msg = "If your analysis includes more than the maximum buckets " .
-             "then the system is likely not appropriate for GA analysis. " .
-             "Heterogeneous samples and continuous distributions are " .
-             "only to be analyzed by the 1/2DSA analysis.";
+      $msg = "Your initialization includes more than 50 solutes " .
+             "(15 for Monte Carlo iter. > 1). The GA analysis is " .
+             "not appropriate for such heterogeneous samples. Either " .
+             "reduce the number of solutes in your initialization " .
+             "or proceed by 1/2DSA Monte Carlo analysis.";
     }
 
     return $msg;
