@@ -43,12 +43,6 @@ $admin4_menu = <<<HTML
 
 HTML;
 
-$viewuser_menu = <<<HTML
-      <li><a href='http://$org_site/view_users.php'>View User Info</a></li>
-      <li><a href='http://$org_site/view_all.php'>View All Users</a></li>
-
-HTML;
-
 $edituser_menu = <<<HTML
       <li><a href='http://$org_site/edit_users.php'>Edit User Info</a></li>
       <li><a href='http://$org_site/view_users.php'>View User Info</a></li>
@@ -106,7 +100,7 @@ else // $userlevel = 3
   $admin_menu .= <<<HTML
     <li>User Information<br />
       <ul>
-        $viewuser_menu
+        $edituser_menu
       </ul>
     </li>
 

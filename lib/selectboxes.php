@@ -5,6 +5,8 @@
  *
  */
 
+include_once 'lib/utility.php';
+
 // A list of project status possibilities
 $project_status = array();
 
@@ -39,7 +41,16 @@ function project_status_select( $select_name, $current_status = NULL )
 function userlevel_select( $userlevel = 0 )
 {
   // Create userlevel drop down
-  $ulimit = ( $_SESSION['userlevel'] == 5 ) ? 5 : 4;
+  $myUserlevel = $_SESSION['userlevel'];
+  $ulimit = ( $myUserlevel >= 3 ) ? $myUserlevel : 0;
+
+  if ( $userlevel > $myUserlevel ) 
+  {
+     $text = "<input type='hidden' name='userlevel' value='$userlevel' /> " .
+             "<input type='text' value='$userlevel' disabled='disabled' />\n";
+     return $text;
+  }
+
   $text = "<select name='userlevel'>\n";
   for ( $x = 0; $x <= $ulimit; $x++ )
   {
