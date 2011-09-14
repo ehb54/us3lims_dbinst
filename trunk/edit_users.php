@@ -14,8 +14,9 @@ if ( ! isset($_SESSION['id']) )
   exit();
 } 
 
-if ( ($_SESSION['userlevel'] != 4) &&
-     ($_SESSION['userlevel'] != 5) )    // Admin and super admin only
+if ( ($_SESSION['userlevel'] != 3) &&
+     ($_SESSION['userlevel'] != 4) &&
+     ($_SESSION['userlevel'] != 5) )    // Super user, admin and super admin only
 {
   header('Location: index.php');
   exit();
@@ -137,10 +138,14 @@ function do_next()
 // Function to delete the current record
 function do_delete()
 {
+  global $admin_list;      // To protect our admin entries
+  $admins = implode( "','", $admin_list );
+
   $personID = $_POST['personID'];
 
   $query = "DELETE FROM people " .
-           "WHERE personID = $personID ";
+           "WHERE personID = $personID " .
+           "AND email NOT IN ( '$admins' ) ";
   mysql_query($query)
     or die("Query failed : $query<br />\n" . mysql_error());
 

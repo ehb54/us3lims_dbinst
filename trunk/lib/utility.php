@@ -6,6 +6,11 @@
  *
  */
 
+$admin_list = array( 'dzollars@gmail.com',
+                     'gegorbet@gmail.com',
+                     'demeler@biochem.uthscsa.edu',
+                     'bruce.dubbs@gmail.com' );
+
 function emailsyntax_is_valid($email)
 {
   list($local, $domain) = explode("@", $email);
