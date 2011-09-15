@@ -23,6 +23,7 @@ if ( ($_SESSION['userlevel'] != 4) &&
 
 include 'config.php';
 include 'db.php';
+include 'lib/utility.php';
 
 // Start displaying page
 $page_title = "Info by Run ID";
@@ -500,6 +501,7 @@ HTML;
   <tbody>
 HTML;
 
+  $in_queue = 0;
   foreach ( $incomplete as $gfacID )
   {
     
@@ -509,17 +511,9 @@ HTML;
     $result = mysql_query( $query )
               or die( "Query failed : $query<br />\n" . mysql_error() );
   
-    if ( mysql_num_rows( $result ) == 0 )
+    if ( mysql_num_rows( $result ) == 1 )
     {
-      $text .= <<<HTML
-      <tr><td>$gfacID</td>
-          <td colspan='5'>Missing</td>
-      </tr>
-HTML;
-    }
-
-    else
-    {
+      $in_queue++;
       list( $cluster, $db, $status, $msg, $time ) = mysql_fetch_array( $result );
       $text .= <<<HTML
       <tr><td>$gfacID</td>
@@ -534,6 +528,9 @@ HTML;
     }
   }
   
+  if ( $in_queue == 0 )
+     $text .= "<tr><td colspan='6'>No local jobs currently in the queue</td></tr>\n";
+
   $text .= "</tbody>\n\n" .
            "</table>\n";
 
@@ -576,6 +573,9 @@ HTML;
   unset( $row[ 'stdout' ] );
   unset( $row[ 'stderr' ] );
   
+  // Get GFAC job status
+  $row['gfacStatus'] = nl2br( getJobstatus( $row['gfacID'] ) );
+
   $text .= <<<HTML
   <a name='runDetail'></a>
   <table cellspacing='0' cellpadding='0' class='admin'>

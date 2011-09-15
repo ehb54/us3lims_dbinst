@@ -30,7 +30,7 @@ if ( isset( $_POST['sort_order'] ) )
 
 include 'config.php';
 include 'db.php';
-include 'lib/cluster_info.php';       // Information about the clusters
+include 'lib/utility.php';       // Information about the clusters
 
 if ( isset( $_POST['delete'] ) )
 {
@@ -107,7 +107,8 @@ function order_select( $current_order = NULL )
 // A function to delete the selected job
 function do_delete()
 {
-  global $clusters;             // From cluster_info.php
+  global $clusters;             // From utility.php
+  global $gfac_serviceURL;
 
   $cluster  = $_POST['cluster'];
   $gfacID   = $_POST['gfacID'];
@@ -115,14 +116,10 @@ function do_delete()
 
   // Find out which cluster we're deleting from
   $found = false;
-  foreach ( $clusters as $ndx => $info )
+  foreach ( $clusters as $info )
   {
-    if ( strcmp( $info['name'], $cluster ) == 0 )
+    if ( $cluster == $info->short_name )
     {
-      $shortname = $ndx;
-      $host      = $info['submithost'];
-      $port      = $info['httpport'];
-      $workdir   = $info['workdir'];
       $found     = true;
       break;
     }
@@ -130,7 +127,7 @@ function do_delete()
 
   if ( ! $found ) return;
 
-  switch ( $shortname )
+  switch ( $cluster )
   {
     case 'bcf-local'   :
     case 'alamo-local' :
@@ -142,14 +139,14 @@ function do_delete()
     case 'alamo'       :
     case 'bcf'         :
 
-      $url = "$host:$port$workdir/canceljob/$gfacID";
+      $url = "$gfac_serviceURL/canceljob/$gfacID";
       $post = new HttpRequest( $url, HttpRequest::METH_GET );
 
       $status  = '';      
       try
       {
         $result = $post->send();
-        $status = $post->getResponseBody();  
+        $status = $post->getBody();  
       }
       catch ( HttpException $e )
       {
@@ -173,9 +170,10 @@ function do_delete()
       }
 
       $gfac_status = parse_response( $status );
-      if ( strcmp( $gfac_status, "CANCELED" ) == 0 )
+      if ( strcmp( $gfac_status, "CANCELLED" ) == 0 ||
+           strcmp( $gfac_status, "CANCELED"  ) == 0 )
       {
-        // Let's update the lastMessage field so maybe user sees 
+        // Let's update the lastMessage field so user sees if he goes back
         $query  = "UPDATE HPCAnalysisResult SET " . 
                   "lastMessage = 'This job has been deleted', " . 
                   "queueStatus = 'aborted' " . 
@@ -206,7 +204,7 @@ function do_delete()
   if ( ! mysql_select_db( $globaldbname, $globaldb ) ) return;
 
   $query  = "UPDATE analysis " .
-            "SET status = 'CANCELLED' " .
+            "SET status = 'CANCELED' " .
             "WHERE gfacID = '$gfacID' ";
 
 //  $query  = "DELETE FROM analysis " .
