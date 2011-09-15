@@ -49,7 +49,7 @@ function makeRandomPassword() {
   return $pass;
 }
 
-// A class to keep track of what clusters are available
+// A class to keep track of cluster information, and what clusters are available
 class cluster_info
 {
    public $name;
@@ -75,11 +75,12 @@ $clusters = array(
   new cluster_info( "gatekeeper.ranger.tacc.teragrid.edu", "ranger",      "long"    ),
   new cluster_info( "lonestar.tacc.teragrid.org",          "lonestar",    "normal"  ), 
   new cluster_info( "bcf.uthscsa.edu",                     "bcf",         "default" ),
-  new cluster_info( "alamo.biochemistry.uthscsa.edu",      "alamo",       "default"  ),
+  new cluster_info( "alamo.biochemistry.uthscsa.edu",      "alamo",       "default" ),
   new cluster_info( "bcf.uthscsa.edu",                     "bcf-local",   "default" ),
-  new cluster_info( "alamo.uthscsa.edu",                   "alamo-local", "default"  )
+  new cluster_info( "alamo.uthscsa.edu",                   "alamo-local", "default" )
   );
 
+$gfac_serviceURL = "http://gw33.quarry.iu.teragrid.org:8080/ogce-rest/job";
 
 $gfac_link = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
 $result    = mysql_select_db( $globaldbname, $gfac_link );
@@ -232,4 +233,57 @@ function uuid() {
     ); 
 }
 
+// Function to get the jobstatus xml and parse for important items
+function getJobstatus( $gfacID )
+{
+  global $gfac_serviceURL;
+
+  $url = "$gfac_serviceURL/jobstatus/$gfacID";
+
+  if ( ! preg_match( "/^US3-Experiment/", $gfacID ) )
+     return "Not a GFAC ID";
+
+  $r = new HttpRequest( $url, HttpRequest::METH_GET );
+
+  $time   = date( "F d, Y H:i:s", time() );
+
+  try
+  {
+     $result = $r->send();
+     $xml    = $result->getBody();
+  }
+  catch ( HttpException $e )
+  {
+    return "Job status unavailable at $time\n" .
+           " ( $e )\n" .
+           "URL: $url\n";
+  }
+
+  $status  = "GFAC status request submitted at $time\n";
+  $status .= "<table>\n";
+
+  $parser = new XMLReader();
+  $parser->xml( $xml );
+
+  while( $parser->read() )
+  {
+     $type = $parser->nodeType;
+
+     if ( $type == XMLReader::ELEMENT )
+        $name = $parser->name;
+
+     else if ( $type == XMLReader::TEXT )
+     {
+        if ( $name == "status" )
+           $status .= "<tr><th>status:</th><td>$parser->value</td></tr>\n";
+        else if ( $name = "message" )
+           $status .= "<tr><th>message:</th><td>" . wordwrap( $parser->value ) . "</td></tr>\n";
+     }
+  }
+  $status .= "</table>\n";
+
+  $parser->close();
+  return $status;
+
+}
 ?>

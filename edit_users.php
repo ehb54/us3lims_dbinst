@@ -26,7 +26,6 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include 'lib/selectboxes.php';
-include 'lib/cluster_info.php';
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
@@ -164,10 +163,10 @@ function do_update()
   // Get cluster information
   global $clusters;
   $userClusterAuth = array();
-  foreach ( $clusters as $clusterName => $cluster )
+  foreach ( $clusters as $cluster )
   {
-    if ( isset($_POST[$clusterName]) == 'on' )
-      $userClusterAuth[] = $clusterName;
+    if ( isset($_POST[$cluster->short_name]) == 'on' )
+      $userClusterAuth[] = $cluster->short_name;
   }
 
   $clusterAuth = implode( ":", $userClusterAuth );
@@ -474,19 +473,20 @@ function edit_record()
     
   // Figure out checks for cluster authorizations
   global $clusters;
-  foreach ( $clusters as $clusterName => $cluster )
+  foreach ( $clusters as $cluster )
   {
     // This produces variables like this: $checked_bcf, $checked_alamo, etc.
-    $checked_cluster  = "checked_$clusterName";
-    $$checked_cluster = ( strpos($clusterAuth, $clusterName) === false ) ? "" : "checked='checked'";
+    $checked_cluster  = "checked_$cluster->short_name";
+    $$checked_cluster = ( strpos($clusterAuth, $cluster->short_name) === false ) ? "" : "checked='checked'";
   }
 
   $cluster_table = "<table cellspacing='0' cellpadding='5' class='noborder'>\n";
-  foreach ( $clusters as $clusterName => $cluster )
+  foreach ( $clusters as $cluster )
   {
-    $checked_cluster  = "checked_$clusterName";
-    $cluster_table   .= "  <tr><td>$clusterName:</td>\n" .
-                        "      <td><input type='checkbox' name='$clusterName' {$$checked_cluster} /></td>\n" .
+    $checked_cluster  = "checked_$cluster->short_name";
+    $cluster_table   .= "  <tr><td>$cluster->short_name:</td>\n" .
+                        "      <td><input type='checkbox' " .
+                        "name='$cluster->short_name' {$$checked_cluster} /></td>\n" .
                         "  </tr>\n";
   }
   $cluster_table .= "</table>\n";
