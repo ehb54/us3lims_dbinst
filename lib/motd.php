@@ -33,7 +33,7 @@ function motd_readfile($fn)
 // function to display the contents of $ULTRASCAN/etc/motd_submit
 function motd_submit()
 {
-  $fn = "/share/apps64/ultrascan/etc/motd_submit";
+  $fn = "/srv/www/htdocs/uslims3/motd_submit";
 
   // Job submission is normal --- just display a php/html message
   if ( file_exists($fn) ) include $fn;
@@ -44,7 +44,7 @@ function motd_submit()
 // function to check if job submission is blocked
 function motd_isblocked()
 {
-  $fn = "/share/apps64/ultrascan/etc/motd_block";
+  $fn = "/srv/www/htdocs/uslims3/motd_block";
   $blocked = false;
 
   if ( file_exists($fn) )
@@ -60,7 +60,7 @@ function motd_block()
   if ( ! motd_isblocked() )
     return;
 
-  $fn = "/share/apps64/ultrascan/etc/motd_block";
+  $fn = "/srv/www/htdocs/uslims3/motd_block";
   $message = motd_readfile($fn);
 
   // If userlevel < 4, display message and stop
@@ -69,14 +69,13 @@ function motd_block()
   {
     // Display message
     if ($message)
-      echo "<p class='message'>$message</p>\n";
+      echo "<p class='message' style='padding-bottom:30em;'>$message</p>\n";
     else
-      echo "<p class='message'>Job submission is blocked.</p>\n";
+      echo "<p class='message' style='padding-bottom:40em;'>Job submission is blocked.</p>\n";
 
-    echo "</div>\n" .
-         "</body>\n" .
-         "</html>\n";
-    exit;
+    echo "</div>\n";
+    include 'footer.php';
+    exit();
   }
 
   // Userlevel == 4, 5

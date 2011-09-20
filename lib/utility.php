@@ -90,14 +90,14 @@ $result    = mysql_query( $query, $gfac_link );
 
 while ( list( $cluster, $running, $queued, $status ) = mysql_fetch_row( $result ) )
 {
-   foreach( $clusters as $c )
+   for ( $i = 0; $i < count( $clusters ); $i++ )
    {
-      if ( $c->short_name == $cluster )
-      {
-         $c->running = $running;
-         $c->queued  = $queued;
-         $c->status  = $status;
-      }
+     if ( $clusters[$i]->short_name == $cluster )
+     {
+       $clusters[$i]->running = $running;
+       $clusters[$i]->queued  = $queued;
+       $clusters[$i]->status  = $status;
+     }
    }
 }
 
@@ -114,9 +114,6 @@ function tigre()
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
 
-  $cmd = "/share/apps64/ultrascan/etc/us_get_tigre_sysstat 2> /dev/null";
-  //exec( $cmd, $output);
-
   $text = "    <fieldset style='margin-top:1em' id='clusters'>\n" .
           "      <legend>Select Cluster</legend>\n";
 
@@ -129,15 +126,9 @@ function tigre()
     <table>
     <tr><th>Cluster</th><th>Status</th><th>Queue Name</th> <th>running/queued</th> </tr>
 
-    <!--<tr class='subheader'><th></th><th></th><th>running/queued</th></tr>-->
-
 HTML;
 
     $checked  = " checked='checked'";      // check the first one
-    $disabled = "";                        // set these as constants for now
-    $status   = "up";
-    $jobs     = 0;
-    $load     = 0;
   
     foreach ( $clusters as $cluster )
     {
@@ -152,6 +143,8 @@ HTML;
       if ( $_SESSION['userlevel'] >= 4         ||
            in_array( $cluster->short-name, $_SESSION['clusterAuth']) )
       {
+        $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
+
         $value = "$cluster->name:$cluster->short_name:$cluster->queue";
         $text .= "     <tr><td class='cluster'>" .
                  "<input type='radio' name='cluster' " .
