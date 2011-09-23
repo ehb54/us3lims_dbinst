@@ -108,7 +108,6 @@ function order_select( $current_order = NULL )
 function do_delete()
 {
   global $clusters;             // From utility.php
-  global $gfac_serviceURL;
 
   $cluster  = $_POST['cluster'];
   $gfacID   = $_POST['gfacID'];
@@ -118,8 +117,9 @@ function do_delete()
   $found = false;
   foreach ( $clusters as $info )
   {
-    if ( $cluster == $info->short_name )
+    if ( $cluster == $info->name )
     {
+      $shortname = $info->short_name;
       $found     = true;
       break;
     }
@@ -127,7 +127,7 @@ function do_delete()
 
   if ( ! $found ) return;
 
-  switch ( $cluster )
+  switch ( $shortname )
   {
     case 'bcf-local'   :
     case 'alamo-local' :
@@ -138,88 +138,76 @@ function do_delete()
     case 'lonestar'    :
     case 'alamo'       :
     case 'bcf'         :
-
-      $url = "$gfac_serviceURL/canceljob/$gfacID";
-      $post = new HttpRequest( $url, HttpRequest::METH_GET );
-
-      $status  = '';      
-      try
-      {
-        $result = $post->send();
-        $status = $post->getBody();  
-      }
-      catch ( HttpException $e )
-      {
-        // Let's update the lastMessage field so the user sees
-        $query  = "UPDATE HPCAnalysisResult SET " .
-                  "lastMessage = 'There has been an error attempting to delete this job' " .
-                  "WHERE gfacID = '$gfacID' ";
-        mysql_query( $query );
-        return;
-      }
-
-      // Verify that the request has completed normally
-      if ( $result->responseCode != 200 )
-      {
-        $lastMessage = "GFAC error: " . $result->responseStatus .
-                       " ( " . $result->responseCode . " )";
-        $query = "UPDATE HPCAnalysisResult SET " .
-                 "lastMessage = '$lastMessage' ";
-        mysql_query( $query );
-        return;
-      }
-
-      $gfac_status = parse_response( $status );
-      if ( strcmp( $gfac_status, "CANCELLED" ) == 0 ||
-           strcmp( $gfac_status, "CANCELED"  ) == 0 )
-      {
-        // Let's update the lastMessage field so user sees if he goes back
-        $query  = "UPDATE HPCAnalysisResult SET " . 
-                  "lastMessage = 'This job has been deleted', " . 
-                  "queueStatus = 'aborted' " . 
-                  "WHERE gfacID = '$gfacID' " ;
-        mysql_query( $query );
-      }
-
+      $status = cancelJob( $gfacID );
       break;
 
     default            :
       break;
 
   }
-
-/*
-  We shouldn't need this.  GFAC should update the global DB and the error_handler
-  should then delete the record.  If we delete it here, GFAC will create 
-  an incomplete record in the gfac.analysis table.
-
-  However, for now let's make sure the global db has the record marked canceled.
-*/
-
-  // Now switch to global db and delete that entry
-  global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
-  $globaldb = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
-  if ( ! $globaldb ) return;
-
-  if ( ! mysql_select_db( $globaldbname, $globaldb ) ) return;
-
-  $query  = "UPDATE analysis " .
-            "SET status = 'CANCELED' " .
-            "WHERE gfacID = '$gfacID' ";
-
-//  $query  = "DELETE FROM analysis " .
-//            "WHERE gfacID = '$gfacID' ";
-  mysql_query( $query );
-
-  mysql_close( $globaldb );
 }
 
-function parse_response( $xml )
+// Function to cancel a job
+function cancelJob( $gfacID )
 {
-   global $message;
+  global $gfac_serviceURL;
 
+  if ( ! preg_match( "/^US3-Experiment/", $gfacID ) )
+     return "Not a GFAC ID";
+
+  $url = "$gfac_serviceURL/canceljob/$gfacID";
+
+  $r = new HttpRequest( $url, HttpRequest::METH_GET );
+
+  $time   = date( "F d, Y H:i:s", time() );
+
+  try
+  {
+     $result = $r->send();
+     $xml    = $result->getBody();
+  }
+  catch ( HttpException $e )
+  {
+    // Let's try to update the lastMessage field so the user sees
+    updateLimsStatus( $gfacID, 'aborted', "Error ($e) attempting to delete job" );
+    return;
+
+  }
+
+  $status = parse_response( $xml, $message );
+  $updateok = true;
+
+  switch ( $status )
+  {
+    case 'CANCELED':
+    case 'Success':
+      $lastMessage = 'This job has been canceled.';
+      break;
+
+    case 'NOTALLOWED':
+      $lastMessage = 'This job has been canceled already, or has completed.';
+      break;
+
+    case 'UNKNOWN':
+      $lastMessage = 'GFAC cannot find this job.';
+      break;
+
+    default :
+      $updateok = false;
+      break;
+  }
+
+  if ( $updateok )
+  {
+    // Let's update what user sees until GFAC cancels
+    updateLimsStatus( $gfacID, 'aborted', $lastMessage );
+  }
+}
+
+function parse_response( $xml, &$msg )
+{
    $status  = "";
-   $message = "";
+   $msg = "";
 
    $parser = new XMLReader();
    $parser->xml( $xml );
@@ -236,7 +224,7 @@ function parse_response( $xml )
          if ( $name == "status" )
             $status  = $parser->value;
          else
-            $message = $parser->value;
+            $msg = $parser->value;
       }
    }
 
@@ -244,6 +232,40 @@ function parse_response( $xml )
    return $status;
 }
 
+// Function to update the status on an arbitrary lims database
+function updateLimsStatus( $gfacID, $status, $message )
+{
+  global $globaldbhost;
+  global $globaldbuser;
+  global $globaldbpasswd;
+  global $globaldbname;
+
+  // Connect to the global GFAC database
+  $gLink = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
+  if ( ! mysql_select_db( $globaldbname, $gLink ) )
+    return;
+
+  // Get database name
+  $query  = "SELECT us3_db FROM analysis " .
+            "WHERE gfacID = '$gfacID'";
+  $result = mysql_query( $query, $gLink );
+  if ( ! $result ) return;
+  if ( mysql_num_rows( $result ) == 0 ) return;
+  list( $db ) = mysql_fetch_array( $result );
+  mysql_close( $gLink );
+
+  // Using credentials that will work for all databases
+  $us3link = mysql_connect( 'uslims3.uthscsa.edu', 'us3php', 'us3' );
+  if ( ! mysql_select_db($db, $us3link) ) return false;
+
+  $query  = "UPDATE HPCAnalysisResult SET " .
+            "queueStatus = '$status', " .
+            "lastMessage = '" . mysql_real_escape_string( $message ) . "' " .
+            "WHERE gfacID = '$gfacID' ";
+  mysql_query( $query, $us3link );
+
+  mysql_close( $us3link );
+}
 
 // A function to generate page content using lims2 methods
 function page_content2()

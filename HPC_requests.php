@@ -117,11 +117,15 @@ else
    $len_stdout = strlen( $row[ 'stdout' ] );
    $len_stderr = strlen( $row[ 'stderr' ] );
    
-   $link = "<a href='{$_SERVER[ PHP_SELF ]}?RequestID=$reqID&stderr=t'>Length stderr</a>";
-   echo "Length stdout           : $len_stdout\n";
-   echo "$link           : $len_stderr\n";
-   
-   if ( isset( $_GET['stderr'] ) ) 
+   $link_stdout = "<a href='{$_SERVER[ PHP_SELF ]}?RequestID=$reqID&stdout=t'>Length stdout</a>";
+   $link_stderr = "<a href='{$_SERVER[ PHP_SELF ]}?RequestID=$reqID&stderr=t'>Length stderr</a>";
+
+   echo "$link_stdout           : $len_stdout\n";
+   if ( isset( $_GET[ 'stdout'] ) ) 
+     echo "\nstdout:\n\n{$row[ 'stdout' ]}\n";
+
+   echo "$link_stderr           : $len_stderr\n";
+   if ( isset( $_GET[ 'stderr'] ) ) 
      echo "\nstderr:\n\n{$row[ 'stderr' ]}\n";
 
    // If gfacID fits the right format for a GFAC job, a status request link:
