@@ -567,6 +567,7 @@ HTML;
   $row['jobfile'] = '<pre>' . htmlentities( $row['jobfile'] ) . '</pre>';
   $row['stderr']  = '<pre>' . htmlentities( $row['stderr'] ) . '</pre>';
 
+  $stdout     = $row[ 'stdout' ];
   $len_stdout = strlen( $row[ 'stdout' ] );
   $stderr     = $row[ 'stderr' ];
   $len_stderr = strlen( $row[ 'stderr' ] );
@@ -588,10 +589,14 @@ HTML;
     $text .= "  <tr><th>$key</th><td>$value</td></tr>\n";
   }
 
-  $link = "<a href='{$_SERVER[ 'PHP_SELF' ]}?RequestID=$requestID&stderr=t#runDetail'>Length stderr</a>";
-  $text .= "  <tr><th>Length stdout</th><td>$len_stdout</td></tr>\n";
-  $text .= "  <tr><th>$link</th><td>$len_stderr</td></tr>\n";
-  
+  $linkout = "<a href='{$_SERVER[ 'PHP_SELF' ]}?RequestID=$requestID&stdout=t#runDetail'>Length stdout</a>";
+  $linkerr = "<a href='{$_SERVER[ 'PHP_SELF' ]}?RequestID=$requestID&stderr=t#runDetail'>Length stderr</a>";
+
+  $text .= "  <tr><th>$linkout</th><td>$len_stdout</td></tr>\n";
+  if ( isset( $_GET[ 'stdout' ] ) ) 
+    $text .= "  <tr><th>stdout</th><td>$stdout</td></tr>\n";
+
+  $text .= "  <tr><th>$linkerr</th><td>$len_stderr</td></tr>\n";
   if ( isset( $_GET[ 'stderr' ] ) ) 
     $text .= "  <tr><th>stderr</th><td>$stderr</td></tr>\n";
 

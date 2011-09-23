@@ -58,7 +58,7 @@ foreach ( $global_info as $l_gfacID => $db )
 {
   $info = get_status( $l_gfacID, $db );
   if ( $info !== false )
-    $display_info[] = $info;
+    $display_info[$l_gfacID] = $info;
 }
 
 // Sort $display_info according to preferred sort_order
@@ -138,7 +138,7 @@ function get_status( $gfacID, $us3_db )
             "WHERE r.gfacID = '$gfacID' " .                                 // limit to 1 record right off
             "AND r.HPCAnalysisRequestID = q.HPCAnalysisRequestID " .
             "AND q.experimentID = experiment.experimentID ";
-  $result = mysql_query( $query );
+  $result = mysql_query( $query, $link );
   if ( ! $result || mysql_num_rows( $result ) == 0 )
     return false;
 
@@ -161,7 +161,7 @@ function get_status( $gfacID, $us3_db )
   $email = '';
   $query  = "SELECT email FROM people " .
             "WHERE personGUID = '{$status['investigatorGUID']}' ";
-  $result = mysql_query( $query );
+  $result = mysql_query( $query, $link );
   if ( $result && mysql_num_rows( $result ) == 1 )
     list( $jobEmail ) = mysql_fetch_array( $result );
 
@@ -181,6 +181,7 @@ function get_status( $gfacID, $us3_db )
   $status['database'] = $us3_db;
   $status['gfacID']   = $gfacID;
 
+  mysql_close( $link );
   return $status;
 }
 
@@ -199,19 +200,12 @@ function cmp( $a, $b )
 //  a delete button
 function display_buttons( $current_db, $cluster, $gfacID, $jobEmail )
 {
+  global $display_info;
+
   $buttons = "";
 
-  // For now, since the GFAC cancel_job method is not working
-  return "";
-
   // Let's see if the current job has already been deleted
-  $query  = "SELECT COUNT( queueStatus ) FROM HPCAnalysisResult " .
-            "WHERE gfacID = '$gfacID' " .
-            "AND queueStatus = 'aborted' ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />" . mysql_error());
-  list( $count ) = mysql_fetch_array( $result );
-  if ( $count > 0 )
+  if ( $display_info[$gfacID]['queueStatus'] == 'aborted' )
     return "";
 
   if ( is_authorized( $current_db, $jobEmail ) )
@@ -249,16 +243,16 @@ function is_authorized( $current_db, $jobEmail )
   // $jobEmail could have multiple emails in it
   $pos = strpos( $jobEmail, $_SESSION['email'] );
 
-  // Userlevel 5 is always authorized
-  if ($_SESSION['userlevel'] >= 5)
+  // Userlevel >= 4 is always authorized
+  if ($_SESSION['userlevel'] >= 4)
     $authorized = true;
 
-  // Userlevel 4 is authorized within his own database
-  else if ( ($_SESSION['userlevel'] == 4) &&
+  // Userlevel 3 is authorized within his own database
+  else if ( ($_SESSION['userlevel'] == 3) &&
             ($current_db == $dbname)      )
     $authorized = true;
 
-  // Userlevels 2, 3 are authorized for their own jobs
+  // Userlevel 2 is authorized for their own jobs
   else if ( ($_SESSION['userlevel'] >= 2) &&
             ($pos !== false)              )
     $authorized = true;
