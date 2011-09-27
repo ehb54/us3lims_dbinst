@@ -30,7 +30,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
-        "maxproc"    => 16
+        "maxproc"    => 32
       );
     
       $this->grid[ 'bcf-local' ] = array 
@@ -45,7 +45,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
-        "maxproc"    => 16
+        "maxproc"    => 32
       );
 
       $this->grid[ 'alamo' ] = array 
@@ -63,7 +63,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
-        "maxproc"    => 32
+        "maxproc"    => 52
       );
     
       $this->grid[ 'alamo-local' ] = array 
@@ -78,7 +78,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
-        "maxproc"    => 32
+        "maxproc"    => 52
       );
 
       $this->grid[ 'ranger' ] = array 
