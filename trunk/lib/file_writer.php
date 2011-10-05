@@ -265,10 +265,10 @@ abstract class File_writer
   // Function to create the data subdirectory to write files into
   function create_dir( $dir_name )
   {
-    global $data_dir;
+    global $submit_dir;
 
 // check for existence
-    $dirPath = $data_dir . $dir_name;
+    $dirPath = $submit_dir . $dir_name;
     if ( ! mkdir( $dirPath, 0770 ) )
     {
       echo "\nmkdir failed\n";

@@ -32,8 +32,9 @@ $udpport            = 12233; # the port to send udp messages to
 $top_image          = '#';  # name of the logo to use
 $top_banner         = 'images/#';  # name of the banner at the top
 
-$full_path          = '/srv/www/htdocs/lims3/';  # Location of the system code
-$data_dir           = '/srv/www/htdocs/lims3/data/'; # Full path
+$full_path          = '/srv/www/htdocs/uslims3/uslims3_instance/';  # Location of the system code
+$data_dir           = '/srv/www/htdocs/uslims3/uslims3_instance/data/'; # Full path
+$submit_dir         = '/srv/www/htdocs/uslims3/uslims3_data/'; # Full path
 $disclaimer_file    = ''; # the name of a text file with disclaimer info
 
 // Dates
@@ -47,6 +48,9 @@ $current_year       = date( 'Y' );
 // ensure a trailing slash
 if ( $data_dir[strlen($data_dir) - 1] != '/' )
   $data_dir .= '/';
+
+if ( $submit_dir[strlen($submit_dir) - 1] != '/' )
+  $submit_dir .= '/';
 
 /* Define our file paths */
 if ( ! defined('HOME_DIR') ) 
