@@ -5,28 +5,28 @@
 */
 
 $org_name           = 'UltraScan3 LIMS portal';
-$org_site           = 'ultrascan3.uthscsa.edu/lims3';
+$org_site           = 'uslims3.uthscsa.edu/uslims3_instance';
 $site_author        = 'Dan Zollars, University of Texas Health Science Center';
 $site_keywords      = 'ultrascan analytical ultracentrifugation lims';
                       # The website keywords (meta tag)
 $site_desc          = 'Website for the UltraScan3 LIMS portal'; # Site description
 
 $admin              = 'Dan Zollars';
-$admin_phone        = 'Office: (210) 767-2761<br />Fax: (210) 567-6595';
+$admin_phone        = 'Office: <br />Fax: ';
 $admin_email        = 'zollarsd@biochem.uthscsa.edu';
 
 $dbusername         = '';  # the name of the MySQL user
 $dbpasswd           = '';  # the password for the MySQL user
 $dbname             = '';  # the name of the database
-$dbhost             = 'localhost'; # the host on which MySQL runs, generally localhost
+$dbhost             = 'uslims3.uthscsa.edu'; # the host on which MySQL runs, generally localhost
 
 // Global DB
 $globaldbuser       = '';  # the name of the MySQL user
 $globaldbpasswd     = '';  # the password for the MySQL user
 $globaldbname       = '';  # the name of the database
-$globaldbhost       = 'localhost'; # the host on which MySQL runs, generally localhost
+$globaldbhost       = 'uslims3.uthscsa.edu'; # the host on which MySQL runs, generally localhost
 
-$ipaddr             = '129.111.140.167'; # the external IP address of the host machine
+$ipaddr             = '129.111.140.156'; # the external IP address of the host machine
 $udpport            = 12233; # the port to send udp messages to
 
 $top_image          = '#';  # name of the logo to use
