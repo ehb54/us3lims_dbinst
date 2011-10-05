@@ -82,9 +82,11 @@ $this->message[] = "Files copied";
    {
       $pbsfile = "us3.pbs";
       $wall    = $this->maxwall();
+      $nodes   = $this->nodes();
 
       $hours   = (int)( $wall / 60 );
       $mins    = (int)( $wall % 60 );
+      $ppn     = $this->grid[ $this->cluster ][ 'ppn' ]; 
 
       $walltime = sprintf( "%02.2d:%02.2d:00", $hours, $mins );  // 01:09:00
 
@@ -92,28 +94,28 @@ $this->message[] = "Files copied";
       {
         case 'bcf-local':
          $libpath = "/share/apps64/openmpi/lib";
-         $nodes   = $this->grid[ $this->cluster ][ 'maxproc' ];
          $path    = "/share/apps64/openmpi/bin";
          break;
 
         case 'alamo-local':
          $libpath = "/share/apps/openmpi/lib";
-         $nodes   = $this->grid[ $this->cluster ][ 'maxproc' ];
          $path    = "/share/apps/openmpi/bin";
          break;
 
         default:
          $libpath = "/share/apps/openmpi/lib:/share/apps/qt4/lib";
-         $nodes   = "8:ppn=4";
          $path    = "/share/apps/openmpi/bin";
+         $ppn     = 2;
          break;
       }
+
+      $procs   = $nodes * $ppn;
 
       $contents = 
       "#! /bin/bash\n"                                      .
       "#\n"                                                 . 
       "#PBS -N US3_Job\n"                                   .
-      "#PBS -l nodes=$nodes,walltime=$walltime\n"           .
+      "#PBS -l nodes=$nodes:ppn=$ppn,walltime=$walltime\n"           .
       "#PBS -V\n"                                           .
       "#PBS -o $this->workdir/stdout\n"                     .
       "#PBS -e $this->workdir/stderr\n"                     .
@@ -127,7 +129,7 @@ $this->message[] = "Files copied";
       "export OMPI_MCA_mpi_show_mca_params=0\n"             .
       "\n"                                                  .
       "cd $this->workdir\n"                                 .
-      "mpirun -np $nodes /home/us3/bin/us_mpi_analysis $this->tarfile\n";
+      "mpirun -np $procs /home/us3/bin/us_mpi_analysis $this->tarfile\n";
 
       $this->data[ 'pbsfile' ] = $contents;
 

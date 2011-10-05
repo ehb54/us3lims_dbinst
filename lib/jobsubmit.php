@@ -30,6 +30,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
+        "ppn"        => 2,
         "maxproc"    => 32
       );
     
@@ -45,6 +46,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
+        "ppn"        => 2,
         "maxproc"    => 32
       );
 
@@ -63,6 +65,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
+        "ppn"        => 4,
         "maxproc"    => 52
       );
     
@@ -78,6 +81,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 60000,
+        "ppn"        => 4,
         "maxproc"    => 52
       );
 
@@ -96,6 +100,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 2880,
+        "ppn"        => 16,
         "maxproc"    => 64
       );
     
@@ -113,6 +118,7 @@ class jobsubmit
         "udpport"    => 12233,
         "database"   => "us3",
         "maxtime"    => 1440,
+        "ppn"        => 12,
         "maxproc"    => 36
       );
    }
@@ -434,89 +440,25 @@ class jobsubmit
    {
       $cluster    = $this->data[ 'job' ][ 'cluster_shortname' ];
       $parameters = $this->data[ 'job' ][ 'jobParameters' ];
-      $max_nodes  = $this->grid[ $cluster ][ 'maxproc' ];
+      $max_procs  = $this->grid[ $cluster ][ 'maxproc' ];
+      $ppn        = $this->grid[ $cluster ][ 'ppn'     ];
  
       if ( preg_match( "/^GA/", $this->data[ 'method' ] ) )
-      {
-         $nodes = $parameters[ 'demes' ] + 1;
-
-         switch ( $cluster )
-         {
-            case 'lonestar':
-               $nodes = (int)( ( $nodes + 11 ) / 12 ) * 12;   // 12 nodes per processor
-               break;
-
-            case 'ranger':
-               $nodes = (int)( ( $nodes + 15 ) / 16 ) * 16;   // 16 nodes per processor
-               break;
-
-            default:
-               $nodes = (int)( ( $nodes + 7 ) / 8 ) * 8;     // 8 nodes per processor
-               break;
-         }
+      {  // GA: procs is demes+1 rounded to procs-per-node
+         $procs = $parameters[ 'demes' ] + $ppn;  // Procs = demes+1
+         $procs = (int)( $procs / $ppn ) * $ppn;  // Rounded to procs-per-node
       }
       else  // 2DSA
-      {
-         /*
-         // $k is the number of grid repetitions (equivalently, grid movements) 
-         
-         $k = pow( $parameters[ 'uniform_grid' ], 2 );
-         if ( $k < 2 ) $k++;
- 
-         $target_util = 0.5;
-         $cluster     = $this->data[ 'job' ][ 'cluster_shortname' ];
-         
-         if ( $cluster == 'hlrb2' ) $target_util = 0.1;
- 
-         // We are setting $x, the "expected # of solutes from a single application
-         // of NNLS to a grid" to be 0.03.  This is not really known, a priori, and
-         // is simply an average taken over a variety of problems.  I have a new
-         // method based upon sampling (it's in the TG paper soon to be published)
-         // - but let's just take .03 to be ok for now.
- 
-         $x     = 0.03;
-         $logx  = log( $x ); // Make efficient: about -3.50655789732
- 
-         // $r is the number of stages, equation developed in 2DSA paper 
- 
-         $r     = (int)( ceil( log( $k ) / -$logx ) );
-         $nodes = 2;
- 
-         for ( $p = 2; $p <= $max_nodes; $p++ )
-         {
-            // $L is the number of stages where there is sufficient 
-            // work to occupy $p processors, (2DSA paper),
-            // needed for speedup & utilization calcs  
- 
-            $L     = (int)( log( $k / $p ) / -$logx );
-            $util  = ( ( $k / $p ) / ( 1 - $x ) ) / 
-                     ( ( $k / $p ) / ( 1 - $x ) + $r - $L );
- 
-            if ( $util >= $target_util ) $nodes = $p;
-         }
-         */
-
-         $procs =  ( $parameters[ 'uniform_grid' ] < 12 ) ? 1 : 2;
-
-         switch ( $cluster )
-         {
-            case 'lonestar':
-               $nodes = $procs * 12;   // 12 nodes per processor
-               break;
-
-            case 'ranger':
-               $nodes = $procs * 16;   // 16 nodes per processor
-               break;
-
-            default:
-               $nodes = $max_nodes;    // bcf
-               break;
-         }
+      {  // 2DSA:  procs is max_procs, but no more than subgrid count
+         $gsize = $parameters[ 'uniform_grid' ];
+         $gsize = $gsize * $gsize;           // Subgrid count
+         $procs = min( $max_procs, $gsize ); // Procs = max or subgrid count
       }
- 
-      $nodes = max( $nodes, 2 );             // Minimum nodes is 2
-      $nodes = min( $nodes, $max_nodes );    // Maximum nodes depends on cluster
 
+      $procs = max( $procs, 4 );             // Minimum procs is 4
+      $procs = min( $procs, $max_procs );    // Maximum procs depends on cluster
+
+      $nodes = $procs / $ppn;    // Return nodes, procs divided by procs-per-node
       return (int)$nodes;
    }
 }
