@@ -30,14 +30,17 @@ $this->message[] = "End of submit_gfac.php\n";
       $workdir     = $this->grid[ $cluster ][ 'workdir' ];
       $userdn      = $this->grid[ $cluster ][ 'userdn' ];
       $queue       = $this->grid[ $cluster ][ 'queue' ];
-     
-      $cores       = $this->nodes();
-      //$cores       = "16";    // override for now
+
+      $ppn         = $this->grid[ $cluster ][ 'ppn' ];
+      $nodes       = $this->nodes();
+      $cores       = $nodes * $ppn;
       
       $maxWallTime = $this->maxwall();
       //$maxWallTime = "5";      // override for now
  
       $this->data[ 'cores'       ] = $cores;
+      $this->data[ 'nodes'       ] = $nodes;
+      $this->data[ 'ppn'         ] = $ppn;
       $this->data[ 'maxWallTime' ] = $maxWallTime;
  
       $writer = new XMLWriter();
@@ -52,6 +55,10 @@ $this->message[] = "End of submit_gfac.php\n";
  
             $writer ->startElement( 'processorcount' );
             $writer ->text( $cores );
+            $writer ->endElement();
+ 
+            $writer ->startElement( 'hostcount' );
+            $writer ->text( $nodes );
             $writer ->endElement();
  
             $writer ->startElement( 'queuename' );
