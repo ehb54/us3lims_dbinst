@@ -365,7 +365,14 @@ echo<<<HTML
           Note: The actual number of
           demes is dependent on the capacity and the architecture of the selected back end system.  
           Generally, demes + 1 will be adjusted upward in units of 8, 12, or 16, but limited
-          to the capacity of the system.
+          to the capacity of the system. Currently, the maximum demes values are as follows:
+          <table class='noborder' style='margin:0px auto;'>
+            <tr><th>Cluster</th><th>Max demes</th></tr>
+            <tr><td>bcf</td><td style='text-align:center;'>31</td></tr>
+            <tr><td>alamo</td><td style='text-align:center;'>51</td></tr>
+            <tr><td>lonestar</td><td style='text-align:center;'>35</td></tr>
+            <tr><td>ranger</td><td style='text-align:center;'>63</td></tr>
+          </table>
         </td></tr>
 
         </table>
