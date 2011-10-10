@@ -349,7 +349,7 @@ function get_model( $rawDataID, $editedDataID, $modelID = 0 )
 function get_noise( $rawDataID, $editedDataID, $noiseIDs )
 {
   $noise  = "<select name='noiseIDs[$rawDataID][]' multiple='multiple'" .
-            "  onchange='this.form.submit();' size='3'>\n" .
+            "  onchange='this.form.submit();' size='6'>\n" .
             "  <option value='null'>Select noise ...</option>\n";
 
   $query  = "SELECT noiseID, modelID, noiseType, timeEntered " .
