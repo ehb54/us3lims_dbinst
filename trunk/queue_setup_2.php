@@ -349,12 +349,13 @@ function get_model( $rawDataID, $editedDataID, $modelID = 0 )
 function get_noise( $rawDataID, $editedDataID, $noiseIDs )
 {
   $noise  = "<select name='noiseIDs[$rawDataID][]' multiple='multiple'" .
-            "  onchange='this.form.submit();' size='6'>\n" .
+            "  onchange='this.form.submit();' size='8'>\n" .
             "  <option value='null'>Select noise ...</option>\n";
 
   $query  = "SELECT noiseID, modelID, noiseType, timeEntered " .
             "FROM noise " .
-            "WHERE editedDataID = $editedDataID";
+            "WHERE editedDataID = $editedDataID " .
+            "ORDER BY timeEntered DESC ";
 
   $result = mysql_query( $query )
           or die("Query failed : $query<br />\n" . mysql_error());
