@@ -95,6 +95,7 @@ include 'lib/motd.php';
 <!-- Begin page content -->
 <div id='content'>
 
+  <a name='title'></a>
   <h1 class="title">Queue Setup (part 1)</h1>
 
 <?php
@@ -119,7 +120,7 @@ HTML;
 }
 
 echo <<<HTML
-  <form action="{$_SERVER['PHP_SELF']}#email" method="post">
+  <form action="{$_SERVER['PHP_SELF']}#title" method="post">
     <fieldset>
       <legend>Initial Queue Setup</legend>
 
@@ -171,7 +172,6 @@ function get_email_text()
         <p>Please enter the following information so
         we can track your queue.<p>
 
-        <a name='email'></a>
         <p>Enter the email address you would like notifications sent to:</p>
         <p>$msg1a<input type="text" name="submitter_email"
                   value="$submitter_email"/>
