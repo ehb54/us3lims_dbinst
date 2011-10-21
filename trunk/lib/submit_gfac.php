@@ -30,6 +30,8 @@ $this->message[] = "End of submit_gfac.php\n";
       $workdir     = $this->grid[ $cluster ][ 'workdir' ];
       $userdn      = $this->grid[ $cluster ][ 'userdn' ];
       $queue       = $this->grid[ $cluster ][ 'queue' ];
+      $gfacID      = "US3-" . basename( $this->data['job']['directory'] );
+      $dbname      = $this->data[ 'db' ][ 'name' ];
 
       $ppn         = $this->grid[ $cluster ][ 'ppn' ];
       $nodes       = $this->nodes();
@@ -53,6 +55,19 @@ $this->message[] = "End of submit_gfac.php\n";
             $writer ->text( $hostname );
             $writer ->endElement();
  
+            $writer ->startElement( 'cluster' );
+            $writer ->text( $cluster );
+            $writer ->endElement();
+
+            $writer ->startElement( 'us3_db' );
+            $writer ->text( $dbname );
+            $writer ->endElement();
+
+            $writer ->writeComment( 'experimentid is the same as gfacID' );
+            $writer ->startElement( 'experimentid' );
+            $writer ->text( $gfacID );
+            $writer ->endElement();
+
             $writer ->startElement( 'processorcount' );
             $writer ->text( $cores );
             $writer ->endElement();
@@ -72,7 +87,7 @@ $this->message[] = "End of submit_gfac.php\n";
             $writer ->startElement( 'userdn' );
             $writer ->text( $userdn );
             $writer ->endElement();
-         $writer ->endElement();     // hostname
+         $writer ->endElement();     // Header
  
          $writer ->startElement( 'Body' );
             $writer ->startElement( 'Method' );
@@ -82,12 +97,13 @@ $this->message[] = "End of submit_gfac.php\n";
             $writer ->startElement( 'input' );
             $writer ->text( '' );
             $writer ->endElement();
-         $writer ->endElement();     // body
-      $writer ->endElement();        // message
+         $writer ->endElement();     // Body
+      $writer ->endElement();        // Message
       $writer ->endDocument();
  
       $this->data[ 'jobxmlfile' ] = $writer->outputMemory( true );
       unset( $writer );
+
 $this->message[] = "Job xml created";
    }
  
@@ -100,7 +116,7 @@ $this->message[] = "Job xml created";
       $host     = $this->grid[ $cluster ]['submithost'];
       $port     = $this->grid[ $cluster ]['httpport'];
       $path     = $this->grid[ $cluster ]['workdir'];
-      $boundary = "US3:" . basename( $this->data['job']['directory'] );
+      $boundary = 'US3-' . basename( $this->data['job']['directory'] );
       $xml      = $this->data['jobxmlfile'];
       $tarFilename = sprintf( "hpcinput-%s-%s-%05d.tar",
                                $this->data['db']['host'],
@@ -110,9 +126,8 @@ $this->message[] = "Job xml created";
       $headers['MIME-Version'] = '1.0';
       $headers['Content-Type'] = "multipart/mixed; boundary=\"$boundary\"";
 
-$this->message[] = "URL: $url";
-$this->message[] = "Headers:";
-$this->message[] = $headers; 
+//$this->message[] = "Headers:";
+//$this->message[] = $headers; 
  
       // Build the data stream
       $httpdata = "--$boundary
@@ -139,8 +154,8 @@ Content-Transfer-Encoding: base64
 --$boundary
 ";
 
-$this->message[] = "Httpdata:
-" .  htmlspecialchars( $xml, ENT_QUOTES );
+//$this->message[] = "Httpdata:
+//" .  htmlspecialchars( $xml, ENT_QUOTES );
 //$this->message[] = $httpdata;
  
       // Now make the request
@@ -148,7 +163,7 @@ $this->message[] = "Httpdata:
       
       $post->setHeaders( $headers );
       $post->setBody( $httpdata );
-      
+
       try
       {
         $result = $post->send();
@@ -168,7 +183,6 @@ $this->message[] = "Result text:";
 $epr = htmlspecialchars( $this->data['eprfile'], ENT_QUOTES );
 
 $this->message[] = preg_replace( "/&gt;/", "&gt;\n", $epr );
-$this->message[] = "End of result text";
 
    }
  
@@ -203,6 +217,11 @@ $this->message[] = "End of result text";
          return;
       }
  
+      $gfacID = $this->getGfacID( $epr );
+
+      if ( $gfacID == '' ) // Nothing returned
+         $gfacID      = "US3-" . basename( $this->data['job']['directory'] );
+
       $query = "INSERT INTO HPCAnalysisResult SET "                   .
                "HPCAnalysisRequestID='$requestID', "                  .
                "queueStatus='$status', "                              .
@@ -218,7 +237,6 @@ $this->message[] = "End of result text";
       }
  
       mysql_close( $link );
-$this->message[] = "Database $dbname updated: requestID = $requestID";
 
       // Update global db
       $gfac_link = mysql_connect( $host, $globaldbuser, $globaldbpasswd );
@@ -234,9 +252,6 @@ $this->message[] = "Database $dbname updated: requestID = $requestID";
          $this->message[] = "Cannot change to global database $globaldbname\n";
          return;
       }
-
-      $gfacID = $this->getGfacID( $epr );
-$this->message[] = "ExperimentID extracted from EPR file = '$gfacID'\n";
 
       $cluster = $this->data['job']['cluster_shortname'];
 
