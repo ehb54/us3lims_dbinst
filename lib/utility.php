@@ -233,7 +233,9 @@ function getJobstatus( $gfacID )
 
   $url = "$gfac_serviceURL/jobstatus/$gfacID";
 
-  if ( ! preg_match( "/^US3-Experiment/", $gfacID ) )
+  $hex = "[0-9a-fA-F]";
+  if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
+       ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) )
      return "Not a GFAC ID";
 
   $r = new HttpRequest( $url, HttpRequest::METH_GET );
