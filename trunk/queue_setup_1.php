@@ -190,8 +190,8 @@ function get_email_text()
   $copy_owner = '';
   if ( $_SESSION['loginID'] != $_SESSION['id'] )
   {
-    $copy_owner = "<input type='checkbox' name='add_owner'$checked />\n" .
-                  "  <label for='add_owner'>Add e-mail address of data owner?</label>\n";
+    $copy_owner = "Add e-mail address of data owner?" .
+                  "<input type='checkbox' name='add_owner'$checked style='width:5em;'/>";
   }
 
   $text = <<<HTML
@@ -200,7 +200,7 @@ function get_email_text()
 
         <p>Enter the email address you would like notifications sent to:</p>
         <p>$msg1a<input type="text" name="submitter_email"
-                  value="$submitter_email"/>
+                  value="$submitter_email"/><br />
            $copy_owner
         </p>
         $msg1
