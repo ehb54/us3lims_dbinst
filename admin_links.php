@@ -47,6 +47,7 @@ $edituser_menu = <<<HTML
       <li><a href='http://$org_site/edit_users.php'>Edit User Info</a></li>
       <li><a href='http://$org_site/view_users.php'>View User Info</a></li>
       <li><a href='http://$org_site/view_all.php'>View All Users</a></li>
+      <li><a href='http://$org_site/select_user.php'>Select Data from Another User</a></li>
 
 HTML;
 

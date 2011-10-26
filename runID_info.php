@@ -241,82 +241,37 @@ HTML;
   $result = mysql_query( $query )
             or die( "Query failed : $query<br />\n" . mysql_error() );
 
-  if ( mysql_num_rows( $result ) == 0 )
-    return $text;
-
-  $text .= <<<HTML
-  <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Models</caption>
-  <thead>
-    <tr><th>ID</th>
-        <th>GUID</th>
-        <th>Edit ID</th>
-        <th>Variance</th>
-        <th>Meniscus</th>
-        <th>Owner ID</th>
-    </tr>
-  </thead>
-
-  <tbody>
-
-HTML;
-
-  $modelIDs = array();
-  while ( list ( $modelID, $editID, $GUID, $variance, $meniscus, $personID ) = mysql_fetch_array( $result ) )
-  {
-    $modelIDs[] = $modelID;
-
-    $text .= <<<HTML
-    <tr><td>$modelID</td>
-        <td>$GUID</td>
-        <td>$editID</td>
-        <td>$variance</td>
-        <td>$meniscus</td>
-        <td>$personID</td>
-    </tr>
-
-HTML;
-  }
-
-  $text .= "</tbody>\n\n" .
-           "</table>\n";
-
-  $modelIDs_csv = implode( ", ", $modelIDs );
-  $query  = "SELECT noiseID, noiseGUID, editedDataID, modelID, modelGUID, noiseType " .
-            "FROM noise " .
-            "WHERE modelID IN ( $modelIDs_csv ) " .
-            "ORDER BY noiseID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-
   if ( mysql_num_rows( $result ) != 0 )
   {
     $text .= <<<HTML
     <table cellspacing='0' cellpadding='0' class='admin'>
-    <caption>Noise Linked to Models</caption>
+    <caption>Models</caption>
     <thead>
       <tr><th>ID</th>
           <th>GUID</th>
           <th>Edit ID</th>
-          <th>Model ID</th>
-          <th>Model GUID</th>
-          <th>Type</th>
+          <th>Variance</th>
+          <th>Meniscus</th>
+          <th>Owner ID</th>
       </tr>
     </thead>
-  
+
     <tbody>
 
 HTML;
 
-    while ( list ( $noiseID, $GUID, $editID, $modelID, $modelGUID, $type ) = mysql_fetch_array( $result ) )
+    $modelIDs = array();
+    while ( list ( $modelID, $editID, $GUID, $variance, $meniscus, $personID ) = mysql_fetch_array( $result ) )
     {
+      $modelIDs[] = $modelID;
+
       $text .= <<<HTML
-      <tr><td>$noiseID</td>
+      <tr><td>$modelID</td>
           <td>$GUID</td>
           <td>$editID</td>
-          <td>$modelID</td>
-          <td>$modelGUID</td>
-          <td>$type</td>
+          <td>$variance</td>
+          <td>$meniscus</td>
+          <td>$personID</td>
       </tr>
 
 HTML;
@@ -324,6 +279,54 @@ HTML;
 
     $text .= "</tbody>\n\n" .
              "</table>\n";
+  }
+
+  if ( count( $modelIDs ) > 0 )
+  {
+    $modelIDs_csv = implode( ", ", $modelIDs );
+    $query  = "SELECT noiseID, noiseGUID, editedDataID, modelID, modelGUID, noiseType " .
+              "FROM noise " .
+              "WHERE modelID IN ( $modelIDs_csv ) " .
+              "ORDER BY noiseID ";
+    $result = mysql_query( $query )
+              or die( "Query failed : $query<br />\n" . mysql_error() );
+
+    if ( mysql_num_rows( $result ) != 0 )
+    {
+      $text .= <<<HTML
+      <table cellspacing='0' cellpadding='0' class='admin'>
+      <caption>Noise Linked to Models</caption>
+      <thead>
+        <tr><th>ID</th>
+            <th>GUID</th>
+            <th>Edit ID</th>
+            <th>Model ID</th>
+            <th>Model GUID</th>
+            <th>Type</th>
+        </tr>
+      </thead>
+    
+      <tbody>
+
+HTML;
+
+      while ( list ( $noiseID, $GUID, $editID, $modelID, $modelGUID, $type ) = mysql_fetch_array( $result ) )
+      {
+        $text .= <<<HTML
+        <tr><td>$noiseID</td>
+            <td>$GUID</td>
+            <td>$editID</td>
+            <td>$modelID</td>
+            <td>$modelGUID</td>
+            <td>$type</td>
+        </tr>
+
+HTML;
+      }
+
+      $text .= "</tbody>\n\n" .
+               "</table>\n";
+    }
   }
 
   $query  = "SELECT noiseID, noiseGUID, editedDataID, modelID, modelGUID, noiseType " .
@@ -426,44 +429,45 @@ HTML;
   $result = mysql_query( $query )
             or die( "Query failed : $query<br />\n" . mysql_error() );
 
-  if ( mysql_num_rows( $result ) == 0 )
-    return $text;
-
-  $text .= <<<HTML
-  <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>HPC Results</caption>
-  <thead>
-    <tr><th>ID</th>
-        <th>Request ID</th>
-        <th>gfac ID</th>
-        <th>Status</th>
-        <th>Updated</th>
-    </tr>
-  </thead>
-
-  <tbody>
-HTML;
-
-  $incomplete = array();
-  while ( list( $ID, $requestID, $gfacID, $status, $updated ) = mysql_fetch_array( $result ) )
+  if ( mysql_num_rows( $result ) != 0 )
   {
-    if ( $status != 'completed' )
-      $incomplete[] = $gfacID;
-
     $text .= <<<HTML
-    <tr><td>$ID</td>
-        <td>$requestID</td>
-        <td>$gfacID</td>
-        <td>$status</td>
-        <td>$updated</td>
-    </tr>
+    <table cellspacing='0' cellpadding='0' class='admin'>
+    <caption>HPC Results</caption>
+    <thead>
+      <tr><th>ID</th>
+          <th>Request ID</th>
+          <th>gfac ID</th>
+          <th>Status</th>
+          <th>Updated</th>
+      </tr>
+    </thead>
+
+    <tbody>
+HTML;
+
+    $incomplete = array();
+    while ( list( $ID, $requestID, $gfacID, $status, $updated ) = mysql_fetch_array( $result ) )
+    {
+      if ( $status != 'completed' )
+        $incomplete[] = $gfacID;
+
+      $text .= <<<HTML
+      <tr><td>$ID</td>
+          <td>$requestID</td>
+          <td>$gfacID</td>
+          <td>$status</td>
+          <td>$updated</td>
+      </tr>
 
 HTML;
 
-  }
+    }
   
   $text .= "</tbody>\n\n" .
            "</table>\n";
+
+  }
 
   if ( empty( $incomplete ) )
     return $text;
