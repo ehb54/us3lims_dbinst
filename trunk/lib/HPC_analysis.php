@@ -9,6 +9,7 @@
  */
 
 include_once 'db.php';
+include_once 'lib/utility.php';
 
 abstract class HPC_analysis
 {
@@ -58,16 +59,17 @@ abstract class HPC_analysis
               or die( "Query failed : $query<br />" . mysql_error());
     list( $submitterGUID ) = mysql_fetch_array( $result );
 
+    $guid = uuid();
     // What about $job['cluster']['shortname'] and $job['cluster']['queue']?
-    $query  = "INSERT INTO HPCAnalysisRequest SET                                    " .
-              "HPCAnalysisRequestGUID = UUID(),                                      " .
-              "investigatorGUID       = '$investigatorGUID',                         " .
-              "submitterGUID          = '$submitterGUID',                            " .
-              "email                  = '{$job['database']['submitter_email']}',     " .
-              "experimentID           = '{$job['job_parameters']['experimentID']}',  " .
-              "submitTime             =  now(),                                      " .
-              "clusterName            = '{$job['cluster']['name']}',                 " .
-              "method                 = '{$job['method']}' ";
+    $query  = "INSERT INTO HPCAnalysisRequest SET " .
+              "HPCAnalysisRequestGUID = '$guid', " .
+              "investigatorGUID = '$investigatorGUID', " .
+              "submitterGUID = '$submitterGUID', " .
+              "email = '{$job['database']['submitter_email']}', " .
+              "experimentID = '{$job['job_parameters']['experimentID']}', " .
+              "submitTime =  now(), " .
+              "clusterName = '{$job['cluster']['name']}', " .
+              "method = '{$job['method']}' " ;
     mysql_query( $query )
           or die( "Query failed : $query<br />" . mysql_error());
 
