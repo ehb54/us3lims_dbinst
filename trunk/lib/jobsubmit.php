@@ -55,7 +55,8 @@ class jobsubmit
         "database"   => "us3",
         "maxtime"    => 60000,
         "ppn"        => 2,
-        "maxproc"    => 32
+        // "maxproc"    => 32
+        "maxproc"    => 30
       );
 
       $this->grid[ 'alamo' ] = array 
