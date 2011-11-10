@@ -5,6 +5,7 @@
  * Submits an analysis using the gfac http method
  *
  */
+require_once 'config.php';
 require_once 'lib/jobsubmit.php';
 
 class submit_gfac extends jobsubmit
@@ -24,6 +25,8 @@ $this->message[] = "End of submit_gfac.php\n";
    // Function to create the job xml 
    function create_job_xml()
    {
+      global $globaldbname, $globaldbhost;
+
       $cluster     = $this->data[ 'job' ][ 'cluster_shortname' ];
       $hostname    = $this->grid[ $cluster ][ 'name' ];
       $httpport    = $this->grid[ $cluster ][ 'httpport' ];
@@ -61,6 +64,14 @@ $this->message[] = "End of submit_gfac.php\n";
 
             $writer ->startElement( 'us3_db' );
             $writer ->text( $dbname );
+            $writer ->endElement();
+
+            $writer ->startElement( 'global_db' );
+            $writer ->text( $globaldbname );
+            $writer ->endElement();
+
+            $writer ->startElement( 'global_host' );
+            $writer ->text( $globaldbhost );
             $writer ->endElement();
 
             $writer ->writeComment( 'experimentid is the same as gfacID' );
