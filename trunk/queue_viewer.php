@@ -172,6 +172,7 @@ function cancelJob( $gfacID )
   {
     // Let's try to update the lastMessage field so the user sees
     updateLimsStatus( $gfacID, 'aborted', "Error ($e) attempting to delete job" );
+    updateGFACStatus( $gfacID, 'CANCELED', "Error ($e) attempting to delete job" );
     return;
 
   }
@@ -201,8 +202,9 @@ function cancelJob( $gfacID )
 
   if ( $updateok )
   {
-    // Let's update what user sees until GFAC cancels
+    // Let's update what user sees until canceled
     updateLimsStatus( $gfacID, 'aborted', $lastMessage );
+    updateGFACStatus( $gfacID, 'CANCELED', $lastMessage );
   }
 }
 
@@ -267,6 +269,30 @@ function updateLimsStatus( $gfacID, $status, $message )
   mysql_query( $query, $us3link );
 
   mysql_close( $us3link );
+}
+
+// Function to update the GFAC status, mostly because job is canceled
+function updateGFACStatus( $gfacID, $status, $message )
+{
+  global $globaldbhost;
+  global $globaldbuser;
+  global $globaldbpasswd;
+  global $globaldbname;
+
+  // Connect to the global GFAC database
+  $gLink = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
+  if ( ! mysql_select_db( $globaldbname, $gLink ) )
+    return;
+
+  $status = strtoupper( $status );
+
+  // Update gfac status
+  $query  = "UPDATE analysis " .
+            "SET status = '$status', " .
+            "queue_msg = '$message' " .
+            "WHERE gfacID = '$gfacID' ";
+  mysql_query( $query, $gLink );
+  mysql_close( $gLink );
 }
 
 // A function to generate page content using lims2 methods

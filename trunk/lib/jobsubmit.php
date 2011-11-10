@@ -15,10 +15,17 @@ class jobsubmit
  
    function __construct()
    {
+      global $globaldbname;
+
+      $gfac_submithost = "http://gw33.quarry.iu.teragrid.org";
+
+      if ( $globaldbname == 'gfac2' )
+        $gfac_submithost = "http://gridfarm005.ucs.indiana.edu";
+
       $this->grid[ 'bcf' ] = array 
       (
         "name"       => "bcf.uthscsa.edu",
-        "submithost" => "http://gw33.quarry.iu.teragrid.org",
+        "submithost" => $gfac_submithost,
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
         "httpport"   => 8080,
@@ -31,7 +38,8 @@ class jobsubmit
         "database"   => "us3",
         "maxtime"    => 60000,
         "ppn"        => 2,
-        "maxproc"    => 32
+        // "maxproc"    => 32
+        "maxproc"    => 30
       );
     
       $this->grid[ 'bcf-local' ] = array 
@@ -53,7 +61,7 @@ class jobsubmit
       $this->grid[ 'alamo' ] = array 
       (
         "name"       => "alamo.biochemistry.uthscsa.edu",
-        "submithost" => "http://gw33.quarry.iu.teragrid.org",
+        "submithost" => $gfac_submithost,
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
         "httpport"   => 8080,
@@ -88,7 +96,7 @@ class jobsubmit
       $this->grid[ 'ranger' ] = array 
       (
         "name"       => "gatekeeper.ranger.tacc.teragrid.org",
-        "submithost" => "http://gw33.quarry.iu.teragrid.org",
+        "submithost" => $gfac_submithost,
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
         "httpport"   => 8080,
@@ -107,7 +115,7 @@ class jobsubmit
       $this->grid[ 'lonestar' ] = array 
       (
         "name"       => "lonestar.tacc.teragrid.org",
-        "submithost" => "http://gw33.quarry.iu.teragrid.org",
+        "submithost" => $gfac_submithost,
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
         "httpport"   => 8080,
