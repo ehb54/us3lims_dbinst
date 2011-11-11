@@ -253,9 +253,12 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
     if ( s_value_min < -0.1 &&
          s_value_max >  0.1 )
     {
-      alert( "Your s-value range overlaps the -0.1 ~ 0.1 range. " +
-             "This range is excluded from the 2DSA analysis.");
-      return( false );
+      var answer = confirm( "Your s-value range overlaps the -0.1 ~ 0.1 range. " +
+                            "This range is normally excluded from the 2DSA analysis." +
+                            "Please click OK to continue, or click cancel to " +
+                            "return to the submission form." );
+
+      if ( ! answer ) return( false );
     }
   }
 
