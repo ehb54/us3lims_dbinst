@@ -551,6 +551,9 @@ function HPCDetail( $requestID )
   $row = mysql_fetch_assoc( $result );
   $row['requestXMLFile'] = '<pre>' . htmlentities( $row['requestXMLFile'] ) . '</pre>';
 
+  // Save for later
+  $requestGUID  = $row['HPCAnalysisRequestGUID'];
+
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
   <caption>HPC Request Detail</caption>
@@ -569,17 +572,44 @@ HTML;
            or die( "Query failed : $query<br />\n" . mysql_error());
   $row = mysql_fetch_assoc( $result );
   $row['jobfile'] = '<pre>' . htmlentities( $row['jobfile'] ) . '</pre>';
-  $row['stderr']  = '<pre>' . htmlentities( $row['stderr'] ) . '</pre>';
 
-  $stdout     = $row[ 'stdout' ];
-  $len_stdout = strlen( $row[ 'stdout' ] );
-  $stderr     = $row[ 'stderr' ];
-  $len_stderr = strlen( $row[ 'stderr' ] );
-  unset( $row[ 'stdout' ] );
-  unset( $row[ 'stderr' ] );
-  
   // Get GFAC job status
   $row['gfacStatus'] = nl2br( getJobstatus( $row['gfacID'] ) );
+
+  // Get queue messages from disk directory, if it still exists
+  global $submit_dir;
+  global $dbname;
+
+  $msg_filename = "$submit_dir$requestGUID/$dbname-$requestID-messages.txt";
+  $queue_msgs = false;
+  if ( file_exists( $msg_filename ) )
+  {
+    $queue_msgs   = file_get_contents( $msg_filename );
+    $len_msgs     = strlen( $queue_msgs );
+    $queue_msgs   = '<pre>' . $queue_msgs . '</pre>';
+  }
+
+  // Get resulting model and noise information
+  $resultID = $row['HPCAnalysisResultID'];
+  $models   = array();
+  $noise    = array();
+  $query  = "SELECT resultID FROM HPCAnalysisResultData " .
+            "WHERE HPCAnalysisResultID = $resultID " .
+            "AND HPCAnalysisResultType = 'model' ";
+  $result = mysql_query( $query )
+           or die( "Query failed : $query<br />\n" . mysql_error());
+  $models = mysql_fetch_row( $result );         // An array with all of them
+  if ( $models !== false )
+    $row['modelIDs'] = implode( ", ", $models );
+
+  $query  = "SELECT resultID FROM HPCAnalysisResultData " .
+            "WHERE HPCAnalysisResultID = $resultID " .
+            "AND HPCAnalysisResultType = 'noise' ";
+  $result = mysql_query( $query )
+           or die( "Query failed : $query<br />\n" . mysql_error());
+  $noise  = mysql_fetch_row( $result );         // An array with all of them
+  if ( $noise !== false )
+    $row['noiseIDs'] = implode( ", ", $noise );
 
   $text .= <<<HTML
   <a name='runDetail'></a>
@@ -593,16 +623,14 @@ HTML;
     $text .= "  <tr><th>$key</th><td>$value</td></tr>\n";
   }
 
-  $linkout = "<a href='{$_SERVER[ 'PHP_SELF' ]}?RequestID=$requestID&stdout=t#runDetail'>Length stdout</a>";
-  $linkerr = "<a href='{$_SERVER[ 'PHP_SELF' ]}?RequestID=$requestID&stderr=t#runDetail'>Length stderr</a>";
+  if ( $queue_msgs !== false )
+  {
+    $linkmsg = "<a href='{$_SERVER[ 'PHP_SELF' ]}?RequestID=$requestID&msgs=t#runDetail'>Length Messages</a>";
 
-  $text .= "  <tr><th>$linkout</th><td>$len_stdout</td></tr>\n";
-  if ( isset( $_GET[ 'stdout' ] ) ) 
-    $text .= "  <tr><th>stdout</th><td>$stdout</td></tr>\n";
-
-  $text .= "  <tr><th>$linkerr</th><td>$len_stderr</td></tr>\n";
-  if ( isset( $_GET[ 'stderr' ] ) ) 
-    $text .= "  <tr><th>stderr</th><td>$stderr</td></tr>\n";
+    $text .= "  <tr><th>$linkmsg</th><td>$len_msgs</td></tr>\n";
+    if ( isset( $_GET[ 'msgs' ] ) ) 
+      $text .= "  <tr><th>Queue Messages</th><td>$queue_msgs</td></tr>\n";
+  }
 
   $text .= "</table>\n";
 

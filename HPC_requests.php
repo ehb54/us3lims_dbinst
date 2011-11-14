@@ -92,6 +92,9 @@ else
    $xmlFile = htmlentities( $row[ 'requestXMLFile' ] );
    echo "Request XML File      : \n$xmlFile\n";
    
+   // Save for later
+   $requestGUID  = $row['HPCAnalysisRequestGUID'];
+
    $query = "SELECT * FROM HPCAnalysisResult WHERE HPCAnalysisRequestID=$reqID";
    $result = mysql_query( $query )
             or die( "Query failed : $query<br />\n" . mysql_error());
@@ -114,19 +117,33 @@ else
    echo "Max Memory              : {$row[ 'max_rss' ]}\n";
    echo "Calculated Data (Unused): {$row[ 'calculatedData' ]}\n";
 
-   $len_stdout = strlen( $row[ 'stdout' ] );
-   $len_stderr = strlen( $row[ 'stderr' ] );
+   // Get queue messages from disk directory, if it still exists
+   global $submit_dir;
+   global $dbname;
+ 
+   $msg_filename = "$submit_dir$requestGUID/$dbname-$reqID-messages.txt";
+   $queue_msgs = false;
+   if ( file_exists( $msg_filename ) )
+   {
+     $queue_msgs   = file_get_contents( $msg_filename );
+     $len_msgs     = strlen( $queue_msgs );
+     $queue_msgs   = '<pre>' . $queue_msgs . '</pre>';
+   }
+
+   if ( $queue_msgs !== false )
+   {
+     $linkmsg1 = "<a href='{$_SERVER[ 'PHP_SELF' ]}?RequestID=$reqID&msgs=t#runDetail'>Length Messages</a>";
+     $linkmsg2 = "<a href='{$_SERVER[ 'PHP_SELF' ]}?RequestID=$reqID'>Hide Messages</a>";
    
-   $link_stdout = "<a href='{$_SERVER[ PHP_SELF ]}?RequestID=$reqID&stdout=t'>Length stdout</a>";
-   $link_stderr = "<a href='{$_SERVER[ PHP_SELF ]}?RequestID=$reqID&stderr=t'>Length stderr</a>";
+     if ( isset( $_GET[ 'msgs' ] ) )
+     {
+       echo "$linkmsg2\n";
+       echo "$queue_msgs\n";
+     }
 
-   echo "$link_stdout           : $len_stdout\n";
-   if ( isset( $_GET[ 'stdout'] ) ) 
-     echo "\nstdout:\n\n{$row[ 'stdout' ]}\n";
-
-   echo "$link_stderr           : $len_stderr\n";
-   if ( isset( $_GET[ 'stderr'] ) ) 
-     echo "\nstderr:\n\n{$row[ 'stderr' ]}\n";
+     else
+       echo "$linkmsg1         : $len_msgs\n";
+   }
 
    // If gfacID fits the right format for a GFAC job, a status request link:
    $link2 = "<a href=\"{$_SERVER['PHP_SELF']}?RequestID=$reqID&jobstatus=t\">Show GFAC Status</a>";
