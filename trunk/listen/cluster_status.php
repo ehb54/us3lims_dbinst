@@ -2,10 +2,12 @@
 
 include "listen-config.php";
 
-$me   = "cluster_status.php";
+$me   = "cluster_status2.php";
 $xml  = get_data();
-$data = array();
 
+if ( $xml == "" ) exit();  // No status available
+
+$data = array();
 parse( $xml );
 
 foreach ( $data as $item )
@@ -20,7 +22,7 @@ exit();
 function get_data()
 {
    global $me;
-   $url = "http://community.ucs.indiana.edu:19444/orps-service/gateway/resource/XML/ultrascan";
+   $url = "http://community.ucs.indiana.edu:19444/orps-service/XML/gateway/ultrascan";
 
    try
    {
@@ -48,19 +50,26 @@ function parse( $xml )
    $x = new XML_Array( $xml );
    $d = $x->ReturnArray();
 
+   if ( ! isset( $d[ 'summaries' ] ) ) exit();  // Bad input
+
    foreach ( $d[ 'summaries' ] as $item )
    {
       $a = Array();
 
-      $a[ 'queued'  ] = $item[ 'queued' ];
-      $a[ 'running' ] = $item[ 'running' ];
+      
+      $a[ 'queued'  ] = $item[ 'waitingJobs' ];
+      $a[ 'running' ] = $item[ 'runningJobs' ];
 
-      $clusterParts  = explode( ".", $item[ 'resourceName' ] );
-      $cluster = preg_replace( '/\d+$/', "", $clusterParts[ 0 ] );
+      if (  $a[ 'queued'  ] == ""  ||  $a[ 'queued'  ] < 0 ) $a[ 'queued'  ] = 0;
+      if (  $a[ 'running' ] == ""  ||  $a[ 'running' ] < 0 ) $a[ 'running' ] = 0;
+
+      $clusterParts  = explode( ".", $item[ 'resourceId' ] );
+      $cluster       = preg_replace( '/\d+$/', "", $clusterParts[ 0 ] );
 
       $a[ 'cluster' ] = $cluster;
       
-      if ( $item[ 'status' ] == "true" )
+      if ( $item[ 'fileTransfer'  ] == "Success"  &&  
+           $item[ 'jobManagement' ] == "Success" )
          $status = "Up";
       else
          $status = "Down";
@@ -163,7 +172,7 @@ class XML_Array
 
     function _startElement( $parser, $name, $attrs )
     {
-        if ( $name == "resourceSummary" ) 
+        if ( $name == "resourceHealth" ) 
         {
            $name .= $this->_index;
            $this->_index++;

@@ -47,11 +47,11 @@ for ( $i = 0; $i < $rows; $i++ )
       write_log( "$me: GFAC DB is NULL - $gfacID" );
       mail_to_admin( "fail", "GFAC DB is NULL\n$gfacID" );
 
-      $query = "UPDATE analysis SET queue_msg='Handled' WHERE gfacID='$gfacID'";
-      $result = mysql_query( $query, $gfac_link );
+      $query2 = "UPDATE analysis SET queue_msg='Handled' WHERE gfacID='$gfacID'";
+      $result2 = mysql_query( $query2, $gfac_link );
 
-      if ( ! $result )
-         write_log( "$me: Query failed $query - " .  mysql_error( $gfac_link ) );
+      if ( ! $result2 )
+         write_log( "$me: Query failed $query2 - " .  mysql_error( $gfac_link ) );
 
       continue;
    }
@@ -71,6 +71,7 @@ for ( $i = 0; $i < $rows; $i++ )
          break;
 
       case "CANCELLED":
+      case "CANCELED":
       case "FAILED":
          failed();
          break;
@@ -151,6 +152,7 @@ function running()
    else // Local job
    {
       $system = "$cluster.uthscsa.edu";
+      $system = preg_replace( "/\-local/", "", $system );
       $cmd    = "/usr/bin/ssh -x us3@$system qstat -a $gfacID 2>&1";
 
       $result = exec( $cmd );

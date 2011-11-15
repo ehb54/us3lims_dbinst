@@ -119,13 +119,16 @@ while ( true )
    
    list( $status, $cluster, $id ) = mysql_fetch_array( $result );
 
-   if ( $cluster == 'bcf'  || $cluster == 'alamo' )
+   if ( $cluster == 'bcf-local'  || $cluster == 'alamo-local' )
    {
-         get_local_files( $gfac_link, $cluster, $requestID, $id, $gfacID );
+         $clushost = $cluster;
+         $clushost = preg_replace( "/\-local/", "", $clushost );
+         get_local_files( $gfac_link, $clushost, $requestID, $id, $gfacID );
          break;
    }
 
-   if ( $status == "KILLED" || $status == "COMPLETE" || $status == "FAILED" )
+   if ( $status == "CANCELLED" || $status == "CANCELED" ||
+        $status == "COMPLETE"  || $status == "FAILED" )
       break;
 
    $tries++;
@@ -188,7 +191,6 @@ if ( ! $result )
 }
 
 // Save the tarfile and expand it
-
 if ( strlen( $tarfile ) == 0 )
 {
    write_log( "$me: No tarfile" );
@@ -228,6 +230,7 @@ if ( $err != 0 )
 // Insert the model files and noise files
 $files    = file( "analysis_files.txt", FILE_IGNORE_NEW_LINES );
 $noiseIDs = array();
+$modelGUIDs = array();
 
 foreach ( $files as $file )
 {
@@ -282,6 +285,9 @@ foreach ( $files as $file )
       $id        = mysql_insert_id( $us3_link );
       $file_type = "noise";
       $noiseIDs[] = $id;
+
+      // Keep track of modelGUIDs for later, when we replace them
+      $modelGUIDs[ $id ] = $modelGUID;
    }
    else  // It's a model file
    {
@@ -340,10 +346,12 @@ foreach ( $files as $file )
 
 foreach ( $noiseIDs as $noiseID )
 {   
+   $modelGUID = $modelGUIDs[ $noiseID ];
    $query = "UPDATE noise SET "                                                 .
             "editedDataID="                                                     .
             "(SELECT editedDataID FROM editedData WHERE editGUID='$editGUID')," .
-            "modelID=$modelID "                                                 .
+            "modelID="                                                          .
+            "(SELECT modelID FROM model WHERE modelGUID='$modelGUID')"          .
             "WHERE noiseID=$noiseID";
 
    $result = mysql_query( $query, $us3_link );
@@ -355,6 +363,26 @@ foreach ( $noiseIDs as $noiseID )
       exit( -1 );
    }
 }
+
+// Copy results to LIMS submit directory (files there are deleted after 7 days)
+$submit_dir         = '/srv/www/htdocs/uslims3/uslims3_data'; // LIMS submit files dir
+
+// Get the request guid (LIMS submit dir name)
+$query  = "SELECT HPCAnalysisRequestGUID FROM HPCAnalysisRequest " .
+          "WHERE HPCAnalysisRequestID = $requestID ";
+$result = mysql_query( $query, $us3_link );
+
+if ( ! $result )
+{
+   write_log( "$me: Bad query:\n$query\n" . mysql_error( $us3_link ) );
+}
+
+list( $requestGUID ) = mysql_fetch_array( $result );
+
+chdir( "$submit_dir/$requestGUID" );
+$f = fopen( "analysis.tar", "w" );
+fwrite( $f, $tarfile );
+fclose( $f );
 
 // Clean up
 chdir ( $work );
@@ -457,21 +485,46 @@ function get_local_files( $gfac_link, $cluster, $requestID, $id, $gfacID )
 
    // Get stdout, stderr, output/analysis-results.tar
    $output = array();
-   $cmd = "scp us3@$cluster.uthscsa.edu:$remoteDir/stdout . 2>&1";
-
-   exec( $cmd, $output, $stat );
-   if ( $stat != 0 ) 
-      write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
-     
-   $cmd = "scp us3@$cluster.uthscsa.edu:$remoteDir/stderr . 2>&1";
-   exec( $cmd, $output, $stat );
-   if ( $stat != 0 ) 
-      write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
+//   $cmd = "scp us3@$cluster.uthscsa.edu:$remoteDir/stdout . 2>&1";
+//
+//   exec( $cmd, $output, $stat );
+//   if ( $stat != 0 ) 
+//      write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
+//     
+//   $cmd = "scp us3@$cluster.uthscsa.edu:$remoteDir/stderr . 2>&1";
+//   exec( $cmd, $output, $stat );
+//   if ( $stat != 0 ) 
+//      write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
 
    $cmd = "scp us3@$cluster.uthscsa.edu:$remoteDir/output/analysis-results.tar . 2>&1";
    exec( $cmd, $output, $stat );
    if ( $stat != 0 ) 
       write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
+
+   $cmd = "scp us3@$cluster.uthscsa.edu:$remoteDir/stdout . 2>&1";
+
+   exec( $cmd, $output, $stat );
+   if ( $stat != 0 ) 
+   {
+      write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
+      sleep( 120 );
+      write_log( "$me: RETRY" );
+      exec( $cmd, $output, $stat );
+      if ( $stat != 0 ) 
+         write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
+   }
+     
+   $cmd = "scp us3@$cluster.uthscsa.edu:$remoteDir/stderr . 2>&1";
+   exec( $cmd, $output, $stat );
+   if ( $stat != 0 ) 
+   {
+      write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
+      sleep( 120 );
+      write_log( "$me: RETRY" );
+      exec( $cmd, $output, $stat );
+      if ( $stat != 0 ) 
+         write_log( "$me: Bad exec:\n$cmd\n" . implode( "\n", $output ) );
+   }
 
    // Write the files to gfacDB
    if ( file_exists( "stderr" ) ) $stderr  = file_get_contents( "stderr" );

@@ -25,9 +25,11 @@ do
    if ( $input[ 0 ] == chr( 0 ) )
    {
       // Go do some work
-      process( rtrim( $msg ) );
-      $msg = "";
+      $msg = rtrim( $msg );
+      process( $msg );
       if ( $msg == "Stop listen" ) break;
+      write_log( "$me: $msg" );
+      $msg = "";
    }
 } while ( true );
 
@@ -36,8 +38,6 @@ exit();
 function process( $msg )
 {
    global $dbhost;
-
-   write_log( $msg );
 
    $list                   = explode( ": ", $msg );
    list( $db, $requestID ) = explode( "-",  array_shift( $list ) );
@@ -81,7 +81,7 @@ function update_db( $dbhost, $db, $action, $message, $requestID )
 
    if ( ! mysql_select_db( $db, $resource ) )
    {
-     write_log( "$me: Could not select DB $db" . mysql_error( $resource ) );
+     write_log( "$me: Could not select DB $db - " . mysql_error( $resource ) );
      return;
    }
 
@@ -145,7 +145,7 @@ function update_db( $dbhost, $db, $action, $message, $requestID )
 
       if ( ! mysql_select_db( $gDB, $resource ) )
       {
-        write_log( "$me: Could not select DB $gDB" . mysql_error( $resource ) );
+        write_log( "$me: Could not select DB $gDB - " . mysql_error( $resource ) );
         return;
       }
 
