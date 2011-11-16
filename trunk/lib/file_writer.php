@@ -267,7 +267,6 @@ abstract class File_writer
   {
     global $submit_dir;
 
-// check for existence
     $dirPath = $submit_dir . $dir_name;
     if ( ! mkdir( $dirPath, 0770 ) )
     {
@@ -275,6 +274,10 @@ abstract class File_writer
       return false;
     }
 
+    // Ensure that group write permmissions are set for us3 user in listen
+    // mkdir is influenced by umask, which is system wide and should
+    // not be reset for one process
+    chmod( $dirPath, 0770 );
     return( $dirPath . "/" );
   }
 
