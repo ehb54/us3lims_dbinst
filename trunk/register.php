@@ -6,6 +6,8 @@
  *
  */
 
+session_start();
+
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
@@ -13,13 +15,14 @@ include 'lib/utility.php';
 // Get the information the new user posted
 include 'get_user_info.php';
 
-// Let's do some error checking first of all
+// Let's see if there were any error messages
 if ( ! empty($message) )
 {
-  $message = 'You did not submit the following required information:<br/>' .
+  $_SESSION['message'] = 'You did not submit the following required information:<br/>' .
              $message;
 
-  include 'newaccount.php'; // Show the form again!
+  $_SESSION['POST'] = $_POST;
+  header( "Location: newaccount.php" ); // Show the form again!
   exit(); 
 }
 
@@ -30,13 +33,18 @@ list($count)  = mysql_fetch_row($result);
  
 if ( $count > 0 )
 {
-    $message = "Your email address is already registered.<br/>"  .
+    $_SESSION['message'] = "Your email address is already registered.<br/>"  .
                "Please submit a different Email address "  .
-               "or <a href=lost_password.php>send a new password</a> for this address.<br/>";
-    unset($email);
-    include 'newaccount.php'; 
+               "or <a href=lost_password.php>request a new password</a> for this address.<br/>";
+
+    $_SESSION['POST'] = $_POST;
+    unset( $_SESSION['POST']['email'] );
+    header( "Location: newaccount.php" ); // Show the form again!
     exit(); 
 }
+
+// Not going back
+unset( $_SESSION['POST'] );
 
 // Now we can start drawing the page
 $page_title = "New Account Registration";
