@@ -115,6 +115,10 @@ $this->message[] = "End of submit_gfac.php\n";
       $this->data[ 'jobxmlfile' ] = $writer->outputMemory( true );
       unset( $writer );
 
+      // Let's output the file while we're in the work directory
+      $outputfile = "$cluster-" . basename( $this->data['job']['directory'] ) . "-jobxmlfile.xml";
+      file_put_contents( "$outputfile", $this->data['jobxmlfile'] );
+
 $this->message[] = "Job xml created";
    }
  
