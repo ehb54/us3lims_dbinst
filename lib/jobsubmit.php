@@ -17,15 +17,13 @@ class jobsubmit
    {
       global $globaldbname;
 
-      $gfac_submithost = "http://gw33.quarry.iu.teragrid.org";
-
       if ( $globaldbname == 'gfac2' )
-        $gfac_submithost = "http://gridfarm005.ucs.indiana.edu";
+          ; // Add logic to change port from 8080 to 8081
 
       $this->grid[ 'bcf' ] = array 
       (
         "name"       => "bcf.uthscsa.edu",
-        "submithost" => $gfac_submithost,
+        "submithost" => "http://gf5.ucs.indiana.edu",
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
         "httpport"   => 8080,
@@ -54,7 +52,7 @@ class jobsubmit
       $this->grid[ 'alamo' ] = array 
       (
         "name"       => "alamo.biochemistry.uthscsa.edu",
-        "submithost" => $gfac_submithost,
+        "submithost" => "http://gf5.ucs.indiana.edu",
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
         "httpport"   => 8080,
@@ -81,7 +79,7 @@ class jobsubmit
       $this->grid[ 'ranger' ] = array 
       (
         "name"       => "gatekeeper.ranger.tacc.teragrid.org",
-        "submithost" => $gfac_submithost,
+        "submithost" => "http://gf5.ucs.indiana.edu",
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
         "httpport"   => 8080,
@@ -96,7 +94,7 @@ class jobsubmit
       $this->grid[ 'lonestar' ] = array 
       (
         "name"       => "lonestar.tacc.teragrid.org",
-        "submithost" => $gfac_submithost,
+        "submithost" => "http://gf5.ucs.indiana.edu",
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
         "httpport"   => 8080,
