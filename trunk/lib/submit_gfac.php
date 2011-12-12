@@ -138,6 +138,7 @@ $this->message[] = "Job xml created";
                                $this->data['db']['name'],
                                $this->data['job']['requestID'] );
       $url     = "$host:$port$path";
+$this->message[] = "URL: $url";
       $headers['MIME-Version'] = '1.0';
       $headers['Content-Type'] = "multipart/mixed; boundary=\"$boundary\"";
 

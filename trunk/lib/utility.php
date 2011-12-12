@@ -80,13 +80,13 @@ $clusters = array(
   new cluster_info( "alamo.uthscsa.edu",                   "alamo-local", "default" )
   );
 
-$gfac_serviceURL = "http://gw33.quarry.iu.teragrid.org:8080/ogce-rest/job";
+$gfac_serviceURL = "http://gf5.ucs.indiana.edu:8080/ogce-rest/job";
 
-// Change for listen2 testing
+// Change for sandbox testing
 global $globaldbname;
 
 if ( $globaldbname == 'gfac2' )
-  $gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:8080/ogce-rest/job";
+  $gfac_serviceURL = "http://gf5.ucs.indiana.edu:8081/ogce-rest/job";
 
 $gfac_link = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
 $result    = mysql_select_db( $globaldbname, $gfac_link );
