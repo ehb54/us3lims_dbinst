@@ -127,11 +127,17 @@ function do_delete()
 
   if ( ! $found ) return;
 
+  // We need to find out if it's a GFAC or local job
+  $hex = "[0-9a-fA-F]";
+  if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
+       ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) )
+     $shortname .= '-local';   // Not a GFAC ID
+
   switch ( $shortname )
   {
     case 'bcf-local'   :
     case 'alamo-local' :
-      // Add code to get status from local jobs
+      $status = cancelLocalJob( $shortname, $gfacID );
       break;
 
     case 'ranger'      :
@@ -145,6 +151,64 @@ function do_delete()
       break;
 
   }
+}
+
+// Function to cancel a local job
+function cancelLocalJob( $cluster, $gfacID )
+{
+   $system = "$cluster.uthscsa.edu";
+   $system = preg_replace( "/\-local/", "", $system );
+   $cmd    = "/usr/bin/ssh -x us3@$system qstat -a $gfacID 2>&1";
+
+   $result = exec( $cmd );
+
+   if ( $result == ""  ||  preg_match( "/^qstat: Unknown/", $result ) )
+   {
+     // Let's try to update the lastMessage field so the user sees
+     updateLimsStatus( $gfacID, 'aborted', "Job was not found in the status queue" );
+     updateGFACStatus( $gfacID, 'CANCELED', "Job was not found in the status queue" );
+     return;
+   }
+
+   $values = preg_split( "/\s+/", $result );
+   switch ( $values[ 9 ] )
+   {
+      case "E" :                      // Job is exiting after having run
+        $lastMessage = "Job is exiting";
+        break;
+
+      case "C" :                      // Job has completed
+        $lastMessage = "Job has already completed";
+        break;
+
+      case "W" :                      // Waiting for execution time to be reached
+      case "R" :                      // Still running
+      case "T" :                      // Job is being moved
+      case "H" :                      // Held
+      case "Q" :                      // Queued
+      default  :                      // This should not occur
+        // If we're here we should delete the job
+        // We could add logic to discover if any of the nodes I'm using are down
+        // 'pbsnodes -l' tells us which nodes are down, if any. If that's empty
+        // we can go ahead. Otherwise we can use qstat -f $gfacID to determine
+        // which nodes are in use for our job. If any of our nodes is down
+        // we should use qdel -r $gfacID instead of the following.
+        $parts = explode( ".", $gfacID );
+        $jobID = $parts[ 0 ];
+        $cmd    = "/usr/bin/ssh -x us3@$system qdel $jobID 2>&1";
+        $result = exec( $cmd );
+
+        $lastMessage = "This job has been canceled";
+        break;
+   }
+
+
+   // Let's update what user sees until canceled
+   updateLimsStatus( $gfacID, 'aborted', $lastMessage );
+   updateGFACStatus( $gfacID, 'CANCELED', $lastMessage );
+
+   return;
+
 }
 
 // Function to cancel a job
