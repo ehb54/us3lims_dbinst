@@ -51,7 +51,7 @@ class jobsubmit
 
       $this->grid[ 'alamo' ] = array 
       (
-        "name"       => "alamo.biochemistry.uthscsa.edu",
+        "name"       => "alamo.uthscsa.edu",
         "submithost" => "http://gf5.ucs.indiana.edu",
         "userdn"     => "/C=US/O=National Center for Supercomputing Applications/CN=Ultrascan3 Community User",
         "submittype" => "http",
