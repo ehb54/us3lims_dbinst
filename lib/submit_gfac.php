@@ -248,7 +248,7 @@ $this->message[] = preg_replace( "/&gt;/", "&gt;\n", $epr );
  
       if ( ! $result )
       {
-         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $result ) . "\n";
+         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $link ) . "\n";
          return;
       }
  
@@ -279,7 +279,7 @@ $this->message[] = preg_replace( "/&gt;/", "&gt;\n", $epr );
  
       if ( ! $result )
       {
-         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $result ) . "\n";
+         $this->message[] = "Invalid query:\n$query\n" . mysql_error( $gfac_link ) . "\n";
          return;
       }
  
