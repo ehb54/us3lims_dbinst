@@ -86,7 +86,7 @@ class jobsubmit
         "workdir"    => "/ogce-rest/job/runjob/async",
         "sshport"    => 22,
         "queue"      => "normal",
-        "maxtime"    => 2880,
+        "maxtime"    => 1440,
         "ppn"        => 16,
         "maxproc"    => 64
       );
