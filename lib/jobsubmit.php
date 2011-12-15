@@ -86,7 +86,7 @@ class jobsubmit
         "workdir"    => "/ogce-rest/job/runjob/async",
         "sshport"    => 22,
         "queue"      => "normal",
-        "maxtime"    => 1440,
+        "maxtime"    => 1440,   // This is overridden in maxwall() if using the long queue
         "ppn"        => 16,
         "maxproc"    => 64
       );
@@ -195,6 +195,7 @@ class jobsubmit
                case 'cluster':
                   $job[ 'cluster_name'      ] = $parser->getAttribute( 'name' );
                   $job[ 'cluster_shortname' ] = $parser->getAttribute( 'shortname' );
+                  $job[ 'cluster_queue'     ] = $parser->getAttribute( 'queue' );
                   break;
  
                case 'udp':
@@ -362,8 +363,14 @@ class jobsubmit
    {
       $parameters = $this->data[ 'job' ][ 'jobParameters' ];
       $cluster    = $this->data[ 'job' ][ 'cluster_shortname' ];
+      $queue      = $this->data[ 'job' ][ 'cluster_queue' ];
       $max_time   = $this->grid[ $cluster ][ 'maxtime' ];
  
+      // Override max time in the case of the long queue on ranger
+      if ( $cluster == 'ranger' &&
+           $queue   == 'long'   )
+         $max_time = 2880;
+
       if ( preg_match( "/^GA/", $this->data[ 'method' ] ) )
       {
          // Assume 1 sec a basic unit

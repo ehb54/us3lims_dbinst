@@ -59,16 +59,6 @@ if ( isset($_POST['TIGRE']) )
     $_SESSION['cluster']['queue']     = $queue;
   }
 
-  // for now, at home
-/*
-  else
-  {
-    $_SESSION['cluster']              = array();
-    $_SESSION['cluster']['name']      = 'bcf.uthscsa.edu';
-    $_SESSION['cluster']['shortname'] = 'bcf';
-  }
-*/
-
   // Check to see if the file is too big
   if ( $advanceLevel == 0 )
     ; //    check_filesize();

@@ -70,6 +70,9 @@ $this->message[] = "Files copied to $address:$workdir";
                          $this->data['db']['host'],
                          $this->data['db']['name'],
                          $this->data['job']['requestID'] );
+      $pmgroups = 1;
+      if ( isset( $this->data[ 'job' ][ 'mgroups_count' ] ) )
+         $pmgroups  = $this->data[ 'job' ][ 'mgroups_count' ];
 
       $pbsfile = "us3.pbs";
       $wall    = $this->maxwall();
@@ -106,10 +109,11 @@ $this->message[] = "Files copied to $address:$workdir";
       "#! /bin/bash\n"                                      .
       "#\n"                                                 . 
       "#PBS -N US3_Job\n"                                   .
-      "#PBS -l nodes=$nodes:ppn=$ppn,walltime=$walltime\n"           .
+      "#PBS -l nodes=$nodes:ppn=$ppn,walltime=$walltime\n"  .
       "#PBS -V\n"                                           .
-      "#PBS -o $workdir/stdout\n"                     .
-      "#PBS -e $workdir/stderr\n"                     .
+      "#PBS -o $workdir/stdout\n"                           .
+      "#PBS -e $workdir/stderr\n"                           .
+      "#pmgroups=$pmgroups\n"                               .
       "\n"                                                  .
       "export LD_LIBRARY_PATH=$libpath:\$LD_LIBRARY_PATH\n" .
       "export PATH=$path:\$PATH\n"                          .
