@@ -25,14 +25,6 @@ include 'config.php';
 include 'current_db_list.php';
 
 // Specific DB setup for functions in this file
-$v1_host = "localhost";
-$v1_user = "root";
-$v1_pass = "str8_up";
-
-$v2_host = "localhost";
-$v2_user = "lims3_admin";
-$v2_pass = "Sv3dberg";
-
 $conn1   = mysql_connect($v1_host, $v1_user, $v1_pass)
            or die("Could not connect to $v1_host\n");
 
