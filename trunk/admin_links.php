@@ -32,6 +32,7 @@ $admin5_menu = <<<HTML
     <li><a href='http://$org_site/orphans.php'>Orphan Report</a></li>
     <li><a href='http://$org_site/HPC_requests.php'>HPC Report</a></li>
     <li><a href='http://$org_site/check_db.php'>Check DB Linkage</a></li>
+    <li><a href='http://$org_site/globaldb_stats.php'>Global DB Stats</a></li>
 
 HTML;
 
@@ -40,6 +41,7 @@ $admin4_menu = <<<HTML
     <li><a href='http://$org_site/orphans.php'>Orphan Report</a></li>
     <li><a href='http://$org_site/HPC_requests.php'>HPC Report</a></li>
     <li><a href='http://$org_site/check_db.php'>Check DB Linkage</a></li>
+    <li><a href='http://$org_site/globaldb_stats.php'>Global DB Stats</a></li>
 
 HTML;
 
