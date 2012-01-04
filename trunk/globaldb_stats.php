@@ -558,7 +558,7 @@ HTML;
   echo "</tbody>\n" .
        "</table>\n";
 
-  $export[$counter]['Total']         = $super_sum_rounded;
+  $export[$counter]['Total']         = $super_tot_rounded;
   $export[$counter]['Investigators'] = $inv_count;
   $export[$counter]['Submitters']    = $sub_count;
   $export[$counter]['Jobs']          = $job_count;
