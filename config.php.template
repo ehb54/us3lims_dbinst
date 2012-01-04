@@ -26,6 +26,15 @@ $globaldbpasswd     = '';  # the password for the MySQL user
 $globaldbname       = '';  # the name of the database
 $globaldbhost       = 'uslims3.uthscsa.edu'; # the host on which MySQL runs, generally localhost
 
+// Admin function
+$v1_host            = "";
+$v1_user            = "";
+$v1_pass            = "";
+                    
+$v2_host            = "";
+$v2_user            = "";
+$v2_pass            = "";
+
 $ipaddr             = '129.111.140.156'; # the external IP address of the host machine
 $udpport            = 12233; # the port to send udp messages to
 
