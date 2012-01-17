@@ -190,6 +190,7 @@ function display( $dataset_id, $num_datasets )
     ff0_grid_points();
     uniform_grid_setup();
     montecarlo();
+    PMGC_option();
     tinoise_option();
   }
  

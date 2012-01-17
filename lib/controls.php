@@ -33,6 +33,54 @@ HTML;
 
 }
 
+// Function to display PMGC options
+function PMGC_option()
+{
+echo<<<HTML
+      <fieldset class='option_value' id='PMGC_option'
+                style='display:none;'>
+        <legend>Parallel Masters Group Option</legend>
+
+        <table class='noborder' >
+        <tr><td>
+
+        <input type='checkbox' name='PMGC_enable' id='PMGC_enable' /> 
+          Use Parallel Processing
+        <br/>
+        <fieldset name='PMGC_count' id='PMGC_count' class='option_value'
+                  style='display:none;'>
+          <legend>Group Count</legend>
+            <select name="req_mgroupcount" id='req_mgroupcount'>
+              <option value='1' selected='selected'>1</option>
+              <option value='2'>2</option>
+              <option value='4'>4</option>
+              <option value='8'>8</option>
+            </select>
+        </fieldset>
+
+        </td>
+
+        <td style='width:50%;'>
+          Note: The actual group count number is dependent on the capacity and the 
+          architecture of the selected back end system. Generally, the group count number
+          will be adjusted downward to 1, 2, 4, or 8 depending on the number of montecarlo 
+          iterations requested and the capacity of the system. Currently, the maximum 
+          number of cores that can be requested ( that is, MC x PMGC ) are as follows:
+          <table class='noborder' style='margin:0px auto;'>
+            <tr><th>Cluster</th><th>Max cores</th></tr>
+            <tr><td>bcf</td><td style='text-align:center;'>32</td></tr>
+            <tr><td>alamo</td><td style='text-align:center;'>52</td></tr>
+            <tr><td>lonestar</td><td style='text-align:center;'>288</td></tr>
+            <tr><td>ranger</td><td style='text-align:center;'>256</td></tr>
+          </table>
+        </td></tr>
+
+        </table>
+
+      </fieldset>
+HTML;
+}
+
 // Function to display # simulation points input
 function simpoints_input()
 {

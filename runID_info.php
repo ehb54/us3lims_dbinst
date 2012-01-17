@@ -590,26 +590,29 @@ HTML;
   }
 
   // Get resulting model and noise information
-  $resultID = $row['HPCAnalysisResultID'];
-  $models   = array();
-  $noise    = array();
-  $query  = "SELECT resultID FROM HPCAnalysisResultData " .
-            "WHERE HPCAnalysisResultID = $resultID " .
-            "AND HPCAnalysisResultType = 'model' ";
-  $result = mysql_query( $query )
-           or die( "Query failed : $query<br />\n" . mysql_error());
-  $models = mysql_fetch_row( $result );         // An array with all of them
-  if ( $models !== false )
-    $row['modelIDs'] = implode( ", ", $models );
+  if ( ! empty( $resultID ) )
+  {
+    $resultID = $row['HPCAnalysisResultID'];
+    $models   = array();
+    $noise    = array();
+    $query  = "SELECT resultID FROM HPCAnalysisResultData " .
+              "WHERE HPCAnalysisResultID = $resultID " .
+              "AND HPCAnalysisResultType = 'model' ";
+    $result = mysql_query( $query )
+             or die( "Query failed : $query<br />\n" . mysql_error());
+    $models = mysql_fetch_row( $result );         // An array with all of them
+    if ( $models !== false )
+      $row['modelIDs'] = implode( ", ", $models );
 
-  $query  = "SELECT resultID FROM HPCAnalysisResultData " .
-            "WHERE HPCAnalysisResultID = $resultID " .
-            "AND HPCAnalysisResultType = 'noise' ";
-  $result = mysql_query( $query )
-           or die( "Query failed : $query<br />\n" . mysql_error());
-  $noise  = mysql_fetch_row( $result );         // An array with all of them
-  if ( $noise !== false )
-    $row['noiseIDs'] = implode( ", ", $noise );
+    $query  = "SELECT resultID FROM HPCAnalysisResultData " .
+              "WHERE HPCAnalysisResultID = $resultID " .
+              "AND HPCAnalysisResultType = 'noise' ";
+    $result = mysql_query( $query )
+             or die( "Query failed : $query<br />\n" . mysql_error());
+    $noise  = mysql_fetch_row( $result );         // An array with all of them
+    if ( $noise !== false )
+      $row['noiseIDs'] = implode( ", ", $noise );
+  }
 
   $text .= <<<HTML
   <a name='runDetail'></a>

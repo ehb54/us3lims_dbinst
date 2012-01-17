@@ -379,7 +379,7 @@ class jobsubmit
          $population  = $parameters[ 'population' ];
 
          // The constant 125 is an empirical value from doing a Hessian
-         // minimumization
+         // minimization
 
          $time        = ( 125 + $population ) * $generations;
  
@@ -421,6 +421,28 @@ class jobsubmit
 
       $time *= 1.5;  // Padding
  
+      // Account for parallel group count in max walltime
+      $mgroupcount = $this->data[ 'job' ][ 'mgroupcount' ];
+
+      switch ( $mgroupcount )
+      {
+         case 2  :
+            $time = (int)( $time * 10 / 15 );
+            break;
+
+         case 4  :
+            $time = (int)( $time * 10 / 35 );
+            break;
+
+         case 8  :
+            $time = (int)( $time * 10 / 75 );
+            break;
+
+         case 1  :
+         default :
+            break;
+      }
+
       $time = max( $time, 5 );         // Minimum time is 5 minutes
       $time = min( $time, $max_time ); // Maximum time is defined for each cluster
  
@@ -451,6 +473,21 @@ class jobsubmit
 
       $nodes = $procs / $ppn;    // Return nodes, procs divided by procs-per-node
       return (int)$nodes;
+   }
+
+   function max_mgroupcount()
+   {
+      $cluster    = $this->data[ 'job' ][ 'cluster_shortname' ];
+      $max_procs  = $this->grid[ $cluster ][ 'maxproc' ];
+      $nodes      = $this->nodes();
+
+      $groups = $max_procs / $nodes;
+
+      // Convert to 1, 2, 4, or 8
+      $power      = (int) floor( log( $groups, 2 ) );
+      $max_groups = min( 8, pow( 2, $power ) );
+
+      return $max_groups;
    }
 }
 ?>

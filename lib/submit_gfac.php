@@ -32,12 +32,14 @@ $this->message[] = "End of submit_gfac.php\n";
       $httpport    = $this->grid[ $cluster ][ 'httpport' ];
       $workdir     = $this->grid[ $cluster ][ 'workdir' ];
       $userdn      = $this->grid[ $cluster ][ 'userdn' ];
-      $queue       = $this->grid[ $cluster ][ 'queue' ];
+      $queue       = $this->data[ 'job' ][ 'cluster_queue' ];
       $gfacID      = "US3-" . basename( $this->data['job']['directory'] );
-      $dbname      = $this->data[ 'db' ][ 'name' ];
+      $dbname      = $this->data[ 'db'  ][ 'name' ];
+      $mgroupcount = min( $this->max_mgroupcount() ,
+                          $this->data[ 'job' ][ 'jobParameters' ][ 'req_mgroupcount' ] );
 
       $ppn         = $this->grid[ $cluster ][ 'ppn' ];
-      $nodes       = $this->nodes();
+      $nodes       = $this->nodes() * $mgroupcount;
       $cores       = $nodes * $ppn;
       
       $maxWallTime = $this->maxwall();
@@ -47,6 +49,7 @@ $this->message[] = "End of submit_gfac.php\n";
       $this->data[ 'nodes'       ] = $nodes;
       $this->data[ 'ppn'         ] = $ppn;
       $this->data[ 'maxWallTime' ] = $maxWallTime;
+      $this->data[ 'job' ][ 'mgroupcount' ] = $mgroupcount;
  
       $writer = new XMLWriter();
       $writer ->openMemory();
@@ -81,6 +84,10 @@ $this->message[] = "End of submit_gfac.php\n";
 
             $writer ->startElement( 'processorcount' );
             $writer ->text( $cores );
+            $writer ->endElement();
+ 
+            $writer ->startElement( 'mgroupcount' );
+            $writer ->text( $mgroupcount );
             $writer ->endElement();
  
             $writer ->startElement( 'hostcount' );
