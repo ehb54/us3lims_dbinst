@@ -78,7 +78,7 @@ function validate_solutes( count )
              parseFloat(s_max.value) >  0.1 )
         {
           alert( "Your s-value range overlaps the -0.1 ~ 0.1 range for " +
-                 "solute " + i + ". This range is excluded from the GA analysis.");
+                 "solute " + i + ". This range is modified for the GA analysis.");
         }
 
         ff0_min = document.getElementById(i + "_ff0_min");

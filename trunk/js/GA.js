@@ -84,9 +84,39 @@ montecarlo.onchange = function ()
         document.getElementById("mc_iterations").value = montecarlo.getValue();
         document.getElementById("montecarlo-min").value = montecarlo.getMinimum();
         document.getElementById("montecarlo-max").value = montecarlo.getMaximum();
+
+        var mc_iterations = document.getElementById( "mc_iterations" );
+        var PMGC_option   = document.getElementById( "PMGC_option"   );
+
+        if ( mc_iterations.value > 1 )
+           PMGC_option.style.display = "block";
+        else
+           PMGC_option.style.display = "none";
 };
 
 } catch(e_montecarlo) {}
+
+// Parallel masters group count setup
+try {
+var PMGC_enable     = document.getElementById( "PMGC_enable"     );
+var PMGC_count      = document.getElementById( "PMGC_count"      );
+var req_mgroupcount = document.getElementById( "req_mgroupcount" );
+
+PMGC_enable.onchange = function ()
+{
+  if ( PMGC_enable.checked )
+  {
+    PMGC_count.style.display = "block";
+    req_mgroupcount.value    = 4;
+  }
+  else
+  {
+    PMGC_count.style.display = "none";
+    req_mgroupcount.value    = 1;
+  }
+}
+
+} catch(e_PMGC_option) {}
 
 // Crossover Slider setup
 try {
@@ -455,6 +485,7 @@ window.onresize = function ()
 
 function redraw_controls()
 {
+  montecarlo.recalculate()
   s.recalculate();
   demes.recalculate();
   genes.recalculate();

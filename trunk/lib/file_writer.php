@@ -443,6 +443,9 @@ class File_2DSA extends File_writer
       $xml->startElement( 'mc_iterations' );
         $xml->writeAttribute( 'value', $parameters['mc_iterations'] );
       $xml->endElement(); // mc_iterations
+      $xml->startElement( 'req_mgroupcount' );
+        $xml->writeAttribute( 'value', $parameters['req_mgroupcount'] );
+      $xml->endElement(); // req_mgroupcount
       $xml->startElement( 'tinoise_option' );
         $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
       $xml->endElement(); // tinoise_option
@@ -482,6 +485,9 @@ class File_GA extends File_writer
       $xml->startElement( 'mc_iterations' );
         $xml->writeAttribute( 'value', $parameters['mc_iterations'] );
       $xml->endElement(); // mc_iterations
+      $xml->startElement( 'req_mgroupcount' );
+        $xml->writeAttribute( 'value', $parameters['req_mgroupcount'] );
+      $xml->endElement(); // req_mgroupcount
       $xml->startElement( 'demes' );
         $xml->writeAttribute( 'value', $parameters['demes'] );
       $xml->endElement(); // demes

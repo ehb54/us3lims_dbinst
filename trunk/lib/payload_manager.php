@@ -254,6 +254,7 @@ class Payload_2DSA extends Payload_manager
       $job_parameters['ff0_grid_points']  = $_POST['ff0_grid_points'];
       $job_parameters['uniform_grid']     = $_POST['uniform_grid'];
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
+      $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
       $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
       $job_parameters['meniscus_range']   = ( $_POST['meniscus_option'] == 1 )
                                           ? $_POST['meniscus_range'] : 0.0;
@@ -349,6 +350,7 @@ class Payload_GA extends Payload_manager
       $job_parameters                     = array();
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
       $job_parameters['demes']            = $_POST['demes-value'];
+      $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
       $job_parameters['population']       = $_POST['genes-value'];
       $job_parameters['generations']      = $_POST['generations-value'];
       $job_parameters['crossover']        = $_POST['crossover-value'];

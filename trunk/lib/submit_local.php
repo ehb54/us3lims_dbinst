@@ -70,13 +70,17 @@ $this->message[] = "Files copied to $address:$workdir";
                          $this->data['db']['host'],
                          $this->data['db']['name'],
                          $this->data['job']['requestID'] );
-      $pmgroups = 1;
-      if ( isset( $this->data[ 'job' ][ 'mgroups_count' ] ) )
-         $pmgroups  = $this->data[ 'job' ][ 'mgroups_count' ];
+      $mgroupcount = 1;
+      if ( isset( $this->data[ 'job' ][ 'jobParameters' ][ 'req_mgroupcount' ] ) )
+      {
+         $mgroupcount  = min( $this->max_mgroupcount() ,
+                          $this->data[ 'job' ][ 'jobParameters' ][ 'req_mgroupcount' ] );
+      }
+      $this->data[ 'job' ][ 'mgroupcount' ] = $mgroupcount;
 
       $pbsfile = "us3.pbs";
-      $wall    = $this->maxwall();
-      $nodes   = $this->nodes();
+      $wall    = $this->maxwall() * 3.0;
+      $nodes   = $this->nodes() * $mgroupcount;
 
       $hours   = (int)( $wall / 60 );
       $mins    = (int)( $wall % 60 );
@@ -113,7 +117,7 @@ $this->message[] = "Files copied to $address:$workdir";
       "#PBS -V\n"                                           .
       "#PBS -o $workdir/stdout\n"                           .
       "#PBS -e $workdir/stderr\n"                           .
-      "#pmgroups=$pmgroups\n"                               .
+      "#pmgroups=$mgroupcount\n"                               .
       "\n"                                                  .
       "export LD_LIBRARY_PATH=$libpath:\$LD_LIBRARY_PATH\n" .
       "export PATH=$path:\$PATH\n"                          .

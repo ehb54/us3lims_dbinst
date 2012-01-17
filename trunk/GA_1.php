@@ -173,7 +173,13 @@ function display( $dataset_id, $num_datasets )
             <?php echo "{$_SESSION['request'][$dataset_id]['filename']}; " .
                        "Dataset " . ($dataset_id + 1) . " of $num_datasets";?></legend>
 
-      <?php if ( $dataset_id == 0 ) montecarlo(); ?>
+      <?php 
+            if ( $dataset_id == 0 ) 
+            {
+              montecarlo(); 
+              PMGC_option();
+            }
+      ?>
 
       <p><button onclick="return toggle('advanced');" id='show'>
         Show Advanced Options</button></p>
