@@ -45,6 +45,14 @@ $admin4_menu = <<<HTML
 
 HTML;
 
+$admin3_menu = <<<HTML
+    <li><a href='http://$org_site/runID_info.php'>Info by Run ID</a></li>
+    <li><a href='http://$org_site/orphans.php'>Orphan Report</a></li>
+    <li><a href='http://$org_site/HPC_requests.php'>HPC Report</a></li>
+    <li><a href='http://$org_site/check_db.php'>Check DB Linkage</a></li>
+
+HTML;
+
 $edituser_menu = <<<HTML
       <li><a href='http://$org_site/edit_users.php'>Edit User Info</a></li>
       <li><a href='http://$org_site/view_users.php'>View User Info</a></li>
@@ -80,6 +88,18 @@ else if ( $userlevel == 4 )  // userlevel 4 = admin
     <li>Administrator Functions<br />
       <ul>
         $admin4_menu
+      </ul>
+    </li>
+
+HTML;
+}
+
+else if ( $userlevel == 3 )  // userlevel 3 = local admin
+{
+  $admin_menu .= <<<HTML
+    <li>Administrator Functions<br />
+      <ul>
+        $admin3_menu
       </ul>
     </li>
 
