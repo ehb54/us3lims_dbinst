@@ -21,6 +21,7 @@ $analysis_menu = <<<HTML
   <a href='queue_setup_1.php'>Queue Setup</a>
   <a href='2DSA_1.php'>2DSA Analysis</a>
   <a href='GA_1.php'>GA Analysis</a>
+  <a href='view_reports.php'>Reports</a>
 
 HTML;
 
