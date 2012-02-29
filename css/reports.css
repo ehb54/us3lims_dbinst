@@ -1,0 +1,13 @@
+/*
+ * reports.css
+ *
+ * Styles common to the reports programs
+ *
+ */
+
+.reporthead
+{
+  background-color : #2790B0; /* teal */
+  color            : black;
+}
+
