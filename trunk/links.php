@@ -91,6 +91,7 @@ else if ( $userlevel == 2 )  // userlevel 2 = Data analyst
   <a href="http://$org_site/index.php">Welcome!</a>
   $projects_menu
   $analysis_menu
+  $monitor_menu
   $general_menu
 
 HTML;
