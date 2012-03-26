@@ -294,7 +294,7 @@ function get_setup_2()
 // Get edit profiles
 function get_editedData( $rawDataID, $editedDataID = 0 )
 {
-  $query  = "SELECT editedDataID, label " .
+  $query  = "SELECT editedDataID, label, filename " .
             "FROM editedData " .
             "WHERE rawDataID = $rawDataID ";
   $result = mysql_query( $query )
@@ -303,10 +303,12 @@ function get_editedData( $rawDataID, $editedDataID = 0 )
   $profile    = "<select name='editedDataID[$rawDataID]'" .
                 "  onchange='this.form.submit();' size='3'>\n" .
                 "  <option value='null'>Select edit profile...</option>\n";
-  while ( list( $eID, $label ) = mysql_fetch_array( $result ) )
+  while ( list( $eID, $label, $fn ) = mysql_fetch_array( $result ) )
   {
+    $parts    = explode( ".", $fn ); // runID, editID, runType, c,c,w, xml
+    $edit_txt  = $parts[1];
     $selected = ( $editedDataID == $eID ) ? " selected='selected'" : "";
-    $profile .= "  <option value='$eID'$selected>[$eID] $label</option>\n";
+    $profile .= "  <option value='$eID'$selected>$label [$edit_txt]</option>\n";
   }
 
   $profile   .= "</select>\n";
