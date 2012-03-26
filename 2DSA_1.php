@@ -180,8 +180,13 @@ exit();
 // A function to display controls for one dataset
 function display( $dataset_id, $num_datasets )
 {
+  // Get edited data profile
+  $parts = explode( ".", $_SESSION['request'][$dataset_id]['editFilename'] );
+  $edit_text = $parts[1];
   echo "  <fieldset>" .
-       "    <legend>Initialize 2DSA Parameters - {$_SESSION['request'][$dataset_id]['filename']}" .
+       "    <legend>Initialize 2DSA Parameters - " .
+       "{$_SESSION['request'][$dataset_id]['filename']}; " .
+       "Edit profile: $edit_text; " .
        "            Dataset " . ($dataset_id + 1) . " of $num_datasets</legend>\n";
 
   if ( $dataset_id == 0 )

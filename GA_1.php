@@ -167,10 +167,14 @@ exit();
 // Function to display controls for one dataset
 function display( $dataset_id, $num_datasets )
 {
+  // Get edited data profile
+  $parts = explode( ".", $_SESSION['request'][$dataset_id]['editFilename'] );
+  $edit_text = $parts[1];
 ?>
     <fieldset>
       <legend>Initialize Genetic Algorithm Parameters -
             <?php echo "{$_SESSION['request'][$dataset_id]['filename']}; " .
+                       "Edit profile: $edit_text; " .
                        "Dataset " . ($dataset_id + 1) . " of $num_datasets";?></legend>
 
       <?php 

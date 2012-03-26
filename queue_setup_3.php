@@ -254,14 +254,16 @@ exit();
 // Get edit profiles
 function get_editedData( $editedDataID )
 {
-  $query  = "SELECT label " .
+  $query  = "SELECT label, filename " .
             "FROM editedData " .
             "WHERE editedDataID = $editedDataID ";
   $result = mysql_query( $query )
           or die("Query failed : $query<br />\n" . mysql_error());
 
-  list( $label ) = mysql_fetch_array( $result );
-  $profile = "<span>[$editedDataID] $label</span>";
+  list( $label, $fn ) = mysql_fetch_array( $result );
+  $parts    = explode( ".", $fn ); // runID, editID, runType, c,c,w, xml
+  $edit_txt  = $parts[1];
+  $profile = "<span>$label [$edit_txt]</span>";
 
   return( $profile );
 }
