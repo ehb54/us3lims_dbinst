@@ -45,6 +45,7 @@ $advanceLevel = ( isset($_SESSION['advancelevel']) )
 // Create the payload manager and place to gather bucket data
 $payload = new Payload_GA( $_SESSION );
 $buckets = array();
+$globalFileName = '';
 
 // First, let's see if the "TIGRE" button has been pressed
 if ( isset($_POST['TIGRE']) )
@@ -117,6 +118,8 @@ $js = 'js/analysis.js,js/GA.js,js/GA_2.js';
 include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";
+$soluteFile = ( !empty($uploadFileName) ) 
+            ? " (Current: $uploadFileName)" : "";
 
 echo <<<HTML
 <!-- Begin page content -->
@@ -132,7 +135,7 @@ echo <<<HTML
 
     <form enctype="multipart/form-data" action="{$_SERVER['PHP_SELF']}" method="post">
       <fieldset style="background: #eeeeee">
-        <legend>Select File to Upload</legend>
+        <legend>Select File to Upload$soluteFile</legend>
         <input type="file" name="file-upload" size="30"/>
         <input type="submit" name="upload_submit" value="Load Values"/>
       </fieldset>
@@ -221,6 +224,7 @@ HTML;
 function upload_file( &$buckets, $upload_dir )
 {
   global $solute_count, $max_buckets;
+  global $uploadFileName;
 
   $buckets = array();
   
