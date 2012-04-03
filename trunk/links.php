@@ -35,6 +35,7 @@ HTML;
 $general_menu = <<<HTML
   <h4>General</h4>
   <a href='http://$org_site/profile.php?edit=12'>Change My Info</a>
+  <a href='http://$org_site/view_database_info.php'>Database Login Info</a>
   <a href="partners.php">Partners</a>
   <a href='contacts.php'>Contacts</a>
   <a href='mailto:$admin_email'>Webmaster</a>
