@@ -43,6 +43,16 @@ $general_menu = <<<HTML
 
 HTML;
 
+$general_menu_1 = <<<HTML
+  <h4>General</h4>
+  <a href='http://$org_site/profile.php?edit=12'>Change My Info</a>
+  <a href="partners.php">Partners</a>
+  <a href='contacts.php'>Contacts</a>
+  <a href='mailto:$admin_email'>Webmaster</a>
+  <a href='http://$org_site/logout.php'>Logout</a>
+
+HTML;
+
 if ( $userlevel == 5 )  // level 5 = super admin ( developer )
 {
   $sidebar_menu = <<<HTML
@@ -104,7 +114,7 @@ else if ( $userlevel == 1 )  // level 1 = privileged user
   <h4>Navigation</h4>
   <a href="http://$org_site/index.php">Welcome!</a>
   $projects_menu
-  $general_menu
+  $general_menu_1
 
 HTML;
 }
@@ -115,7 +125,7 @@ else if ( $userlevel == 0 )  // level 0 = regular user
   <h4>Navigation</h4>
   <a href="http://$org_site/index.php">Welcome!</a>
   $projects_menu
-  $general_menu
+  $general_menu_1
 
 HTML;
 }
