@@ -50,6 +50,9 @@ if ( isset( $_POST['save'] ) )
     $_SESSION['request'][$count]['editedDataID'] = $cell['editedDataID'];
     $_SESSION['request'][$count]['editFilename'] = $cell['editFilename'];
     $_SESSION['request'][$count]['noiseIDs']     = $cell['noiseIDs'];
+    $_SESSION['request'][$count]['editMeniscus'] = $cell['editMeniscus'];
+    $_SESSION['request'][$count]['dataLeft']     = $cell['dataLeft'];
+    $_SESSION['request'][$count]['dataRight']    = $cell['dataRight'];
 
     $count++;
   }
@@ -256,13 +259,14 @@ function get_setup_2()
     {
       $_SESSION['cells'][$rawDataID]['editedDataID'] = $editedDataID;
 
-      // Get filename too
-      $query  = "SELECT filename FROM editedData " .
+      // Get other things we need too
+      $query  = "SELECT filename, data FROM editedData " .
                 "WHERE editedDataID = $editedDataID ";
       $result = mysql_query( $query )
               or die("Query failed : $query<br />\n" . mysql_error());
-      list( $editFilename ) = mysql_fetch_array( $result );
+      list( $editFilename, $editXML ) = mysql_fetch_array( $result );
       $_SESSION['cells'][$rawDataID]['editFilename'] = $editFilename;
+      getOtherEditInfo( $rawDataID, $editXML );
     }
   }
 
@@ -360,5 +364,39 @@ function get_noise( $rawDataID, $editedDataID, $noiseIDs )
   $noise   .= "</select>\n";
 
   return( $noise );
+}
+
+// Function to get information from the XML to check meniscus value later
+function getOtherEditInfo( $rawDataID, $xml )
+{
+  $parser = new XMLReader();
+  $parser->xml( $xml );
+
+  while( $parser->read() )
+  {
+     $type = $parser->nodeType;
+
+     if ( $type == XMLReader::ELEMENT )
+     {
+        $name = $parser->name;
+  
+        if ( $name == "meniscus" )
+        {
+          $parser->moveToAttribute( 'radius' );
+          $_SESSION['cells'][$rawDataID]['editMeniscus'] = $parser->value;
+        }
+
+        else if ( $name == 'data_range' )
+        {
+          $parser->moveToAttribute( 'left' );
+          $_SESSION['cells'][$rawDataID]['dataLeft'] = $parser->value;
+
+          $parser->moveToAttribute( 'right' );
+          $_SESSION['cells'][$rawDataID]['dataRight'] = $parser->value;
+        }
+     }
+  }
+
+  $parser->close();
 }
 ?>

@@ -210,7 +210,8 @@ function toggle(area)
   return false;
 }
 
-function validate( f, advanceLevel, dataset_num, count_datasets, separate_datasets )
+function validate( f, advanceLevel, dataset_num, count_datasets, separate_datasets,
+                      meniscus_radius, data_left )
 {
   // Advanced users don't go through these tests
   if ( advanceLevel > 0 ) return( true );
@@ -247,51 +248,27 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
     s_value_min         = parseFloat(f.s_value_min.value);  // These might have changed
     s_value_max         = parseFloat(f.s_value_max.value);
 
-    // |s_value_min| >= 0.1
-    if ( Math.abs(s_value_min) < 0.1 )
+    // What if the s_values are entirely inside the -0.1 ~ +0.1 range?
+    if ( (s_value_min >= -0.1) && (s_value_max <=  0.1) )
     {
-      alert( "Absolute value of s-min must be >= 0.1" );
-      f.s_value_min.focus();
+      alert( "Your s-value range is entirely within the -0.1 ~ 0.1 range. " +
+             "This range is not allowed." );
       return( false );
     }
 
-    // |s_value_min| out of range (most likely < -10000) 
-    if ( Math.abs(s_value_min) > 10000 )
-    {
-      alert( "Absolute value of s-min must be <= 10000" );
-      f.s_value_min.focus();
-      return( false );
-    }
-
-    // |s_max| >= 0.1
-    if ( Math.abs(s_value_max) < 0.1 )
-    {
-      alert( "Absolute value of s-max must be >= 0.1" );
-      f.s_value_max.focus();
-      return( false );
-    }
-
-    // |s_max| out of range
-    if ( Math.abs(s_value_max) > 10000 )
-    {
-      alert( "Absolute value of s-max must be <= 10000" );
-      f.s_value_max.focus();
-      return( false );
-    }
-
-    // What if s range includes -0.1 ~ 0.1?
-    if ( s_value_min < -0.1 &&
-         s_value_max >  0.1 )
+    // Some of the s_value range should be outside the - 0.1 ~ + 0.1 range
+    if ( (s_value_min <= -0.1) && (s_value_max >= -0.1) ||
+         (s_value_min <=  0.1) && (s_value_max >=  0.1) )
     {
       var answer = confirm( "Your s-value range overlaps the -0.1 ~ 0.1 range. " +
-                            "This range is normally excluded from the 2DSA analysis." +
+                            "This range will be excluded from the 2DSA analysis." +
                             "Please click OK to continue, or click cancel to " +
                             "return to the submission form." );
 
       if ( ! answer ) return( false );
     }
   }
-
+  
   // Verify these fields exist
   if ( valid_field(f.mw_value_min) )
   {
@@ -336,6 +313,30 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
 
       f.ff0_min.value = ff0_max;
       f.ff0_max.value = ff0_min;
+    }
+  }
+
+  // What if the user requests meniscus fitting but the fit range extends into 
+  // the data?
+  var meniscus_option = 0;
+  if ( valid_field(f.meniscus_option) )
+    meniscus_option = parseInt( get_radio_value(f.meniscus_option) );
+
+  if ( meniscus_option == 1 )
+  {
+    var meniscus_range = parseFloat( f.meniscus_range.value );
+
+    // alert( "meniscus range = " + meniscus_range +
+    //        "\nmeniscus radius = " + meniscus_radius +
+    //        "\nleftmost data point = " + data_left );
+
+    var range_limit = data_left - meniscus_radius - 0.002; // a fudge factor
+    range_limit = Math.round( range_limit * 2000 ) / 1000; // multiply by 2 and round to 3 digits
+    if ( meniscus_range > range_limit )
+    {
+       f.meniscus_range.value = range_limit;
+       alert( "The meniscus fit range extends beyond the left data range limit. " +
+              "The meniscus range has been reduced to " + range_limit );
     }
   }
 
