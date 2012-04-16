@@ -34,7 +34,8 @@ class jobsubmit
         "ppn"        => 2,
         // "maxproc"    => 32
         // "maxproc"    => 30
-        "maxproc"    => 28
+        // "maxproc"    => 28
+        "maxproc"    => 26
       );
     
       $this->grid[ 'bcf-local' ] = array 
@@ -48,7 +49,8 @@ class jobsubmit
         "ppn"        => 2,
         // "maxproc"    => 32
         // "maxproc"    => 30
-        "maxproc"    => 28
+        // "maxproc"    => 28
+        "maxproc"    => 26
       );
 
       $this->grid[ 'alamo' ] = array 
