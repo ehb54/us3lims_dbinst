@@ -39,12 +39,6 @@ if ( isset( $_POST['save'] ) )
   // Verify we have all the info
   get_setup_2();
 
-  if ( isset( $_POST['noiseIDs'] ) )
-  {
-    foreach ( $_POST['noiseIDs'] as $rawDataID => $noiseIDs )
-      $_SESSION['cells'][$rawDataID]['noiseIDs'] = $noiseIDs;
-  }
-
   // Now translate into a data structure more useful for sequencing datasets
   $_SESSION['request'] = array();
   $count = 0;
@@ -55,7 +49,6 @@ if ( isset( $_POST['save'] ) )
     $_SESSION['request'][$count]['filename']     = $cell['filename'];
     $_SESSION['request'][$count]['editedDataID'] = $cell['editedDataID'];
     $_SESSION['request'][$count]['editFilename'] = $cell['editFilename'];
-//    $_SESSION['request'][$count]['modelID']      = $cell['modelID'];
     $_SESSION['request'][$count]['noiseIDs']     = $cell['noiseIDs'];
 
     $count++;
@@ -275,20 +268,16 @@ function get_setup_2()
 
   if ( isset( $_POST['noiseIDs'] ) )
   {
-    foreach( $_POST['noiseIDs'] as $rawDataID => $noiseIDs )
-      unset( $_SESSION['cells'][$rawDataID]['noiseIDs'] );
+    foreach ( $_POST['noiseIDs'] as $rawDataID => $noiseIDs )
+    {
+      $_SESSION['cells'][$rawDataID]['noiseIDs'] = array();
 
-    foreach( $_POST['noiseIDs'] as $rawDataID => $noiseIDs )
-      $_SESSION['cells'][$rawDataID]['noiseIDs'] = $noiseIDs;   // each of these is an array
+      // Check if user had the "Select noise..." selected
+      if ( ! in_array( 'null', $noiseIDs ) )
+         $_SESSION['cells'][$rawDataID]['noiseIDs'] = $noiseIDs;   // each of these is an array
+    }
   }
 
-/*
-  if ( isset( $_POST['modelID'] ) )
-  {
-    foreach ( $_POST['modelID'] as $rawDataID => $modelID )
-      $_SESSION['cells'][$rawDataID]['modelID'] = $modelID;
-  }
-*/
 }
 
 // Get edit profiles
