@@ -114,6 +114,10 @@ else
   $payload->save();
 }
 
+// Get some other session data
+$editMeniscus = $_SESSION['request'][$dataset_id]['editMeniscus'];
+$dataLeft     = $_SESSION['request'][$dataset_id]['dataLeft'];
+
 // Start displaying page
 $page_title = '2DSA Analysis';
 $css = 'css/luna/luna.css';    // This is for the slider
@@ -133,7 +137,9 @@ include 'header.php';
                 <?php echo $advanceLevel; ?>, 
                 <?php echo $dataset_id; ?>,
                 <?php echo $num_datasets; ?>, 
-                <?php echo $separate_datasets; ?>);" >
+                <?php echo $separate_datasets; ?>,
+                <?php echo $editMeniscus; ?>,
+                <?php echo $dataLeft; ?>);" >
 
 
 <?php
