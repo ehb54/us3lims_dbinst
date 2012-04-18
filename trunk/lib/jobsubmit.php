@@ -428,6 +428,11 @@ class jobsubmit
       // Account for parallel group count in max walltime
       $mgroupcount = $this->data[ 'job' ][ 'mgroupcount' ];
 
+      if ( $max_time > 50000 )
+      {  // "Unlimited" max time (bcf,alamo) means no PMG
+        $mgroupcount = 1;
+      }
+
       switch ( $mgroupcount )
       {
          case 2  :
@@ -483,9 +488,15 @@ class jobsubmit
    {
       $cluster    = $this->data[ 'job' ][ 'cluster_shortname' ];
       $max_procs  = $this->grid[ $cluster ][ 'maxproc' ];
+      $max_time   = $this->grid[ $cluster ][ 'maxtime' ];
       $nodes      = $this->nodes();
 
       $groups = $max_procs / $nodes;
+
+      if ( $max_time > 50000 )
+      {  // "Unlimited" max time (bcf,alamo) means no PMG
+        $groups = 1;
+      }
 
       // Convert to 1, 2, 4, or 8
       $power      = (int) floor( log( $groups, 2 ) );

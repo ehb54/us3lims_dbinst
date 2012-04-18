@@ -294,18 +294,16 @@ var band_volume    = new Slider(document.getElementById("band_volume-slider"),
 band_volume.setMinimum(0);
 band_volume.setMaximum(50);
 band_volume.setValue(15);
-document.getElementById("band_volume-value").value = band_volume.getValue() / 1000.0;
-document.getElementById("band_volume-min").value = band_volume.getMinimum() / 1000.0;
-document.getElementById("band_volume-max").value = band_volume.getMaximum() / 1000.0;
+document.getElementById("band_volume-value").value = 0.015;
+document.getElementById("band_volume-min").value   = 0;
+document.getElementById("band_volume-max").value   = 0.05;
 
 band_volume.onchange = function () 
 {
         document.getElementById("band_volume-value").value 
-          = band_volume.getValue() / 1000.0;
-        document.getElementById("band_volume-min").value 
-          = band_volume.getMinimum() / 1000.0;
-        document.getElementById("band_volume-max").value 
-          = band_volume.getMaximum() / 1000.0;
+          = band_volume.getValue()/1000;
+        document.getElementById("band_volume-min").value   = 0;
+        document.getElementById("band_volume-max").value   = 0.05;
 };
 
 } catch(e_band_volume) {}
@@ -387,15 +385,15 @@ var mutate_sigma          = new Slider(document.getElementById("mutate_sigma-sli
 mutate_sigma.setMinimum(10);
 mutate_sigma.setMaximum(40);
 mutate_sigma.setValue(20);
-document.getElementById("mutate_sigma-value").value = mutate_sigma.getValue() / 10.0;
-document.getElementById("mutate_sigma-min").value = mutate_sigma.getMinimum() / 10.0;
-document.getElementById("mutate_sigma-max").value = mutate_sigma.getMaximum() / 10.0;
+document.getElementById("mutate_sigma-value").value = 2.0;
+document.getElementById("mutate_sigma-min").value   = 1.0;
+document.getElementById("mutate_sigma-max").value   = 4.0;
 
 mutate_sigma.onchange = function () 
 {
-        document.getElementById("mutate_sigma-value").value = mutate_sigma.getValue() / 10.0;
-        document.getElementById("mutate_sigma-min").value = mutate_sigma.getMinimum() / 10.0;
-        document.getElementById("mutate_sigma-max").value = mutate_sigma.getMaximum() / 10.0;
+        document.getElementById("mutate_sigma-value").value = mutate_sigma.getValue()/10;
+        document.getElementById("mutate_sigma-min").value   = 1.0;
+        document.getElementById("mutate_sigma-max").value   = 4.0;
 };
 
 } catch(e_mutate_sigma) {}

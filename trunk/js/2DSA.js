@@ -136,18 +136,16 @@ try {
 band_volume.setMinimum(0);
 band_volume.setMaximum(50);
 band_volume.setValue(15);
-document.getElementById("band_volume-value").value = band_volume.getValue() / 1000.0;
-document.getElementById("band_volume-min").value = band_volume.getMinimum() / 1000.0;
-document.getElementById("band_volume-max").value = band_volume.getMaximum() / 1000.0;
+document.getElementById("band_volume-value").value = 0.015;
+document.getElementById("band_volume-min").value   = 0;
+document.getElementById("band_volume-max").value   = 0.05;
 
 band_volume.onchange = function () 
 {
         document.getElementById("band_volume-value").value 
-          = band_volume.getValue() / 1000.0;
-        document.getElementById("band_volume-min").value 
-          = band_volume.getMinimum() / 1000.0;
-        document.getElementById("band_volume-max").value 
-          = band_volume.getMaximum() / 1000.0;
+          = band_volume.getValue()/1000;
+        document.getElementById("band_volume-min").value   = 0;
+        document.getElementById("band_volume-max").value   = 0.05;
 };
 
 } catch(e_band_volume) {}

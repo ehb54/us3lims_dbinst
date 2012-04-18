@@ -291,7 +291,7 @@ class Payload_2DSA extends Payload_manager
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
     
     $parameters['simpoints']    = $_POST['simpoints-value'];
-    $parameters['band_volume']  = ( $centerpiece_shape == 'band_forming' )
+    $parameters['band_volume']  = ( $centerpiece_shape == 'band forming' )
                                 ? $_POST['band_volume-value']
                                 : 0.0;
     $parameters['radial_grid']  = $_POST['radial_grid'];
@@ -396,7 +396,7 @@ class Payload_GA extends Payload_manager
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
     
     $parameters['simpoints']    = $_POST['simpoints-value'];
-    $parameters['band_volume']  = ( $centerpiece_shape == 'band_forming' )
+    $parameters['band_volume']  = ( $centerpiece_shape == 'band forming' )
                                 ? $_POST['band_volume-value']
                                 : 0.0;
     $parameters['radial_grid']  = $_POST['radial_grid'];
