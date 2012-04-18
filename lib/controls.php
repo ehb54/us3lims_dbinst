@@ -68,8 +68,8 @@ echo<<<HTML
           number of cores that can be requested ( that is, MC x PMGC ) are as follows:
           <table class='noborder' style='margin:0px auto;'>
             <tr><th>Cluster</th><th>Max cores</th></tr>
-            <tr><td>bcf</td><td style='text-align:center;'>32</td></tr>
-            <tr><td>alamo</td><td style='text-align:center;'>52</td></tr>
+            <tr><td>bcf</td><td style='text-align:center;'>(no PMG)</td></tr>
+            <tr><td>alamo</td><td style='text-align:center;'>(no PMG)</td></tr>
             <tr><td>lonestar</td><td style='text-align:center;'>288</td></tr>
             <tr><td>ranger</td><td style='text-align:center;'>256</td></tr>
           </table>
@@ -113,10 +113,10 @@ echo<<<HTML
           <input class="slider-input" id="band_volume-slider-input"/>
         </div>
         <br/>
-        Value: <input id="band_volume-value"  size='5'
-                      onchange="band_volume.setValue(parseInt(this.value))" 
-                      name="band_volume-value" 
-                      value="band_volume.setValue(parseInt(this.value))"/>
+        Value: <input name="band_volume-value"  size='5'
+                      id="band_volume-value" 
+                      value="band_volume.setValue(parseInt(this.value))"
+                      onchange="band_volume.setValue(parseInt(this.value))" />
         Minimum: <input id="band_volume-min"  size='5'
                       disabled="disabled"/>
         Maximum: <input id="band_volume-max"  size='5'
