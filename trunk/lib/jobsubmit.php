@@ -63,7 +63,7 @@ class jobsubmit
         "workdir"    => "/ogce-rest/job/runjob/async",
         "sshport"    => 22,
         "queue"      => "default",
-        "maxtime"    => 60000,
+        "maxtime"    => 90000,
         "ppn"        => 4,
         "maxproc"    => 52
       );
@@ -75,7 +75,7 @@ class jobsubmit
         "workdir"    => "/home/us3/work/",  // Need trailing slash
         "sshport"    => 22,
         "queue"      => "",
-        "maxtime"    => 60000,
+        "maxtime"    => 90000,
         "ppn"        => 4,
         "maxproc"    => 52
       );
@@ -428,9 +428,18 @@ class jobsubmit
       // Account for parallel group count in max walltime
       $mgroupcount = $this->data[ 'job' ][ 'mgroupcount' ];
 
-      if ( $max_time > 50000 )
-      {  // "Unlimited" max time (bcf,alamo) means no PMG
-        $mgroupcount = 1;
+      if ( $cluster == 'alamo' || $cluster == 'alamo-local' )
+      {
+         // For alamo, $max_time is hardwired to 90000, and no PMG
+         $time = $max_time;
+         $mgroupcount = 1;
+      }
+
+      else if ( $cluster == 'bcf' || $cluster == 'bcf-local' )
+      {
+         // For bcf, hardwire $max_time to 120 (2 hours), and no PMG
+         $time = 120;
+         $mgroupcount = 1;
       }
 
       switch ( $mgroupcount )
