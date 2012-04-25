@@ -254,7 +254,13 @@ class Payload_2DSA extends Payload_manager
       $job_parameters['ff0_grid_points']  = $_POST['ff0_grid_points'];
       $job_parameters['uniform_grid']     = $_POST['uniform_grid'];
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
-      $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
+
+      if ( isset( $_POST['req_mgroupcount'] ) )
+         $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
+
+      else
+         $job_parameters['req_mgroupcount'] = 1;
+
       $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
       $job_parameters['meniscus_range']   = ( $_POST['meniscus_option'] == 1 )
                                           ? $_POST['meniscus_range'] : 0.0;
