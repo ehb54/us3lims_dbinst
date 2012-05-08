@@ -73,20 +73,7 @@ The $org_name Admins.
    
 This is an automated response, do not reply!";
 
-$now = time();
-$headers = "From: $org_name Admin<$admin_email>"     . "\n";
-
-// Set the reply address
-$headers .= "Reply-To: $org_name<$admin_email>"      . "\n";
-$headers .= "Return-Path: $org_name<$admin_email>"   . "\n";
-
-// Try to avoid spam filters
-$headers .= "Message-ID: <" . $now . "info@" . $_SERVER['SERVER_NAME'] . ">\n";
-$headers .= "X-Mailer: PHP v" . phpversion()         . "\n";
-$headers .= "MIME-Version: 1.0"                      . "\n";
-$headers .= "Content-Transfer-Encoding: 8bit"        . "\n";
-
-mail( $email_address, $subject, $message, $headers );
+LIMS_mailer( $email_address, $subject, $message );
 
 $message =  "Your password has been sent to you via email. " . 
             "Please check your email for your new password.";

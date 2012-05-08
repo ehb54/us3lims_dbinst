@@ -61,6 +61,7 @@ $db_password = md5($random_password);
 $uuid = uuid();
 
 // Enter info into the Database.
+// Experimentally setting the default userlevel to 1
 $query = "INSERT INTO people " .
          "SET personGUID  = '$uuid', " .
          "lname           = '$lname', " .
@@ -74,7 +75,7 @@ $query = "INSERT INTO people " .
          "phone           = '$phone', " .
          "email           = '$email', " .
          "password        = '$db_password', " .
-         "userlevel       = 0, " .
+         "userlevel       = 1, " .
          "activated       = 0, " .
          "signup          = now() ";
 
@@ -115,20 +116,7 @@ The $org_name Admins.
 
 This is an automated response, do not reply!";
 
-$now = time();
-$headers = "From: $org_name Admin<$admin_email>"     . "\n";
-
-// Set the reply address
-$headers .= "Reply-To: $org_name<$admin_email>"      . "\n";
-$headers .= "Return-Path: $org_name<$admin_email>"   . "\n";
-
-// Try to avoid spam filters
-$headers .= "Message-ID: <" . $now . "info@" . $_SERVER['SERVER_NAME'] . ">\n";
-$headers .= "X-Mailer: PHP v" . phpversion()         . "\n";
-$headers .= "MIME-Version: 1.0"                      . "\n";
-$headers .= "Content-Transfer-Encoding: 8bit"        . "\n";
-
-mail($email, $subject, $message, $headers);
+LIMS_mailer($email, $subject, $message);
 
 echo "<p>Your login information has been mailed to your email address.\n" .
      "   Please check your e-mail and follow the directions in order to \n" .

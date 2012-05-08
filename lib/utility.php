@@ -287,4 +287,25 @@ function getJobstatus( $gfacID )
   return $status;
 
 }
+
+// Function to send out an arbitrary email message
+function LIMS_mailer( $email, $subject, $message )
+{
+  global $org_name, $admin_email;     // From config.php
+
+  $now = time();
+  $headers = "From: $org_name Admin<$admin_email>"     . "\n";
+
+  // Set the reply address
+  $headers .= "Reply-To: $org_name<$admin_email>"      . "\n";
+  $headers .= "Return-Path: $org_name<$admin_email>"   . "\n";
+
+  // Try to avoid spam filters
+  $headers .= "Message-ID: <" . $now . "info@" . $_SERVER['SERVER_NAME'] . ">\n";
+  $headers .= "X-Mailer: PHP v" . phpversion()         . "\n";
+  $headers .= "MIME-Version: 1.0"                      . "\n";
+  $headers .= "Content-Transfer-Encoding: 8bit"        . "\n";
+
+  mail($email, "$subject - $now", $message, $headers);
+}
 ?>
