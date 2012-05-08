@@ -1,8 +1,8 @@
 <?php
 /*
- * edit_projects.php
+ * admin_edit_projects.php
  *
- * A place to edit/update the project table
+ * A place for the admin to edit/update user projects
  *
  */
 session_start();
@@ -14,7 +14,9 @@ if ( ! isset($_SESSION['id']) )
   exit();
 } 
 
-if ( $_SESSION['userlevel'] < 1 )
+if ( ( $_SESSION['userlevel'] != 3 ) &&
+     ( $_SESSION['userlevel'] != 4 ) &&
+     ( $_SESSION['userlevel'] != 5 ) )  // super, admin and superadmin only
 {
   header('Location: index.php');
   exit();
@@ -43,16 +45,15 @@ else if (isset($_POST['new']))
   exit();
 }
 
-// Are we being directed here from a push button?
-if (isset($_POST['update']))
+else if (isset($_POST['update']))
 {
   do_update();
   exit();
 }
 
 // Start displaying page
-$page_title = 'Edit My Projects';
-$js = 'js/edit_projects.js';
+$page_title = 'Edit User Projects';
+$js = 'js/admin_edit_projects.js';
 include 'header.php';
 include 'lib/selectboxes.php';
 
@@ -60,16 +61,32 @@ include 'lib/selectboxes.php';
 <!-- Begin page content -->
 <div id='content'>
 
-  <h1 class="title">Edit My Projects</h1>
+  <h1 class="title">Edit User Projects</h1>
   <!-- Place page content here -->
 
 <?php
-// Edit or display a record
-if ( isset($_POST['edit']) || isset($_GET['edit']) )
-  edit_record();
+  if ( isset( $_POST['personID'] ) )
+  {
+    $_SESSION['currentID'] = $_POST['personID'];
 
-else
-  display_record();
+    $text  = person_select( 'personID', $_POST['personID'] );
+  }
+
+  else if ( isset( $_SESSION['currentID'] ) )
+    $text  = person_select( 'personID', $_SESSION['currentID'] );
+
+  else
+    $text  = person_select( 'personID' );
+
+  // Display what we have
+  echo $text;
+
+  // Edit or display a record
+  if ( isset($_POST['edit']) || isset($_GET['edit']) )
+    edit_record();
+
+  else
+    display_record();
 
 ?>
 </div>
@@ -81,7 +98,7 @@ exit();
 // Function to redirect to prior record
 function do_prior()
 {
-  $ID = $_SESSION['id'];
+  $ID = $_SESSION['currentID'];
   $projectID = $_POST['projectID'];
 
   $query  = "SELECT j.projectID " .
@@ -109,7 +126,7 @@ function do_prior()
 // Function to redirect to next record
 function do_next()
 {
-  $ID = $_SESSION['id'];
+  $ID = $_SESSION['currentID'];
   $projectID = $_POST['projectID'];
 
   $query  = "SELECT j.projectID " .
@@ -134,6 +151,7 @@ function do_next()
 // Function to create a new record
 function do_new()
 {
+  $ID = $_SESSION['currentID'];
   $uuid = uuid();
 
   // Insert an ID
@@ -157,8 +175,6 @@ function do_new()
 // Function to update the current record
 function do_update()
 {
-  $ID = $_SESSION['id'];
-
   $projectID           =                                $_POST['projectID'];
   $goals               =        addslashes(htmlentities($_POST['goals']));
   $molecules           =        addslashes(htmlentities($_POST['molecules']));
@@ -169,6 +185,7 @@ function do_update()
   $AUC_questions       =        addslashes(htmlentities($_POST['AUC_questions']));
   $notes               =        addslashes(htmlentities($_POST['notes']));
   $description         =        addslashes(htmlentities($_POST['description']));
+  $status              =                                $_POST['status'];
   $query = "UPDATE project " .
            "SET goals  = '$goals', " .
            "molecules  = '$molecules', " .
@@ -178,7 +195,8 @@ function do_update()
            "saltInformation  = '$saltInformation', " .
            "AUC_questions  = '$AUC_questions', " .
            "notes  = '$notes', " .
-           "description  = '$description' " .
+           "description  = '$description', " .
+           "status  = '$status' " .
            "WHERE projectID = $projectID ";
 
   mysql_query($query)
@@ -195,7 +213,7 @@ function do_update()
     $email   = $_SESSION['email'] . ",cauma@biochem.uthscsa.edu";
 
     $message = "Dear $fname $lname,
-    You have entered a new project in your $org_name account at $org_site.
+    A project has been entered into your $org_name account at $org_site.
     The project description is:
 
     $description
@@ -236,11 +254,10 @@ function display_record()
     $$key = (empty($value)) ? "&nbsp;" : html_entity_decode( stripslashes( nl2br($value) ) );
   }
 
-  $status = $row['status'];
   global $project_status;               // From lib/selectboxes.php
   $status = $project_status[ $status ];
 
-  $ID = $_SESSION['id'];
+  $ID = $_SESSION['currentID'];
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
@@ -264,7 +281,7 @@ echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
-      <tr><th colspan='8'>Edit My Projects</th></tr>
+      <tr><th colspan='8'>Edit User Projects</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>Jump to: $nav_listbox
@@ -312,10 +329,10 @@ function get_id()
   if (isset($_GET['ID']))
     return( $_GET['ID'] );
 
-  $ID = $_SESSION['id'];
+  $ID = $_SESSION['currentID'];
 
   // We don't know which record, so just find the first one
-  $query  = "SELECT projectID " .
+  $query  = "SELECT p.projectID " .
             "FROM project j, projectPerson p " .
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
@@ -335,7 +352,7 @@ echo<<<HTML
   <form action='{$_SERVER[PHP_SELF]}' method='post'>
   <table cellspacing='0' cellpadding='0' class='style1'>
     <thead>
-      <tr><th colspan='2'>Edit My Projects</th></tr>
+      <tr><th colspan='2'>Edit User Projects</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'><input type='submit' name='new' value='New' />
@@ -389,12 +406,11 @@ function edit_record()
   $notes               = html_entity_decode( stripslashes( $row['notes'] ) );
   $description         = html_entity_decode( stripslashes( $row['description'] ) );
 
-  $status = $row['status'];
-  global $project_status;               // From lib/selectboxes.php
-  $status = $project_status[ $status ];
+  $status      = $row['status'];
+  $status_text = project_status_select( 'status', $status );
 
   // Let's see if we're coming from the New Record or the Update button
-  $rec_status = ( isset( $_GET['edit'] ) ) 
+  $rec_status = ( isset( $_GET['edit'] ) )
               ? "<input type='hidden' name='rec_status' value='new' />"
               : "<input type='hidden' name='rec_status' value='update' />";
 
@@ -464,7 +480,7 @@ echo<<<HTML
     <tr><td><textarea name='notes' rows='6' cols='65' 
                       wrap='virtual'>$notes</textarea></td></tr>
     <tr><th>Status:</th></tr>
-    <tr><td>$status</td></tr>
+    <tr><td>$status_text</td></tr>
 
 
     </tbody>
