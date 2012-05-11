@@ -157,9 +157,43 @@ function do_new()
 // Function to update the current record
 function do_update()
 {
-  $ID = $_SESSION['id'];
+  $ID        = $_SESSION['id'];
+  $projectID = $_POST['projectID'];
 
-  $projectID           =                                $_POST['projectID'];
+  // Since we always send out emails here, and the user could press the 
+  //  Update button even though nothing has changed, let's check
+  $query  = "SELECT goals, molecules, purity, expense, " .
+            "bufferComponents, saltInformation, AUC_questions, " .
+            "expDesign, notes, description " .
+            "FROM project " .
+            "WHERE projectID = $projectID ";
+  $result = mysql_query($query) 
+            or die("Query failed : $query<br />\n" . mysql_error());
+
+  $row    = mysql_fetch_array($result, MYSQL_ASSOC);
+
+  // Create local variables
+  foreach ($row as $key => $value)
+  {
+    $$key = (empty($value)) ? "" : $value ;
+  }
+
+  if ( $goals            == $_POST['goals']            &&
+       $molecules        == $_POST['molecules']        &&
+       $purity           == $_POST['purity']           &&
+       $expense          == $_POST['expense']          &&
+       $bufferComponents == $_POST['bufferComponents'] &&
+       $saltInformation  == $_POST['saltInformation']  &&
+       $AUC_questions    == $_POST['AUC_questions']    &&
+       $expDesign        == $_POST['expDesign']        &&
+       $notes            == $_POST['notes']            &&
+       $description      == $_POST['description']      )
+  {
+    header("Location: $_SERVER[PHP_SELF]?ID=$projectID");
+    exit();
+  }
+
+  // Ok, we're still here, so something has changed
   $goals               =        addslashes(htmlentities($_POST['goals']));
   $molecules           =        addslashes(htmlentities($_POST['molecules']));
   $purity              = substr(addslashes(htmlentities($_POST['purity'])), 0,10);
@@ -167,8 +201,10 @@ function do_update()
   $bufferComponents    =        addslashes(htmlentities($_POST['bufferComponents']));
   $saltInformation     =        addslashes(htmlentities($_POST['saltInformation']));
   $AUC_questions       =        addslashes(htmlentities($_POST['AUC_questions']));
+  $expDesign           =        addslashes(htmlentities($_POST['expDesign']));
   $notes               =        addslashes(htmlentities($_POST['notes']));
   $description         =        addslashes(htmlentities($_POST['description']));
+
   $query = "UPDATE project " .
            "SET goals  = '$goals', " .
            "molecules  = '$molecules', " .
@@ -177,6 +213,7 @@ function do_update()
            "bufferComponents  = '$bufferComponents', " .
            "saltInformation  = '$saltInformation', " .
            "AUC_questions  = '$AUC_questions', " .
+           "expDesign = '$expDesign', " .
            "notes  = '$notes', " .
            "description  = '$description' " .
            "WHERE projectID = $projectID ";
@@ -184,30 +221,28 @@ function do_update()
   mysql_query($query)
     or die("Query failed : $query<br />\n" . mysql_error());
 
-  if ( isset( $_POST['rec_status'] ) && $_POST['rec_status'] == 'new' )
-  {
-    // New record, so let's mail the user
-    global $org_name, $org_site;
+  // The project is new or has changed, so let's mail the user
+  global $org_name, $org_site;
+  $site_abbrev = substr( $org_site, strrpos( $org_site, "uslims3_" ) + 8 );
 
-    $subject = "Your new $org_name project";
-    $fname   = $_SESSION['firstname'];
-    $lname   = $_SESSION['lastname'];
-    $email   = $_SESSION['email'] . ",cauma@biochem.uthscsa.edu";
+  $subject = "Your $site_abbrev project";
+  $fname   = $_SESSION['firstname'];
+  $lname   = $_SESSION['lastname'];
+  $email   = $_SESSION['email'] . ",cauma@biochem.uthscsa.edu";
 
-    $message = "Dear $fname $lname,
-    You have entered a new project in your $org_name account at $org_site.
-    The project description is:
+  $message = "Dear $fname $lname,
+  You have entered a new project in your $org_name account at $org_site.
+  The project description is:
 
-    $description
+  $description
 
-    Please save this message for your reference.
-    Thanks!
-    The $org_name Admins.
+  Please save this message for your reference.
+  Thanks!
+  The $org_name Admins.
 
-    This is an automated response, do not reply!";
+  This is an automated response, do not reply!";
 
-    LIMS_mailer($email, $subject, $message);
-  }
+  LIMS_mailer($email, $subject, $message);
 
   header("Location: $_SERVER[PHP_SELF]?ID=$projectID");
   exit();
@@ -222,7 +257,7 @@ function display_record()
     return;
 
   $query  = "SELECT projectGUID, goals, molecules, purity, expense, " .
-            "bufferComponents, saltInformation, AUC_questions, notes, description, status " .
+            "bufferComponents, saltInformation, AUC_questions, expDesign, notes, description, status " .
             "FROM project " .
             "WHERE projectID = $projectID ";
   $result = mysql_query($query) 
@@ -294,6 +329,8 @@ echo<<<HTML
           <td>$saltInformation</td></tr>
       <tr><th>AUC Questions:</th>
           <td>$AUC_questions</td></tr>
+      <tr><th>Experimental Design:</th>
+          <td>$expDesign</td></tr>
       <tr><th>Notes:</th>
           <td>$notes</td></tr>
       <tr><th>Status:</th>
@@ -371,7 +408,7 @@ function edit_record()
   }
 
   $query  = "SELECT goals, molecules, purity, expense, bufferComponents, " .
-            "saltInformation, AUC_questions, notes, description, status  " .
+            "saltInformation, AUC_questions, expDesign, notes, description, status  " .
             "FROM project " .
             "WHERE projectID = $projectID ";
   $result = mysql_query($query) 
@@ -386,6 +423,7 @@ function edit_record()
   $bufferComponents    = html_entity_decode( stripslashes( $row['bufferComponents'] ) );
   $saltInformation     = html_entity_decode( stripslashes( $row['saltInformation'] ) );
   $AUC_questions       = html_entity_decode( stripslashes( $row['AUC_questions'] ) );
+  $expDesign           = html_entity_decode( stripslashes( $row['expDesign'] ) );
   $notes               = html_entity_decode( stripslashes( $row['notes'] ) );
   $description         = html_entity_decode( stripslashes( $row['description'] ) );
 
@@ -460,6 +498,9 @@ echo<<<HTML
             to approach the research with AUC experiments?</th></tr>
     <tr><td><textarea name='AUC_questions' rows='6' cols='65' 
                       wrap='virtual'>$AUC_questions</textarea></td></tr>
+    <tr><th>Please enter any notes about the experiment design.</th></tr>
+    <tr><td><textarea name='expDesign' rows='6' cols='65' 
+                      wrap='virtual'>$expDesign</textarea></td></tr>
     <tr><th>Special instructions, questions, and notes (optional):</th></tr>
     <tr><td><textarea name='notes' rows='6' cols='65' 
                       wrap='virtual'>$notes</textarea></td></tr>
