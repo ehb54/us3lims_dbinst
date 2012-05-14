@@ -243,19 +243,47 @@ function do_update()
     or die("Query failed : $query<br />\n" . mysql_error());
 
   // The project is new or has changed, so let's mail the user
-  global $org_name, $org_site;
+  global $org_name, $org_site, $admin_email;
   $site_abbrev = substr( $org_site, strrpos( $org_site, "uslims3_" ) + 8 );
 
   $subject = "Your $site_abbrev project";
   $fname   = $_SESSION['firstname'];
   $lname   = $_SESSION['lastname'];
-  $email   = $_SESSION['email'] . ",cauma@biochem.uthscsa.edu";
+  $email   = $_SESSION['email'] . ",$admin_email";
 
   $message = "Dear $fname $lname,
   You have entered a new project in your $org_name account at $org_site.
-  The project description is:
+  The new project information is:
 
-  $description
+  Goals:
+  {$_POST['goals']}
+
+  Molecules:
+  {$_POST['molecules']}
+
+  Purity
+  {$_POST['purity']}
+
+  Expense:
+  {$_POST['expense']}
+
+  Buffer Components:
+  {$_POST['bufferComponents']}
+
+  Salt Information:
+  {$_POST['saltInformation']}
+
+  AUC Questions:
+  {$_POST['AUC_questions']}
+
+  Experiment Design:
+  {$_POST['expDesign']}
+
+  Notes:
+  {$_POST['notes']}
+
+  Description:
+  {$_POST['description']}
 
   Please save this message for your reference.
   Thanks!
