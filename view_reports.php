@@ -90,7 +90,8 @@ function report_select( $select_name, $current_ID = NULL )
     //  associated with the report
     $text .= "<h3>Cell:</h3>\n";
 
-    $query  = "SELECT reportTripleID, triple FROM reportTriple " .
+    $query  = "SELECT reportTripleID, triple, dataDescription " .
+              "FROM reportTriple " .
               "WHERE reportID = $current_ID " .
               "ORDER BY triple ";
     $result = mysql_query( $query )
@@ -98,10 +99,11 @@ function report_select( $select_name, $current_ID = NULL )
 
     $self = $_SERVER['PHP_SELF'];
     $text .= "<ul>\n";
-    while ( list( $tripleID, $tripleDesc ) = mysql_fetch_array( $result ) )
+    while ( list( $tripleID, $tripleDesc, $dataDesc ) = mysql_fetch_array( $result ) )
     {
       list( $cell, $channel, $wl ) = explode( "/", $tripleDesc );
-      $display = "Cell: $cell; Channel: $channel; Wavelength: $wl";
+      $description = ( empty($dataDesc) ) ? "" : "; Descr: $dataDesc";
+      $display = "Cell: $cell; Channel: $channel; Wavelength: $wl$description";
       $text .= "  <li><a href='$self?triple=$tripleID'>$display</a></li>\n";
     }
 
