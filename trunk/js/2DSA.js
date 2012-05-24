@@ -1,150 +1,146 @@
 // Javascript for 2DSA controls
 
-// Protect ourselves in case the controls aren't present
-
-try {
-var meniscus = new Slider(document.getElementById("meniscus-slider"), 
-                          document.getElementById("meniscus-slider-input"));
-meniscus.setMinimum(3);
-meniscus.setMaximum(30);
-meniscus.setValue(10);
-document.getElementById("meniscus_points").value = meniscus.getValue();
-document.getElementById("meniscus-min").value = meniscus.getMinimum();
-document.getElementById("meniscus-max").value = meniscus.getMaximum();
-
-meniscus.onchange = function () 
+// jQuery slider controls
+$(document).ready(function()
 {
-  document.getElementById("meniscus_points").value = meniscus.getValue();
-  document.getElementById("meniscus-min").value = meniscus.getMinimum();
-  document.getElementById("meniscus-max").value = meniscus.getMaximum();
-};
+  // Montecarlo Slider setup
+  $("#montecarlo-min").attr('value', 0  );
+  $("#montecarlo-max").attr('value', 100);
+  $("#montecarlo-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   0,
+    min:     0,
+    max:     100,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#mc_iterations" ).attr('value', ui.value);
+    },
+  });
 
-} catch(e_meniscus) {}
+  $("#mc_iterations").change( function()
+  {
+    $("#montecarlo-slider").slider( 'value', this.value );
+  });
 
-try {
-var iterations = new Slider(document.getElementById("iterations-slider"), 
-                            document.getElementById("iterations-slider-input"));
-iterations.setMinimum(1);
-iterations.setMaximum(10);
-iterations.setValue(3);
-document.getElementById("max_iterations").value = iterations.getValue();
-document.getElementById("iterations-min").value = iterations.getMinimum();
-document.getElementById("iterations-max").value = iterations.getMaximum();
+  // Meniscus Slider setup
+  $("#meniscus-min").attr('value', 3  );
+  $("#meniscus-max").attr('value', 30 );
+  $("#meniscus-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   10,
+    min:     3,
+    max:     30,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#meniscus_points" ).attr('value', ui.value);
+    },
+  });
 
-iterations.onchange = function () 
-{
-  document.getElementById("max_iterations").value = iterations.getValue();
-  document.getElementById("iterations-min").value = iterations.getMinimum();
-  document.getElementById("iterations-max").value = iterations.getMaximum();
-};
+  $("#meniscus_points").change( function()
+  {
+    $("#meniscus-slider").slider( 'value', this.value );
+  });
 
-} catch(e_iterations) {}
+  // Iterations Slider setup
+  $("#iterations-min").attr('value', 1  );
+  $("#iterations-max").attr('value', 10 );
+  $("#iterations-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   3,
+    min:     1,
+    max:     10,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#max_iterations" ).attr('value', ui.value);
+    },
+  });
 
-try {
-var debug_level = new Slider(document.getElementById("debug_slider"), 
-                             document.getElementById("debug_slider_input"));
-debug_level.setMinimum(0);
-debug_level.setMaximum(4);
-debug_level.setValue(0);
-document.getElementById("debug_level").value = debug_level.getValue();
-document.getElementById("debug_level_min").value = debug_level.getMinimum();
-document.getElementById("debug_level_max").value = debug_level.getMaximum();
+  $("#max_iterations").change( function()
+  {
+    $("#iterations-slider").slider( 'value', this.value );
+  });
 
-debug_level.onchange = function () 
-{
-  document.getElementById("debug_level").value = debug_level.getValue();
-  document.getElementById("debug_level_min").value = debug_level.getMinimum();
-  document.getElementById("debug_level_max").value = debug_level.getMaximum();
-};
+  // Simpoints Slider setup
+  $("#simpoints-min").attr('value', 50  );
+  $("#simpoints-max").attr('value', 5000);
+  $("#simpoints-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   200,
+    min:     50,
+    max:     5000,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#simpoints-value" ).attr('value', ui.value);
+    },
+  });
 
-} catch(e_debug_level) {}
+  $("#simpoints-value").change( function()
+  {
+    $("#simpoints-slider").slider( 'value', this.value );
+  });
 
-//Montecarlo Slider setup
-try {
-var montecarlo = new Slider(document.getElementById("montecarlo-slider"), 
-                            document.getElementById("montecarlo-slider-input"));
-montecarlo.setMinimum(1);
-montecarlo.setMaximum(100);
-montecarlo.setValue(1);
-document.getElementById("mc_iterations").value = montecarlo.getValue();
-document.getElementById("montecarlo-min").value = montecarlo.getMinimum();
-document.getElementById("montecarlo-max").value = montecarlo.getMaximum();
+  // Band_volume Slider setup
+  $("#band_volume-min").attr('value', 0.0 );
+  $("#band_volume-max").attr('value', 0.05);
+  $("#band_volume-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   0.015,
+    min:     0.0,
+    max:     0.05,
+    step:    0.0001,
+    slide: function( event, ui )
+    {
+      $( "#band_volume-value" ).attr('value', ui.value);
+    },
+  });
 
-montecarlo.onchange = function ()
-{
-        document.getElementById("mc_iterations").value = montecarlo.getValue();
-        document.getElementById("montecarlo-min").value = montecarlo.getMinimum();
-        document.getElementById("montecarlo-max").value = montecarlo.getMaximum();
+  $("#band_volume-value").change( function()
+  {
+    $("#band_volume-slider").slider( 'value', this.value );
+  });
 
-};
+  // Debug_level Slider setup
+  $("#debug_level-min").attr('value', 0 );
+  $("#debug_level-max").attr('value', 4 );
+  $("#debug_level-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   0,
+    min:     0,
+    max:     4,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#debug_level-value" ).attr('value', ui.value);
+    },
+  });
 
-} catch(e_montecarlo) {}
+  $("#debug_level-value").change( function()
+  {
+    $("#debug_level-slider").slider( 'value', this.value );
+  });
 
-// Simpoints Slider setup
-try {
-var simpoints      = new Slider(document.getElementById("simpoints-slider"),
-                                document.getElementById("simpoints-slider-input"));
-simpoints.setMinimum(50);
-simpoints.setMaximum(5000);
-simpoints.setValue(200);
-document.getElementById("simpoints-value").value = simpoints.getValue();
-document.getElementById("simpoints-min").value = simpoints.getMinimum();
-document.getElementById("simpoints-max").value = simpoints.getMaximum();
-
-simpoints.onchange = function () 
-{
-        document.getElementById("simpoints-value").value = simpoints.getValue();
-        document.getElementById("simpoints-min").value = simpoints.getMinimum();
-        document.getElementById("simpoints-max").value = simpoints.getMaximum();
-};
-
-} catch(e_simpoints) {}
-
-// Band_volume Slider setup
-var band_volume    = new Slider(document.getElementById("band_volume-slider"),
-                                document.getElementById("band_volume-slider-input"));
-try {
-band_volume.setMinimum(0);
-band_volume.setMaximum(50);
-band_volume.setValue(15);
-document.getElementById("band_volume-value").value = 0.015;
-document.getElementById("band_volume-min").value   = 0;
-document.getElementById("band_volume-max").value   = 0.05;
-
-band_volume.onchange = function () 
-{
-        document.getElementById("band_volume-value").value 
-          = band_volume.getValue()/1000;
-        document.getElementById("band_volume-min").value   = 0;
-        document.getElementById("band_volume-max").value   = 0.05;
-};
-
-} catch(e_band_volume) {}
-
-window.onresize = function () 
-{
-  redraw_controls();
-};
-
-function redraw_controls()
-{
-  meniscus.recalculate();
-  iterations.recalculate();
-  debug_level.recalculate();
-  montecarlo.recalculate();
-  simpoints.recalculate();
-  band_volume.recalculate();
-}
+});
 
 function show_ctl(num) 
 {
   var which = document.getElementById('mag'+num);
   which.style.display = 'block';
-  if( num == 5 || num == 6 ) 
-  {
-    meniscus.recalculate();
-    iterations.recalculate();
-  }
 }
 
 function hide(num) 
@@ -173,7 +169,6 @@ function toggle(area)
     else
       text.textContent = "Hide Advanced Options";
     which.style.display = 'block';
-    redraw_controls();
   }
 
   return false;

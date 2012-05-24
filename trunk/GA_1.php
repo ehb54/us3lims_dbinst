@@ -101,8 +101,8 @@ else
 
 // Start displaying page
 $page_title = 'GA Analysis';
-$css = 'css/luna/luna.css';    // This is for the slider
-$js = 'js/analysis.js,js/range.js,js/timer.js,js/slider.js';
+$css = 'css/slider.css';
+$js = 'js/analysis.js,js/GA.js';
 include 'header.php';
 
 ?>
@@ -156,8 +156,6 @@ include 'header.php';
 
 </div>
 
-<!-- This must be loaded down here, after all the controls are on the page -->
-<script type='text/javascript' src='js/GA.js'></script>
 </div>
 
 <?php

@@ -1,0 +1,33 @@
+/* slider.css
+   styles used in the jQuery slider
+*/
+
+/*the slider background*/
+.newslider {
+width:230px;
+height:11px;
+background:url(../images/slider-bg.png);
+position:relative;
+margin:0;
+padding:0 10px;
+}
+ 
+/*Style for the slider button*/
+.ui-slider-handle {
+width:24px;
+height:24px;
+position:absolute;
+top:-7px;
+margin-left:-12px;
+z-index:200;
+background:url(../images/slider-button.png);
+}
+ 
+/*This is the fill bar color*/
+.ui-widget-header {
+background:url(../images/fill.png) no-repeat left;
+height:8px;
+left:1px;
+top:1px;
+position:absolute;
+}

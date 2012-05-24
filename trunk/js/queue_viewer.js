@@ -1,9 +1,22 @@
 // JavaScript routines for queue_viewer.php
 
+// A jQuery function that will update the queue content every 20 sec or so
+// Another advantage is that the next call of this function will only
+//   occur after previous one has completed.
 function update_queue_content()
 {
-  var myAjaxQueue = new Ajax.PeriodicalUpdater('queue_content',
-                    'queue_content.php', {method: 'post', frequency: 20.0, decay: 1});
+  $.ajax(
+  {
+    url:      'queue_content.php',
+    success:  function( data )
+              {
+                $('#queue_content').html( data );
+              },
+    complete: function()
+              {
+                setTimeout( update_queue_content, 20000 );
+              }
+  })
 }
 
 function show_info( jobid )

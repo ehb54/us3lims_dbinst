@@ -117,16 +117,17 @@ function report_select( $select_name, $current_ID = NULL )
 function tripleDetail( $tripleID )
 {
   // Let's start with header information
-  $query  = "SELECT report.reportID, runID, triple " .
+  $query  = "SELECT report.reportID, runID, triple, dataDescription " .
             "FROM reportTriple, report " .
             "WHERE reportTripleID = $tripleID " .
             "AND reportTriple.reportID = report.reportID ";
   $result = mysql_query( $query )
             or die( "Query failed : $query<br />\n" . mysql_error() );
-  list ( $reportID, $runID, $tripleDesc ) = mysql_fetch_array( $result );
+  list ( $reportID, $runID, $tripleDesc, $dataDesc ) = mysql_fetch_array( $result );
   list ( $cell, $channel, $wl ) = explode( "/", $tripleDesc );
+  $description = ( empty($dataDesc) ) ? "" : "; Descr: $dataDesc";
   $text = "<h3>Run ID: $runID</h3>\n" .
-          "<h4>Cell: $cell; Channel: $channel; Wavelength: $wl</h4>\n";
+          "<h4>Cell: $cell; Channel: $channel; Wavelength: $wl$description</h4>\n";
 
   // Now create a list of available analysis types
   $atypes = array();

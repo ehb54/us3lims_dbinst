@@ -44,6 +44,9 @@ Released      : 6/30/2011
   <link rel="shortcut icon" href="images/favicon.ico" />
   <link href="css/common.css" rel="stylesheet" type="text/css" />
   <script src="js/main.js" type="text/javascript"></script>
+  <script type='text/javascript' src='js/jquery.js'></script>
+  <script type='text/javascript' src='js/jquery-ui.js'></script>
+  <link rel='stylesheet' type='text/css' href='css/slider.css' />
 
 HTML;
 

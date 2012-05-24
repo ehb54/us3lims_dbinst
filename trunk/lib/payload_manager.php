@@ -272,7 +272,7 @@ class Payload_2DSA extends Payload_manager
       $job_parameters['debug_timings']    = ( isset( $_POST['debug_timings'] ) &&
                                                      $_POST['debug_timings']   == 'on' )
                                           ? 1 : 0;
-      $job_parameters['debug_level']      = $_POST['debug_level'];
+      $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['experimentID']     = $_SESSION['experimentID'];
       $this->add( 'job_parameters', $job_parameters );
 
@@ -370,13 +370,13 @@ class Payload_GA extends Payload_manager
       $job_parameters['s_grid']           = $_POST['s_grid-value'];
       $job_parameters['k_grid']           = $_POST['k_grid-value'];
       $job_parameters['mutate_sigma']     = $_POST['mutate_sigma-value'];
-      $job_parameters['p_mutate_s']       = $_POST['mutate_s_value'];
-      $job_parameters['p_mutate_k']       = $_POST['mutate_k_value'];
-      $job_parameters['p_mutate_sk']      = $_POST['mutate_sk_value'];
+      $job_parameters['p_mutate_s']       = $_POST['mutate_s-value'];
+      $job_parameters['p_mutate_k']       = $_POST['mutate_k-value'];
+      $job_parameters['p_mutate_sk']      = $_POST['mutate_sk-value'];
       $job_parameters['debug_timings']    = ( isset( $_POST['debug_timings'] ) &&
                                                      $_POST['debug_timings']   == 'on' )
                                           ? 1 : 0;
-      $job_parameters['debug_level']      = $_POST['debug_level'];
+      $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['experimentID']     = $_SESSION['experimentID'];
       // buckets
       $this->add( 'job_parameters', $job_parameters );
