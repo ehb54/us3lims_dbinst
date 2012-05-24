@@ -12,33 +12,26 @@
 function montecarlo()
 {
 echo<<<HTML
-    <fieldset class='option_value'>
-      <legend>Monte Carlo Iterations</legend>
-      <div class="slider" id="montecarlo-slider">
-         <input class="slider-input" id="montecarlo-slider-input"/>
-      </div>
-      <br/>
-      Value: <input id="mc_iterations" size='5'
-                    onchange="montecarlo.setValue(parseInt(this.value))"
-                    name="mc_iterations"
-                    value="montecarlo.setValue(parseInt(this.value))"/>
-
-      Minimum: <input id="montecarlo-min" size='5'
-                      disabled="disabled"/>
-
-      Maximum: <input id="montecarlo-max" size='5'
-                      disabled="disabled"/>
-    </fieldset>
+      <fieldset>
+        <legend>Monte Carlo Iterations</legend>
+        <div class='newslider' id='montecarlo-slider'></div>
+        <br />
+        Value:   <input name='mc_iterations' 
+                        id='mc_iterations'
+                        value='0' />
+        Minimum: <input id="montecarlo-min" 
+                        disabled="disabled" />
+        Maximum: <input id="montecarlo-max" 
+                        disabled="disabled" />
+      </fieldset>
 HTML;
-
 }
 
 // Function to display PMGC options
 function PMGC_option()
 {
 echo<<<HTML
-      <fieldset class='option_value' id='PMGC_option'
-                style='display:none;'>
+      <fieldset>
         <legend>Parallel Masters Group Option</legend>
 
         <table class='noborder' >
@@ -47,8 +40,7 @@ echo<<<HTML
         <input type='checkbox' name='PMGC_enable' id='PMGC_enable' /> 
           Use Parallel Processing
         <br/>
-        <fieldset name='PMGC_count' id='PMGC_count' class='option_value'
-                  style='display:none;'>
+        <fieldset name='PMGC_count' id='PMGC_count' style='display:none;'>
           <legend>Group Count</legend>
             <select name="req_mgroupcount" id='req_mgroupcount'>
               <option value='1' selected='selected'>1</option>
@@ -85,20 +77,17 @@ HTML;
 function simpoints_input()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Simulation Points</legend>
-        <div class="slider" id="simpoints-slider">
-          <input class="slider-input" id="simpoints-slider-input"/>
-        </div>
-        <br/>
-        Value: <input id="simpoints-value"  size='5'
-                      onchange="simpoints.setValue(parseInt(this.value))" 
-                      name="simpoints-value" 
-                      value="simpoints.setValue(parseInt(this.value))"/>
-        Minimum: <input id="simpoints-min"  size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="simpoints-max"  size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='simpoints-slider'></div>
+        <br />
+        Value:   <input name='simpoints-value' 
+                        id='simpoints-value'
+                        value='200' />
+        Minimum: <input id="simpoints-min" 
+                        disabled="disabled" />
+        Maximum: <input id="simpoints-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -107,20 +96,17 @@ HTML;
 function band_volume_input()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Band Loading Volume</legend>
-        <div class="slider" id="band_volume-slider">
-          <input class="slider-input" id="band_volume-slider-input"/>
-        </div>
-        <br/>
-        Value: <input name="band_volume-value"  size='5'
-                      id="band_volume-value" 
-                      value="band_volume.setValue(parseInt(this.value))"
-                      onchange="band_volume.setValue(parseInt(this.value))" />
-        Minimum: <input id="band_volume-min"  size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="band_volume-max"  size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='band_volume-slider'></div>
+        <br />
+        Value:   <input name='band_volume-value' 
+                        id='band_volume-value'
+                        value='0.015' />
+        Minimum: <input id="band_volume-min" 
+                        disabled="disabled" />
+        Maximum: <input id="band_volume-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -165,20 +151,15 @@ echo<<<HTML
         <br/>
         <fieldset>
           <legend>Debug Level</legend>
-          <div class="slider" id="debug_slider">
-             <input class="slider-input" id="debug_slider_input"/>
-          </div>
+          <div class="newslider" id="debug_level-slider"></div>
           <br/>
-          Value: <input id="debug_level" size='5'
-                        onchange="debug_level.setValue(parseInt(this.value))" 
-                        name="debug_level" 
-                        value="debug_level.setValue(parseInt(this.value))"/>
-
-          Minimum: <input id='debug_level_min' size='5'
-                        disabled='disabled' />
-
-          Maximum: <input id='debug_level_max' size='5'
-                        disabled='disabled' />
+          Value:   <input name='debug_level-value'
+                          id='debug_level-value'
+                          value='0' />
+          Minimum: <input id='debug_level-min'
+                          disabled='disabled' />
+          Maximum: <input id='debug_level-max'
+                          disabled='disabled' />
 
         </fieldset>
       </fieldset>
@@ -320,27 +301,21 @@ echo<<<HTML
         <input type="radio" name="meniscus_option" value="1" onclick="show_ctl(5);"/> On<br/>
         <input type="radio" name="meniscus_option" value="0" onclick="hide(5);" 
                checked='checked'/> Off<br/>
-               
         <div style="display:none" id="mag5">
           <br/>
           <input type="text" name="meniscus_range" value="0.03"/>Meniscus Fit Range (cm)<br/>
           <br/>
           <fieldset>
-            <legend>Meniscus Point Count</legend>
-            <div class="slider" id="meniscus-slider">
-               <input class="slider-input" id="meniscus-slider-input"/>
-            </div>
-            <br/>
-            Value: <input id="meniscus_points" size='5'
-                          onchange="meniscus.setValue(parseInt(this.value))" 
-                          name="meniscus_points" 
-                          value="meniscus.setValue(parseInt(this.value))"/>
-                          
-            Minimum: <input id="meniscus-min" size='5'
-                            disabled="disabled"/>
-                            
-            Maximum: <input id="meniscus-max" size='5'
-                            disabled="disabled"/>
+            <legend>Meniscus Grid Points</legend>
+            <div class='newslider' id='meniscus-slider'></div>
+            <br />
+            Value:   <input name='meniscus_points' 
+                            id='meniscus_points'
+                            value='10' />
+            Minimum: <input id="meniscus-min" 
+                            disabled="disabled" />
+            Maximum: <input id="meniscus-max" 
+                            disabled="disabled" />
           </fieldset>
         </div>
       </fieldset>
@@ -361,20 +336,15 @@ echo<<<HTML
           <br/>
           <fieldset>
             <legend>Maximum Number of Iterations</legend>
-            <div class="slider" id="iterations-slider">
-               <input class="slider-input" id="iterations-slider-input"/>
-            </div>
-            <br/>
-            Value: <input id="max_iterations" size='5'
-                          onchange="iterations.setValue(parseInt(this.value))" 
-                          name="max_iterations" 
-                          value="iterations.setValue(parseInt(this.value))"/>
-                       
-            Minimum: <input id="iterations-min" size='5'
-                            disabled="disabled"/>
-                      
-            Maximum: <input id="iterations-max" size='5'
-                            disabled="disabled"/>                                        
+            <div class='newslider' id='iterations-slider'></div>
+            <br />
+            Value:   <input name='max_iterations' 
+                            id='max_iterations'
+                            value='3' />
+            Minimum: <input id="iterations-min" 
+                            disabled="disabled" />
+            Maximum: <input id="iterations-max" 
+                            disabled="disabled" />
           </fieldset>
         </div>
       </fieldset>
@@ -393,19 +363,15 @@ echo<<<HTML
         <table class='noborder' >
         <tr><td>
 
-        <div class="slider" id="demes-slider">
-          <input class="slider-input" id="demes-slider-input"/> 
-        </div>
-
-        <br/>
-        Value: <input name="demes-value" size='5'
-                      value="demes.setValue(parseInt(this.value))" 
-                      id="demes-value"
-                      onchange="demes.setValue(parseInt(this.value))"/>
-        Minimum: <input id="demes-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="demes-max" size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='demes-slider'></div>
+        <br />
+        Value:   <input name='demes-value' 
+                        id='demes-value'
+                        value='31' />
+        Minimum: <input id="demes-min" 
+                        disabled="disabled" />
+        Maximum: <input id="demes-max" 
+                        disabled="disabled" />
 
         </td>
 
@@ -433,21 +399,17 @@ HTML;
 function genes_setup()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Population Size</legend>
-        <div class="genes" id="genes-slider">
-          <input class="slider-input" id="genes-slider-input"/>
-        </div>
-        <br/>
-
-        Value: <input name="genes-value" size='5'
-                      value="genes.setValue(parseInt(this.value))" 
-                      id="genes-value"
-                      onchange="genes.setValue(parseInt(this.value))"/>
-        Minimum: <input id="genes-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="genes-max" size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='genes-slider'></div>
+        <br />
+        Value:   <input name='genes-value' 
+                        id='genes-value'
+                        value='100' />
+        Minimum: <input id="genes-min" 
+                        disabled="disabled" />
+        Maximum: <input id="genes-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -456,20 +418,17 @@ HTML;
 function generations_setup()
 {
 echo<<<HTML
-       <fieldset class='option_value'>
+       <fieldset>
         <legend>Generations</legend>
-        <div class="slider" id="generations-slider">
-          <input class="slider-input" id="generations-slider-input"/>
-        </div>
-        <br/>
-        Value: <input name="generations-value" size='5'
-                      value="s.setValue(parseInt(this.value))" 
-                      id="h-value" 
-                      onchange="s.setValue(parseInt(this.value))"/>
-        Minimum: <input id="h-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="h-max" size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='generations-slider'></div>
+        <br />
+        Value:   <input name='generations-value' 
+                        id='generations-value'
+                        value='100' />
+        Minimum: <input id="generations-min" 
+                        disabled="disabled" />
+        Maximum: <input id="generations-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -478,20 +437,17 @@ HTML;
 function crossover_percent()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Crossover Percent</legend>
-        <div class="slider" id="crossover-slider">
-          <input class="slider-input" id="crossover-slider-input"/>
-        </div>
-        <br/>
-        Value: <input name="crossover-value" size='5'
-                      value="crossover.setValue(parseInt(this.value))" 
-                      id="crossover-value" 
-                      onchange="crossover.setValue(parseInt(this.value))"/>
-        Minimum: <input id="crossover-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="crossover-max" size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='crossover-slider'></div>
+        <br />
+        Value:   <input name='crossover-value' 
+                        id='crossover-value'
+                        value='50' />
+        Minimum: <input id="crossover-min" 
+                        disabled="disabled" />
+        Maximum: <input id="crossover-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -500,20 +456,17 @@ HTML;
 function mutation_percent()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Mutation Percent</legend>
-        <div class="slider" id="mutation-slider">
-          <input class="slider-input" id="mutation-slider-input"/>
-        </div>
-        <br/>
-        Value: <input name="mutation-value" size='5'
-                      value="mutation.setValue(parseInt(this.value))" 
-                      id="mutation-value" 
-                      onchange="mutation.setValue(parseInt(this.value))"/>
-        Minimum: <input id="mutation-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="mutation-max" size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='mutation-slider'></div>
+        <br />
+        Value:   <input name='mutation-value' 
+                        id='mutation-value'
+                        value='50' />
+        Minimum: <input id="mutation-min" 
+                        disabled="disabled" />
+        Maximum: <input id="mutation-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -522,20 +475,17 @@ HTML;
 function plague_percent()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Plague Percent</legend>
-        <div class="slider" id="plague-slider">
-          <input class="slider-input" id="plague-slider-input"/>
-        </div>
-        <br/>
-        Value: <input id="plague-value" size='5'
-                      onchange="plague.setValue(parseInt(this.value))" 
-                      name="plague-value" 
-                      value="plague.setValue(parseInt(this.value))"/>
-        Minimum: <input id="plague-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="plague-max" size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='plague-slider'></div>
+        <br />
+        Value:   <input name='plague-value' 
+                        id='plague-value'
+                        value='4' />
+        Minimum: <input id="plague-min" 
+                        disabled="disabled" />
+        Maximum: <input id="plague-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -544,20 +494,17 @@ HTML;
 function elitism_setup()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Elitism</legend>
-        <div class="slider" id="elitism-slider">
-          <input class="slider-input" id="elitism-slider-input"/>
-        </div>
-        <br/>
-        Value: <input id="elitism-value" size='5'
-                      onchange="elitism.setValue(parseInt(this.value))" 
-                      name="elitism-value" 
-                      value="elitism.setValue(parseInt(this.value))"/>
-        Minimum: <input id="elitism-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="elitism-max" size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='elitism-slider'></div>
+        <br />
+        Value:   <input name='elitism-value' 
+                        id='elitism-value'
+                        value='2' />
+        Minimum: <input id="elitism-min" 
+                        disabled="disabled" />
+        Maximum: <input id="elitism-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -566,20 +513,17 @@ HTML;
 function migration_rate()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Migration Rate</legend>
-        <div class="slider" id="migration-slider">
-          <input class="slider-input" id="migration-slider-input"/>
-        </div>
-        <br/>
-        Value: <input id="migration-value" size='5'
-                      onchange="migration.setValue(parseInt(this.value))" 
-                      name="migration-value" 
-                      value="migration.setValue(parseInt(this.value))"/>
-        Minimum: <input id="migration-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="migration-max" size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='migration-slider'></div>
+        <br />
+        Value:   <input name='migration-value' 
+                        id='migration-value'
+                        value='3' />
+        Minimum: <input id="migration-min" 
+                        disabled="disabled" />
+        Maximum: <input id="migration-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -588,20 +532,17 @@ HTML;
 function ga_regularization_setup()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Regularization</legend>
-        <div class="slider" id="regularization-slider">
-          <input class="slider-input" id="regularization-slider-input"/>
-        </div>
-        <br/>
-        Value: <input id="regularization-value" size='5'
-                      onchange="regularization.setValue(parseInt(this.value))" 
-                      name="regularization-value" 
-                      value="regularization.setValue(parseInt(this.value))"/>
-        Minimum: <input id="regularization-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="regularization-max" size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='regularization-slider'></div>
+        <br />
+        Value:   <input name='regularization-value' 
+                        id='regularization-value'
+                        value='5' />
+        Minimum: <input id="regularization-min" 
+                        disabled="disabled" />
+        Maximum: <input id="regularization-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -610,20 +551,17 @@ HTML;
 function random_seed()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Random Seed</legend>
-        <div class="slider" id="seed-slider">
-          <input class="slider-input" id="seed-slider-input"/>
-        </div>
-        <br/>
-        Value: <input id="seed-value" size='5'
-                      onchange="seed.setValue(parseInt(this.value))" 
-                      name="seed-value" 
-                      value="seed.setValue(parseInt(this.value))"/>
-        Minimum: <input id="seed-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="seed-max" size='5'
-                      disabled="disabled"/>
+        <div class='newslider' id='seed-slider'></div>
+        <br />
+        Value:   <input name='seed-value' 
+                        id='seed-value'
+                        value='0' />
+        Minimum: <input id="seed-min" 
+                        disabled="disabled" />
+        Maximum: <input id="seed-max" 
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -632,22 +570,17 @@ HTML;
 function conc_threshold_setup()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Concentration Threshold</legend>
-
-        <div class="slider" id="conc_threshold-slider">
-          <input class="slider_input" id="conc_threshold-slider-input"/>
-        </div>
-
+        <div class="newslider" id="conc_threshold-slider"></div>
         <br/>
-        Value: <input name="conc_threshold-value" size='5'
-                      value="conc_threshold.setValue(parseInt(this.value))" 
-                      id="conc_threshold-value"
-                      onchange="conc_threshold.setValue(parseInt(this.value))"/>
-        Minimum: <input id="conc_threshold-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="conc_threshold-max" size='5'
-                      disabled="disabled"/>
+        Value:   <input name="conc_threshold-value"
+                        id="conc_threshold-value"
+                        value="0.00001" />
+        Minimum: <input id="conc_threshold-min"
+                        disabled="disabled"/>
+        Maximum: <input id="conc_threshold-max"
+                        disabled="disabled"/>
       </fieldset>
 HTML;
 }
@@ -656,22 +589,17 @@ HTML;
 function s_grid_setup()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>S Grid</legend>
-
-        <div class="slider" id="s_grid-slider">
-          <input class="slider-input" id="s_grid-slider-input"/>
-        </div>
-
+        <div class="newslider" id="s_grid-slider"></div>
         <br/>
-        Value: <input name="s_grid-value" size='5'
-                      value="s_grid.setValue(parseInt(this.value))" 
-                      id="s_grid-value"
-                      onchange="s_grid.setValue(parseInt(this.value))"/>
-        Minimum: <input id="s_grid-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="s_grid-max" size='5'
-                      disabled="disabled"/>
+        Value:   <input name="s_grid-value"
+                        id="s_grid-value"
+                        value="100" />
+        Minimum: <input id="s_grid-min"
+                        disabled="disabled"/>
+        Maximum: <input id="s_grid-max"
+                        disabled="disabled"/>
       </fieldset>
 HTML;
 }
@@ -680,22 +608,18 @@ HTML;
 function k_grid_setup()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>K Grid</legend>
-
-        <div class="slider" id="k_grid-slider">
-          <input class="slider-input" id="k_grid-slider-input"/>
+        <div class="newslider" id="k_grid-slider">
         </div>
-
         <br/>
-        Value: <input name="k_grid-value" size='5'
-                      value="k_grid.setValue(parseInt(this.value))" 
-                      id="k_grid-value"
-                      onchange="k_grid.setValue(parseInt(this.value))"/>
-        Minimum: <input id="k_grid-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="k_grid-max" size='5'
-                      disabled="disabled"/>
+        Value:   <input name="k_grid-value"
+                        id="k_grid-value"
+                        value="100" />
+        Minimum: <input id="k_grid-min"
+                        disabled="disabled" />
+        Maximum: <input id="k_grid-max"
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }
@@ -704,21 +628,16 @@ HTML;
 function mutate_sigma_setup()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Mutate Sigma</legend>
-
-        <div class="slider" id="mutate_sigma-slider">
-          <input class="slider-input" id="mutate_sigma-slider-input"/>
-        </div>
-
+        <div class="newslider" id="mutate_sigma-slider"></div>
         <br/>
-        Value: <input name="mutate_sigma-value" size='5'
-                      value="mutate_sigma.setValue(parseInt(this.value))" 
+        Value: <input name="mutate_sigma-value"
                       id="mutate_sigma-value"
-                      onchange="mutate_sigma.setValue(parseInt(this.value))"/>
-        Minimum: <input id="mutate_sigma-min" size='5'
+                      value="20" />
+        Minimum: <input id="mutate_sigma-min"
                       disabled="disabled"/>
-        Maximum: <input id="mutate_sigma-max" size='5'
+        Maximum: <input id="mutate_sigma-max"
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -728,22 +647,18 @@ HTML;
 function mutate_s_setup()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Mutate s</legend>
-
-        <div class="slider" id="mutate_s-slider">
-          <input class="slider-input" id="mutate_s-slider-input"/>
+        <div class="newslider" id="mutate_s-slider">
         </div>
-
         <br/>
-        Value: <input name="mutate_s_value" size='5'
-                      value="mutate_s.setValue(parseInt(this.value))" 
-                      id="mutate_s_value"
-                      onchange="mutate_s.setValue(parseInt(this.value))"/>
-        Minimum: <input id="mutate_s-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="mutate_s-max" size='5'
-                      disabled="disabled"/>
+        Value:   <input name="mutate_s-value"
+                        id="mutate_s-value"
+                        value="20" />
+        Minimum: <input id="mutate_s-min"
+                        disabled="disabled"/>
+        Maximum: <input id="mutate_s-max"
+                        disabled="disabled"/>
       </fieldset>
 HTML;
 }
@@ -752,22 +667,17 @@ HTML;
 function mutate_k_setup()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Mutate k</legend>
-
-        <div class="slider" id="mutate_k-slider">
-          <input class="slider-input" id="mutate_k-slider-input"/>
-        </div>
-
+        <div class="newslider" id="mutate_k-slider"></div>
         <br/>
-        Value: <input name="mutate_k_value" size='5'
-                      value="mutate_k.setValue(parseInt(this.value))" 
-                      id="mutate_k_value"
-                      onchange="mutate_k.setValue(parseInt(this.value))"/>
-        Minimum: <input id="mutate_k-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="mutate_k-max" size='5'
-                      disabled="disabled"/>
+        Value:   <input name="mutate_k-value"
+                        id="mutate_k-value"
+                        value="20" />
+        Minimum: <input id="mutate_k-min"
+                        disabled="disabled"/>
+        Maximum: <input id="mutate_k-max"
+                        disabled="disabled"/>
       </fieldset>
 HTML;
 }
@@ -776,22 +686,18 @@ HTML;
 function mutate_sk_setup()
 {
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset>
         <legend>Mutate s and k</legend>
-
-        <div class="slider" id="mutate_sk-slider">
-          <input class="slider-input" id="mutate_sk-slider-input"/>
+        <div class="newslider" id="mutate_sk-slider">
         </div>
-
         <br/>
-        Value: <input name="mutate_sk_value" size='5'
-                      value="mutate_sk.setValue(parseInt(this.value))" 
-                      id="mutate_sk_value"
-                      onchange="mutate_sk.setValue(parseInt(this.value))"/>
-        Minimum: <input id="mutate_sk-min" size='5'
-                      disabled="disabled"/>
-        Maximum: <input id="mutate_sk-max" size='5'
-                      disabled="disabled"/>
+        Value:   <input name="mutate_sk-value"
+                        id="mutate_sk-value"
+                        value="20" />
+        Minimum: <input id="mutate_sk-min"
+                        disabled="disabled" />
+        Maximum: <input id="mutate_sk-max"
+                        disabled="disabled" />
       </fieldset>
 HTML;
 }

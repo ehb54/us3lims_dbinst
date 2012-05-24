@@ -48,7 +48,7 @@ if ( isset( $_SESSION['queue_viewer_sort_order'] ) )
 
 // Start displaying page
 $page_title = "Queue Viewer";
-$js     = 'js/prototype.js,js/queue_viewer.js';
+$js     = 'js/queue_viewer.js';
 $onload = "onload='update_queue_content();'";
 $css    = 'css/queue_viewer.css';
 include 'header.php';

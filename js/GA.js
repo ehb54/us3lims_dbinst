@@ -1,512 +1,487 @@
 // Javascript for GA controls
 
-
-// Protect ourselves in case the controls aren't present
-
-// Demes Slider setup
-try {
-var demes          = new Slider(document.getElementById("demes-slider"), 
-                                document.getElementById("demes-slider-input"));
-
-demes.setMinimum(1);
-demes.setMaximum(100);
-demes.setValue(31);
-document.getElementById("demes-value").value = demes.getValue();
-document.getElementById("demes-min").value = demes.getMinimum();
-document.getElementById("demes-max").value = demes.getMaximum();
-
-demes.onchange = function () 
+// jQuery slider controls
+$(document).ready(function()
 {
-        document.getElementById("demes-value").value = demes.getValue();
-        document.getElementById("demes-min").value = demes.getMinimum();
-        document.getElementById("demes-max").value = demes.getMaximum();
-};
-
-} catch(e_demes) {}
-
-// Genes Slider setup
-try {
-var genes          = new Slider(document.getElementById("genes-slider"), 
-                                document.getElementById("genes-slider-input"));
-
-genes.setMinimum(25);
-genes.setMaximum(1000);
-genes.setValue(100);
-document.getElementById("genes-value").value = genes.getValue();
-document.getElementById("genes-min").value = genes.getMinimum();
-document.getElementById("genes-max").value = genes.getMaximum();
-
-genes.onchange = function () 
-{
-        document.getElementById("genes-value").value = genes.getValue();
-        document.getElementById("genes-min").value = genes.getMinimum();
-        document.getElementById("genes-max").value = genes.getMaximum();
-};
-
-} catch(e_genes) {}
-
-
-//Seed Slider setup
-try {
-var seed           = new Slider(document.getElementById("seed-slider"), 
-                                document.getElementById("seed-slider-input"));
-
-seed.setMinimum(0);
-seed.setMaximum(1000);
-seed.setValue(0);
-document.getElementById("seed-value").value = seed.getValue();
-document.getElementById("seed-min").value = seed.getMinimum();
-document.getElementById("seed-max").value = seed.getMaximum();
-
-seed.onchange = function () 
-{
-        document.getElementById("seed-value").value = seed.getValue();
-        document.getElementById("seed-min").value = seed.getMinimum();
-        document.getElementById("seed-max").value = seed.getMaximum();
-};
-
-} catch(e_seed) {}
-
-//Montecarlo Slider setup
-try {
-var montecarlo     = new Slider(document.getElementById("montecarlo-slider"), 
-                                document.getElementById("montecarlo-slider-input"));
-
-montecarlo.setMinimum(1);
-montecarlo.setMaximum(100);
-montecarlo.setValue(1);
-document.getElementById("mc_iterations").value = montecarlo.getValue();
-document.getElementById("montecarlo-min").value = montecarlo.getMinimum();
-document.getElementById("montecarlo-max").value = montecarlo.getMaximum();
-
-montecarlo.onchange = function () 
-{
-        document.getElementById("mc_iterations").value = montecarlo.getValue();
-        document.getElementById("montecarlo-min").value = montecarlo.getMinimum();
-        document.getElementById("montecarlo-max").value = montecarlo.getMaximum();
-
-        var mc_iterations = document.getElementById( "mc_iterations" );
-        var PMGC_option   = document.getElementById( "PMGC_option"   );
-
-        if ( mc_iterations.value > 1 )
-           PMGC_option.style.display = "block";
-        else
-           PMGC_option.style.display = "none";
-};
-
-} catch(e_montecarlo) {}
-
-// Parallel masters group count setup
-try {
-var PMGC_enable     = document.getElementById( "PMGC_enable"     );
-var PMGC_count      = document.getElementById( "PMGC_count"      );
-var req_mgroupcount = document.getElementById( "req_mgroupcount" );
-
-PMGC_enable.onchange = function ()
-{
-  if ( PMGC_enable.checked )
+  // Montecarlo Slider setup
+  $("#montecarlo-min").attr('value', 0  );
+  $("#montecarlo-max").attr('value', 100);
+  $("#montecarlo-slider").slider(
   {
-    PMGC_count.style.display = "block";
-    req_mgroupcount.value    = 4;
-  }
-  else
+    animate: true,
+    range:   "min",
+    value:   0,
+    min:     0,
+    max:     100,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#mc_iterations" ).attr('value', ui.value);
+    },
+  });
+
+  $("#mc_iterations").change( function()
   {
-    PMGC_count.style.display = "none";
-    req_mgroupcount.value    = 1;
-  }
-}
-
-} catch(e_PMGC_option) {}
-
-// Crossover Slider setup
-try {
-var crossover      = new Slider(document.getElementById("crossover-slider"), 
-                                document.getElementById("crossover-slider-input"));
-
-crossover.setMinimum(0);
-crossover.setMaximum(100);
-crossover.setValue(50);
-document.getElementById("crossover-value").value = crossover.getValue();
-document.getElementById("crossover-min").value = crossover.getMinimum();
-document.getElementById("crossover-max").value = crossover.getMaximum();
-
-crossover.onchange = function () 
-{
-        document.getElementById("crossover-value").value = crossover.getValue();
-        document.getElementById("crossover-min").value = crossover.getMinimum();
-        document.getElementById("crossover-max").value = crossover.getMaximum();
-};
-
-} catch(e_crossover) {}
-
-
-// Mutation Slider setup
-try {
-var mutation       = new Slider(document.getElementById("mutation-slider"), 
-                                document.getElementById("mutation-slider-input"));
-
-mutation.setMinimum(0);
-mutation.setMaximum(100);
-mutation.setValue(50);
-document.getElementById("mutation-value").value = mutation.getValue();
-document.getElementById("mutation-min").value = mutation.getMinimum();
-document.getElementById("mutation-max").value = mutation.getMaximum();
-
-mutation.onchange = function () 
-{
-        document.getElementById("mutation-value").value = mutation.getValue();
-        document.getElementById("mutation-min").value = mutation.getMinimum();
-        document.getElementById("mutation-max").value = mutation.getMaximum();
-};
-
-} catch(e_mutation) {}
-
-// Plague Slider setup
-try {
-var plague         = new Slider(document.getElementById("plague-slider"), 
-                                document.getElementById("plague-slider-input"));
-
-plague.setMinimum(0);
-plague.setMaximum(100);
-plague.setValue(4);
-document.getElementById("plague-value").value = plague.getValue();
-document.getElementById("plague-min").value = plague.getMinimum();
-document.getElementById("plague-max").value = plague.getMaximum();
-
-plague.onchange = function () 
-{
-        document.getElementById("plague-value").value = plague.getValue();
-        document.getElementById("plague-min").value = plague.getMinimum();
-        document.getElementById("plague-max").value = plague.getMaximum();
-};
-
-} catch(e_plague) {}
-
-
-// Elitism Slider setup
-try {
-var elitism        = new Slider(document.getElementById("elitism-slider"), 
-                                document.getElementById("elitism-slider-input"));
-
-elitism.setMinimum(0);
-elitism.setMaximum(5);
-elitism.setValue(2);
-document.getElementById("elitism-value").value = elitism.getValue();
-document.getElementById("elitism-min").value = elitism.getMinimum();
-document.getElementById("elitism-max").value = elitism.getMaximum();
-
-elitism.onchange = function () 
-{
-        document.getElementById("elitism-value").value = elitism.getValue();
-        document.getElementById("elitism-min").value = elitism.getMinimum();
-        document.getElementById("elitism-max").value = elitism.getMaximum();
-};
-
-} catch(e_elitism) {}
-
-// Migration Slider setup
-try {
-var migration      = new Slider(document.getElementById("migration-slider"), 
-                                document.getElementById("migration-slider-input"));
-
-migration.setMinimum(0);
-migration.setMaximum(50);
-migration.setValue(3);
-document.getElementById("migration-value").value = migration.getValue();
-document.getElementById("migration-min").value = migration.getMinimum();
-document.getElementById("migration-max").value = migration.getMaximum();
-
-migration.onchange = function () 
-{
-        document.getElementById("migration-value").value = migration.getValue();
-        document.getElementById("migration-min").value = migration.getMinimum();
-        document.getElementById("migration-max").value = migration.getMaximum();
-};
-
-} catch(e_migration) {}
-
-// Regularization Slider setup
-try {
-var regularization = new Slider(document.getElementById("regularization-slider"), 
-                                document.getElementById("regularization-slider-input"));
-
-regularization.setMinimum(0);
-regularization.setMaximum(100);
-regularization.setValue(5);
-document.getElementById("regularization-value").value = 0.05;
-document.getElementById("regularization-min").value = 0;
-document.getElementById("regularization-max").value = 1;
-
-regularization.onchange = function () 
-{
-        document.getElementById("regularization-value").value = regularization.getValue()/100;
-        document.getElementById("regularization-min").value = 0;
-        document.getElementById("regularization-max").value = 1;
-};
-
-} catch(e_regularization) {}
-
-// Generations slider setup
-try {
-var s              = new Slider(document.getElementById("generations-slider"), 
-                                document.getElementById("generations-slider-input"));
-
-s.setMinimum(25);
-s.setMaximum(500);
-s.setValue(100);
-document.getElementById("h-value").value = s.getValue();
-document.getElementById("h-min").value = s.getMinimum();
-document.getElementById("h-max").value = s.getMaximum();
-
-s.onchange = function () 
-{
-        document.getElementById("h-value").value = s.getValue();
-        document.getElementById("h-min").value = s.getMinimum();
-        document.getElementById("h-max").value = s.getMaximum();
-};
-
-} catch(e_s) {}
-
-// Simpoints Slider setup
-try {
-var simpoints      = new Slider(document.getElementById("simpoints-slider"),
-                                document.getElementById("simpoints-slider-input"));
-simpoints.setMinimum(50);
-simpoints.setMaximum(5000);
-simpoints.setValue(200);
-document.getElementById("simpoints-value").value = simpoints.getValue();
-document.getElementById("simpoints-min").value = simpoints.getMinimum();
-document.getElementById("simpoints-max").value = simpoints.getMaximum();
-simpoints.onchange = function () 
-{
-        document.getElementById("simpoints-value").value = simpoints.getValue();
-        document.getElementById("simpoints-min").value = simpoints.getMinimum();
-        document.getElementById("simpoints-max").value = simpoints.getMaximum();
-};
-
-} catch (e_simpoints) {}
-
-// Band_volume Slider setup
-try {
-var band_volume    = new Slider(document.getElementById("band_volume-slider"),
-                                document.getElementById("band_volume-slider-input"));
-
-band_volume.setMinimum(0);
-band_volume.setMaximum(50);
-band_volume.setValue(15);
-document.getElementById("band_volume-value").value = 0.015;
-document.getElementById("band_volume-min").value   = 0;
-document.getElementById("band_volume-max").value   = 0.05;
-
-band_volume.onchange = function () 
-{
-        document.getElementById("band_volume-value").value 
-          = band_volume.getValue()/1000;
-        document.getElementById("band_volume-min").value   = 0;
-        document.getElementById("band_volume-max").value   = 0.05;
-};
-
-} catch(e_band_volume) {}
-
-// Concentration Threshhold Slider setup
-try {
-var conc_threshold          = new Slider(document.getElementById("conc_threshold-slider"), 
-                                document.getElementById("conc_threshold-slider-input"));
-
-conc_threshold.setMinimum(-8);
-conc_threshold.setMaximum(-1);
-conc_threshold.setValue(-6);
-document.getElementById("conc_threshold-value").value 
-  = Math.pow(10,conc_threshold.getValue());
-document.getElementById("conc_threshold-min").value 
-  = Math.pow(10,conc_threshold.getMinimum());
-document.getElementById("conc_threshold-max").value 
-  = Math.pow(10,conc_threshold.getMaximum());
-
-conc_threshold.onchange = function () 
-{
-        document.getElementById("conc_threshold-value").value
-          = Math.pow(10,conc_threshold.getValue());
-        document.getElementById("conc_threshold-min").value
-          = Math.pow(10,conc_threshold.getMinimum());
-        document.getElementById("conc_threshold-max").value
-          = Math.pow(10,conc_threshold.getMaximum());
-};
-
-} catch(e_conc_threshold) {}
-
-// S Grid Slider setup
-try {
-var s_grid          = new Slider(document.getElementById("s_grid-slider"), 
-                                document.getElementById("s_grid-slider-input"));
-
-s_grid.setMinimum(10);
-s_grid.setMaximum(200);
-s_grid.setValue(100);
-document.getElementById("s_grid-value").value = s_grid.getValue();
-document.getElementById("s_grid-min").value = s_grid.getMinimum();
-document.getElementById("s_grid-max").value = s_grid.getMaximum();
-
-s_grid.onchange = function () 
-{
-        document.getElementById("s_grid-value").value = s_grid.getValue();
-        document.getElementById("s_grid-min").value = s_grid.getMinimum();
-        document.getElementById("s_grid-max").value = s_grid.getMaximum();
-};
-
-} catch(e_s_grid) {}
-
-// K Grid Slider setup
-try {
-var k_grid          = new Slider(document.getElementById("k_grid-slider"), 
-                                document.getElementById("k_grid-slider-input"));
-
-k_grid.setMinimum(10);
-k_grid.setMaximum(200);
-k_grid.setValue(100);
-document.getElementById("k_grid-value").value = k_grid.getValue();
-document.getElementById("k_grid-min").value = k_grid.getMinimum();
-document.getElementById("k_grid-max").value = k_grid.getMaximum();
-
-k_grid.onchange = function () 
-{
-        document.getElementById("k_grid-value").value = k_grid.getValue();
-        document.getElementById("k_grid-min").value = k_grid.getMinimum();
-        document.getElementById("k_grid-max").value = k_grid.getMaximum();
-};
-
-} catch(e_k_grid) {}
-
-// Mutate Sigma Slider setup
-try {
-var mutate_sigma          = new Slider(document.getElementById("mutate_sigma-slider"), 
-                                document.getElementById("mutate_sigma-slider-input"));
-
-mutate_sigma.setMinimum(10);
-mutate_sigma.setMaximum(40);
-mutate_sigma.setValue(20);
-document.getElementById("mutate_sigma-value").value = 2.0;
-document.getElementById("mutate_sigma-min").value   = 1.0;
-document.getElementById("mutate_sigma-max").value   = 4.0;
-
-mutate_sigma.onchange = function () 
-{
-        document.getElementById("mutate_sigma-value").value = mutate_sigma.getValue()/10;
-        document.getElementById("mutate_sigma-min").value   = 1.0;
-        document.getElementById("mutate_sigma-max").value   = 4.0;
-};
-
-} catch(e_mutate_sigma) {}
-
-// Mutate s Slider setup
-try {
-var mutate_s          = new Slider(document.getElementById("mutate_s-slider"), 
-                                document.getElementById("mutate_s-slider-input"));
-
-mutate_s.setMinimum(0);
-mutate_s.setMaximum(100);
-mutate_s.setValue(20);
-document.getElementById("mutate_s_value").value = mutate_s.getValue();
-document.getElementById("mutate_s-min").value = mutate_s.getMinimum();
-document.getElementById("mutate_s-max").value = mutate_s.getMaximum();
-
-mutate_s.onchange = function () 
-{
-        document.getElementById("mutate_s_value").value = mutate_s.getValue();
-        document.getElementById("mutate_s-min").value = mutate_s.getMinimum();
-        document.getElementById("mutate_s-max").value = mutate_s.getMaximum();
-};
-
-} catch(e_mutate_s) {}
-
-// Mutate k Slider setup
-try {
-var mutate_k          = new Slider(document.getElementById("mutate_k-slider"), 
-                                document.getElementById("mutate_k-slider-input"));
-
-mutate_k.setMinimum(0);
-mutate_k.setMaximum(100);
-mutate_k.setValue(20);
-document.getElementById("mutate_k_value").value = mutate_k.getValue();
-document.getElementById("mutate_k-min").value = mutate_k.getMinimum();
-document.getElementById("mutate_k-max").value = mutate_k.getMaximum();
-
-mutate_k.onchange = function () 
-{
-        document.getElementById("mutate_k_value").value = mutate_k.getValue();
-        document.getElementById("mutate_k-min").value = mutate_k.getMinimum();
-        document.getElementById("mutate_k-max").value = mutate_k.getMaximum();
-};
-
-} catch(e_mutate_k) {}
-
-// Mutate s/k Slider setup
-try {
-var mutate_sk          = new Slider(document.getElementById("mutate_sk-slider"), 
-                                document.getElementById("mutate_sk-slider-input"));
-
-mutate_sk.setMinimum(0);
-mutate_sk.setMaximum(100);
-mutate_sk.setValue(20);
-document.getElementById("mutate_sk_value").value = mutate_sk.getValue();
-document.getElementById("mutate_sk-min").value = mutate_sk.getMinimum();
-document.getElementById("mutate_sk-max").value = mutate_sk.getMaximum();
-
-mutate_sk.onchange = function () 
-{
-        document.getElementById("mutate_sk_value").value = mutate_sk.getValue();
-        document.getElementById("mutate_sk-min").value = mutate_sk.getMinimum();
-        document.getElementById("mutate_sk-max").value = mutate_sk.getMaximum();
-};
-
-} catch(e_mutate_sk) {}
-
-try {
-var debug_level = new Slider(document.getElementById("debug_slider"), 
-                             document.getElementById("debug_slider_input"));
-debug_level.setMinimum(0);
-debug_level.setMaximum(4);
-debug_level.setValue(0);
-document.getElementById("debug_level").value = debug_level.getValue();
-
-debug_level.onchange = function () 
-{
-  document.getElementById("debug_level").value = debug_level.getValue();
-};
-
-} catch(e_debug_level) {}
-
-window.onresize = function () 
-{
-  redraw_controls();
-};
-
-function redraw_controls()
-{
-  montecarlo.recalculate()
-  s.recalculate();
-  demes.recalculate();
-  genes.recalculate();
-  mutation.recalculate();
-  regularization.recalculate();
-  crossover.recalculate();
-  plague.recalculate();
-  elitism.recalculate();
-  migration.recalculate();
-  s.recalculate();
-  simpoints.recalculate();
-  band_volume.recalculate();
-
-  conc_threshold.recalculate();
-  s_grid.recalculate();
-  k_grid.recalculate();
-  mutate_sigma.recalculate();
-  mutate_s.recalculate();
-  mutate_k.recalculate();
-  mutate_sk.recalculate();
-
-  debug_level.recalculate();
-}
+    $("#montecarlo-slider").slider( 'value', this.value );
+  });
+
+  // Demes Slider setup
+  $("#demes-min").attr('value', 1  );
+  $("#demes-max").attr('value', 100);
+  $("#demes-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   31,
+    min:     1,
+    max:     100,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#demes-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#demes-value").change( function()
+  {
+    $("#demes-slider").slider( 'value', this.value );
+  });
+
+  // Population Slider setup
+  $("#genes-min").attr('value', 25  );
+  $("#genes-max").attr('value', 1000);
+  $("#genes-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   100,
+    min:     25,
+    max:     1000,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#genes-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#genes-value").change( function()
+  {
+    $("#genes-slider").slider( 'value', this.value );
+  });
+
+  // Generations Slider setup
+  $("#generations-min").attr('value', 25  );
+  $("#generations-max").attr('value', 500);
+  $("#generations-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   100,
+    min:     25,
+    max:     500,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#generations-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#generations-value").change( function()
+  {
+    $("#generations-slider").slider( 'value', this.value );
+  });
+
+  // Crossover Slider setup
+  $("#crossover-min").attr('value', 0  );
+  $("#crossover-max").attr('value', 100);
+  $("#crossover-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   50,
+    min:     0,
+    max:     100,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#crossover-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#crossover-value").change( function()
+  {
+    $("#crossover-slider").slider( 'value', this.value );
+  });
+
+  // Mutation Slider setup
+  $("#mutation-min").attr('value', 0  );
+  $("#mutation-max").attr('value', 100);
+  $("#mutation-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   50,
+    min:     0,
+    max:     100,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#mutation-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#mutation-value").change( function()
+  {
+    $("#mutation-slider").slider( 'value', this.value );
+  });
+
+  // Plague Slider setup
+  $("#plague-min").attr('value', 0  );
+  $("#plague-max").attr('value', 100);
+  $("#plague-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   4,
+    min:     0,
+    max:     100,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#plague-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#plague-value").change( function()
+  {
+    $("#plague-slider").slider( 'value', this.value );
+  });
+
+  // Elitism Slider setup
+  $("#elitism-min").attr('value', 0 );
+  $("#elitism-max").attr('value', 5 );
+  $("#elitism-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   2,
+    min:     0,
+    max:     5,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#elitism-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#elitism-value").change( function()
+  {
+    $("#elitism-slider").slider( 'value', this.value );
+  });
+
+  // Migration Slider setup
+  $("#migration-min").attr('value', 0  );
+  $("#migration-max").attr('value', 50);
+  $("#migration-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   3,
+    min:     0,
+    max:     50,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#migration-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#migration-value").change( function()
+  {
+    $("#migration-slider").slider( 'value', this.value );
+  });
+
+  // Regularization Slider setup
+  $("#regularization-min").attr('value', 0  );
+  $("#regularization-max").attr('value', 100);
+  $("#regularization-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   5,
+    min:     0,
+    max:     100,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#regularization-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#regularization-value").change( function()
+  {
+    $("#regularization-slider").slider( 'value', this.value );
+  });
+
+  // Random Seed Slider setup
+  $("#seed-min").attr('value', 0   );
+  $("#seed-max").attr('value', 1000);
+  $("#seed-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   0,
+    min:     0,
+    max:     1000,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#seed-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#seed-value").change( function()
+  {
+    $("#seed-slider").slider( 'value', this.value );
+  });
+
+  // Simpoints Slider setup
+  $("#simpoints-min").attr('value', 50  );
+  $("#simpoints-max").attr('value', 5000);
+  $("#simpoints-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   200,
+    min:     50,
+    max:     5000,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#simpoints-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#simpoints-value").change( function()
+  {
+    $("#simpoints-slider").slider( 'value', this.value );
+  });
+
+  // Band_volume Slider setup
+  $("#band_volume-min").attr('value', 0.0 );
+  $("#band_volume-max").attr('value', 0.05);
+  $("#band_volume-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   0.015,
+    min:     0.0,
+    max:     0.05,
+    step:    0.0001,
+    slide: function( event, ui )
+    {
+      $( "#band_volume-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#band_volume-value").change( function()
+  {
+    $("#band_volume-slider").slider( 'value', this.value );
+  });
+
+  // Parallel masters group count setup
+  $("#PMGC_enable").change( function()
+  {
+    if ( $("#PMGC_enable").is(":checked") )
+    {
+       $("#PMGC_count").show();
+       $("#req_mgroupcount").attr( 'value', 4 );
+    }
+
+    else
+    {
+       $("#PMGC_count").hide();
+       $("#req_mgroupcount").attr( 'value', 1 );
+    }
+
+  });
+  // Conc_threshold Slider setup
+  $("#conc_threshold-min").attr('value', 0.00000001 );
+  $("#conc_threshold-max").attr('value', 0.1 );
+  $("#conc_threshold-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   -6,
+    min:     -8,
+    max:     -1,
+    step:     1,
+    slide: function( event, ui )
+    {
+      $( "#conc_threshold-value" ).attr('value', Math.pow(10, ui.value) );
+    },
+  });
+
+  $("#conc_threshold-value").change( function()
+  {
+    $("#conc_threshold-slider").slider( 'value', Math.log(this.value) / Math.log(10) );
+  });
+
+  // S_grid Slider setup
+  $("#s_grid-min").attr('value', 10 );
+  $("#s_grid-max").attr('value', 200);
+  $("#s_grid-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   100,
+    min:     10,
+    max:     200,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#s_grid-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#s_grid-value").change( function()
+  {
+    $("#s_grid-slider").slider( 'value', this.value );
+  });
+
+  // K_grid Slider setup
+  $("#k_grid-min").attr('value', 10 );
+  $("#k_grid-max").attr('value', 200);
+  $("#k_grid-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   100,
+    min:     10,
+    max:     200,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#k_grid-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#k_grid-value").change( function()
+  {
+    $("#k_grid-slider").slider( 'value', this.value );
+  });
+
+  // Mutate_sigma Slider setup
+  $("#mutate_sigma-min").attr('value', 10 );
+  $("#mutate_sigma-max").attr('value', 40 );
+  $("#mutate_sigma-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   20,
+    min:     10,
+    max:     40,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#mutate_sigma-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#mutate_sigma-value").change( function()
+  {
+    $("#mutate_sigma-slider").slider( 'value', this.value );
+  });
+
+  // Mutate_s Slider setup
+  $("#mutate_s-min").attr('value', 0 );
+  $("#mutate_s-max").attr('value', 100 );
+  $("#mutate_s-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   20,
+    min:     0,
+    max:     100,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#mutate_s-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#mutate_s-value").change( function()
+  {
+    $("#mutate_s-slider").slider( 'value', this.value );
+  });
+
+  // Mutate_k Slider setup
+  $("#mutate_k-min").attr('value', 0 );
+  $("#mutate_k-max").attr('value', 100 );
+  $("#mutate_k-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   20,
+    min:     0,
+    max:     100,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#mutate_k-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#mutate_k-value").change( function()
+  {
+    $("#mutate_k-slider").slider( 'value', this.value );
+  });
+
+  // Mutate s/k Slider setup
+  $("#mutate_sk-min").attr('value', 0 );
+  $("#mutate_sk-max").attr('value', 100 );
+  $("#mutate_sk-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   20,
+    min:     0,
+    max:     100,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#mutate_sk-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#mutate_sk-value").change( function()
+  {
+    $("#mutate_sk-slider").slider( 'value', this.value );
+  });
+
+  // Debug_level Slider setup
+  $("#debug_level-min").attr('value', 0 );
+  $("#debug_level-max").attr('value', 4 );
+  $("#debug_level-slider").slider(
+  {
+    animate: true,
+    range:   "min",
+    value:   0,
+    min:     0,
+    max:     4,
+    step:    1,
+    slide: function( event, ui )
+    {
+      $( "#debug_level-value" ).attr('value', ui.value);
+    },
+  });
+
+  $("#debug_level-value").change( function()
+  {
+    $("#debug_level-slider").slider( 'value', this.value );
+  });
+
+});
 
 function show_ctl(num) 
 {
@@ -540,7 +515,6 @@ function toggle(area)
     else
       text.textContent = "Hide Advanced Options";
     which.style.display = 'block';
-    redraw_controls();
   }
 
   return false;
