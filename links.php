@@ -11,8 +11,8 @@ $userlevel = ( isset( $_SESSION['userlevel'] ) ) ? $_SESSION['userlevel'] : -1;
 
 $projects_menu = <<<HTML
   <h4>Project</h4>
-  <a href='view_projects.php'>View/Edit Projects</a>
-  <a href='#' onclick='construction();'>Enter Image</a>
+  <a href='view_projects.php'>Projects</a>
+  <a href='edit_images.php'>Images</a>
 
 HTML;
 
