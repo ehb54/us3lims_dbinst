@@ -134,6 +134,7 @@ function do_next()
 // Function to create a new record
 function do_new()
 {
+  $ID = $_SESSION['id'];
   $uuid = uuid();
 
   // Insert an ID
