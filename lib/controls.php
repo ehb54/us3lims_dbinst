@@ -18,7 +18,7 @@ echo<<<HTML
         <br />
         Value:   <input name='mc_iterations' 
                         id='mc_iterations'
-                        value='0' />
+                        value='1' />
         Minimum: <input id="montecarlo-min" 
                         disabled="disabled" />
         Maximum: <input id="montecarlo-max" 
