@@ -32,9 +32,6 @@ class jobsubmit
         "queue"      => "default",
         "maxtime"    => 60000,
         "ppn"        => 2,
-        // "maxproc"    => 32
-        // "maxproc"    => 30
-        // "maxproc"    => 28
         "maxproc"    => 26
       );
     
@@ -47,9 +44,6 @@ class jobsubmit
         "queue"      => "default",
         "maxtime"    => 60000,
         "ppn"        => 2,
-        // "maxproc"    => 32
-        // "maxproc"    => 30
-        // "maxproc"    => 28
         "maxproc"    => 26
       );
 

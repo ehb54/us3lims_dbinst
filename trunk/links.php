@@ -13,6 +13,8 @@ $projects_menu = <<<HTML
   <h4>Project</h4>
   <a href='view_projects.php'>Projects</a>
   <a href='edit_images.php'>Images</a>
+  <a href='view_reports.php'>Reports</a>
+  <a href='data_sharing.php'>Sharing</a>
 
 HTML;
 
@@ -21,7 +23,6 @@ $analysis_menu = <<<HTML
   <a href='queue_setup_1.php'>Queue Setup</a>
   <a href='2DSA_1.php'>2DSA Analysis</a>
   <a href='GA_1.php'>GA Analysis</a>
-  <a href='view_reports.php'>Reports</a>
 
 HTML;
 
