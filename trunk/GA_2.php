@@ -121,6 +121,20 @@ $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";
 $soluteFile = ( !empty($uploadFileName) ) 
             ? " (Current: $uploadFileName)" : "";
 
+// Create a list of files that were selected
+$file_info = '';
+$num_datasets = sizeof( $_SESSION['request'] );
+foreach ( $_SESSION['request'] as $id => $request )
+{
+  // Get edited data profile 
+  $parts = explode( ".", $request['editFilename'] );
+  $edit_text = $parts[1];
+
+  $file_info .= "Dataset " . ($id + 1) . ": " .
+                "{$request['filename']}; " .
+                "Edit profile: $edit_text<br />\n"; 
+}
+
 echo <<<HTML
 <!-- Begin page content -->
 <div id='content'>
@@ -132,6 +146,9 @@ echo <<<HTML
 
   <fieldset>
     <legend>Initialize S-Value Range, Upload file or Specify Manually</legend>
+
+    <p>Selected File(s):<br />
+       $file_info</p>
 
     <form enctype="multipart/form-data" action="{$_SERVER['PHP_SELF']}" method="post">
       <fieldset style="background: #eeeeee">
