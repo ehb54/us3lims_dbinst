@@ -492,7 +492,8 @@ echo<<<HTML
     <tr><td><textarea name='goals' rows='6' cols='65' 
                       wrap='virtual'>$goals</textarea></td></tr>
     <tr><th>What proteins/DNA molecules are involved in the research and what 
-            are their approximate molecular weights?</th></tr>
+            are their approximate molecular weights? Also, please
+            provide the sequence in single-letter code.</th></tr>
     <tr><td><textarea name='molecules' rows='6' cols='65' 
                       wrap='virtual'>$molecules</textarea></td></tr>
     <tr><th>Please indicate the approximate purity of your sample(s). You can 
