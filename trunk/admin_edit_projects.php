@@ -175,7 +175,6 @@ function do_new()
 // Function to update the current record
 function do_update()
 {
-  $ID        = $_SESSION['id'];
   $projectID = $_POST['projectID'];
 
   // Since we always send out emails here, and the user could press the 
@@ -247,12 +246,19 @@ function do_update()
   $site_abbrev = substr( $org_site, strrpos( $org_site, "uslims3_" ) + 8 );
 
   $subject = "Your $site_abbrev project";
-  $fname   = $_SESSION['firstname'];
-  $lname   = $_SESSION['lastname'];
-  $email   = $_SESSION['email'] . ",$admin_email";
+
+  // We have to get info about the project owner, not ourselves here
+  $query  = "SELECT lname, fname, email " .
+            "FROM projectPerson, people " .
+            "WHERE projectID = $projectID " .
+            "AND projectPerson.personID = people.personID ";
+  $result = mysql_query( $query )
+            or die("Query failed : $query<br />\n" . mysql_error());
+  list($lname, $fname, $email) = mysql_fetch_array($result);
+  $email   .= ",$admin_email";
 
   $message = "Dear $fname $lname,
-  You have entered a new project in your $org_name account at $org_site.
+  You have entered/updated a project in your $org_name account at $org_site.
   The new project information is:
 
   Goals:

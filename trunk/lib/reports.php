@@ -8,18 +8,31 @@
  */
 
 // Function to create a dropdown for people who have given us permission
-function people_select( $select_name, $myID = NULL )
+function people_select( $select_name, $personID = NULL )
 {
   // Caller can pass a selected personID, but we need to check permissions
-  // First of all, make an array of all people we are authorized to view
-  $loginID = $_SESSION['loginID'];
-  if ( $myID == NULL ) $myID = $loginID;
+  $myID = $_SESSION['id'];
+  if ( $personID == NULL ) $personID = $myID;
 
-  $query  = "SELECT people.personID, lname, fname "  .
-            "FROM permits, people " .
-            "WHERE collaboratorID = $loginID " .
-            "AND permits.personID = people.personID " .
-            "ORDER BY lname, fname ";
+  if ( $_SESSION['userlevel'] < 3 )
+  {
+     // First of all, make an array of all people we are authorized to view
+     $query  = "SELECT people.personID, lname, fname "  .
+               "FROM permits, people " .
+               "WHERE collaboratorID = $myID " .
+               "AND permits.personID = people.personID " .
+               "ORDER BY lname, fname ";
+  }
+
+  else
+  {
+     // We are admin, so we can view all of them
+     $query  = "SELECT personID, lname, fname "  .
+               "FROM people " .
+               "WHERE personID != $myID " .
+               "ORDER BY lname, fname ";
+  }
+
   $result = mysql_query( $query )
             or die( "Query failed : $query<br />" . mysql_error() );
 
@@ -27,11 +40,11 @@ function people_select( $select_name, $myID = NULL )
   $myName = "{$_SESSION['lastname']}, {$_SESSION['firstname']}";
   $text  = "<h3>Investigator:</h3>\n";
   $text .= "<select name='$select_name' id='$select_name' size='1'>\n" .
-           "    <option value='$loginID'>$myName</option>\n";
-  while ( list( $personID, $lname, $fname ) = mysql_fetch_array( $result ) )
+           "    <option value='$myID'>$myName</option>\n";
+  while ( list( $ID, $lname, $fname ) = mysql_fetch_array( $result ) )
   {
-    $selected = ( $myID == $personID ) ? " selected='selected'" : "";
-    $text .= "    <option value='$personID'$selected>$lname, $fname</option>\n";
+    $selected = ( $ID == $personID ) ? " selected='selected'" : "";
+    $text .= "    <option value='$ID'$selected>$lname, $fname</option>\n";
   }
 
   $text .= "  </select>\n";
@@ -40,19 +53,19 @@ function people_select( $select_name, $myID = NULL )
 }
 
 // Function to create a dropdown for available runIDs
-function run_select( $select_name, $current_ID = NULL, $myID = NULL )
+function run_select( $select_name, $current_ID = NULL, $personID = NULL )
 {
   // Caller can pass a personID to get anybody's report, but we default
   //   to user's own
-  $loginID = $_SESSION['loginID'];
-  if ( $myID == NULL ) $myID = $loginID;
+  $myID = $_SESSION['id'];
+  if ( $personID == NULL ) $personID = $myID;
 
   // Check the permits table to be sure user is authorized to view this report
-  if ( $myID != $loginID )
+  if ( ( $personID != $myID ) && ( $_SESSION['userlevel'] < 3 ) )
   {
      $query  = "SELECT COUNT(*) FROM permits " .
-               "WHERE personID = $myID " .
-               "AND collaboratorID = $loginID ";
+               "WHERE personID = $personID " .
+               "AND collaboratorID = $myID ";
      $result = mysql_query( $query )
                or die( "Query failed : $query<br />" . mysql_error() );
      list( $count ) = mysql_fetch_array( $result );
@@ -60,7 +73,7 @@ function run_select( $select_name, $current_ID = NULL, $myID = NULL )
      if ( $count == 0 )
      {
         // Ok, user was not authorized
-        $myID = $loginID;
+        $personID = $myID;
      }
   }
 
@@ -69,7 +82,7 @@ function run_select( $select_name, $current_ID = NULL, $myID = NULL )
 
   $query  = "SELECT report.reportID, runID " .
             "FROM reportPerson, report " .
-            "WHERE reportPerson.personID = $myID " .
+            "WHERE reportPerson.personID = $personID " .
             "AND reportPerson.reportID = report.reportID " .
             "ORDER BY runID ";
   $result = mysql_query( $query )
