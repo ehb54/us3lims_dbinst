@@ -23,6 +23,7 @@ $analysis_menu = <<<HTML
   <a href='queue_setup_1.php'>Queue Setup</a>
   <a href='2DSA_1.php'>2DSA Analysis</a>
   <a href='GA_1.php'>GA Analysis</a>
+  <a href='runID_info.php'>RunID Info</a></li>
 
 HTML;
 
