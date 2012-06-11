@@ -42,7 +42,8 @@ include 'header.php';
   if ( isset( $_POST['experimentID'] ) )
   {
     $text  = experiment_select( 'experimentID', $_POST['experimentID'] );
-    $text .= runID_info( $_POST['experimentID'] );
+    if ( $_POST['experimentID'] != -1 )               // -1 is Please select...
+       $text .= runID_info( $_POST['experimentID'] );
   }
 
   else if ( isset( $_GET['RequestID'] ) )
@@ -79,7 +80,8 @@ function experiment_select( $select_name, $current_ID = NULL )
   if ( mysql_num_rows( $result ) == 0 ) return "";
 
   $text = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n" .
-          "  <select name='$select_name' size='1' onchange='form.submit();'>\n";
+          "  <select name='$select_name' size='1' onchange='form.submit();'>\n" .
+          "    <option value=-1>Please select...</option>\n";
   while ( list( $experimentID, $runID, $lname ) = mysql_fetch_array( $result ) )
   {
     $selected = ( $current_ID == $experimentID ) ? " selected='selected'" : "";
