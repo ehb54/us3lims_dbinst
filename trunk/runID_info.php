@@ -14,9 +14,10 @@ if ( ! isset($_SESSION['id']) )
   exit();
 } 
 
-if ( ($_SESSION['userlevel'] != 3) &&
+if ( ($_SESSION['userlevel'] != 2) &&   // data analyst can see own runID's
+     ($_SESSION['userlevel'] != 3) &&   // admin and super admin can see all
      ($_SESSION['userlevel'] != 4) &&
-     ($_SESSION['userlevel'] != 5) )    // admin and super admin only
+     ($_SESSION['userlevel'] != 5) )
 {
   header('Location: index.php');
   exit();
@@ -62,10 +63,15 @@ exit();
 // Function to create a dropdown for available runIDs
 function experiment_select( $select_name, $current_ID = NULL )
 {
+  $myID = $_SESSION['id'];
+
+  $users_clause = ( $_SESSION['userlevel'] > 2 ) ? "" : "AND people.personID = $myID ";
+
   $query  = "SELECT experimentID, runID, lname " .
             "FROM experiment, projectPerson, people " .
             "WHERE experiment.projectID = projectPerson.projectID " .
             "AND projectPerson.personID = people.personID " .
+            $users_clause .
             "ORDER BY lname, runID ";
   $result = mysql_query( $query )
             or die( "Query failed : $query<br />" . mysql_error() );
