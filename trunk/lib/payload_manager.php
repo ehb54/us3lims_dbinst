@@ -364,7 +364,10 @@ class Payload_GA extends Payload_manager
       $job_parameters['plague']           = $_POST['plague-value'];
       $job_parameters['elitism']          = $_POST['elitism-value'];
       $job_parameters['migration']        = $_POST['migration-value'];
-      $job_parameters['regularization']   = $_POST['regularization-value'];
+
+      // This one is in %, so it needs to be divided by 100
+      $job_parameters['regularization']   = $_POST['regularization-value'] / 100.0;
+
       $job_parameters['seed']             = $_POST['seed-value'];
       $job_parameters['conc_threshold']   = $_POST['conc_threshold-value'];
       $job_parameters['s_grid']           = $_POST['s_grid-value'];
