@@ -533,7 +533,7 @@ function ga_regularization_setup()
 {
 echo<<<HTML
       <fieldset>
-        <legend>Regularization</legend>
+        <legend>Regularization (in %)</legend>
         <div class='newslider' id='regularization-slider'></div>
         <br />
         Value:   <input name='regularization-value' 

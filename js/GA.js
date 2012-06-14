@@ -204,6 +204,7 @@ $(document).ready(function()
   });
 
   // Regularization Slider setup
+  // Values from 0-100, but this is in % so divide by 100 later
   $("#regularization-min").attr('value', 0  );
   $("#regularization-max").attr('value', 100);
   $("#regularization-slider").slider(
