@@ -18,7 +18,13 @@ $imageType = $_GET['type'];
 
 include 'db.php';
 
-if ( $imageType == 'analyte' )
+if ( $imageType == 'buffer' )
+{
+  do_getBuffer();
+  exit();
+}
+
+else if ( $imageType == 'analyte' )
 {
   do_getAnalyte();
   exit();
@@ -51,6 +57,36 @@ function do_notauthorized()
 </body></html>
 
 HTML;
+}
+
+// Function to return some dynamic text to jQuery about buffers
+function do_getBuffer()
+{
+  $ID = $_SESSION['id'];
+
+  $query  = "SELECT b.bufferID, description " .
+            "FROM buffer b, bufferPerson p " .
+            "WHERE p.personID = $ID " .
+            "AND b.bufferID = p.bufferID " .
+            "ORDER BY description ";
+  $result = mysql_query( $query )
+            or die("Query failed : $query<br />" . mysql_error());
+
+  if ( mysql_num_rows($result) == 0 )
+  {
+    // Nothing to link to
+    echo "There are no buffers to link to.";
+    return;
+  }
+
+  $text = "<select name='bufferID' size='1'>\n";
+  while ( list( $bufferID, $description ) = mysql_fetch_array( $result ) )
+    $text .= "  <option value='$bufferID'>$description</option>\n";
+
+  $text .= "</select>\n";
+
+  echo "Current buffers:<br />\n";
+  echo $text;
 }
 
 // Function to return some dynamic text to jQuery about analytes

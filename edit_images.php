@@ -208,6 +208,7 @@ function do_update()
   $description         = substr(addslashes(htmlentities($_POST['description'])), 0,80);
   $imageType           = $_POST['imageType'];
   $analyteID           = ( isset( $_POST['analyteID']) ) ? $_POST['analyteID'] : -1;
+  $bufferID            = ( isset( $_POST['bufferID']) ) ? $_POST['bufferID'] : -1;
   $solutionID          = ( isset( $_POST['solutionID']) ) ? $_POST['solutionID'] : -1;
   $uploadFilename      = '';
   $gelPicture          = '';
@@ -224,12 +225,13 @@ function do_update()
 
   if ( $gelPicture !== false )
   {
-    // We can't allow uploading of picture without either analyte 
+    // We can't allow uploading of picture without either buffer, analyte 
     //   or solution linkage
     if ( (!isset($_POST['analyteID'] )) &&
+         (!isset($_POST['bufferID'] ))  &&
          (!isset($_POST['solutionID'])) )
     {
-       $_SESSION['message'] = "You must associate either an analyte or a solution " .
+       $_SESSION['message'] = "You must associate either a buffer, an analyte or a solution " .
                               "when uploading an image. File upload was not saved. ";
 
        header("Location: $_SERVER[PHP_SELF]?ID=$imageID");
@@ -246,7 +248,12 @@ function do_update()
     mysql_query($query)
       or die("Query failed : $query<br />\n" . mysql_error());
 
-    // Now create analyte and solution link table entries
+    // Now create buffer, analyte and solution link table entries
+    $query  = "DELETE FROM imageBuffer " .
+              "WHERE imageID = $imageID ";
+    mysql_query($query)
+      or die("Query failed : $query<br />\n" . mysql_error());
+
     $query  = "DELETE FROM imageAnalyte " .
               "WHERE imageID = $imageID ";
     mysql_query($query)
@@ -257,7 +264,16 @@ function do_update()
     mysql_query($query)
       or die("Query failed : $query<br />\n" . mysql_error());
 
-    if ( $imageType == 'analyte' )
+    if ( $imageType == 'buffer' )
+    {
+      $query  = "INSERT INTO imageBuffer " .
+                "SET imageID = $imageID, " .
+                "bufferID    = $bufferID ";
+      mysql_query($query)
+        or die("Query failed : $query<br />\n" . mysql_error());
+    }
+
+    else if ( $imageType == 'analyte' )
     {
       $query  = "INSERT INTO imageAnalyte " .
                 "SET imageID = $imageID, " .
@@ -452,7 +468,10 @@ echo<<<HTML
         <td><input type='file' name='gelPicture' size='40' /></td></tr>
     <tr><th>Type of Image</th>
         <td><table cellspacing='0' cellpadding='10' class='noborder'>
-              <tr><td><label><input type='radio' name='imageType' id='imageAnalyte'
+              <tr><td><label><input type='radio' name='imageType' id='imageBuffer'
+                                    value='buffer' />
+                                    Buffer</label><br />
+                      <label><input type='radio' name='imageType' id='imageAnalyte'
                                     value='analyte' />
                                     Analyte</label><br />
                       <label><input type='radio' name='imageType' id='imageSolution'
