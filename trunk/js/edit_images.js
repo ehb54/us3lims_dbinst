@@ -10,6 +10,16 @@ function get_image(control)
 // jQuery image-type controls
 $(document).ready(function()
 {
+  // imageBuffer setup
+  $("#imageBuffer").change( function()
+  {
+    if ( $("#imageBuffer").is(":checked") )
+    {
+       $("#imageLink").load( 'image_linkInfo.php?type=buffer' );
+    }
+
+  });
+
   // imageAnalyte setup
   $("#imageAnalyte").change( function()
   {
