@@ -45,6 +45,8 @@ var change_run_select = function ()
    var rID = $('#run_select').val();
 
    $('#run_select').unbind('change');    
+   $('#tripleID').load( 'report_getInfo.php?type=t&rID=' + rID );
+   $('#combos').load( 'report_getInfo.php?type=c&rID=' + rID );
    $('#runID').load( 'report_getInfo.php?type=r&pID=' + pID +
                      '&rID=' + rID,
      function()
@@ -53,7 +55,5 @@ var change_run_select = function ()
        // make sure change event is bound after data is loaded
        $('#run_select').change( change_run_select );
      });
-
-   $('#tripleID').html( '' );
 }
 
