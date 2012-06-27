@@ -42,12 +42,15 @@ if ( isset( $_POST['change_cell'] ) )
 
    $person_info = people_select( 'people_select', $personID );
    $run_info    = run_select( 'run_select', $reportID, $personID );
+   $triple_list = tripleList( $reportID );
+   $combo_info  = combo_info( $reportID );
 
   $text =<<<HTML
   <div id='personID'>$person_info</div>
   <div id='report_content'>
     <div id='runID'>$run_info</div>
-    <div id='tripleID'></div>
+    <div id='tripleID'>$triple_list</div>
+    <div id='combos'>$combo_info</div>
   </div>
 
   <script>
@@ -60,6 +63,9 @@ HTML;
 else if ( isset( $_GET['triple'] ) )
    $text = tripleDetail( $_GET['triple'] );
 
+else if ( isset( $_GET['combo'] ) )
+   $text = comboDetail( $_GET['combo'] );
+
 else
 {
   $person_info = people_select( 'people_select', $myID );
@@ -70,6 +76,7 @@ else
   <div id='report_content'>
     <div id='runID'>$run_info</div>
     <div id='tripleID'></div>
+    <div id='combos'></div>
   </div>
 
   <script>

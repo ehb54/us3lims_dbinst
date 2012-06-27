@@ -43,6 +43,28 @@ else if ( $infoType == 'r' )
   exit();
 }
 
+else if ( $infoType == 't' )
+{
+  // Return a dynamic list of associated triples
+  $currentID = ( isset( $_GET['rID'] ) ) ? $_GET['rID'] : -1;
+
+  $text = tripleList( $currentID );
+
+  echo $text;
+  exit();
+}
+
+else if ( $infoType == 'c' )
+{
+  // Return a dynamic list of associated combinations
+  $currentID = ( isset( $_GET['rID'] ) ) ? $_GET['rID'] : -1;
+
+  $text = combo_info( $currentID );
+
+  echo $text;
+  exit();
+}
+
 else
   display_error( "Unsupported info type." );
 

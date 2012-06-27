@@ -101,15 +101,27 @@ function run_select( $select_name, $current_ID = NULL, $personID = NULL )
 
   $text .= "  </select>\n";
 
+  return $text;
+}
+
+// Function to return a list of triples, if we know the reportID
+function tripleList( $current_ID = NULL )
+{
+  // Account for user selecting the Please select... choice
+  $current_ID = ( $current_ID == -1 ) ? NULL : $current_ID;
+
+  $text = '';
+
   if ( isset( $current_ID ) )
   {
     // We have a legit runID, so let's get a list of triples
     //  associated with the run
-    $text .= "<h3>Cell:</h3>\n";
+    $text .= "<h3>Triple:</h3>\n";
 
     $query  = "SELECT reportTripleID, triple, dataDescription " .
               "FROM reportTriple " .
               "WHERE reportID = $current_ID " .
+              "AND triple NOT LIKE '0%' " .           // Combined triples look like 0/Z/9999
               "ORDER BY triple ";
     $result = mysql_query( $query )
               or die("Query failed : $query<br />\n" . mysql_error());
@@ -123,7 +135,46 @@ function run_select( $select_name, $current_ID = NULL, $personID = NULL )
       $text .= "  <li><a href='view_reports.php?triple=$tripleID'>$display</a></li>\n";
     }
 
-    $text .= "</ul><br /><br />\n";
+    $text .= "</ul>\n";
+  }
+  
+  return $text;
+}
+
+// Function to return a link to the combo reports, if there are any
+function combo_info( $current_ID )
+{
+  // Account for user selecting the Please select... choice
+  $current_ID = ( $current_ID == -1 ) ? NULL : $current_ID;
+
+  $text = '';
+
+  if ( isset( $current_ID ) )
+  {
+    // We have a legit runID, so let's get a list of triples
+    //  associated with the run
+    $query  = "SELECT reportTripleID, dataDescription " .
+              "FROM reportTriple " .
+              "WHERE reportID = $current_ID " .
+              "AND triple LIKE '0%' " .               // Combined triples look like 0/Z/9999
+              "ORDER BY triple ";
+    $result = mysql_query( $query )
+              or die("Query failed : $query<br />\n" . mysql_error());
+
+    // In this case we might not have any
+    if ( mysql_num_rows( $result ) > 0 )
+    {
+      $text .= "<h3>Combination:</h3>\n";
+
+      $text .= "<ul>\n";
+      while ( list( $tripleID, $dataDesc ) = mysql_fetch_array( $result ) )
+      {
+        $description = ( empty($dataDesc) ) ? "" : "$dataDesc";
+        $text .= "  <li><a href='view_reports.php?combo=$tripleID'>$description</a></li>\n";
+      }
+      
+      $text .= "</ul><br /><br />\n";
+    }
   }
   
   return $text;
@@ -183,13 +234,77 @@ function tripleDetail( $tripleID )
     $text .= "</ul>\n";
   }
 
-  // Let's add a back link to make things easier to get to the list of triples
+  // Let's add a back link to make things easier to get to the list of reports
   $self = $_SERVER['PHP_SELF'];
   $text .= <<<HTML
   <form action='$self' method='post'>
     <p><input type='hidden' name='personID' value='$personID' />
        <input type='hidden' name='reportID' value='$reportID' />
-       <input type='submit' name='change_cell' value='Select another cell?' /></p>
+       <input type='submit' name='change_cell' value='Select another report?' /></p>
+  </form>
+HTML;
+  return $text;
+}
+
+// A function to retrieve the reportTriple detail for combinations
+function comboDetail( $tripleID )
+{
+  // Let's start with header information
+  $query  = "SELECT personID, report.reportID, dataDescription " .
+            "FROM reportTriple, report, reportPerson " .
+            "WHERE reportTripleID = $tripleID " .
+            "AND reportTriple.reportID = report.reportID " .
+            "AND report.reportID = reportPerson.reportID ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />\n" . mysql_error() );
+  list ( $personID, $reportID, $dataDesc ) 
+       = mysql_fetch_array( $result );
+  $text = "<h3>Combinations:</h3>\n" .
+          "<h4>$dataDesc</h4>\n";
+
+  // Now create a list of available analysis types
+  $atypes = array();
+  $query  = "SELECT DISTINCT analysis, label " .
+            "FROM documentLink, reportDocument " .
+            "WHERE documentLink.reportTripleID = $tripleID " .
+            "AND documentLink.reportDocumentID = reportDocument.reportDocumentID ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />\n" . mysql_error() );
+  while ( list( $atype, $label ) = mysql_fetch_array( $result ) )
+  {
+    $parts = explode( ":", $label );
+    $atypes[$atype] = $parts[0];      // The analysis part of the label
+  }
+
+  foreach ( $atypes as $atype => $alabel )
+  {
+    $query  = "SELECT reportDocument.reportDocumentID, label " .
+              "FROM documentLink, reportDocument " .
+              "WHERE documentLink.reportTripleID = $tripleID " .
+              "AND documentLink.reportDocumentID = reportDocument.reportDocumentID " .
+              "AND analysis = '$atype' " .
+              "ORDER BY subAnalysis ";
+    $result = mysql_query( $query )
+              or die( "Query failed : $query<br />\n" . mysql_error() );
+
+    $text .= "<p class='reporthead'><a name='$atype'></a>$alabel</p>\n" .
+             "<ul>\n";
+    while ( list( $docID, $label ) = mysql_fetch_array( $result ) )
+    {
+      list( $anal, $subanal, $doctype ) = explode( ":", $label );
+      $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>$subanal ($doctype)</a></li>\n";
+    }
+
+    $text .= "</ul>\n";
+  }
+
+  // Let's add a back link to make things easier to get to the list of reports
+  $self = $_SERVER['PHP_SELF'];
+  $text .= <<<HTML
+  <form action='$self' method='post'>
+    <p><input type='hidden' name='personID' value='$personID' />
+       <input type='hidden' name='reportID' value='$reportID' />
+       <input type='submit' name='change_cell' value='Select another report?' /></p>
   </form>
 HTML;
   return $text;
