@@ -382,6 +382,152 @@ HTML;
              "</table>\n";
   }
 
+  $reportIDs = array();
+  $query  = "SELECT reportID, reportGUID, title " .
+            "FROM report " .
+            "WHERE experimentID = $experimentID " .
+            "ORDER BY reportID ";
+
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />\n" . mysql_error() );
+
+  if ( mysql_num_rows( $result ) != 0 )
+  {
+    $text .= <<<HTML
+    <table cellspacing='0' cellpadding='0' class='admin'>
+    <caption>Reports Related to This Experiment</caption>
+    <thead>
+      <tr><th>ID</th>
+          <th>GUID</th>
+          <th>Title</th>
+      </tr>
+    </thead>
+  
+    <tbody>
+
+HTML;
+
+    while ( list ( $reportID, $GUID, $title ) = mysql_fetch_array( $result ) )
+    {
+      $reportIDs[] = $reportID;
+      $text .= <<<HTML
+      <tr><td>$reportID</td>
+          <td>$GUID</td>
+          <td>$title</td>
+      </tr>
+
+HTML;
+    }
+
+    $text .= "</tbody>\n\n" .
+             "</table>\n";
+  }
+
+  $reportTripleIDs = array();
+  if ( ! empty( $reportIDs ) )
+  {
+    $reportIDs_csv = implode( ",", $reportIDs );
+    $query  = "SELECT reportTripleID, reportTripleGUID, resultID, triple, dataDescription, reportID " .
+              "FROM reportTriple " .
+              "WHERE reportID IN ( $reportIDs_csv ) " .
+              "ORDER BY reportID, reportTripleID ";
+  
+    $result = mysql_query( $query )
+              or die( "Query failed : $query<br />\n" . mysql_error() );
+
+    if ( mysql_num_rows( $result ) != 0 )
+    {
+      $text .= <<<HTML
+      <table cellspacing='0' cellpadding='0' class='admin'>
+      <caption>Report Triples Related to Reports</caption>
+      <thead>
+        <tr><th>ID</th>
+            <th>GUID</th>
+            <th>Result ID</th>
+            <th>Triple</th>
+            <th>Description</th>
+            <th>Report ID</th>
+        </tr>
+      </thead>
+    
+      <tbody>
+  
+HTML;
+  
+      while ( list ( $reportTripleID, $GUID, $resultID, $triple, $dataDesc, $rptID ) 
+                   = mysql_fetch_array( $result ) )
+      {
+        $reportTripleIDs[] = $reportTripleID;
+        $text .= <<<HTML
+        <tr><td>$reportTripleID</td>
+            <td>$GUID</td>
+            <td>$resultID</td>
+            <td>$triple</td>
+            <td>$dataDesc</td>
+            <td>$rptID</td>
+        </tr>
+  
+HTML;
+      }
+  
+      $text .= "</tbody>\n\n" .
+               "</table>\n";
+    }
+  }
+
+  if ( ! empty( $reportTripleIDs ) )
+  {
+    $reportTripleIDs_csv = implode( ",", $reportTripleIDs );
+    $query  = "SELECT d.reportDocumentID, reportDocumentGUID, editedDataID, label, " .
+              "filename, analysis, subAnalysis, documentType, l.reportTripleID " .
+              "FROM documentLink l, reportDocument d " .
+              "WHERE reportTripleID IN ( $reportTripleIDs_csv ) " .
+              "AND l.reportDocumentID = d.reportDocumentID " .
+              "ORDER BY reportTripleID, reportDocumentID ";
+  
+    $result = mysql_query( $query )
+              or die( "Query failed : $query<br />\n" . mysql_error() );
+
+    if ( mysql_num_rows( $result ) != 0 )
+    {
+      $text .= <<<HTML
+      <table cellspacing='0' cellpadding='0' class='admin'>
+      <caption>Report Documents Related to Triples</caption>
+      <thead>
+        <tr><th>ID</th>
+            <th>GUID</th>
+            <th>Edit ID</th>
+            <th>Label/Filename</th>
+            <th>Anal/Sub/DocType</th>
+            <th>Trip ID</th>
+        </tr>
+      </thead>
+    
+      <tbody>
+  
+HTML;
+  
+      while ( list ( $reportDocumentID, $GUID, $editID, $label, $filename, 
+                     $analysis, $subAnal, $docType, $tripID ) 
+                   = mysql_fetch_array( $result ) )
+      {
+        $text .= <<<HTML
+        <tr><td>$reportDocumentID</td>
+            <td>$GUID</td>
+            <td>$editID</td>
+            <td>$label/$filename</td>
+            <td>$analysis/$subAnal/$docType</td>
+            <td>$tripID</td>
+        </tr>
+  
+HTML;
+      }
+  
+      $text .= "</tbody>\n\n" .
+               "</table>\n";
+    }
+  }
+
   $query  = "SELECT HPCAnalysisRequestID, HPCAnalysisRequestGUID, editXMLFilename, " .
             "submitTime, clusterName, method " .
             "FROM HPCAnalysisRequest " .
