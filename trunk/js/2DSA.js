@@ -4,14 +4,14 @@
 $(document).ready(function()
 {
   // Montecarlo Slider setup
-  $("#montecarlo-min").attr('value', 0  );
+  $("#montecarlo-min").attr('value', 1  );
   $("#montecarlo-max").attr('value', 100);
   $("#montecarlo-slider").slider(
   {
     animate: true,
     range:   "min",
-    value:   0,
-    min:     0,
+    value:   1,
+    min:     1,
     max:     100,
     step:    1,
     slide: function( event, ui )

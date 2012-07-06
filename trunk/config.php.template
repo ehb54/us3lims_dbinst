@@ -44,6 +44,7 @@ $top_banner         = 'images/#';  # name of the banner at the top
 $full_path          = '/srv/www/htdocs/uslims3/uslims3_instance/';  # Location of the system code
 $data_dir           = '/srv/www/htdocs/uslims3/uslims3_instance/data/'; # Full path
 $submit_dir         = '/srv/www/htdocs/uslims3/uslims3_data/'; # Full path
+$class_dir          = '/srv/www/htdocs/common/class/'; #Full path
 $disclaimer_file    = ''; # the name of a text file with disclaimer info
 
 // Dates
@@ -60,6 +61,9 @@ if ( $data_dir[strlen($data_dir) - 1] != '/' )
 
 if ( $submit_dir[strlen($submit_dir) - 1] != '/' )
   $submit_dir .= '/';
+
+if ( $class_dir[strlen($class_dir) - 1] != '/' )
+  $class_dir .= '/';
 
 /* Define our file paths */
 if ( ! defined('HOME_DIR') ) 

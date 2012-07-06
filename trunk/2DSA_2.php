@@ -39,8 +39,8 @@ include 'lib/utility.php';
 include 'lib/payload_manager.php';
 include 'lib/HPC_analysis.php';
 include 'lib/file_writer.php';
-include 'lib/submit_local.php';
-include 'lib/submit_gfac.php';
+include $class_dir . 'submit_local.php';
+include $class_dir . 'submit_gfac.php';
 
 // Create the payload manager and restore the data
 $payload = new Payload_2DSA( $_SESSION );
