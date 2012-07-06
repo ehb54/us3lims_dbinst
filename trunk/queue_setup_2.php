@@ -34,6 +34,7 @@ if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 include 'config.php';
 include 'db.php';
 
+$data_missing = false;
 if ( isset( $_POST['save'] ) )
 {
   // Verify we have all the info
@@ -44,6 +45,12 @@ if ( isset( $_POST['save'] ) )
   $count = 0;
   foreach( $_SESSION['cells'] as $rawDataID => $cell )
   {
+    // Check to see if we have all the editedDataID's
+    if ( !isset($cell['editedDataID']) ||
+         $cell['editedDataID'] == 0    ||
+         empty ($cell['editFilename']) )
+       $data_missing = true;
+
     $_SESSION['request'][$count]['rawDataID']    = $rawDataID;
     $_SESSION['request'][$count]['path']         = $cell['path'];
     $_SESSION['request'][$count]['filename']     = $cell['filename'];
@@ -57,12 +64,14 @@ if ( isset( $_POST['save'] ) )
     $count++;
   }
 
-  header( "Location: queue_setup_3.php" );
-  exit();
+  if ( !$data_missing )
+  {
+     header( "Location: queue_setup_3.php" );
+     exit();
+  }
 }
 
-// Are we gathering info from previous screen?
-if ( isset( $_SESSION['new_submitter'] ) )
+else if ( isset( $_SESSION['new_submitter'] ) )   // Are we gathering info from previous screen?
   get_setup_1();
 
 else   // no, gathering info from here
@@ -97,6 +106,20 @@ also, insert below in $out_text
   $noise_text       = get_noise( $rawDataID, $cell['editedDataID'], 
                                  $cell['noiseIDs'] );
 
+  $missing1 = "";
+  $missing2 = "";
+  
+  if ( ( !isset($cell['editedDataID'])   ||
+         $cell['editedDataID'] == 0      ||
+         empty ($cell['editFilename']) ) &&
+       $data_missing                     )
+  {
+    // If $data_missing is true, then the user has pressed the save button 
+    // without selecting all the edit profiles
+    $missing1 = "<span class='message'>***</span>";
+    $missing2 = "<p class='message'>*** You must select an edit profile for each cell</p>\n";
+  }
+
   $out_text .= <<<HTML
 
   <a name='anchor_$count_anchors'></a>
@@ -105,10 +128,13 @@ also, insert below in $out_text
 
     <table cellpadding='3' cellspacing='0'>
     <tr><th>Edit Profile</th>
-        <td>$editedData_text</td></tr>
+        <td>$editedData_text</td>
+        <td>$missing1</td></tr>
     <tr><th>Noise</th>
-        <td>$noise_text</td></tr>
+        <td colspan='2'>$noise_text</td></tr>
     </table>
+
+    $missing2
 
   </fieldset>
 
