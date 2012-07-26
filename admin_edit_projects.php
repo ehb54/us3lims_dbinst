@@ -531,7 +531,7 @@ echo<<<HTML
     <tr><th>What buffers do you plan to use? Is phosphate or MOPS buffer an option?<br />
             To minimize absorbance we prefer to run phosphate or MOPS buffers in 
             low concentration (~ 5-10 mM). Salts also absorb and should be kept 
-            to a minimum, although a certain ionic sliength (25-50 mM) is desired 
+            to a minimum, although a certain ionic strength (25-50 mM) is desired 
             to aid with the hydrodynamic ideality behavior.<br /><br />
 
             Do you need to have drugs in your sample, such as reductants and 
