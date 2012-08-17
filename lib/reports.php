@@ -200,7 +200,8 @@ function tripleDetail( $tripleID, $selected_docTypes = array() )
 
   // Figure out which document types to display in a flexible way, so it will still
   //  work when new ones are added
-  $docTypes = array();
+  $docTypes  = array();
+  $docTypes2 = array();
   $query  = "SELECT DISTINCT documentType FROM reportDocument " .
             "ORDER BY documentType ";
   $result = mysql_query( $query )
@@ -209,13 +210,20 @@ function tripleDetail( $tripleID, $selected_docTypes = array() )
   {
     // all checkboxes should be checked initially, except svg
     if ( empty( $selected_docTypes ) && $docType != 'svg' )
+    {
        $docTypes[ $docType ] = true;
+       $docTypes2[] = $docType;
+    }
 
     else if ( empty( $selected_docTypes ) )
        $docTypes[ 'svg' ] = false;
 
     else
+    {
        $docTypes[ $docType ] = ( in_array( $docType, $selected_docTypes ) );
+       if ( in_array( $docType, $selected_docTypes ) )
+          $docTypes2[] = $docType;
+    }
   }
 
   // Now create the checkboxes so the user can change it
@@ -261,9 +269,7 @@ HTML;
   $linkbar = ( count($links) < 2 ) ? "" : ( "Jump to: " . implode( " | ", $links ) );
 
   // Figure out which types of documents to display
-  $select_docs = '';
-  if ( count( $selected_docTypes ) > 0 )
-     $select_docs = "AND documentType IN ('" . implode( "','", $selected_docTypes ) . "') ";
+  $select_docs = "AND documentType IN ('" . implode( "','", $docTypes2 ) . "') ";
 
   foreach ( $atypes as $atype => $alabel )
   {
