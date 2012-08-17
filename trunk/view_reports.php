@@ -65,8 +65,24 @@ else if ( isset( $_GET['triple'] ) )
    $docTypes = array();
    if ( isset( $_GET['a'] ) )
    {
-      // preg_match ('dat'|'html'|'png'|'rpt'|'svg')
-      $docTypes = explode( ',', $_GET['a'] );
+      // Check the listed document types against the db
+      $proposed_docTypes = explode( ',', $_GET['a'] );
+
+      $dbTypes = array();
+      $query  = "SELECT DISTINCT documentType FROM reportDocument " .
+                "ORDER BY documentType ";
+      $result = mysql_query( $query )
+                or die( "Query failed : $query<br />\n" . mysql_error() );
+      while ( list( $dbType ) = mysql_fetch_array( $result ) )
+         $dbTypes[] = $dbType;
+
+      // Now prune out document types that aren't in the db
+      $docTypes = array();
+      foreach ( $proposed_docTypes as $t )
+      {
+          if ( in_array( $t, $dbTypes ) )
+             $docTypes[] = $t;
+      }
    }
 
    $text = tripleDetail( $_GET['triple'], $docTypes );
