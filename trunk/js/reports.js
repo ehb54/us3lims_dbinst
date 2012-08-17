@@ -57,3 +57,27 @@ var change_run_select = function ()
      });
 }
 
+var change_docType = function ()
+{
+   // Get a list of all the checked boxes
+   var imageIDs = $("input:checked").toArray();
+   var docTypes = [];
+   var tripleID = 0;
+
+   // Now make a list of the document types, which are contained as text in the element
+   for ( var i = 0; i < imageIDs.length; i++ )
+   {
+       var id = imageIDs[i].getAttribute('ID');
+       var a  = id.split("_");
+       tripleID = a[1];
+       var docType  = a[2];
+
+       docTypes.push( docType );
+   }
+
+   // Make a comma-separated list
+   var types = docTypes.join(",");
+
+   location.href = 'view_reports.php?triple=' + tripleID + '&a=' + types;
+}
+

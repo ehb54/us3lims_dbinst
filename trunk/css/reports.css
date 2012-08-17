@@ -7,7 +7,9 @@
 
 .reporthead
 {
-  background-color : #2790B0; /* teal */
+  background-color : #7DD5F0;  /*#2790B0; teal */
   color            : black;
+  font-size        : 120%;
+  font-weight      : bold;
 }
 
