@@ -61,7 +61,16 @@ HTML;
 }
 
 else if ( isset( $_GET['triple'] ) )
-   $text = tripleDetail( $_GET['triple'] );
+{
+   $docTypes = array();
+   if ( isset( $_GET['a'] ) )
+   {
+      // preg_match ('dat'|'html'|'png'|'rpt'|'svg')
+      $docTypes = explode( ',', $_GET['a'] );
+   }
+
+   $text = tripleDetail( $_GET['triple'], $docTypes );
+}
 
 else if ( isset( $_GET['combo'] ) )
    $text = comboDetail( $_GET['combo'] );

@@ -116,7 +116,7 @@ function tripleList( $current_ID = NULL )
   {
     // We have a legit runID, so let's get a list of triples
     //  associated with the run
-    $text .= "<h3>Triple:</h3>\n";
+    $text .= "<h3>Reports for Individual Samples:</h3>\n";
 
     $query  = "SELECT reportTripleID, triple, dataDescription " .
               "FROM reportTriple " .
@@ -164,7 +164,7 @@ function combo_info( $current_ID )
     // In this case we might not have any
     if ( mysql_num_rows( $result ) > 0 )
     {
-      $text .= "<h3>Combination:</h3>\n";
+      $text .= "<h3>Combination Plots:</h3>\n";
 
       $text .= "<ul>\n";
       while ( list( $tripleID, $dataDesc ) = mysql_fetch_array( $result ) )
@@ -181,7 +181,7 @@ function combo_info( $current_ID )
 }
 
 // A function to retrieve the reportTriple detail
-function tripleDetail( $tripleID )
+function tripleDetail( $tripleID, $selected_docTypes = array() )
 {
   // Let's start with header information
   $query  = "SELECT personID, report.reportID, runID, triple, dataDescription " .
@@ -198,12 +198,54 @@ function tripleDetail( $tripleID )
   $text = "<h3>Run ID: $runID</h3>\n" .
           "<h4>Cell: $cell; Channel: $channel; Wavelength: $wl$description</h4>\n";
 
+  // Figure out which document types to display in a flexible way, so it will still
+  //  work when new ones are added
+  $docTypes = array();
+  $query  = "SELECT DISTINCT documentType FROM reportDocument " .
+            "ORDER BY documentType ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />\n" . mysql_error() );
+  while ( list( $docType ) = mysql_fetch_array( $result ) )
+  {
+    // all checkboxes should be checked initially, except svg
+    if ( empty( $selected_docTypes ) && $docType != 'svg' )
+       $docTypes[ $docType ] = true;
+
+    else if ( empty( $selected_docTypes ) )
+       $docTypes[ 'svg' ] = false;
+
+    else
+       $docTypes[ $docType ] = ( in_array( $docType, $selected_docTypes ) );
+  }
+
+  // Now create the checkboxes so the user can change it
+  $checkboxes = '';
+  $jquery     = '';
+  foreach ( $docTypes as $docType => $active )
+  {
+    $checked = ( $active ) ? " checked='checked'" : "";
+    $checkboxes .= "      <input type='checkbox' id='image_{$tripleID}_$docType'$checked /> $docType<br />\n";
+  }
+      
+  $text .= <<<HTML
+    <div>
+      <p>Include the following report document types:</p>
+      $checkboxes
+    </div>
+
+    <script>
+      $(":checkbox").click( change_docType );
+    </script>
+
+HTML;
+
   // Now create a list of available analysis types
   $atypes = array();
   $query  = "SELECT DISTINCT analysis, label " .
             "FROM documentLink, reportDocument " .
             "WHERE documentLink.reportTripleID = $tripleID " .
-            "AND documentLink.reportDocumentID = reportDocument.reportDocumentID ";
+            "AND documentLink.reportDocumentID = reportDocument.reportDocumentID " .
+            "ORDER BY analysis ";
   $result = mysql_query( $query )
             or die( "Query failed : $query<br />\n" . mysql_error() );
   while ( list( $atype, $label ) = mysql_fetch_array( $result ) )
@@ -212,37 +254,61 @@ function tripleDetail( $tripleID )
     $atypes[$atype] = $parts[0];      // The analysis part of the label
   }
 
+  // Make a little link bar
+  $links = array();
+  foreach ( $atypes as $atype => $alabel )
+    $links[] = "<a href='#$atype'>$atype</a>";
+  $linkbar = ( count($links) < 2 ) ? "" : ( "Jump to: " . implode( " | ", $links ) );
+
+  // Figure out which types of documents to display
+  $select_docs = '';
+  if ( count( $selected_docTypes ) > 0 )
+     $select_docs = "AND documentType IN ('" . implode( "','", $selected_docTypes ) . "') ";
+
   foreach ( $atypes as $atype => $alabel )
   {
-    $query  = "SELECT reportDocument.reportDocumentID, label " .
+    $query  = "SELECT reportDocument.reportDocumentID, label, documentType " .
               "FROM documentLink, reportDocument " .
               "WHERE documentLink.reportTripleID = $tripleID " .
               "AND documentLink.reportDocumentID = reportDocument.reportDocumentID " .
               "AND analysis = '$atype' " .
+              $select_docs .
               "ORDER BY subAnalysis ";
     $result = mysql_query( $query )
               or die( "Query failed : $query<br />\n" . mysql_error() );
 
+    if ( mysql_num_rows( $result ) < 1 ) continue;
+
     $text .= "<p class='reporthead'><a name='$atype'></a>$alabel</p>\n" .
              "<ul>\n";
-    while ( list( $docID, $label ) = mysql_fetch_array( $result ) )
+    while ( list( $docID, $label, $doctype ) = mysql_fetch_array( $result ) )
     {
-      list( $anal, $subanal, $doctype ) = explode( ":", $label );
-      $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>$subanal ($doctype)</a></li>\n";
+      list( $anal, $subanal, $doctype_text ) = explode( ":", $label );
+
+      // Display the document type only if there are both png and svg on the page
+      $include_doctype = ( in_array( $doctype, array('png', 'svg') ) &&
+                           in_array( 'png', $selected_docTypes )     &&
+                           in_array( 'svg', $selected_docTypes )    )
+                       ? " ($doctype_text)"
+                       : "";
+      $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>" .
+               "$subanal{$include_doctype}</a></li>\n";
     }
 
     $text .= "</ul>\n";
+
+    // Let's add links to make things easier to get around
+    $self = $_SERVER['PHP_SELF'];
+    $text .= <<<HTML
+    <form name='$alabel' action='$self' method='post'>
+      <p><input type='hidden' name='personID' value='$personID' />
+         <input type='hidden' name='reportID' value='$reportID' />
+         <input type='submit' name='change_cell' value='Select another report?' />
+         $linkbar</p>
+    </form>
+HTML;
   }
 
-  // Let's add a back link to make things easier to get to the list of reports
-  $self = $_SERVER['PHP_SELF'];
-  $text .= <<<HTML
-  <form action='$self' method='post'>
-    <p><input type='hidden' name='personID' value='$personID' />
-       <input type='hidden' name='reportID' value='$reportID' />
-       <input type='submit' name='change_cell' value='Select another report?' /></p>
-  </form>
-HTML;
   return $text;
 }
 
@@ -307,6 +373,7 @@ function comboDetail( $tripleID )
        <input type='submit' name='change_cell' value='Select another report?' /></p>
   </form>
 HTML;
+
   return $text;
 }
 ?>
