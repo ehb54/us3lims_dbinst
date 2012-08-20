@@ -105,6 +105,9 @@ function do_new()
 // Only people with projects should show up
 function person_project_select( $select_name, $current_ID = NULL )
 {
+  // Account for people selecting the "Please select" choice
+  $current_ID = ( $current_ID == -1 ) ? NULL : $current_ID;
+
   $query  = "SELECT DISTINCT people.personID, lname, fname " .
             "FROM projectPerson, people " .
             "WHERE projectPerson.personID = people.personID " .
@@ -115,7 +118,8 @@ function person_project_select( $select_name, $current_ID = NULL )
   if ( mysql_num_rows( $result ) == 0 ) return "";
 
   $text = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n" .
-          "  <select name='$select_name' size='1' onchange='form.submit();'>\n";
+          "  <select name='$select_name' size='1' onchange='form.submit();'>\n" .
+          "    <option value='-1'>Please select...</option>\n";
   while ( list( $personID, $lname, $fname ) = mysql_fetch_array( $result ) )
   {
     $selected = ( $current_ID == $personID ) ? " selected='selected'" : "";
