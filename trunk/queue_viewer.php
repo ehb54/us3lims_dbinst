@@ -247,6 +247,7 @@ function cancelJob( $gfacID )
   switch ( $status )
   {
     case 'CANCELED':
+    case 'CANCELLED':
     case 'Success':
       $lastMessage = 'This job has been canceled.';
       break;
@@ -256,6 +257,7 @@ function cancelJob( $gfacID )
       break;
 
     case 'UNKNOWN':
+    case 'ERROR':
       $lastMessage = 'GFAC cannot find this job.';
       break;
 
