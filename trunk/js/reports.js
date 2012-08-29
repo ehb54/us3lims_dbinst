@@ -14,6 +14,19 @@ function show_report_detail( ID )
                "width=640,height=480,title=Report Detail"   );
 }
 
+// Function to display solution details in a new window
+function show_solution_detail( compType, eID, triple )
+{
+   var properType = compType.charAt(0).toUpperCase() +
+                    compType.substr(1);
+
+   window.open("solution_detail.php?type=" + compType + "&expID=" + eID + "&triple=" + triple,
+               properType,
+               "toobar=no,location=no,directories=no,status=no," +
+               "scrollbars=yes,resizable=yes,copyhistory=no,"    +
+               "width=640,height=480,title=Detail"); // + properType + "Detail"   );
+}
+
 // jQuery format controls
 var change_person = function ()
 {

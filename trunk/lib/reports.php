@@ -266,6 +266,8 @@ HTML;
   $links = array();
   foreach ( $atypes as $atype => $alabel )
     $links[] = "<a href='#$atype'>$atype</a>";
+  // Add solution
+  $links[] = "<a href='#solution'>Solution</a>";
   $linkbar = ( count($links) < 2 ) ? "" : ( "Jump to: " . implode( " | ", $links ) );
 
   // Figure out which types of documents to display
@@ -314,6 +316,42 @@ HTML;
     </form>
 HTML;
   }
+
+  // Now let's get information about the solution in this cell
+  $query  = "SELECT experimentID, triple " .
+            "FROM report, reportTriple " .
+            "WHERE reportTripleID = $tripleID " .
+            "AND report.reportID = reportTriple.reportID ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />\n" . mysql_error() );
+  list ( $experimentID, $triple_desc ) = mysql_fetch_array( $result );
+
+  $text .= <<<HTML
+    <p class='reporthead'><a name='solution'></a>Solution Data</p>
+    <ul>
+        <li><a href='#solution' 
+               onclick="show_solution_detail( 'solution', $experimentID, '$triple_desc' );">
+               Solution Information</a></li>
+        <li><a href='#solution' 
+               onclick="show_solution_detail( 'analyte', $experimentID, '$triple_desc' );">
+               Analyte Information</a></li>
+        <li><a href='#solution' 
+               onclick="show_solution_detail( 'buffer', $experimentID, '$triple_desc' );">
+               Buffer Information</a></li>
+
+    </ul>
+HTML;
+
+  // Let's add links to make things easier to get around
+  $self = $_SERVER['PHP_SELF'];
+  $text .= <<<HTML
+  <form name='$alabel' action='$self' method='post'>
+    <p><input type='hidden' name='personID' value='$personID' />
+       <input type='hidden' name='reportID' value='$reportID' />
+       <input type='submit' name='change_cell' value='Select another report?' />
+       $linkbar</p>
+  </form>
+HTML;
 
   return $text;
 }
