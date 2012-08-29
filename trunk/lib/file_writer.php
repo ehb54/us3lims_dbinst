@@ -133,9 +133,25 @@ abstract class File_writer
             $xml->startElement( 'rotor_stretch' );
               $xml->writeAttribute( 'value', $dataset['rotor_stretch'] );
             $xml->endElement(); // rotor_stretch
+            $xml->startElement( 'centerpiece_shape' );
+              $xml->writeAttribute( 'value', $dataset['centerpiece_shape'] );
+            $xml->endElement(); // centerpiece_shape
             $xml->startElement( 'centerpiece_bottom' );
               $xml->writeAttribute( 'value', $dataset['centerpiece_bottom'] );
+            if (! isset($dataset['centerpiece_angle']) )
+              $dataset['centerpiece_angle'] = 0.0;
+            if (! isset($dataset['centerpiece_width']) )
+              $dataset['centerpiece_width'] = 0.0;
             $xml->endElement(); // centerpiece_bottom
+            $xml->startElement( 'centerpiece_angle' );
+              $xml->writeAttribute( 'value', $dataset['centerpiece_angle'] );
+            $xml->endElement(); // centerpiece_angle
+            $xml->startElement( 'centerpiece_pathlength' );
+              $xml->writeAttribute( 'value', $dataset['centerpiece_pathlength'] );
+            $xml->endElement(); // centerpiece_pathlength
+            $xml->startElement( 'centerpiece_width' );
+              $xml->writeAttribute( 'value', $dataset['centerpiece_width'] );
+            $xml->endElement(); // centerpiece_width
 
             $xml->startElement( 'solution' );
               $xml->startElement( 'buffer' );

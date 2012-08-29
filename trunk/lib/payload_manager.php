@@ -112,9 +112,12 @@ abstract class Payload_manager
       }
       
       // We need the centerpiece bottom
-      $centerpiece_bottom = 7.3;
-      $centerpiece_shape  = 'standard';
-      $query  = "SELECT shape, bottom " .
+      $centerpiece_bottom      = 7.3;
+      $centerpiece_shape       = 'standard';
+      $centerpiece_angle       = 2.5;
+      $centerpiece_pathlength  = 1.2;
+      $centerpiece_width       = 0.0;
+      $query  = "SELECT shape, bottom, angle, pathLength, width " .
                 "FROM rawData, cell, abstractCenterpiece " .
                 "WHERE rawData.rawDataID = $rawDataID " .
                 "AND rawData.experimentID = cell.experimentID " .
@@ -122,7 +125,8 @@ abstract class Payload_manager
       $result = mysql_query( $query )
                 or die( "Query failed : $query<br />" . mysql_error());
       if ( mysql_num_rows ( $result ) > 0 )
-        list( $centerpiece_shape, $centerpiece_bottom ) = mysql_fetch_array( $result );      // should be 1
+        list( $centerpiece_shape, $centerpiece_bottom, $centerpiece_angle, $centerpiece_pathlength, $centerpiece_width )
+          = mysql_fetch_array( $result );      // should be 1
       
       // We also need some information about the analytes in this cell
       $analytes = array();
@@ -160,6 +164,9 @@ abstract class Payload_manager
       $params['rotor_stretch'] = $rotor_stretch;
       $params['centerpiece_bottom'] = $centerpiece_bottom;
       $params['centerpiece_shape']  = $centerpiece_shape;
+      $params['centerpiece_angle']  = $centerpiece_angle;
+      $params['centerpiece_pathlength']  = $centerpiece_pathlength;
+      $params['centerpiece_width']  = $centerpiece_width;
       $params['density']      = $density;
       $params['viscosity']    = $viscosity;
       $params['analytes']     = $analytes;
