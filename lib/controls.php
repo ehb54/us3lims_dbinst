@@ -257,6 +257,50 @@ echo<<<HTML
 HTML;
 }
 
+// Function to display a custom grid model dropdown
+function CG_select_setup()
+{
+  $personID = $_SESSION['id'];
+  $query  = "SELECT model.modelID, description, lastUpdated " .
+            "FROM modelPerson, model " .
+            "WHERE personID = $personID " .
+            "AND modelPerson.modelID = model.modelID " .
+            "AND description LIKE '%CustomGrid%' " .
+            "ORDER BY lastUpdated DESC ";
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />\n" . mysql_error() );
+
+  if ( mysql_num_rows( $result ) == 0 )
+  {
+    echo <<<HTML
+      <fieldset class='option_value'>
+        <legend>Custom Grid Model</legend>
+        <p>There are no custom grid models available</p>
+      </fieldset>
+HTML;
+
+    return;
+}
+
+  $models = '';
+  while ( list( $modelID, $description, $lastUpdated ) = mysql_fetch_array( $result ) )
+  {
+    $descr = explode( ".", $description );
+    array_pop( $descr );                  // pop off the .model part
+    $description = implode( ".", $descr );
+    $models .= "            <option value='$modelID'>$lastUpdated $description</option>\n";
+  }
+ 
+echo<<<HTML
+      <fieldset class='option_value'>
+        <legend>Custom Grid Model</legend>
+          <select name="CG_modelID">
+            $models
+          </select>
+      </fieldset>
+HTML;
+}
+
 // Function to display uniform grid setup
 function uniform_grid_setup()
 {

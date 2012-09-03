@@ -196,6 +196,9 @@ abstract class File_writer
           $files[] = $noiseFile;
       }
 
+      if ( isset( $filename['CG_model'] ) )
+         $files[] = $filename['CG_model'];
+
       $files[] = $xml_filename;
     }
 
@@ -273,6 +276,23 @@ abstract class File_writer
           return false;
         $filenames[$dataset_id]['noise'][$ndx] = $noise_file;
       }
+    }
+
+    // In the case of 2DSA_CG files, the CG_model
+    if ( isset( $job['job_parameters']['CG_modelID'] ) )
+    {
+      $CG_modelID = $job['job_parameters']['CG_modelID'];
+      $query  = "SELECT description, xml " .
+                "FROM model " .
+                "WHERE modelID = $CG_modelID ";
+      $result = mysql_query( $query )
+                or die( "Query failed : $query<br />" . mysql_error());
+      list( $fn, $contents ) = mysql_fetch_array( $result );
+      if ( ! $this->create_file( $fn, $dir, $contents ) )
+        return false;
+      $filenames[0]['CG_model'] = $fn;  // put it in with other dataset[0] files so
+                                        //  as not to confuse the tar file creation
+
     }
 
     return( $filenames );
@@ -453,6 +473,63 @@ class File_2DSA extends File_writer
       $xml->startElement( 'ff0_grid_points' );
         $xml->writeAttribute( 'value', $parameters['ff0_grid_points'] );
       $xml->endElement(); // ff0_grid_points
+      $xml->startElement( 'uniform_grid' );
+        $xml->writeAttribute( 'value', $parameters['uniform_grid'] );
+      $xml->endElement(); // uniform_grid
+      $xml->startElement( 'mc_iterations' );
+        $xml->writeAttribute( 'value', $parameters['mc_iterations'] );
+      $xml->endElement(); // mc_iterations
+      $xml->startElement( 'req_mgroupcount' );
+        $xml->writeAttribute( 'value', $parameters['req_mgroupcount'] );
+      $xml->endElement(); // req_mgroupcount
+      $xml->startElement( 'tinoise_option' );
+        $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
+      $xml->endElement(); // tinoise_option
+      $xml->startElement( 'meniscus_range' );
+        $xml->writeAttribute( 'value', $parameters['meniscus_range'] );
+      $xml->endElement(); // meniscus_range
+      $xml->startElement( 'meniscus_points' );
+        $xml->writeAttribute( 'value', $parameters['meniscus_points'] );
+      $xml->endElement(); // meniscus_points
+      $xml->startElement( 'max_iterations' );
+        $xml->writeAttribute( 'value', $parameters['max_iterations'] );
+      $xml->endElement(); // max_iterations
+      $xml->startElement( 'rinoise_option' );
+        $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
+      $xml->endElement(); // rinoise_option
+      $xml->startElement( 'debug_timings' );
+        $xml->writeAttribute( 'value', $parameters['debug_timings'] );
+      $xml->endElement(); // debug_timings
+      $xml->startElement( 'debug_level' );
+        $xml->writeAttribute( 'value', $parameters['debug_level'] );
+      $xml->endElement(); // debug_level
+    $xml->endElement(); // jobParameters
+  }
+
+}
+
+/*
+ * A class that writes the 2DSA portion of a control xml file
+ * Inherits from File_writer
+ */
+class File_2DSA_CG extends File_writer
+{
+  // Function to write the XML job parameters for the 2DSA analysis
+  function writeJobParameters( $xml, $parameters )
+  {
+    $CG_modelID = $parameters['CG_modelID'];
+
+    $query  = "SELECT description FROM model " .
+              "WHERE  modelID = $CG_modelID ";
+    $result = mysql_query( $query )
+              or die( "Query failed : $query<br />" . mysql_error());
+    list( $fn ) = mysql_fetch_array( $result );
+
+    $xml->startElement( 'jobParameters' );
+      $xml->startElement( 'CG_model' );
+        $xml->writeAttribute( 'id', $CG_modelID );
+        $xml->writeAttribute( 'filename', $fn );
+      $xml->endElement(); // CG_model
       $xml->startElement( 'uniform_grid' );
         $xml->writeAttribute( 'value', $parameters['uniform_grid'] );
       $xml->endElement(); // uniform_grid
