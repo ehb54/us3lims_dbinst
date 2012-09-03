@@ -204,18 +204,23 @@ HTML;
 
   <p><input type="button" value="Setup 2DSA Control"
             onclick='window.location="2DSA_1.php"' />
-     <input type="button" value="Setup 2DSA Control with MW Constraint"
-            onclick='window.location="2DSA_MW_1.php"' disabled='disabled' /></p>
+     <input type="button" value="Setup 2DSA Control with Custom Grid"
+            onclick='window.location="2DSA-CG_1.php"' /></p>
 
   <p><input type="button" value="Setup GA Control"
             onclick='window.location="GA_1.php"' />
+     <input type="button" value="Clear Queue"
+            onclick='window.location="{$_SERVER['PHP_SELF']}?clear=clear"'/></p>
+  <!--
+     <input type="button" value="Setup 2DSA Control with MW Constraint"
+            onclick='window.location="2DSA-MW_1.php"' disabled='disabled' /></p>
      <input type="button" value="Setup GA Control with MW Constraint"
-            onclick='window.location="GA_MW_1.php"' disabled='disabled' /></p>
+            onclick='window.location="GA-MW_1.php"' disabled='disabled' /></p>
 
   <p><input type="button" value="Nonlinear Model GA Control"
             onclick='window.location="GA_SC_1.php"' disabled='disabled' $disabled />
-     <input type="button" value="Clear Queue"
-            onclick='window.location="{$_SERVER['PHP_SELF']}?clear=clear"'/></p>
+  -->
+
   </form>
   </div>
 

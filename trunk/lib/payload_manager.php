@@ -322,6 +322,109 @@ $this->show( 0, "Payload manager 2DSA\n" );
 }
 
 /*
+ * A place to encapsulate the 2DSA payload data for custom grid
+ * Inherits from payload_manager.php
+ *
+ */
+class Payload_2DSA_CG extends Payload_manager
+{
+  public function analysisType()
+  {
+    return '2DSA_CG';
+  }
+
+  // Function to save all the data on the screen
+  function acquirePostedData( $dataset_id, $num_datasets )
+  {
+    // From config.php
+    global $dbname, $dbhost;
+    global $udpport, $ipaddr;
+
+    // A lot of this only gets posted the first time through
+    if ( $dataset_id == 0 )
+    {
+      $this->add( 'method', $this->analysisType() );
+
+      $udp                  = array();
+      $udp['udpport']       = $udpport;
+      $udp['ip']            = $ipaddr;
+      $this->add( 'server', $udp );
+
+      $this->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
+      $this->add( 'datasetCount', $num_datasets );
+
+      $database             = array();
+      $database['name']     = $dbname;
+      $database['host']     = $dbhost;
+      $database['user_email'] = $_SESSION['email'];
+      $database['submitter_email'] = $_SESSION['submitter_email'];
+      $this->add( 'database', $database );
+
+      $job_parameters                     = array();
+      $job_parameters['CG_modelID']       = $_POST['CG_modelID'];
+      $job_parameters['uniform_grid']     = $_POST['uniform_grid'];
+      $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
+
+      if ( isset( $_POST['req_mgroupcount'] ) )
+         $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
+
+      else
+         $job_parameters['req_mgroupcount'] = 1;
+
+      $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
+      $job_parameters['meniscus_range']   = ( $_POST['meniscus_option'] == 1 )
+                                          ? $_POST['meniscus_range'] : 0.0;
+      $job_parameters['meniscus_points']  = ( $_POST['meniscus_option'] == 1 )
+                                          ? $_POST['meniscus_points'] : 1;
+      $job_parameters['max_iterations']   = ( $_POST['iterations_option'] == 1 )
+                                          ? $_POST['max_iterations'] : 1;
+      $job_parameters['rinoise_option']   = $_POST['rinoise_option'];
+      $job_parameters['debug_timings']    = ( isset( $_POST['debug_timings'] ) &&
+                                                     $_POST['debug_timings']   == 'on' )
+                                          ? 1 : 0;
+      $job_parameters['debug_level']      = $_POST['debug_level-value'];
+      $job_parameters['experimentID']     = $_SESSION['experimentID'];
+      $this->add( 'job_parameters', $job_parameters );
+
+      $dataset = array();
+        $dataset[ 0 ]['files']      = array();   // This will be done later
+        $dataset[ 0 ]['parameters'] = array();
+    }
+
+    // These will be done every time
+    $parameters                 = array();
+    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
+    $centerpiece_shape = $parameters['centerpiece_shape'];
+
+    // Create new elements for this dataset
+    //?? $parameters                 = $dataset['parameters'];
+    $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
+    $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
+    $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
+    $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
+  //  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
+    $parameters['noiseIDs']     = array();
+    $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
+    
+    $parameters['simpoints']    = $_POST['simpoints-value'];
+    $parameters['band_volume']  = ( $centerpiece_shape == 'band forming' )
+                                ? $_POST['band_volume-value']
+                                : 0.0;
+    $parameters['radial_grid']  = $_POST['radial_grid'];
+    $parameters['time_grid']    = $_POST['time_grid'];
+
+    // Get arrays with multiple dataset data
+    $dataset                    = $this->get('dataset');
+    // Add new datasets
+    $dataset[$dataset_id]       = $parameters;
+    $this->add( 'dataset', $dataset );
+
+$this->show( 0, "Payload manager 2DSA-CG\n" );
+  }
+
+}
+
+/*
  * A place to encapsulate the GA payload data
  * Inherits from payload_manager.php
  *

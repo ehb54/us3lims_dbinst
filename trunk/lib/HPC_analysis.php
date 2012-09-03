@@ -194,6 +194,32 @@ class HPC_2DSA extends HPC_analysis
 }
 
 /*
+ * A class that writes the 2DSA_CG portion of the data to the DB
+ *  Inherits from HPC_analysis
+ */
+class HPC_2DSA_CG extends HPC_analysis
+{
+  // Function to create the HPC Analysis DB entries for the 2DSA_CG analysis
+  protected function HPCJobParameters( $HPCAnalysisRequestID, $job_parameters )
+  {
+    $query  = "INSERT INTO 2DSA_CG_Settings SET " .
+              "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
+              "CG_modelID           = {$job_parameters['CG_modelID']},       " .
+              "uniform_grid         = {$job_parameters['uniform_grid']},     " .
+              "mc_iterations        = {$job_parameters['mc_iterations']},    " .
+              "tinoise_option       = {$job_parameters['tinoise_option']},   " .
+              "meniscus_range       = {$job_parameters['meniscus_range']},   " .
+              "meniscus_points      = {$job_parameters['meniscus_points']},  " .
+              "max_iterations       = {$job_parameters['max_iterations']},   " .
+              "rinoise_option       = {$job_parameters['rinoise_option']}    ";
+
+    mysql_query( $query )
+          or die( "Query failed : $query<br />" . mysql_error());
+
+  }
+}
+
+/*
  * A class that writes the GA portion of the data to the DB
  *  Inherits from HPC_analysis
  */
