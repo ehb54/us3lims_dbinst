@@ -194,7 +194,29 @@ function do_update()
     exit();
   }
 
-  // Ok, we're still here, so something has changed
+
+  // Ok, we're still here, so something has changed. Let's create a diff
+  $diff = '';
+  $diff .= get_xdiff( $goals,            $_POST['goals'],            "Goals"             );
+  $diff .= get_xdiff( $molecules,        $_POST['molecules'],        "Molecules"         );
+  $diff .= get_xdiff( $purity,           $_POST['purity'],           "Purity"            );
+  $diff .= get_xdiff( $expense,          $_POST['expense'],          "Expense"           );
+  $diff .= get_xdiff( $bufferComponents, $_POST['bufferComponents'], "Buffer Components" );
+  $diff .= get_xdiff( $AUC_questions,    $_POST['AUC_questions'],    "AUC Questions"     );
+  $diff .= get_xdiff( $expDesign,        $_POST['expDesign'],        "Experiment Design" );
+  $diff .= get_xdiff( $notes,            $_POST['notes'],            "Notes"             );
+  $diff .= get_xdiff( $description,      $_POST['description'],      "Description"       );
+
+  $diff_text = '';
+  if ( ! empty( $diff ) )
+  {
+     $diff_text = <<<HTML
+ Differences are as follows:
+  $diff
+HTML;
+  }
+
+  // Now update the database with the new information
   $goals               =        addslashes(htmlentities($_POST['goals']));
   $molecules           =        addslashes(htmlentities($_POST['molecules']));
   $purity              = substr(addslashes(htmlentities($_POST['purity'])), 0,10);
@@ -233,7 +255,9 @@ function do_update()
 
   $message = "Dear $fname $lname,
   You have entered a new project in your $org_name account at $org_site.
-  The new project information is:
+  $diff_text
+
+  The complete/new project information is:
 
   Goals:
   {$_POST['goals']}
@@ -275,6 +299,21 @@ function do_update()
 
   header("Location: $_SERVER[PHP_SELF]?ID=$projectID");
   exit();
+}
+
+// Function to make getting xdiff information a little easier
+function get_xdiff( $old, $new, $label )
+{
+  $diff = xdiff_string_diff( $old, $new, 1 );
+
+  if ( $diff === FALSE || empty( $diff ) )
+     return '';
+
+  // Take out all the '\ No newline at end of file', including \n at the end
+  while ( ($pos = strpos($diff, '\ No newline at end of file') ) !== FALSE )
+    $diff = substr( $diff, 0, $pos ) . substr( $diff, $pos+28 );
+
+  return "$label:\n$diff";
 }
 
 // Function to display and navigate records
