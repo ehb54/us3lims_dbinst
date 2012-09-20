@@ -64,6 +64,9 @@ echo<<<HTML
             <tr><td>alamo</td><td style='text-align:center;'>(no PMG)</td></tr>
             <tr><td>lonestar</td><td style='text-align:center;'>288</td></tr>
             <tr><td>ranger</td><td style='text-align:center;'>256</td></tr>
+            <tr><td>stampede</td><td style='text-align:center;'>256</td></tr>
+            <tr><td>gordon</td><td style='text-align:center;'>256</td></tr>
+            <tr><td>trestles</td><td style='text-align:center;'>256</td></tr>
           </table>
         </td></tr>
 
@@ -430,6 +433,9 @@ echo<<<HTML
             <tr><td>alamo</td><td style='text-align:center;'>51</td></tr>
             <tr><td>lonestar</td><td style='text-align:center;'>35</td></tr>
             <tr><td>ranger</td><td style='text-align:center;'>63</td></tr>
+            <tr><td>stampede</td><td style='text-align:center;'>63</td></tr>
+            <tr><td>gordon</td><td style='text-align:center;'>63</td></tr>
+            <tr><td>trestles</td><td style='text-align:center;'>63</td></tr>
           </table>
         </td></tr>
 

@@ -142,6 +142,9 @@ function do_delete()
 
     case 'ranger'      :
     case 'lonestar'    :
+    case 'stampede'    :
+    case 'gordon'    :
+    case 'trestles'    :
     case 'alamo'       :
     case 'bcf'         :
       $status = cancelJob( $gfacID );
