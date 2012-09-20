@@ -86,20 +86,25 @@ HTML;
 function get_header_info( $type, $experimentID, $triple )
 {
   // Let's start with header information
-  $query  = "SELECT runID " .
+  $query  = "SELECT runID, runType " .
             "FROM experiment " .
             "WHERE experimentID = $experimentID ";
   $result = mysql_query( $query )
             or die( "Query failed : $query<br />\n" . mysql_error() );
-  list ( $runID ) = mysql_fetch_array( $result );
+  list ( $runID, $runType ) = mysql_fetch_array( $result );
   list ( $cell, $channel, $wl ) = explode( "/", $triple );
+  $radius      = $wl / 1000.0;    // If WA data
 
   // Create header information
+  $triple = ( $runType == "WA" )
+          ? "Cell $cell, Channel $channel, Radius $radius<br />\n"
+          : "Cell $cell, Channel $channel, Wavelength $wl<br />\n";
+
   $ptype = ucwords( $type );
   $header = "<div>\n" .
             "<h1>$ptype Information</h1>\n" .
             "<h2>Run ID: $runID<br />\n" .
-            "Cell $cell, Channel $channel, Wavelength $wl<br />\n" .
+            $triple .
             "</div>\n";
 
   return $header;

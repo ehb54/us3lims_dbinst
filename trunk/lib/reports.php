@@ -118,20 +118,25 @@ function tripleList( $current_ID = NULL )
     //  associated with the run
     $text .= "<h3>Reports for Individual Samples:</h3>\n";
 
-    $query  = "SELECT reportTripleID, triple, dataDescription " .
-              "FROM reportTriple " .
-              "WHERE reportID = $current_ID " .
+    $query  = "SELECT reportTripleID, triple, dataDescription, runType " .
+              "FROM reportTriple, report, experiment " .
+              "WHERE reportTriple.reportID = $current_ID " .
               "AND triple NOT LIKE '0%' " .           // Combined triples look like 0/Z/9999
+              "AND reportTriple.reportID = report.reportID " .
+              "AND report.experimentID = experiment.experimentID " .
               "ORDER BY triple ";
     $result = mysql_query( $query )
               or die("Query failed : $query<br />\n" . mysql_error());
 
     $text .= "<ul>\n";
-    while ( list( $tripleID, $tripleDesc, $dataDesc ) = mysql_fetch_array( $result ) )
+    while ( list( $tripleID, $tripleDesc, $dataDesc, $runType ) = mysql_fetch_array( $result ) )
     {
       list( $cell, $channel, $wl ) = explode( "/", $tripleDesc );
       $description = ( empty($dataDesc) ) ? "" : "; Descr: $dataDesc";
-      $display = "Cell: $cell; Channel: $channel; Wavelength: $wl$description";
+      $radius      = $wl / 1000.0;    // If WA data
+      $display = ( $runType == "WA" )
+               ? "Cell: $cell; Channel: $channel; Radius: $radius$description"
+               : "Cell: $cell; Channel: $channel; Wavelength: $wl$description";
       $text .= "  <li><a href='view_reports.php?triple=$tripleID'>$display</a></li>\n";
     }
 
@@ -184,19 +189,24 @@ function combo_info( $current_ID )
 function tripleDetail( $tripleID, $selected_docTypes = array() )
 {
   // Let's start with header information
-  $query  = "SELECT personID, report.reportID, runID, triple, dataDescription " .
-            "FROM reportTriple, report, reportPerson " .
+  $query  = "SELECT personID, report.reportID, report.runID, " .
+            "triple, dataDescription, runType " .
+            "FROM reportTriple, report, reportPerson, experiment " .
             "WHERE reportTripleID = $tripleID " .
             "AND reportTriple.reportID = report.reportID " .
-            "AND report.reportID = reportPerson.reportID ";
+            "AND report.reportID = reportPerson.reportID " .
+            "AND report.experimentID = experiment.experimentID ";
   $result = mysql_query( $query )
             or die( "Query failed : $query<br />\n" . mysql_error() );
-  list ( $personID, $reportID, $runID, $tripleDesc, $dataDesc ) 
+  list ( $personID, $reportID, $runID, $tripleDesc, $dataDesc, $runType ) 
        = mysql_fetch_array( $result );
   list ( $cell, $channel, $wl ) = explode( "/", $tripleDesc );
+  $radius      = $wl / 1000.0;    // If WA data
   $description = ( empty($dataDesc) ) ? "" : "; Descr: $dataDesc";
-  $text = "<h3>Run ID: $runID</h3>\n" .
-          "<h4>Cell: $cell; Channel: $channel; Wavelength: $wl$description</h4>\n";
+  $text  = "<h3>Run ID: $runID</h3>\n";
+  $text .= ( $runType == "WA" )
+         ? "<h4>Cell: $cell; Channel: $channel; Radius: $radius$description</h4>\n"
+         : "<h4>Cell: $cell; Channel: $channel; Wavelength: $wl$description</h4>\n";
 
   // Figure out which document types to display in a flexible way, so it will still
   //  work when new ones are added
