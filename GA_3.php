@@ -139,6 +139,9 @@ HTML;
     
        case 'lonestar' :
        case 'ranger'   :
+       case 'stampede'   :
+       case 'gordon'   :
+       case 'trestles'   :
        case 'alamo'    :
        case 'bcf'      :
           $job = new submit_gfac();

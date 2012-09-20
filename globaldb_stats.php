@@ -46,6 +46,9 @@ $cluster_list = array(
                 'ranger.tacc.teragrid.edu'            => 'ranger',
                 'queenbee.loni-lsu.teragrid.org'      => 'queenbee',
                 'gatekeeper.ranger.tacc.teragrid.edu' => 'gatekeeper.ranger',
+                'stampede.tacc.teragrid.org'          => 'stampede',
+                'gordon.sdsc.edu'                     => 'gordon',
+                'trestles.sdsc.edu'                   => 'trestles',
                 'alamo.biochemistry.uthscsa.edu'      => 'alamo.biochemistry'
                 );
 
