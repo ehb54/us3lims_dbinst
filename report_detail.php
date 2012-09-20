@@ -76,15 +76,17 @@ HTML;
 function get_header_info( $documentID )
 {
   // Let's start with header information
-  $query  = "SELECT runID, triple " .
-            "FROM documentLink, reportTriple, report " .
+  $query  = "SELECT report.runID, triple, runType " .
+            "FROM documentLink, reportTriple, report, experiment " .
             "WHERE reportDocumentID = $documentID " .
             "AND documentLink.reportTripleID = reportTriple.reportTripleID " .
-            "AND reportTriple.reportID = report.reportID ";
+            "AND reportTriple.reportID = report.reportID " .
+            "AND report.experimentID = experiment.experimentID ";
   $result = mysql_query( $query )
             or die( "Query failed : $query<br />\n" . mysql_error() );
-  list ( $runID, $tripleDesc ) = mysql_fetch_array( $result );
+  list ( $runID, $tripleDesc, $runType ) = mysql_fetch_array( $result );
   list ( $cell, $channel, $wl ) = explode( "/", $tripleDesc );
+  $radius      = $wl / 1000.0;    // If WA data
 
   // Now the information we need from the document table
   $query  = "SELECT reportDocument.label, reportDocument.filename, editedData.filename, " .
@@ -98,12 +100,15 @@ function get_header_info( $documentID )
   list( $anal, $subanal, $doctype_text ) = explode( ":", $label );
   $parts = explode( ".", $efilename );
   $edit_profile = $parts[1];
+  $triple = ( $runType == "WA" )
+          ? "Cell $cell, Channel $channel, Radius $radius<br />\n"
+          : "Cell $cell, Channel $channel, Wavelength $wl<br />\n";
 
   // Create header information
   $header = "<div>\n" .
             "<h1>$anal</h1>\n" .
             "<h2>Run ID: $runID<br />\n" .
-            "Cell $cell, Channel $channel, Wavelength $wl<br />\n" .
+            $triple .
             "Edited Dataset: $edit_profile</h2>\n" .
             "<p><b>$subanal ($doctype_text)</b><br />\n" .
             "<b>Filename:</b>$rfilename<br />\n" .
