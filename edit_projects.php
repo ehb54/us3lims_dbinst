@@ -245,14 +245,17 @@ HTML;
     or die("Query failed : $query<br />\n" . mysql_error());
 
   // The project is new or has changed, so let's mail the user
-  global $org_name, $org_site, $admin_email;
-  $site_abbrev = substr( $org_site, strrpos( $org_site, "uslims3_" ) + 8 );
+  global $org_name, $org_site, $dbname, $admin_email;
+  $db_abbrev = substr( $dbname, strrpos( $dbname, "uslims3_" ) + 8 );
 
-  $subject = "Your $site_abbrev project";
   $fname   = $_SESSION['firstname'];
   $lname   = $_SESSION['lastname'];
   $email   = $_SESSION['email'] . ",$admin_email";
 
+  $subject = "$lname project ($db_abbrev): {$_POST['description']}";
+  $subject = ( strlen( $subject ) > 50 )
+           ? ( substr( $subject, 0, 50 ) . '...' )
+           : ( $subject );
   $message = "Dear $fname $lname,
   You have entered a new project in your $org_name account at $org_site.
   $diff_text

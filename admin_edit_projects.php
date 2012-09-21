@@ -263,10 +263,8 @@ HTML;
     or die("Query failed : $query<br />\n" . mysql_error());
 
   // The project is new or has changed, so let's mail the user
-  global $org_name, $org_site, $admin_email;
-  $site_abbrev = substr( $org_site, strrpos( $org_site, "uslims3_" ) + 8 );
-
-  $subject = "Your $site_abbrev project";
+  global $org_name, $org_site, $dbname, $admin_email;
+  $db_abbrev = substr( $dbname, strrpos( $dbname, "uslims3_" ) + 8 );
 
   // We have to get info about the project owner, not ourselves here
   $query  = "SELECT lname, fname, email " .
@@ -278,6 +276,10 @@ HTML;
   list($lname, $fname, $email) = mysql_fetch_array($result);
   $email   .= ",$admin_email";
 
+  $subject = "$lname project ($db_abbrev): {$_POST['description']}";
+  $subject = ( strlen( $subject ) > 50 )
+           ? ( substr( $subject, 0, 50 ) . '...' )
+           : ( $subject );
   $message = "Dear $fname $lname,
   You have entered/updated a project in your $org_name account at $org_site.
   $diff_text
