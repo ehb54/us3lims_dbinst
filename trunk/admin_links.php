@@ -27,44 +27,44 @@ include 'config.php';
 $userlevel = ( isset( $_SESSION['userlevel'] ) ) ? $_SESSION['userlevel'] : -1;
 
 $admin5_menu = <<<HTML
-    <li><a href='http://$org_site/mysql_admin.php'>MySQL</a></li>
-    <li><a href='http://$org_site/runID_info.php'>Info by Run ID</a></li>
-    <li><a href='http://$org_site/orphans.php'>Orphan Report</a></li>
-    <li><a href='http://$org_site/HPC_requests.php'>HPC Report</a></li>
-    <li><a href='http://$org_site/check_db.php'>Check DB Linkage</a></li>
-    <li><a href='http://$org_site/globaldb_stats.php'>Global DB Stats</a></li>
+    <li><a href='https://$org_site/mysql_admin.php'>MySQL</a></li>
+    <li><a href='https://$org_site/runID_info.php'>Info by Run ID</a></li>
+    <li><a href='https://$org_site/orphans.php'>Orphan Report</a></li>
+    <li><a href='https://$org_site/HPC_requests.php'>HPC Report</a></li>
+    <li><a href='https://$org_site/check_db.php'>Check DB Linkage</a></li>
+    <li><a href='https://$org_site/globaldb_stats.php'>Global DB Stats</a></li>
 
 HTML;
 
 $admin4_menu = <<<HTML
-    <li><a href='http://$org_site/runID_info.php'>Info by Run ID</a></li>
-    <li><a href='http://$org_site/orphans.php'>Orphan Report</a></li>
-    <li><a href='http://$org_site/HPC_requests.php'>HPC Report</a></li>
-    <li><a href='http://$org_site/check_db.php'>Check DB Linkage</a></li>
-    <li><a href='http://$org_site/globaldb_stats.php'>Global DB Stats</a></li>
+    <li><a href='https://$org_site/runID_info.php'>Info by Run ID</a></li>
+    <li><a href='https://$org_site/orphans.php'>Orphan Report</a></li>
+    <li><a href='https://$org_site/HPC_requests.php'>HPC Report</a></li>
+    <li><a href='https://$org_site/check_db.php'>Check DB Linkage</a></li>
+    <li><a href='https://$org_site/globaldb_stats.php'>Global DB Stats</a></li>
 
 HTML;
 
 $admin3_menu = <<<HTML
-    <li><a href='http://$org_site/runID_info.php'>Info by Run ID</a></li>
-    <li><a href='http://$org_site/orphans.php'>Orphan Report</a></li>
-    <li><a href='http://$org_site/HPC_requests.php'>HPC Report</a></li>
-    <li><a href='http://$org_site/check_db.php'>Check DB Linkage</a></li>
+    <li><a href='https://$org_site/runID_info.php'>Info by Run ID</a></li>
+    <li><a href='https://$org_site/orphans.php'>Orphan Report</a></li>
+    <li><a href='https://$org_site/HPC_requests.php'>HPC Report</a></li>
+    <li><a href='https://$org_site/check_db.php'>Check DB Linkage</a></li>
 
 HTML;
 
 $edituser_menu = <<<HTML
-      <li><a href='http://$org_site/edit_users.php'>Edit User Info</a></li>
-      <li><a href='http://$org_site/view_users.php'>View User Info</a></li>
-      <li><a href='http://$org_site/view_all.php'>View All Users</a></li>
-      <li><a href='http://$org_site/admin_view_projects.php'>View Users&rsquo; Projects</a></li>
-      <li><a href='http://$org_site/select_user.php'>Select Data from Another User</a></li>
+      <li><a href='https://$org_site/edit_users.php'>Edit User Info</a></li>
+      <li><a href='https://$org_site/view_users.php'>View User Info</a></li>
+      <li><a href='https://$org_site/view_all.php'>View All Users</a></li>
+      <li><a href='https://$org_site/admin_view_projects.php'>View Users&rsquo; Projects</a></li>
+      <li><a href='https://$org_site/select_user.php'>Select Data from Another User</a></li>
 
 HTML;
 
 $hardware_menu = <<<HTML
-      <li><a href='edit_labs.php'>Edit Labs</a></li>
-      <li><a href='edit_instruments.php'>Edit Instruments</a></li>
+      <li><a href='https://$org_site/edit_labs.php'>Edit Labs</a></li>
+      <li><a href='https://$org_site/edit_instruments.php'>Edit Instruments</a></li>
 
 HTML;
 
