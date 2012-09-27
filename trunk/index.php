@@ -81,6 +81,10 @@ Texas Advanced Computing Center supported by NSF Teragrid Grant<br/>
 <a href='http://ultrascan.uthscsa.edu/ultrascan-refs.html'>UltraScan
 submission website</a>.</p>
 
+<p>Before logging in, if you have not done so, please visit 
+   <a href='data_security.php'>the Data Security page</a> to accept our 
+   certificate authority. This will make it easier to use the secure part 
+   of our website. Thanks!</p>
 
 <p><a href='mailto:demeler@biochem.uthscsa.edu'>Borries Demeler, Ph.D.</a><br/>
 Associate Professor<br/> 
