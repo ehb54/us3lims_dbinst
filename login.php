@@ -36,10 +36,10 @@ echo<<<HTML
     </table>
   </form>
 
-  <p><a href='http://$org_site/lost_password.php'>Forget your password?</a></p>
+  <p><a href='https://$org_site/lost_password.php'>Forget your password?</a></p>
 
   <h3>New Users:</h3>
-  <p><a href='http://$org_site/newaccount.php'>Sign up for a new account</a></p>
+  <p><a href='https://$org_site/newaccount.php'>Sign up for a new account</a></p>
 
 </div>
 
