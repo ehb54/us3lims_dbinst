@@ -80,16 +80,18 @@ echo<<<HTML
        <td style='vertical-align:middle;width:400px;'>
 
        <div id="cse-search-form">Loading</div>
-       <script src="http://www.google.com/jsapi" type="text/javascript"></script>
+       <script src="https://www.google.com/jsapi" type="text/javascript"></script>
        <script type="text/javascript"> 
+       // <![CDATA[     // escape validation errors
          google.load('search', '1', {language : 'en', style : google.loader.themes.MINIMALIST});
          google.setOnLoadCallback(function() {
            var customSearchControl = new google.search.CustomSearchControl('007201445830912588415:jg05a0rix7y');
            customSearchControl.setResultSetSize(google.search.Search.FILTERED_CSE_RESULTSET);
            var options = new google.search.DrawOptions();
-           options.enableSearchboxOnly("http://$org_site/search.php");    
+           options.enableSearchboxOnly("https://$org_site/search.php");    
            customSearchControl.draw('cse-search-form', options);
          }, true);
+       // ]]>
        </script>
 
        </td>
