@@ -38,10 +38,18 @@ include 'header.php';
      to you once it is set up correctly. On this website these certificates
      are based on <a href='ssl/cacert.crt'>our certificate authority</a>.
      Before logging in, if you have not done so already, please click on this 
-     link to accept our certificate authority. In the dialog that pops up, be 
-     sure to check the box to trust this certificate authority to identify 
-     websites and click ok. This will make it easier to use the secure part of 
-     our website.</p>
+     link to accept our certificate authority. If you are using Firefox be sure
+     to check the box to trust this certficate authority to identify websites
+     in the dialog that pops up and click ok. If you are using Internet Explorer,
+     click the <em>Open</em> button to open the certificate file, and then in 
+     the dialog that pops up click on the button marked <em>Install certificate...</em>.
+     Then, in the Certificate Import Wizard, click the radio button that says
+     <em>Automatically select the certificate store based on the type of certificate</em>.
+     Finally, in the <em>Security Warning</em> dialog box confirming that you want
+     to install the certificate authority (CA) representing bcf.uthscsa.edu, click
+     <em>Yes</em>. Whichever browser you use, accepting our certificate authority
+     will help your browser identify our website and make it easier to use the 
+     secure parts of it.</p>
 
   <p>If you have any questions or problems with our certificate authority, please
      contact us. Thanks!</p>
