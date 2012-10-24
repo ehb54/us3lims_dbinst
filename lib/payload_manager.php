@@ -98,7 +98,10 @@ abstract class Payload_manager
       
       // we need the stretch function from the rotor table
       $rotor_stretch = "0 0";
-      $query  = "SELECT coeff1, coeff2 " .
+      $cellname      = "1";
+      $channel       = "A";
+      $chanindex     = 0;
+      $query  = "SELECT coeff1, coeff2, filename " .
                 "FROM rawData, experiment, rotorCalibration " .
                 "WHERE rawData.rawDataID = $rawDataID " .
                 "AND rawData.experimentID = experiment.experimentID " .
@@ -107,8 +110,10 @@ abstract class Payload_manager
                 or die( "Query failed : $query<br />" . mysql_error());
       if ( mysql_num_rows( $result ) > 0 )
       {
-        list( $coeff1, $coeff2 ) = mysql_fetch_array( $result );      // should be 1
+        list( $coeff1, $coeff2, $filename ) = mysql_fetch_array( $result );   // should be 1
         $rotor_stretch = "$coeff1 $coeff2";
+        list( $run, $dtype, $cellname, $channel, $waveln, $ftype ) = explode( ".", $filename );
+        $chanindex = strpos( "ABCDEFGH", $channel ) / 2;
       }
       
       // We need the centerpiece bottom
@@ -121,13 +126,19 @@ abstract class Payload_manager
                 "FROM rawData, cell, abstractCenterpiece " .
                 "WHERE rawData.rawDataID = $rawDataID " .
                 "AND rawData.experimentID = cell.experimentID " .
+                "AND cell.name = $cellname " .
                 "AND cell.abstractCenterpieceID = abstractCenterpiece.abstractCenterpieceID ";
       $result = mysql_query( $query )
                 or die( "Query failed : $query<br />" . mysql_error());
       if ( mysql_num_rows ( $result ) > 0 )
         list( $centerpiece_shape, $centerpiece_bottom, $centerpiece_angle, $centerpiece_pathlength, $centerpiece_width )
           = mysql_fetch_array( $result );      // should be 1
-      
+       if ( strpos( $centerpiece_bottom, ":" ) !== false )
+       { // Parse multiple bottoms and get the one for the channel set
+          $bottoms            = explode( ":", $centerpiece_bottom );
+          $centerpiece_bottom = $bottoms[ $chanindex ];
+       }
+
       // We also need some information about the analytes in this cell
       $analytes = array();
       $query  = "SELECT type, vbar, molecularWeight, amount " .
