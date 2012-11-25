@@ -336,7 +336,7 @@ function validate_single( f )
 
     if ( meniscus_option == 1 )
     {
-      alert( "Meniscus fitting may only be performed when no monte carlo " +
+      alert( "Meniscus fitting may only be performed when no Monte Carlo " +
              "iterations are requested.\n" + contact_bo );
       return( false );
     }
@@ -348,12 +348,12 @@ function validate_single( f )
 
     // alert( "iterations_option = " + iterations_option );
 
-    if ( iterations_option == 1 )
-    {
-      alert( "Iterative fitting may only be performed when no monte carlo " +
-             "iterations are requested.\n" + contact_bo );
-      return( false );
-    }
+    //if ( iterations_option == 1 )
+    //{
+    //  alert( "Iterative fitting may only be performed when no Monte Carlo " +
+    //         "iterations are requested.\n" + contact_bo );
+    //  return( false );
+    //}
 
     var ti_noise = 0;
     if ( valid_field(f.tinoise_option) )
