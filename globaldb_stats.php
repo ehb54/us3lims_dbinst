@@ -41,15 +41,12 @@ if (ob_get_length() === false)
 $cluster_list = array(
                 'lonestar.tacc.teragrid.org'          => 'lonestar.tacc',
                 'lonestar'                            => 'lonestar',
-                'bcf.uthscsa.edu'                     => 'bcf',
-                'alamo.uthscsa.edu'                   => 'alamo',
-                'ranger.tacc.teragrid.edu'            => 'ranger',
-                'queenbee.loni-lsu.teragrid.org'      => 'queenbee',
-                'gatekeeper.ranger.tacc.teragrid.edu' => 'gatekeeper.ranger',
-                'stampede.tacc.teragrid.org'          => 'stampede',
-                'gordon.sdsc.edu'                     => 'gordon',
+##                'stampede.tacc.teragrid.org'          => 'stampede',
+##                'gordon.sdsc.edu'                     => 'gordon',
                 'trestles.sdsc.edu'                   => 'trestles',
+                'alamo.uthscsa.edu'                   => 'alamo',
                 'alamo.biochemistry.uthscsa.edu'      => 'alamo.biochemistry'
+                'bcf.uthscsa.edu'                     => 'bcf',
                 );
 
 // Figure out which clusters were selected
