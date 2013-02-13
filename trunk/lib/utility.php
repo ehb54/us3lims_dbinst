@@ -71,12 +71,11 @@ class cluster_info
 }
 
 $clusters = array( 
-  new cluster_info( "gatekeeper.ranger.tacc.teragrid.edu", "ranger",      "normal"  ),
-  new cluster_info( "gatekeeper.ranger.tacc.teragrid.edu", "ranger",      "long"    ),
   new cluster_info( "lonestar.tacc.teragrid.org",          "lonestar",    "normal"  ), 
-  new cluster_info( "stampede.tacc.teragrid.org",          "stampede",    "normal"  ), 
-  new cluster_info( "gordon.sdsc.edu",                     "gordon",      "normal"  ), 
+##  new cluster_info( "stampede.tacc.teragrid.org",          "stampede",    "normal"  ), 
+##  new cluster_info( "stampede.tacc.teragrid.org",          "stampede",    "long"    ), 
   new cluster_info( "trestles.sdsc.edu",                   "trestles",    "normal"  ), 
+##  new cluster_info( "gordon.sdsc.edu",                     "gordon",      "normal"  ), 
   new cluster_info( "bcf.uthscsa.edu",                     "bcf",         "default" ),
   new cluster_info( "alamo.uthscsa.edu",                   "alamo",       "default" ),
   new cluster_info( "bcf.uthscsa.edu",                     "bcf-local",   "default" ),
