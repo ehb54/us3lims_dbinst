@@ -128,7 +128,6 @@ HTML;
           break;
     
        case 'lonestar' :
-       case 'ranger'   :
        case 'stampede'   :
        case 'gordon'   :
        case 'trestles'   :
