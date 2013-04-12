@@ -77,8 +77,8 @@ $clusters = array(
 ##  new cluster_info( "gordon.sdsc.edu",                     "gordon",      "normal"  ), 
   new cluster_info( "alamo.uthscsa.edu",                   "alamo",       "default" ),
   new cluster_info( "bcf.uthscsa.edu",                     "bcf",         "default" ),
-  new cluster_info( "alamo.uthscsa.edu",                   "alamo-local", "default" )
-  new cluster_info( "bcf.uthscsa.edu",                     "bcf-local",   "default" ),
+  new cluster_info( "alamo.uthscsa.edu",                   "alamo-local", "default" ),
+  new cluster_info( "bcf.uthscsa.edu",                     "bcf-local",   "default" )
   );
 
 $gfac_serviceURL = "http://gf5.ucs.indiana.edu:8080/ogce-rest/job";
