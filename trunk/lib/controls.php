@@ -60,12 +60,11 @@ echo<<<HTML
           number of cores that can be requested ( that is, MC x PMGC ) are as follows:
           <table class='noborder' style='margin:0px auto;'>
             <tr><th>Cluster</th><th>Max cores</th></tr>
-            <tr><td>bcf</td><td style='text-align:center;'>(no PMG)</td></tr>
-            <tr><td>alamo</td><td style='text-align:center;'>(no PMG)</td></tr>
-            <tr><td>lonestar</td><td style='text-align:center;'>288</td></tr>
             <tr><td>stampede</td><td style='text-align:center;'>256</td></tr>
+            <tr><td>lonestar</td><td style='text-align:center;'>288</td></tr>
             <tr><td>trestles</td><td style='text-align:center;'>256</td></tr>
-            <tr><td>gordon</td><td style='text-align:center;'>256</td></tr>
+            <tr><td>alamo</td><td style='text-align:center;'>(no PMG)</td></tr>
+            <tr><td>bcf</td><td style='text-align:center;'>(no PMG)</td></tr>
           </table>
         </td></tr>
 
