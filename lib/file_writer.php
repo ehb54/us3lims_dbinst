@@ -157,6 +157,7 @@ abstract class File_writer
               $xml->startElement( 'buffer' );
                 $xml->writeAttribute( 'density', $dataset['density'] );
                 $xml->writeAttribute( 'viscosity', $dataset['viscosity'] );
+                $xml->writeAttribute( 'manual', $dataset['manual'] );
               $xml->endElement(); // buffer
               foreach( $dataset['analytes'] as $analyte )
               {

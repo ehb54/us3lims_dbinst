@@ -127,10 +127,10 @@ HTML;
           $job = new submit_local();
           break;
     
-       case 'lonestar' :
        case 'stampede'   :
-       case 'gordon'   :
+       case 'lonestar' :
        case 'trestles'   :
+       case 'gordon'   :
        case 'alamo'    :
        case 'bcf'      :
           $job = new submit_gfac();

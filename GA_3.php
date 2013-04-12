@@ -137,8 +137,8 @@ HTML;
           $job = new submit_local();
           break;
     
-       case 'lonestar' :
        case 'stampede'   :
+       case 'lonestar' :
        case 'gordon'   :
        case 'trestles'   :
        case 'alamo'    :
