@@ -125,7 +125,7 @@ exit();
 function get_status( $gfacID, $us3_db )
 {
   // Using credentials that will work for all databases
-  $link = mysql_connect( 'uslims3.uthscsa.edu', 'us3php', 'us3' );
+  $link = mysql_connect( 'localhost', 'us3php', 'us3' );
   if ( ! $link ) return false;
 
   $result = mysql_select_db($us3_db, $link);
