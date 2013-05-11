@@ -152,9 +152,9 @@ echo "<h3>{$rss->channel['title']}</h3>\n";
 echo "<table cellpadding='7' cellspacing='0'>\n";
 foreach ( $items as $item )
 {
-  $title = $item[title];
-  $url   = $item[link];
-  $description = $item[description];
+  $title       = $item['title'];
+  $url         = $item['link'];
+  $description = $item['description'];
 
   echo <<<HTML
   <tr><td><a href=$url>$title</a></td>

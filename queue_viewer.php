@@ -328,7 +328,7 @@ function updateLimsStatus( $gfacID, $status, $message )
   mysql_close( $gLink );
 
   // Using credentials that will work for all databases
-  $us3link = mysql_connect( 'uslims3.uthscsa.edu', 'us3php', 'us3' );
+  $us3link = mysql_connect( 'localhost', 'us3php', 'us3' );
   if ( ! mysql_select_db($db, $us3link) ) return false;
 
   $query  = "UPDATE HPCAnalysisResult SET " .
