@@ -15,7 +15,8 @@ if ( ! isset( $_SESSION['captcha'] ) )
 }
 
 $captcha = $_SESSION['captcha'];
-$font    = '/usr/share/fonts/TTF/AppleGaramond-BoldItalic.ttf';
+//$font    = '/usr/share/fonts/TTF/AppleGaramond-BoldItalic.ttf';
+$font    = '/usr/share/fonts/liberation/LiberationSans-BoldItalic.ttf';
 
 $size      = 60;
 
