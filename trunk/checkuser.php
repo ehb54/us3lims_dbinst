@@ -11,6 +11,19 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 
+// Is the current instance the same as the one logged into
+if ( isset($_SESSION['instance']) )
+{
+    $message = "INSTANCE *IS* SET";
+  if ( $_SESSION['instance'] != $dbname )
+  {
+    $message = "Error: Already logged into " . $_SESSION['instance']
+       . ", not " . $dbname . " ! &nbsp;&nbsp;&nbsp;Logout first!!";
+    header('Location: login.php');
+    exit();
+  }
+}
+
 $email  = trim($_POST['email']);
 $passwd = trim($_POST['password']);
 
@@ -58,6 +71,7 @@ if ( $count == 1 )
   $_SESSION['email']        = $email;
   $_SESSION['submitter_email'] = $email;
   $_SESSION['userlevel']    = $userlevel;
+  $_SESSION['instance']     = $dbname;
 
   // Set cluster authorizations
   $clusterAuth = array();

@@ -5,16 +5,8 @@
  * A place for a user to edit/update his own info
  *
  */
-session_start();
+include_once 'checkinstance.php';
 
-// Are we authorized to view this page?
-if ( ! isset($_SESSION['id']) )
-{
-  header('Location: index.php');
-  exit();
-} 
-
-include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 

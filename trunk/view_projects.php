@@ -5,14 +5,7 @@
  * Display the entire project table, allowing individual records to be edited
  *
  */
-session_start();
-
-// Are we authorized to view this page?
-if ( ! isset($_SESSION['id']) )
-{
-  header('Location: index.php');
-  exit();
-} 
+include_once 'checkinstance.php';
 
 // Not sure which userlevels yet
 /*

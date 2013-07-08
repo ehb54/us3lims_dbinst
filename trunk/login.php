@@ -5,8 +5,18 @@
  * Login page
  *
  */
+session_start();
+include 'config.php';
 
-include_once 'config.php';
+// Is the current instance the same as the one logged into
+if ( isset($_SESSION['instance']) )
+{
+  if ( $_SESSION['instance'] != $dbname )
+  {
+    $message = "Error: Already logged into " . $_SESSION['instance']
+       . ", not " . $dbname . " !&nbsp;&nbsp;&nbsp;Logout first!!";
+  }
+}
 
 $page_title = "Login";
 include 'header.php';

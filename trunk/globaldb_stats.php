@@ -5,14 +5,7 @@
  * A home page for generating/viewing/exporting global database stats
  *
  */
-session_start();
-
-// Are we authorized to view this page?
-if ( ! isset($_SESSION['id']) )
-{
-  header('Location: index.php');
-  exit();
-} 
+include_once 'checkinstance.php';
 
 if ( ( $_SESSION['userlevel'] != 4 ) &&
      ( $_SESSION['userlevel'] != 5 ) )  // global admins only

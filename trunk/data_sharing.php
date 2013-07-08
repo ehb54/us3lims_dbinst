@@ -5,14 +5,7 @@
  * A place to define who you would like to share your data with
  *
  */
-session_start();
-
-// Are we authorized to view this page?
-if ( ! isset($_SESSION['loginID']) )
-{
-  header('Location: index.php');
-  exit();
-} 
+include_once 'checkinstance.php';
 
 $loginID = $_SESSION['loginID'];
 $message = '';

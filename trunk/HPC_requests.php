@@ -5,14 +5,7 @@
  * Check HPC Request Data
  *
  */
-session_start();
-
-// Are we authorized to view this page?
-if ( ! isset($_SESSION['id']) )
-{
-  header('Location: index.php');
-  exit();
-} 
+include_once 'checkinstance.php';
 
 if ( ( $_SESSION['userlevel'] != 3 ) &&
      ( $_SESSION['userlevel'] != 4 ) &&
@@ -57,7 +50,7 @@ HTML;
 
       while ( list( $reqID, $time, $cluster, $method ) = mysql_fetch_array( $result ) )
       {
-         $link = "<a href='{$_SERVER[ PHP_SELF ]}?RequestID=$reqID'>$reqID</a>";
+         $link = "<a href='{$_SERVER['PHP_SELF']}?RequestID=$reqID'>$reqID</a>";
 
          $table .= "<tr><td>$link</td><td>$time</td><td>$cluster</td><td>$method</td></tr>\n";
       }

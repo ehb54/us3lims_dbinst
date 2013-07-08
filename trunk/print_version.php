@@ -5,16 +5,7 @@
  * A program to create a page suitable for printing
  *
  */
-session_start();
-
-// Are we authorized to view this page?
-if ( ! isset($_SESSION['id']) )
-{
-  header('Location: index.php');
-  exit();
-} 
-
-include 'config.php';
+include_once 'checkinstance.php';
 
 $page_title   = $_SESSION['print_title'];
 $page_content = $_SESSION['print_text'];
