@@ -5,14 +5,7 @@
  * A page of links for the admin
  *
  */
-session_start();
-
-// Are we authorized to view this page?
-if ( ! isset($_SESSION['id']) )
-{
-  header('Location: index.php');
-  exit();
-} 
+include_once 'checkinstance.php';
 
 if ( ($_SESSION['userlevel'] != 3) &&
      ($_SESSION['userlevel'] != 4) &&

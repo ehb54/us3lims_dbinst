@@ -5,14 +5,7 @@
  * View the report information that was stored in the DB by UltraScan III
  *
  */
-session_start();
-
-// Are we authorized to view this page?
-if ( ! isset($_SESSION['id']) )
-{
-  header('Location: index.php');
-  exit();
-} 
+include_once 'checkinstance.php';
 
 $myID = $_SESSION['id'];
 
