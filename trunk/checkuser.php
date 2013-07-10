@@ -5,24 +5,9 @@
  * Verify user credentials
  *
  */
-session_start();
-
-include 'config.php';
+include 'checkinstance.php';
 include 'db.php';
 include 'lib/utility.php';
-
-// Is the current instance the same as the one logged into
-if ( isset($_SESSION['instance']) )
-{
-    $message = "INSTANCE *IS* SET";
-  if ( $_SESSION['instance'] != $dbname )
-  {
-    $message = "Error: Already logged into " . $_SESSION['instance']
-       . ", not " . $dbname . " ! &nbsp;&nbsp;&nbsp;Logout first!!";
-    header('Location: login.php');
-    exit();
-  }
-}
 
 $email  = trim($_POST['email']);
 $passwd = trim($_POST['password']);

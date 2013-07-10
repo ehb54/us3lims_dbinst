@@ -429,11 +429,10 @@ echo<<<HTML
             <tr><th>Cluster</th><th>Max demes</th></tr>
             <tr><td>bcf</td><td style='text-align:center;'>31</td></tr>
             <tr><td>alamo</td><td style='text-align:center;'>51</td></tr>
-            <tr><td>lonestar</td><td style='text-align:center;'>35</td></tr>
-            <tr><td>ranger</td><td style='text-align:center;'>63</td></tr>
             <tr><td>stampede</td><td style='text-align:center;'>63</td></tr>
-            <tr><td>gordon</td><td style='text-align:center;'>63</td></tr>
+            <tr><td>lonestar</td><td style='text-align:center;'>35</td></tr>
             <tr><td>trestles</td><td style='text-align:center;'>63</td></tr>
+            <tr><td>gordon</td><td style='text-align:center;'>63</td></tr>
           </table>
         </td></tr>
 
