@@ -5,7 +5,7 @@
  * Log out of the system
  *
  */
-session_start();
+include 'checkinstance.php';
 
 // Unset all of the session variables.
 $_SESSION = array();

@@ -1,5 +1,5 @@
 <?php
-session_start();
+include 'checkinstance.php';
 
 // Are we authorized to view this page?
 if ( !isset($_SESSION['id']) )

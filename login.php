@@ -5,18 +5,7 @@
  * Login page
  *
  */
-session_start();
-include 'config.php';
-
-// Is the current instance the same as the one logged into
-if ( isset($_SESSION['instance']) )
-{
-  if ( $_SESSION['instance'] != $dbname )
-  {
-    $message = "Error: Already logged into " . $_SESSION['instance']
-       . ", not " . $dbname . " !&nbsp;&nbsp;&nbsp;Logout first!!";
-  }
-}
+include_once 'checkinstance.php';
 
 $page_title = "Login";
 include 'header.php';

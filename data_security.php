@@ -5,7 +5,7 @@
  * A brief description of why we use https, and a link for the root certificate
  *
  */
-session_start();
+include 'checkinstance.php';
 
 include 'config.php';
 

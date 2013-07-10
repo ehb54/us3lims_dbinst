@@ -6,7 +6,7 @@
  *
  */
 
-session_start();
+include 'checkinstance.php';
 
 include_once 'config.php';
 include_once 'db.php';
