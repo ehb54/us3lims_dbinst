@@ -34,11 +34,9 @@ if (ob_get_length() === false)
 $cluster_list = array(
                 'stampede.tacc.xsede.org'          =>    'stampede',
                 'lonestar.tacc.teragrid.org'          => 'lonestar.tacc',
-                'lonestar'                            => 'lonestar',
 ##                'gordon.sdsc.edu'                     => 'gordon',
                 'trestles.sdsc.edu'                   => 'trestles',
                 'alamo.uthscsa.edu'                   => 'alamo',
-                'alamo.biochemistry.uthscsa.edu'      => 'alamo.biochemistry',
                 'bcf.uthscsa.edu'                     => 'bcf'
                 );
 
