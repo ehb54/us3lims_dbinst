@@ -38,8 +38,8 @@ $cluster_list = array(
 ##                'gordon.sdsc.edu'                     => 'gordon',
                 'trestles.sdsc.edu'                   => 'trestles',
                 'alamo.uthscsa.edu'                   => 'alamo',
-                'alamo.biochemistry.uthscsa.edu'      => 'alamo.biochemistry'
-                'bcf.uthscsa.edu'                     => 'bcf',
+                'alamo.biochemistry.uthscsa.edu'      => 'alamo.biochemistry',
+                'bcf.uthscsa.edu'                     => 'bcf'
                 );
 
 // Figure out which clusters were selected
