@@ -120,10 +120,11 @@ HTML;
           $job = new submit_local();
           break;
     
-       case 'stampede'   :
+       case 'stampede' :
        case 'lonestar' :
+       case 'trestles' :
+       case 'juropa'   :
        case 'gordon'   :
-       case 'trestles'   :
        case 'alamo'    :
        case 'bcf'      :
           $job = new submit_gfac();

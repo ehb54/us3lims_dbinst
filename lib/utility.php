@@ -71,23 +71,24 @@ class cluster_info
 }
 
 $clusters = array( 
-  new cluster_info( "stampede.tacc.xsede.org",             "stampede",    "normal"  ), 
-  new cluster_info( "lonestar.tacc.teragrid.org",          "lonestar",    "normal"  ), 
-  new cluster_info( "trestles.sdsc.edu",                   "trestles",    "normal"  ), 
-##  new cluster_info( "gordon.sdsc.edu",                     "gordon",      "normal"  ), 
-  new cluster_info( "alamo.uthscsa.edu",                   "alamo",       "default" ),
-  new cluster_info( "bcf.uthscsa.edu",                     "bcf",         "default" ),
-  new cluster_info( "alamo.uthscsa.edu",                   "alamo-local", "default" ),
-  new cluster_info( "bcf.uthscsa.edu",                     "bcf-local",   "default" )
+  new cluster_info( "stampede.tacc.xsede.org",     "stampede",    "normal"  ), 
+  new cluster_info( "lonestar.tacc.teragrid.org",  "lonestar",    "normal"  ), 
+  new cluster_info( "trestles.sdsc.edu",           "trestles",    "normal"  ), 
+##  new cluster_info( "gordon.sdsc.edu",             "gordon",      "normal"  ), 
+  new cluster_info( "juropa.fz-juelich.de",        "juropa",      "default" ), 
+  new cluster_info( "alamo.uthscsa.edu",           "alamo",       "default" ),
+  new cluster_info( "bcf.uthscsa.edu",             "bcf",         "default" ),
+  new cluster_info( "alamo.uthscsa.edu",           "alamo-local", "default" ),
+  new cluster_info( "bcf.uthscsa.edu",             "bcf-local",   "default" )
   );
 
-$gfac_serviceURL = "http://gf5.ucs.indiana.edu:8080/ogce-rest/job";
+global $svcport;
+//$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:8080/ogce-rest/job";
+//$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:9090/ogce-rest/job";
+$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:" . $svcport . "ogce-rest/job";
 
 // Change for sandbox testing
 global $globaldbname;
-
-if ( $globaldbname == 'gfac2' )
-  $gfac_serviceURL = "http://gf5.ucs.indiana.edu:8081/ogce-rest/job";
 
 $gfac_link = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
 $result    = mysql_select_db( $globaldbname, $gfac_link );

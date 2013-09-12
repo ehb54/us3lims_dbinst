@@ -82,7 +82,7 @@ if ( $_SESSION[ 'separate_datasets' ] )
 
 else
 {
-echo "not separate\n"; exit();
+//echo "not separate\n"; exit();
   $globalfit = $payload->get();
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
@@ -131,15 +131,16 @@ HTML;
           break;
     
        case 'stampede'   :
-       case 'lonestar' :
-       case 'gordon'   :
+       case 'lonestar'   :
        case 'trestles'   :
-       case 'alamo'    :
-       case 'bcf'      :
+       case 'gordon'     :
+       case 'juropa'     :
+       case 'alamo'      :
+       case 'bcf'        :
           $job = new submit_gfac();
           break;
 
-       default         :
+       default           :
           $output_msg .= "<br /><span class='message'>Unsupported cluster $cluster!</span><br />\n";
           $filenames = array();
           break;

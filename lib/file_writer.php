@@ -639,16 +639,34 @@ class File_GA extends File_writer
       $xml->startElement( 'debug_level' );
         $xml->writeAttribute( 'value', $parameters['debug_level'] );
       $xml->endElement(); // debug_level
+      $xml->startElement( 'bucket_fixed' );
+        $xml->writeAttribute( 'value', $parameters['bucket_fixed'] );
+      $xml->endElement(); // bucket-fixed
 
+      $xtype = 's';
+      $ytype = 'ff0';
+      $bucket = $parameters['buckets'][1];
+      if ( isset($bucket['mw_min']) )
+         $xtype = 'mw';
+      if ( isset($bucket['D_min']) )
+         $xtype = 'D';
+      if ( isset($bucket['f_min']) )
+         $ytype = 'f';
+      if ( isset($bucket['vbar_min']) )
+         $ytype = 'vbar';
+      $xtlo = $xtype . '_min';
+      $xthi = $xtype . '_max';
+      $ytlo = $ytype . '_min';
+      $ythi = $ytype . '_max';
       // Now write out the buckets
       for ( $i = 1; $i <= sizeof( $parameters['buckets'] ); $i++ )
       {
         $bucket = $parameters['buckets'][$i];
         $xml->startElement( 'bucket' );
-          $xml->writeAttribute( 's_min',   $bucket['s_min'] );
-          $xml->writeAttribute( 's_max',   $bucket['s_max'] );
-          $xml->writeAttribute( 'ff0_min', $bucket['f_min'] );
-          $xml->writeAttribute( 'ff0_max', $bucket['f_max'] );
+          $xml->writeAttribute( $xtlo, $bucket[$xtlo] );
+          $xml->writeAttribute( $xthi, $bucket[$xthi] );
+          $xml->writeAttribute( $ytlo, $bucket[$ytlo] );
+          $xml->writeAttribute( $ythi, $bucket[$ythi] );
         $xml->endElement(); // bucket
       }
 

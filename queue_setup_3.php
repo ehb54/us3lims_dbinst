@@ -153,13 +153,10 @@ HTML;
     <legend>Multiple dataset notes:</legend>
     <ul class='multi_notes'>
       <li><form action='$_SERVER[PHP_SELF]' method='post'>
-          In the case of the 2DSA control and the 2DSA with MW
-          constraint control, multiple datasets can be submitted as
-          either a global fit to a single model or separated into
-          multiple jobs. Currently, you are set up to $separate_text.
-          To change, select one of the options below before proceeding.
-          Remember, if you select a GA analysis method this setting
-          will be ignored.
+          Multiple datasets can be submitted as either a global fit to
+          a single model or separated into multiple jobs. Currently,
+          you are set up to $separate_text. To change, select one of
+          the options below before proceeding.
 
           <table cellspacing='0' cellpadding='3px'>
           <tr><td><label>
@@ -173,8 +170,8 @@ HTML;
                          onclick='this.form.submit();' />
                          Proceed as a global fit</label></td></tr>
           </table>
-          </form></li>
-      <li>The nonlinear GA model currently supports only one dataset</li>
+          </form>
+      </li>
     </ul>
     </fieldset>
 
