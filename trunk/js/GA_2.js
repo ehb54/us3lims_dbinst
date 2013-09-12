@@ -22,7 +22,7 @@ function validate_solutes( count )
 {
     for ( var i = 1; i <= count; i++ )
     {
-        var s_min = document.getElementById(i + "_min");
+        var s_min = document.getElementById(i + "_xmin");
         if ( ( s_min == null ) || isWhitespace(s_min.value) )
         {
             alert( "Please enter min value for Solute "+ i );
@@ -30,7 +30,7 @@ function validate_solutes( count )
             return( false );
         }
 
-        s_max = document.getElementById(i + "_max");
+        s_max = document.getElementById(i + "_xmax");
         if ( ( s_max == null ) || isWhitespace(s_max.value) )
         {
             alert( "Please enter max value for Solute "+ i );
@@ -81,7 +81,7 @@ function validate_solutes( count )
                  "solute " + i + ". This range is modified for the GA analysis.");
         }
 
-        ff0_min = document.getElementById(i + "_ff0_min");
+        ff0_min = document.getElementById(i + "_ymin");
         if ( ( ff0_min == null ) || isWhitespace(ff0_min.value) )
         {
             alert("Please enter f/f0 min value for Solute "+ i);
@@ -89,7 +89,7 @@ function validate_solutes( count )
             return false;
         }
 
-        ff0_max = document.getElementById(i + "_ff0_max");
+        ff0_max = document.getElementById(i + "_ymax");
         if ( ( ff0_max == null ) || isWhitespace(ff0_max.value) )
         {
             alert("Please enter f/f0 max value for Solute "+ i);
