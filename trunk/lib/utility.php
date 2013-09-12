@@ -85,7 +85,7 @@ $clusters = array(
 global $svcport;
 //$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:8080/ogce-rest/job";
 //$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:9090/ogce-rest/job";
-$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:" . $svcport . "ogce-rest/job";
+$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:" . $svcport . "/ogce-rest/job";
 
 // Change for sandbox testing
 global $globaldbname;
