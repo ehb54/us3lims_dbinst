@@ -50,6 +50,16 @@ if ( isset($_POST['TIGRE']) )
     $_SESSION['cluster']              = array();
     $_SESSION['cluster']['name']      = $cluster_name;
     $_SESSION['cluster']['shortname'] = $cluster_shortname;
+    if ( $cluster_shortname == 'alamo' )
+    {
+      if ( isset($_SESSION['separate_datasets']) )
+      {
+         if ( $_SESSION['separate_datasets'] == 0 )
+        {
+          $queue = 'ngenseq';
+        }
+      }
+    }
     $_SESSION['cluster']['queue']     = $queue;
   }
 
@@ -64,6 +74,7 @@ if ( isset($_POST['TIGRE']) )
 
   // Save buckets inside the job parameters section
   $job_parameters = $payload->get( 'job_parameters' );
+  $job_parameters['bucket_fixed'] = $_POST['z-fixed'];
   $job_parameters['buckets'] = $buckets;
   $payload->add( 'job_parameters', $job_parameters );
   $payload->add( 'cluster', $_SESSION['cluster'] );
@@ -193,28 +204,52 @@ exit();
 // Function to display a varying number of solutes
 function solute_setup( $buckets, $count )
 {
+  global $zfixed;
+
   $solute_text = <<<HTML
     <fieldset>
     <legend>Setup solutes</legend>
 HTML;
 
+  $xtype = 's';
+  $ytype = 'ff0';
+  if ( isset( $buckets[1]['s_min'] ) )
+    $xtype = 's';
+  else if ( isset( $buckets[1]['D_min'] ) )
+    $xtype = 'D';
+  else if ( isset( $buckets[1]['mw_min'] ) )
+    $xtype = 'mw';
+  if ( isset( $buckets[1]['ff0_min'] ) )
+    $ytype = 'ff0';
+  if ( isset( $buckets[1]['f/f0_min'] ) )
+    $ytype = 'ff0';
+  else if ( isset( $buckets[1]['vbar_min'] ) )
+    $ytype = 'vbar';
+  else if ( isset( $buckets[1]['f_min'] ) )
+    $ytype = 'f';
+  $xlo = $xtype . '_min';
+  $xhi = $xtype . '_max';
+  $ylo = $ytype . '_min';
+  $yhi = $ytype . '_max';
+
+
   for ( $i = 1; $i <= $count; $i++ )
   {
-    $s_min = ( isset( $buckets[$i]['s_min'] ) ) ? $buckets[$i]['s_min'] : '';
-    $s_max = ( isset( $buckets[$i]['s_max'] ) ) ? $buckets[$i]['s_max'] : '';
-    $f_min = ( isset( $buckets[$i]['f_min'] ) ) ? $buckets[$i]['f_min'] : 1;
-    $f_max = ( isset( $buckets[$i]['f_max'] ) ) ? $buckets[$i]['f_max'] : 4;
+    $x_min = ( isset( $buckets[$i][$xlo] ) ) ? $buckets[$i][$xlo] : '';
+    $x_max = ( isset( $buckets[$i][$xhi] ) ) ? $buckets[$i][$xhi] : '';
+    $y_min = ( isset( $buckets[$i][$ylo] ) ) ? $buckets[$i][$ylo] : 1;
+    $y_max = ( isset( $buckets[$i][$yhi] ) ) ? $buckets[$i][$yhi] : 4;
 
     $solute_text .= <<<HTML
       <div id='solutes{$i}'>
-        Solute $i: s-min    <input type='text' name='{$i}_min' id='{$i}_min' 
-                                   size='8' value='$s_min' />
-                   s-max    <input type='text' name='{$i}_max' id='{$i}_max'
-                                   size='8' value='$s_max' />
-                   f/f0-min <input type='text' name='{$i}_ff0_min' id='{$i}_ff0_min'
-                                   size='5' value='$f_min' />
-                   f/f0-max <input type='text' name='{$i}_ff0_max' id='{$i}_ff0_max'
-                                   size='5' value='$f_max' />
+        Solute $i: $xlo   <input type='text' name='{$i}_xmin' id='{$i}_xmin' 
+                                   size='8' value='$x_min' />
+                   $xhi   <input type='text' name='{$i}_xmax' id='{$i}_xmax'
+                                   size='8' value='$x_max' />
+                   $ylo   <input type='text' name='{$i}_ymin' id='{$i}_ymin'
+                                   size='5' value='$y_min' />
+                   $yhi   <input type='text' name='{$i}_ymax' id='{$i}_ymax'
+                                   size='5' value='$y_max' />
       </div>
       <br/><br/>
 HTML;
@@ -224,6 +259,9 @@ HTML;
     <input class='submit' type='button'
            onclick="window.location='GA_1.php'" value='Setup GA Control'/>
     <input type='hidden' name='solute-value' value="$count"/>
+    <input type='hidden' name='x-type' value="$xtype"/>
+    <input type='hidden' name='y-type' value="$ytype"/>
+    <input type='hidden' name='z-fixed' value="$zfixed"/>
     </fieldset>
 HTML;
 
@@ -235,6 +273,7 @@ function upload_file( &$buckets, $upload_dir )
 {
   global $solute_count, $max_buckets;
   global $uploadFileName;
+  global $zfixed;
 
   $buckets = array();
   
@@ -251,7 +290,40 @@ function upload_file( &$buckets, $upload_dir )
   if ( ! ( $lines = file( $uploadFile, FILE_IGNORE_NEW_LINES ) ) )
     return 'Uploaded file could not be read';
 
-  $solute_count = (int) $lines[0];  // First line total solutes
+  $nums  = explode(" ", $lines[0] );
+  $solute_count = (int) $nums[0];  // First line total solutes
+  $zfixed       = ( sizeof( $nums ) > 3 ) ?  (double)trim( $nums[ 3 ] ) : 0.0;
+  $xnum  = ( sizeof( $nums ) > 1 ) ?  (int)trim( $nums[ 1 ] ) : 1;
+  $ynum  = ( sizeof( $nums ) > 2 ) ?  (int)trim( $nums[ 2 ] ) : 4;
+  $xtype = 's';
+  $ytype = 'ff0';
+
+  switch ($xnum) 
+  {
+     case 0 :
+        $xtype = 'mw';
+        break;
+     case 1 :
+     default  :
+        $xtype = 's';
+        break;
+     case 2 :
+        $xtype = 'D';
+        break;
+  }
+  switch ($ynum) 
+  {
+     case 3 :
+        $ytype = 'f';
+        break;
+     case 4 :
+     default :
+        $ytype = 'ff0';
+        break;
+     case 5 :
+        $ytype = 'vbar';
+        break;
+  }
   
   // Check that the solute count is in range
   if ( ($solute_count < 1 ) || ($solute_count > $max_buckets) )
@@ -286,6 +358,10 @@ function upload_file( &$buckets, $upload_dir )
   }
 
   // Get the values, checking for floating numbers too
+  $xtlo  = $xtype . '_min';
+  $xthi  = $xtype . '_max';
+  $ytlo  = $ytype . '_min';
+  $ythi  = $ytype . '_max';
   $error = false;
   for ($i = 1; $i <= $solute_count; $i++ )
   {
@@ -306,19 +382,19 @@ function upload_file( &$buckets, $upload_dir )
       switch ($j) 
       {
         case 0 :
-           $buckets[$i]['s_min'] = $num;
+           $buckets[$i][$xtlo] = $num;
            break;
 
         case 1 :
-           $buckets[$i]['s_max'] = $num;
+           $buckets[$i][$xthi] = $num;
            break;
 
         case 2 :
-           $buckets[$i]['f_min'] = $num;
+           $buckets[$i][$ytlo] = $num;
            break;
 
         case 3 :
-           $buckets[$i]['f_max'] = $num;
+           $buckets[$i][$ythi] = $num;
            break;
 
       }

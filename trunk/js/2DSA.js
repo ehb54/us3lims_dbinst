@@ -345,15 +345,7 @@ function validate_single( f )
     var iterations_option = 0;
     if ( valid_field(f.iterations_option) )
       iterations_option = parseInt( get_radio_value(f.iterations_option) );
-
     // alert( "iterations_option = " + iterations_option );
-
-    //if ( iterations_option == 1 )
-    //{
-    //  alert( "Iterative fitting may only be performed when no Monte Carlo " +
-    //         "iterations are requested.\n" + contact_bo );
-    //  return( false );
-    //}
 
     var ti_noise = 0;
     if ( valid_field(f.tinoise_option) )
@@ -362,7 +354,6 @@ function validate_single( f )
     var ri_noise = 0;
     if ( valid_field(f.rinoise_option) )
       ri_noise = parseInt( get_radio_value(f.rinoise_option) );
-
     // alert("tinoise_option value = " + ti_noise +
     //       "\nrinoise_option value = " + ri_noise);
 
@@ -439,13 +430,17 @@ function validate_multiple( f )
   var iterations_option = 0;
   if ( valid_field(f.iterations_option) )
     iterations_option = parseInt( get_radio_value(f.iterations_option) );
+  var monte_carlo = 1;
+  if ( valid_field(f.mc_iterations) )
+    monte_carlo = parseInt( f.mc_iterations.value );
 
   // alert("iterations_option = " + iterations_option);
+  // alert( "monte_carlo value = " + monte_carlo );
 
-  if ( iterations_option == 1 )
+  if ( iterations_option == 1  &&  monte_carlo > 1 )
   {
-    alert( "Iterative fitting is not allowed on multiple datasets.\n" +
-           contact_bo);
+    alert( "Iterative fitting is not allowed for Monte Carlo on multiple datasets.\n" +
+           contact_bo );
     return( false );
   }
 

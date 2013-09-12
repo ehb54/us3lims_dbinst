@@ -508,6 +508,7 @@ class Payload_GA extends Payload_manager
                                                      $_POST['debug_timings']   == 'on' )
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
+      $job_parameters['bucket_fixed']     = $_POST['z-fixed'];
       $job_parameters['experimentID']     = $_SESSION['experimentID'];
       // buckets
       $this->add( 'job_parameters', $job_parameters );
@@ -550,15 +551,24 @@ class Payload_GA extends Payload_manager
   // Function to get the posted bucket data on the screen
   function getBuckets( $count, &$buckets )
   {
+    $xtype = ( isset($_POST['x-type']) ) ? $_POST['x-type'] : 's';
+    $ytype = ( isset($_POST['y-type']) ) ? $_POST['y-type'] : 'ff0';
+    $xtlo  = $xtype . '_min';
+    $xthi  = $xtype . '_max';
+    $ytlo  = $ytype . '_min';
+    $ythi  = $ytype . '_max';
     $buckets = array();
     
     for ( $i = 1; $i <= $count; $i++ )
     {
-      $buckets[$i]['s_min'] = $_POST[$i.'_min'];
-      $buckets[$i]['s_max'] = $_POST[$i.'_max'];
-      $buckets[$i]['f_min'] = $_POST[$i.'_ff0_min'];
-      $buckets[$i]['f_max'] = $_POST[$i.'_ff0_max'];
+      $buckets[$i][$xtlo] = $_POST[$i.'_xmin'];
+      $buckets[$i][$xthi] = $_POST[$i.'_xmax'];
+      $buckets[$i][$ytlo] = $_POST[$i.'_ymin'];
+      $buckets[$i][$ythi] = $_POST[$i.'_ymax'];
     }
+
+    $parameters['bucket_fixed'] =
+       ( isset($_POST['z-fixed']) ) ? $_POST['z-fixed'] : '0.0';
   }
 }
 ?>

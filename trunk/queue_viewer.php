@@ -133,16 +133,17 @@ function do_delete()
       $status = cancelLocalJob( $shortname, $gfacID );
       break;
 
-    case 'lonestar'    :
-    case 'stampede'    :
+    case 'stampede'  :
+    case 'lonestar'  :
+    case 'trestles'  :
     case 'gordon'    :
-    case 'trestles'    :
-    case 'alamo'       :
-    case 'bcf'         :
+    case 'juropa'    :
+    case 'alamo'     :
+    case 'bcf'       :
       $status = cancelJob( $gfacID );
       break;
 
-    default            :
+    default          :
       break;
 
   }

@@ -49,9 +49,13 @@ else if ( isset( $_SESSION['new_submitter'] ) )
 $add_owner = ( isset( $_POST['add_owner'] ) ) ? 1 : 0;
 
 $experimentID = 0;
-if ( isset( $_POST['expID'] ) )
+if ( isset( $_POST['expIDs'] ) )
 {
-  $experimentID = $_POST['expID'];
+  $_SESSION['new_expIDs'] = array();
+  foreach( $_POST['expIDs'] as $expID )
+  {
+    $experimentID = $expID;
+  }
 }
 
 else if ( isset( $_SESSION['new_expID'] ) )
@@ -217,9 +221,10 @@ function get_experiment_text()
   $result = mysql_query( $query )
             or die("Query failed : $query<br />\n" . mysql_error());
 
-  $experiment_list = "<select id='expID' name='expID' size='10' " .
+  $experiment_list = "<select id='expIDs' name='expIDs[]' multiple='multiple' size='15' " .
                      "  onchange='this.form.submit();'>\n" .
                      "  <option value='null'>run ID not selected...</option>\n";
+
   while ( list( $expID, $udate, $runID ) = mysql_fetch_array( $result ) )
   {
     $selected = ( $expID == $experimentID )
@@ -240,7 +245,7 @@ function get_experiment_text()
   }
 
   $text = <<<HTML
-      <p>Select the UltraScan experiment (run ID) you would like to add to the Analysis Queue.</p>
+      <p>Select the UltraScan experiments (run IDs) you would like to add to the Analysis Queue.</p>
       <p>$msg2a $experiment_list</p>
       $msg2
 
@@ -255,7 +260,7 @@ function get_cell_text()
 
   if ( $experimentID == 0 )
   {
-    $rawData_list = "<select name='cells[]' multiple='multiple'>\n" .
+    $rawData_list = "<select name='cells[]' multiple='multiple' size='4'>\n" .
                        "  <option value='null'>Select runID first...</option>\n";
     $rawData_list .= "</select>\n";
   }
@@ -264,17 +269,21 @@ function get_cell_text()
   {
     // We have a legit experimentID, so let's get a list of cells 
     //  (auc files) in experiment
-    $query  = "SELECT rawDataID, runID, filename " .
-              "FROM   rawData, experiment " .
-              "WHERE  rawData.experimentID = $experimentID " .
-              "AND    rawData.experimentID = experiment.experimentID ";
-    $result = mysql_query( $query )
-              or die("Query failed : $query<br />\n" . mysql_error());
-  
-    $rawData_list = "<select name='cells[]' multiple='multiple'>\n" .
+    $rawData_list = "<select name='cells[]' multiple='multiple' size='8'>\n" .
                        "  <option value='null'>Select cells...</option>\n";
-    while ( list( $rawDataID, $runID, $filename ) = mysql_fetch_array( $result ) )
-      $rawData_list .= "  <option value='$rawDataID:$filename'>$runID $filename</option>\n";
+
+    foreach( $_POST['expIDs'] as $experimentID )
+    {
+      $query  = "SELECT rawDataID, runID, filename " .
+                "FROM   rawData, experiment " .
+                "WHERE  rawData.experimentID = $experimentID " .
+                "AND    rawData.experimentID = experiment.experimentID ";
+      $result = mysql_query( $query )
+                or die("Query failed : $query<br />\n" . mysql_error());
+  
+      while ( list( $rawDataID, $runID, $filename ) = mysql_fetch_array( $result ) )
+        $rawData_list .= "  <option value='$rawDataID:$filename'>$runID $filename</option>\n";
+    }
   
     $rawData_list .= "</select>\n";
   }

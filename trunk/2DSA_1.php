@@ -64,6 +64,16 @@ if ( isset($_POST['TIGRE']) )
     $_SESSION['cluster']              = array();
     $_SESSION['cluster']['name']      = $cluster_name;
     $_SESSION['cluster']['shortname'] = $cluster_shortname;
+    if ( $cluster_shortname == 'alamo' )
+    {
+      if ( isset($_SESSION['separate_datasets']) )
+      {
+         if ( $_SESSION['separate_datasets'] == 0 )
+        {
+          $queue = 'ngenseq';
+        }
+      }
+    }
     $_SESSION['cluster']['queue']     = $queue;
   }
 
