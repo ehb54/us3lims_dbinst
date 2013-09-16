@@ -140,16 +140,8 @@ HTML;
   
     foreach ( $clusters as $cluster )
     {
-      // These clusters are userlevel >= 4 only
-      if ( ( $_SESSION['userlevel'] < 4 )            &&
-           ( $cluster->short_name == 'bcf-local'   || 
-             $cluster->short_name == 'alamo-local' )  )
-         continue;
-
-      // Userlevel 4 users can go to all systems; otherwise we check 
-      //  authorizations
-      if ( $_SESSION['userlevel'] >= 4         ||
-           in_array( $cluster->short-name, $_SESSION['clusterAuth']) )
+      // Only list clusters that are authorized for the user
+      if (  in_array( $cluster->short_name, $_SESSION['clusterAuth'] ) )
       {
         $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
 
@@ -183,6 +175,7 @@ HTML;
 HTML;
 
   }
+
 
   $text .= "     </fieldset>\n";
 
