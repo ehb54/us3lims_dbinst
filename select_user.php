@@ -80,6 +80,17 @@ function change_person_info( $personID )
   $_SESSION['phone']        = $phone;
 
   // Set cluster authorizations
+  $loginID = $_SESSION['loginID'];
+  $query  = "SELECT ClusterAuthorizations " .
+            "FROM people " .
+            "WHERE personID = $loginID ";
+  $result = mysql_query($query)
+            or die( "Query failed : $query<br />\n" . mysql_error() );
+  $row    = mysql_fetch_assoc($result);
+  foreach( $row AS $key => $val )
+  {
+     $$key = stripslashes( $val );
+  }
   $clusterAuth = array();
   $clusterAuth = explode(":", $ClusterAuthorizations );
   $_SESSION['clusterAuth'] = $clusterAuth;
@@ -92,7 +103,7 @@ function change_person_info( $personID )
 
   Name:   $lname, $fname
 
-  Cluster Authorizations: $clusterText
+  Login User Cluster Authorizations: $clusterText
   </pre>
 HTML;
 

@@ -33,6 +33,16 @@ if ( ! isset( $_GET[ 'RequestID' ] ) )
    $result = mysql_query( $query )
          or die( "Query failed : $query<br />\n" . mysql_error());
 
+   $numrow = mysql_num_rows( $result );
+   if ( $numrow > 2000 )
+   {
+      $start_hpcr = $numrow - 1000;
+      $query = "SELECT HPCAnalysisRequestID, submitTime, clusterName, method FROM HPCAnalysisRequest" .
+               " where HPCAnalysisRequestID>" . $start_hpcr;
+      $result = mysql_query( $query )
+            or die( "Query failed : $query<br />\n" . mysql_error());
+   }
+
    if ( mysql_num_rows( $result ) > 0 )
    {
       $table = <<<HTML
