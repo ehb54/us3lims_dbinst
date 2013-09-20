@@ -60,7 +60,7 @@ if ( $count == 1 )
 
   // Set cluster authorizations
   $clusterAuth = array();
-  $clusterAuth = explode(":", $ClusterAuthorizations );
+  $clusterAuth = explode(":", $clusterAuthorizations );
   $_SESSION['clusterAuth'] = $clusterAuth;
 }
 
