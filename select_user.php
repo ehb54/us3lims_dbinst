@@ -58,7 +58,7 @@ exit();
 // Function to update user session variables and display info
 function change_person_info( $personID )
 {
-  $query  = "SELECT fname, lname, phone, ClusterAuthorizations " .
+  $query  = "SELECT fname, lname, phone, clusterAuthorizations " .
             "FROM people " .
             "WHERE personID = $personID ";
   $result = mysql_query($query)
@@ -81,7 +81,7 @@ function change_person_info( $personID )
 
   // Set cluster authorizations
   $loginID = $_SESSION['loginID'];
-  $query  = "SELECT ClusterAuthorizations " .
+  $query  = "SELECT clusterAuthorizations " .
             "FROM people " .
             "WHERE personID = $loginID ";
   $result = mysql_query($query)
@@ -92,7 +92,7 @@ function change_person_info( $personID )
      $$key = stripslashes( $val );
   }
   $clusterAuth = array();
-  $clusterAuth = explode(":", $ClusterAuthorizations );
+  $clusterAuth = explode(":", $clusterAuthorizations );
   $_SESSION['clusterAuth'] = $clusterAuth;
 
   // Allow for display of this information
@@ -115,7 +115,7 @@ function restore_info()
 {
   $personID = $_SESSION['loginID'];
 
-  $query  = "SELECT fname, lname, phone, ClusterAuthorizations " .
+  $query  = "SELECT fname, lname, phone, clusterAuthorizations " .
             "FROM people " .
             "WHERE personID = $personID ";
   $result = mysql_query($query)
@@ -138,7 +138,7 @@ function restore_info()
 
   // Set cluster authorizations
   $clusterAuth = array();
-  $clusterAuth = explode(":", $ClusterAuthorizations );
+  $clusterAuth = explode(":", $clusterAuthorizations );
   $_SESSION['clusterAuth'] = $clusterAuth;
 
   // Allow for display of this information
