@@ -133,6 +133,18 @@ function do_next()
 // Function to delete the current record
 function do_delete()
 {
+  $query  = "SELECT COUNT(*) FROM instrument";
+  $result = mysql_query($query)
+            or die("Query failed : $query<br />\n" . mysql_error());
+  list( $count ) = mysql_fetch_array( $result );
+  if ( $count < 2 )
+  {  // Skip deleting if no or only 1 instrument row exists
+    echo "<p>Cannot delete the last remaining instrument record.</p>\n";
+    //header("Location: $_SERVER[PHP_SELF]");
+    //exit();
+    return;
+  }
+
   $instrumentID = $_POST['instrumentID'];
 
   // Add checks here to prevent deleting records that can't be deleted
