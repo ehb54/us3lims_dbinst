@@ -45,6 +45,8 @@ $advanceLevel = ( isset($_SESSION['advancelevel']) )
 
 $separate_datasets = ( isset( $_SESSION['separate_datasets'] ) )
                    ? $_SESSION['separate_datasets'] : 1;
+$advanced_review   = ( isset( $_SESSION['advanced_review'] ) )
+                   ? $_SESSION['advanced_review'] : 0;
 
 // To support multiple datasets, let's keep track of which one we're on
 $num_datasets = sizeof( $_SESSION['request'] );
@@ -57,6 +59,16 @@ if ( isset($_POST['last']) )
 {
   $dataset_id = ( $_POST['dataset_id'] < $num_datasets - 1 )
                 ? $_POST['dataset_id'] : $num_datasets - 1;
+
+  if ( $num_datasets > 1  &&  $advanced_review == 0 )
+  { // For multiple datasets and no advanced review, create all payloads
+    $payload->clear();
+    for ( $jdataset_id = 0; $jdataset_id < ( $num_datasets - 1 ); $jdataset_id++ )
+    {
+      $payload->acquirePostedData( $jdataset_id, $num_datasets );
+    }
+    $payload->save();
+  }
 
   // get previous payload data and add this session to it
   $payload->restore();
@@ -90,6 +102,10 @@ else
   $payload->clear();
 
   $payload->save();
+
+  // If multi-data and no advanced review, point to last dataset
+  if ( $advanced_review == 0  &&  $num_datasets > 1 )
+    $dataset_id = $num_datasets - 1;
 }
 
 // Start displaying page
@@ -114,8 +130,11 @@ include 'header.php';
 
 <?php
 //  if ( isset($error) ) echo $error;
+  $max_dset_id  = $num_datasets - 1;
+  $dataset_id   = ( $dataset_id < $num_datasets ) ? $dataset_id : $max_dset_id;
+  $display_dsid = ( $advanced_review == 0 ) ? 0 : $dataset_id;
 
-  display( $dataset_id, $num_datasets );
+  display( $display_dsid, $num_datasets );
 
   // Display some information about the current dataset
   echo "  <fieldset>\n" .
@@ -127,14 +146,14 @@ include 'header.php';
        "    </ul>\n";
 
   // Add some controls to move to the next dataset, if there's more than one
-  if ( $num_datasets > 1 && $dataset_id < $num_datasets - 1 )
+  if ( $num_datasets > 1  &&  $dataset_id < $max_dset_id )
   {
     echo "    <input type='hidden' name='dataset_id' value='$dataset_id' />\n" .
          "    <input class='submit' type='submit' name='next' value='Next Dataset --&gt;' /></p>\n";
   }
 
   // Add controls to save the last or only dataset
-  if ( $dataset_id == $num_datasets - 1 )
+  if ( $dataset_id == $max_dset_id )
   {
     echo "    <input type='hidden' name='dataset_id' value='$dataset_id' />\n" .
          "    <input class='submit' type='submit' name='last' value='Enter Solute Data--&gt;' /></p>\n";

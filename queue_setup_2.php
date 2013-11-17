@@ -65,10 +65,14 @@ if ( isset( $_POST['save'] ) )
 }
 
 else if ( isset( $_SESSION['new_submitter'] ) )   // Are we gathering info from previous screen?
+{
   get_setup_1();
+}
 
 else   // no, gathering info from here
+{
   get_setup_2();
+}
 
 // Start displaying page
 $page_title = "Queue Setup (part 2)";
@@ -150,10 +154,81 @@ else
   $anchor = "anchor_$anchor_no";
 }
 
+// Set or reset edit selection type (0=auto, 1=manual)
+if ( isset( $_POST['edit_select_type'] ) )
+{
+  $edit_select_type = $_POST['edit_select_type'] == 'manualedits'
+                      ? 1
+                      : 0;
+}
+
+else if ( isset( $_SESSION['edit_select_type'] ) )
+  $edit_select_type = $_SESSION['edit_select_type'];
+
+else
+  $edit_select_type = 0;
+
+$_SESSION['edit_select_type'] = $edit_select_type;
+if ( $edit_select_type == 0 )
+{
+  $edauto_checked="  checked='checked'";
+  $edmanu_checked="";
+}
+else
+{
+  $edauto_checked="";
+  $edmanu_checked="  checked='checked'";
+}
+
+// Display and set edit selection type radio buttons
 echo <<<HTML
+
+ <fieldset>
+ <legend style='font-size:110%;font-weight:bold;'>Edit and Noise Selection</legend>
+ <ul class='edit_select'>
+   <li><form action='$_SERVER[PHP_SELF]' method='post'>
+       By default, all the latest edits for chosen cells will be
+       selected, along with the latest associated noises.
+       Alternatively, you may make individual manual selections.
+
+       <table cellspacing='0' cellpadding='3px'>
+       <tr><td><label>
+               <input type='radio' name='edit_select_type'
+                      value='autoedits'$edauto_checked
+                      onclick='this.form.submit();' />
+                 Use latest edits and noises
+               </label></td></tr>
+       <tr><td><label>
+               <input type='radio' name='edit_select_type'
+                      value='manualedits'$edmanu_checked
+                      onclick='this.form.submit();' />
+                 Make individual manual selections
+               </label></td></tr>
+       </table>
+       </form>
+   </li>
+ </ul>
+ </fieldset>
+
+HTML;
+
+if ( $edit_select_type == 1 )
+{ // If manual selection, present each edit profile
+echo <<<HTML
+
   <!--h4>Select the edit profile, model and noise files for each cell</h4-->
   <h4>Select the edit profile each cell</h4>
 
+HTML;
+}
+else
+{ // For default auto selection, no edit profiles get shown
+  $out_text = "";
+}
+
+
+// Present edits, if need be, and final Save button
+echo <<<HTML
   <div>
   <a name='setup_form'></a>
   <form action="{$_SERVER['PHP_SELF']}#$anchor" method="post">
@@ -272,8 +347,11 @@ function get_setup_1()
 // Build information from current page
 function get_setup_2()
 {
+  $no_posts=true;
+
   if ( isset( $_POST['editedDataID'] ) )
   {
+    $no_posts=false;
     foreach ( $_POST['editedDataID'] as $rawDataID => $editedDataID )
     {
       $_SESSION['cells'][$rawDataID]['editedDataID'] = $editedDataID;
@@ -291,6 +369,7 @@ function get_setup_2()
 
   if ( isset( $_POST['noiseIDs'] ) )
   {
+    $no_posts=false;
     foreach ( $_POST['noiseIDs'] as $rawDataID => $noiseIDs )
     {
       $_SESSION['cells'][$rawDataID]['noiseIDs'] = array();
@@ -300,7 +379,16 @@ function get_setup_2()
          $_SESSION['cells'][$rawDataID]['noiseIDs'] = $noiseIDs;   // each of these is an array
     }
   }
-
+  if ( $no_posts )
+  {
+    if ( isset( $_SESSION['edit_select_type'] ) )
+    {
+      if ( $_SESSION['edit_select_type'] == 0 )
+      { // Auto-Edit-Select:  get latest edits and noises
+        get_latest_edits( );
+      }
+    }
+  }
 }
 
 // Get edit profiles
@@ -418,4 +506,71 @@ function getOtherEditInfo( $rawDataID, $xml )
 
   $parser->close();
 }
+
+// Get latest edit and noises information for all cells
+function get_latest_edits( )
+{
+  $_SESSION['request'] = array();
+  $count = 0;
+  foreach( $_SESSION['cells'] as $rawDataID => $cell )
+  {
+    $query  = "SELECT editedDataID, label, filename, data, " .
+              " DATE( lastUpdated ) AS udate " .
+              "FROM editedData " .
+              "WHERE rawDataID = $rawDataID " .
+              "ORDER BY udate DESC, label ";
+    $result = mysql_query( $query )
+            or die("Query failed : $query<br />\n" . mysql_error());
+
+    list( $editedDataID, $label, $filename, $editXML ) = mysql_fetch_array( $result );
+    getOtherEditInfo( $rawDataID, $editXML );
+
+    $noiseIDs = array();
+    $query  = "SELECT noiseID, noiseType, timeEntered " .
+              "FROM noise " .
+              "WHERE editedDataID = $editedDataID " .
+              "ORDER BY timeEntered DESC ";
+
+    $result = mysql_query( $query )
+            or die("Query failed : $query<br />\n" . mysql_error());
+
+    $knoise = 0;
+    $prtype = "";
+    $prtime = 0;
+    while ( list( $noiseID, $noiseType, $time ) = mysql_fetch_array( $result ) )
+    {
+      if ( $knoise == 0 )
+      {
+        $noiseIDs[$knoise] = $noiseID;
+        $prtype = $noiseType;
+        $prtime = $time;
+        $knoise++;
+      }
+      else if ( $knoise == 1 )
+      {
+        if ( $prtype == $noiseType )    break;
+        if ( ( $time - $prtime ) > 2 )  break;
+        $noiseIDs[$knoise] = $noiseID;
+        $knoise++;
+        break;
+      }
+    }
+
+    $cell = $_SESSION['cells'][$rawDataID];
+    $_SESSION['request'][$count]['rawDataID']    = $rawDataID;
+    $_SESSION['request'][$count]['path']         = $cell['path'];
+    $_SESSION['request'][$count]['filename']     = $cell['filename'];
+    $_SESSION['request'][$count]['editedDataID'] = $editedDataID;
+    $_SESSION['request'][$count]['editFilename'] = $filename;
+    $_SESSION['request'][$count]['editMeniscus'] = $cell['editMeniscus'];
+    $_SESSION['request'][$count]['dataLeft']     = $cell['dataLeft'];
+    $_SESSION['request'][$count]['dataRight']    = $cell['dataRight'];
+    $_SESSION['request'][$count]['noiseIDs']     = $noiseIDs;
+    $_SESSION['cells'][$rawDataID]['editedDataID']  = $editedDataID;
+    $_SESSION['cells'][$rawDataID]['editFilename']  = $filename;
+    $_SESSION['cells'][$rawDataID]['noiseIDs']      = $noiseIDs;
+    $count++;
+  }
+}
+
 ?>
