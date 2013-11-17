@@ -57,6 +57,34 @@ if ( isset($_GET['clear']) )
   exit();
 }
 
+// Check the status of the advanced review radio buttons
+if ( isset( $_POST['advanced_review'] ) )
+{
+  $advanced_review = $_POST['advanced_review'] == 'adv_disabled'
+                     ? 0
+                     : 1;
+}
+
+else if ( isset( $_SESSION['advanced_review'] ) )
+  $advanced_review = $_SESSION['advanced_review'];
+
+else
+  $advanced_review = 0;
+
+if ( $advanced_review )
+{
+  $adv_disabled_cked = "";
+  $adv_enabled_cked  = " checked='checked'";
+}
+
+else
+{
+  $adv_disabled_cked = " checked='checked'";
+  $adv_enabled_cked  = "";
+}
+
+$_SESSION['advanced_review'] = $advanced_review;
+
 // Check the status of the separate datasets radio buttons
 if ( isset( $_POST['separate_datasets'] ) )
 {
@@ -170,6 +198,25 @@ HTML;
                          onclick='this.form.submit();' />
                          Proceed as a global fit</label></td></tr>
           </table>
+          </form></li>
+      <li><form action='$_SERVER[PHP_SELF]' method='post'>
+          By default, control parameters apply to all datasets.
+          Alternatively, you may choose to review each cell and
+          modify Advanced Controls on a cell-by-cell basis.
+          <table cellspacing='0' cellpadding='3px'>
+          <tr><td><label>
+                  <input type='radio' name='advanced_review'
+                         value='adv_disabled'$adv_disabled_cked
+                         onclick='this.form.submit();' />
+                         Apply controls to all datasets
+                  </label></td></tr>
+          <tr><td><label>
+                  <input type='radio' name='advanced_review'
+                         value='adv_enabled'$adv_enabled_cked
+                         onclick='this.form.submit();' />
+                         Review advanced controls for each cell
+                  </label></td></tr>
+          </table>
           </form>
       </li>
     </ul>
@@ -179,14 +226,12 @@ HTML;
   }
 
   echo <<<HTML
-  <h4>Review submitted edit profiles, models and noise files for each cell</h4>
+  <h4>Review submitted edit profiles and noise files for each cell</h4>
 
   <div>
   $multiset_notes
 
   <form action="queue_setup_2.php" method="post">
-
-    $out_text
 
   <p><input type='button' value='Select Different Experiment'
             onclick='window.location="queue_setup_1.php";' /> 
@@ -211,15 +256,14 @@ HTML;
             onclick='window.location="GA_SC_1.php"' disabled='disabled' $disabled />
   -->
 
-  </form>
-  </div>
-
-  <div>
   <p>Double check the information for each cell, and if it is not correct, 
      please click on one of the buttons to edit it again, or to start over.
      If the queue information is correct, please select the <em>Analysis</em>
      global menu above and choose which type of analysis you would like to
      perform.</p>
+    $out_text
+
+  </form>
   </div>
 
 HTML;

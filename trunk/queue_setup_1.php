@@ -32,6 +32,9 @@ include 'db.php';
 
 // Reset multiple dataset processing for later
 unset( $_SESSION['separate_datasets'] );
+// Likewise for edit selection type and advanced review
+unset( $_SESSION['edit_select_type' ] );
+unset( $_SESSION['advanced_review'  ] );
 
 // Get posted information, if any
 // Reset submitter email address, in case previous experiment had different owner, etc.
@@ -269,11 +272,13 @@ function get_cell_text()
   {
     // We have a legit experimentID, so let's get a list of cells 
     //  (auc files) in experiment
-    $rawData_list = "<select name='cells[]' multiple='multiple' size='8'>\n" .
-                       "  <option value='null'>Select cells...</option>\n";
+    $rrawIDs  = array();
+    $rrunIDs  = array();
+    $rrfiles  = array();
+    $kraw     = 0;
 
     foreach( $_POST['expIDs'] as $experimentID )
-    {
+    { // First accumulate arrays of rawDataID,runID,filename
       $query  = "SELECT rawDataID, runID, filename " .
                 "FROM   rawData, experiment " .
                 "WHERE  rawData.experimentID = $experimentID " .
@@ -282,6 +287,33 @@ function get_cell_text()
                 or die("Query failed : $query<br />\n" . mysql_error());
   
       while ( list( $rawDataID, $runID, $filename ) = mysql_fetch_array( $result ) )
+      {
+        $rrawIDs[ $kraw      ] = $rawDataID;
+        $rrunIDs[ $rawDataID ] = $runID;
+        $rrfiles[ $rawDataID ] = $filename;
+        $kraw++;
+      }
+    }
+
+    // Now construct the list items of run,filename;
+    //  but only where the AUC has at least one Edit child
+    $rawData_list = "<select name='cells[]' multiple='multiple' size='8'>\n" .
+                       "  <option value='null'>Select cells...</option>\n";
+
+    for ( $kraw = 0; $kraw < count($rrawIDs); $kraw++ )
+    {
+      $rawDataID = $rrawIDs[ $kraw      ];
+      $runID     = $rrunIDs[ $rawDataID ];
+      $filename  = $rrfiles[ $rawDataID ];
+
+      $query  = "SELECT COUNT(*) ".
+                "FROM editedData " .
+                "WHERE rawDataID = $rawDataID";
+      $result = mysql_query( $query )
+                or die("Query failed : $query<br />\n" . mysql_error());
+      list( $count ) = mysql_fetch_array( $result );
+
+      if ( $count > 0 )
         $rawData_list .= "  <option value='$rawDataID:$filename'>$runID $filename</option>\n";
     }
   
