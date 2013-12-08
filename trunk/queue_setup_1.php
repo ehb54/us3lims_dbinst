@@ -162,7 +162,7 @@ foreach ( $items as $item )
 
 HTML;
 }
-echo "</table\n";
+echo "</table>\n";
 
 ?>
 
