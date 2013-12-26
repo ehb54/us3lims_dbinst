@@ -67,6 +67,7 @@ if ( isset( $_POST['save'] ) )
 else if ( isset( $_SESSION['new_submitter'] ) )   // Are we gathering info from previous screen?
 {
   get_setup_1();
+  unset( $_SESSION['anchor_count'] );
 }
 
 else   // no, gathering info from here
@@ -92,14 +93,7 @@ $count_anchors = 0;        // just for creating some named anchors
 foreach ( $_SESSION['cells'] as $rawDataID => $cell )
 {
   $editedData_text  = get_editedData( $rawDataID, $cell['editedDataID'] );
-/*
-  $model_text       = get_model( $rawDataID, $cell['editedDataID'], 
-                                 $cell['modelID'] );
 
-also, insert below in $out_text
-    <tr><th>Model</th>
-        <td>$model_text</td></tr>
-*/
   $noise_text       = get_noise( $rawDataID, $cell['editedDataID'], 
                                  $cell['noiseIDs'] );
 
@@ -140,19 +134,25 @@ HTML;
    $count_anchors++;
 
 }
+$_SESSION['max_anchor'] = $count_anchors - 1;
 
 // calculate anchor to jump to
 $anchor_no = 0;
-foreach ( $_SESSION['cells'] as $cell )
-  if ( $cell['editedDataID'] != 0 ) $anchor_no++;
-
-if ( $anchor_no < 3 ) $anchor = "setup_form";
-
+if ( !isset( $_SESSION['anchor_count'] ) )
+  $anchor_count = -1;
 else
-{
-  $anchor_no -= 2;
+  $anchor_count = $_SESSION['anchor_count'];
+
+$anchor_count++;
+$_SESSION['anchor_count'] = $anchor_count;
+$anchor_no  = (int)( $anchor_count / 2 );
+$max_anchor = $_SESSION['max_anchor'];
+if ( $anchor_no > $max_anchor )
+  $anchor_no = $max_anchor;
+if ( $anchor_no < 1 )
+  $anchor = "setup_form";
+else
   $anchor = "anchor_$anchor_no";
-}
 
 // Set or reset edit selection type (0=auto, 1=manual)
 if ( isset( $_POST['edit_select_type'] ) )
@@ -216,7 +216,7 @@ if ( $edit_select_type == 1 )
 { // If manual selection, present each edit profile
 echo <<<HTML
 
-  <!--h4>Select the edit profile, model and noise files for each cell</h4-->
+  <!--h4>Select the edit profile and noise files for each cell</h4-->
   <h4>Select the edit profile each cell</h4>
 
 HTML;
@@ -416,37 +416,6 @@ function get_editedData( $rawDataID, $editedDataID = 0 )
   return( $profile );
 }
 
-/*
-// Get the models
-function get_model( $rawDataID, $editedDataID, $modelID = 0 )
-{
-  $myID = $_SESSION['id'];
-
-  $query  = "SELECT model.modelID, description " .
-            "FROM   modelPerson, model " .
-            "WHERE  modelPerson.personID = $myID " .
-            "AND    modelPerson.modelID = model.modelID " .
-            "AND    ( editedDataID = $editedDataID || " .
-            "         editedDataID = 1 )";
-
-  $result = mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
-
-  $model      = "<select name='modelID[$rawDataID]'" .
-                "  onchange='this.form.submit();'>\n" .
-                "  <option value='null'>Select model...</option>\n";
-  while ( list( $mID, $descr ) = mysql_fetch_array( $result ) )
-  {
-    $selected = ( $modelID == $mID ) ? " selected='selected'" : "";
-    $model .= "  <option value='$mID'$selected>[$mID] $descr</option>\n";
-  }
-
-  $model   .= "</select>\n";
-
-  return( $model );
-}
-*/
-
 // Get the noise files
 function get_noise( $rawDataID, $editedDataID, $noiseIDs )
 {
@@ -515,10 +484,10 @@ function get_latest_edits( )
   foreach( $_SESSION['cells'] as $rawDataID => $cell )
   {
     $query  = "SELECT editedDataID, label, filename, data, " .
-              " DATE( lastUpdated ) AS udate " .
+              " lastUpdated " .
               "FROM editedData " .
               "WHERE rawDataID = $rawDataID " .
-              "ORDER BY udate DESC, label ";
+              "ORDER BY label, lastUpdated DESC";
     $result = mysql_query( $query )
             or die("Query failed : $query<br />\n" . mysql_error());
 
