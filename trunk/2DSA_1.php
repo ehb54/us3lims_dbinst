@@ -223,7 +223,7 @@ function display( $dataset_id, $num_datasets )
   {
     s_grid_points();
     ff0_grid_points();
-    uniform_grid_setup();
+//    uniform_grid_setup();
     montecarlo();
     tinoise_option();
   }
