@@ -115,7 +115,38 @@ abstract class Payload_manager
         list( $run, $dtype, $cellname, $channel, $waveln, $ftype ) = explode( ".", $filename );
         $chanindex = strpos( "ABCDEFGH", $channel ) / 2;
       }
-      
+
+      // We may need speedsteps information
+      $speedsteps = array();
+      $query  = "SELECT speedstepID, speedstep.experimentID, scans, durationhrs, durationmins, " .
+                "delayhrs, delaymins, rotorspeed, acceleration, accelerflag, " .
+                " w2tfirst, w2tlast, timefirst, timelast " .
+                "FROM rawData, speedstep " .
+                "WHERE rawData.rawDataID = $rawDataID " .
+                "AND rawData.experimentID = speedstep.experimentID ";
+      $result = mysql_query( $query )
+                or die( "Query failed : $query<br />" . mysql_error());
+      while ( list( $stepID, $expID, $scans, $durhrs, $durmins, $dlyhrs, $dlymins,
+                    $speed, $accel, $accflag, $w2tf, $w2tl, $timef, $timel ) = mysql_fetch_array( $result ) )
+      {
+        $speedstep['stepID']  = $stepID;
+        $speedstep['expID']   = $expID;
+        $speedstep['scans']   = $scans;
+        $speedstep['durhrs']  = $durhrs;
+        $speedstep['durmins'] = $durmins;
+        $speedstep['dlyhrs']  = $dlyhrs;
+        $speedstep['dlymins'] = $dlymins;
+        $speedstep['speed']   = $speed;
+        $speedstep['accel']   = $accel;
+        $speedstep['accflag'] = $accflag;
+        $speedstep['w2tf']    = $w2tf;
+        $speedstep['w2tl']    = $w2tl;
+        $speedstep['timef']   = $timef;
+        $speedstep['timel']   = $timel;
+
+        $speedsteps[] = $speedstep;
+      }
+
       // We need the centerpiece bottom
       $centerpiece_bottom      = 7.3;
       $centerpiece_shape       = 'standard';
@@ -188,6 +219,7 @@ abstract class Payload_manager
       $params['viscosity']    = $viscosity;
       $params['manual' ]      = $manual;
       $params['analytes']     = $analytes;
+      $params['speedsteps']   = $speedsteps;
 
     }
 
@@ -273,11 +305,49 @@ class Payload_2DSA extends Payload_manager
       $job_parameters                     = array();
       $job_parameters['s_min']            = $_POST['s_value_min'];
       $job_parameters['s_max']            = $_POST['s_value_max'];
-      $job_parameters['s_grid_points']    = $_POST['s_grid_points'];
       $job_parameters['ff0_min']          = $_POST['ff0_min'];
       $job_parameters['ff0_max']          = $_POST['ff0_max'];
-      $job_parameters['ff0_grid_points']  = $_POST['ff0_grid_points'];
-      $job_parameters['uniform_grid']     = $_POST['uniform_grid'];
+
+      // Compute 'uniform_grid' (grid repetitions)
+      $gpoints_s                          = $_POST['s_grid_points'];
+      $gpoints_k                          = $_POST['ff0_grid_points'];
+      if ( $gpoints_s < 10 )
+         $gpoints_s = 10;
+      if ( $gpoints_s > 200 )
+         $gpoints_s = 200;
+      if ( $gpoints_k < 10 )
+         $gpoints_k = 10;
+      if ( $gpoints_k > 200 )
+         $gpoints_k = 200;
+      $gpoints   = $gpoints_s * $gpoints_k;
+      $repsgrid  = pow( $gpoints, 0.25 );
+      $gridreps  = (int)( $repsgrid + 0.5 );
+      $grround   = $gridreps - 1;
+      $subpts_s  = (int)( ( $gpoints_s + $grround ) / $gridreps );
+      $subpts_k  = (int)( ( $gpoints_k + $grround ) / $gridreps );
+      $subpts    = $subpts_s * $subpts_k;
+      while( $subpts > 200  &&  $gridreps < 40 )
+      {
+         $gridreps++;
+         $grround   = $gridreps - 1;
+         $subpts_s  = (int)( ( $gpoints_s + $grround ) / $gridreps );
+         $subpts_k  = (int)( ( $gpoints_k + $grround ) / $gridreps );
+         $subpts    = $subpts_s * $subpts_k;
+      }
+      while( $subpts < 40  &&  $gridreps > 1 )
+      {
+         $gridreps--;
+         $grround   = $gridreps - 1;
+         $subpts_s  = (int)( ( $gpoints_s + $grround ) / $gridreps );
+         $subpts_k  = (int)( ( $gpoints_k + $grround ) / $gridreps );
+         $subpts    = $subpts_s * $subpts_k;
+      }
+      $gpoints_s = $subpts_s * $gridreps;
+      $gpoints_k = $subpts_k * $gridreps;
+      $job_parameters['s_grid_points']    = $gpoints_s;
+      $job_parameters['ff0_grid_points']  = $gpoints_k;
+      $job_parameters['uniform_grid']     = $gridreps;
+
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
 
       if ( isset( $_POST['req_mgroupcount'] ) )

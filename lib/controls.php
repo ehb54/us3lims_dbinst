@@ -224,7 +224,7 @@ echo<<<HTML
        <legend>S-Value Resolution</legend>
        <input type="text" value="1" name="s_value_min"/> S-Value Minimum<br/>
        <input type="text" value="10" name="s_value_max"/> S-Value Maximum<br/>
-       <input type="text" value="60" name="s_grid_points"/> S-Value Resolution (total grid points)<br/>
+       <input type="text" value="64" name="s_grid_points"/> S-Value Resolution (total grid points)<br/>
     </fieldset>
 HTML;
 }
@@ -254,7 +254,7 @@ echo<<<HTML
       <legend>f/f0 Resolution</legend>
       <input type="text" value="1" name="ff0_min"/> f/f0 Minimum<br/>
       <input type="text" value="4" name="ff0_max"/> f/f0 Maximum<br/>
-      <input type="text" value="60" name="ff0_grid_points"/> f/f0 Resolution (total grid points)<br/>
+      <input type="text" value="64" name="ff0_grid_points"/> f/f0 Resolution (total grid points)<br/>
     </fieldset>
 HTML;
 }
