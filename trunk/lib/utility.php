@@ -90,6 +90,8 @@ $gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:" . $svcport . "/ogce-res
 // Change for sandbox testing
 global $globaldbname;
 
+include '../down_clusters.php';
+
 $gfac_link = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
 $result    = mysql_select_db( $globaldbname, $gfac_link );
 
@@ -98,6 +100,9 @@ $result    = mysql_query( $query, $gfac_link );
 
 while ( list( $cluster, $running, $queued, $status ) = mysql_fetch_row( $result ) )
 {
+   if ( in_array( $cluster, $down_clusters ) )
+     $status = 'down';
+
    for ( $i = 0; $i < count( $clusters ); $i++ )
    {
      if ( $clusters[$i]->short_name == $cluster )
