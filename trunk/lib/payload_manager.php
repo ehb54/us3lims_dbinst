@@ -579,6 +579,9 @@ class Payload_GA extends Payload_manager
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['bucket_fixed']     = $_POST['z-fixed'];
+      $job_parameters['x-type']           = $_POST['x-type'];
+      $job_parameters['y-type']           = $_POST['y-type'];
+      $job_parameters['z-type']           = $_POST['z-type'];
       $job_parameters['experimentID']     = $_SESSION['experimentID'];
       // buckets
       $this->add( 'job_parameters', $job_parameters );
@@ -623,10 +626,11 @@ class Payload_GA extends Payload_manager
   {
     $xtype = ( isset($_POST['x-type']) ) ? $_POST['x-type'] : 's';
     $ytype = ( isset($_POST['y-type']) ) ? $_POST['y-type'] : 'ff0';
-    $xtlo  = $xtype . '_min';
-    $xthi  = $xtype . '_max';
-    $ytlo  = $ytype . '_min';
-    $ythi  = $ytype . '_max';
+    $ztype = ( isset($_POST['z-type']) ) ? $_POST['z-type'] : 'vbar';
+    $xtlo  = 'x_min';
+    $xthi  = 'x_max';
+    $ytlo  = 'y_min';
+    $ythi  = 'y_max';
     $buckets = array();
     
     for ( $i = 1; $i <= $count; $i++ )
@@ -639,6 +643,9 @@ class Payload_GA extends Payload_manager
 
     $parameters['bucket_fixed'] =
        ( isset($_POST['z-fixed']) ) ? $_POST['z-fixed'] : '0.0';
+    $parameters['x-type'] = $xtype;
+    $parameters['y-type'] = $ytype;
+    $parameters['z-type'] = $ztype;
   }
 }
 ?>

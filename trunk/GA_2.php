@@ -75,6 +75,9 @@ if ( isset($_POST['TIGRE']) )
   // Save buckets inside the job parameters section
   $job_parameters = $payload->get( 'job_parameters' );
   $job_parameters['bucket_fixed'] = $_POST['z-fixed'];
+  $job_parameters['x-type']       = $_POST['x-type'];
+  $job_parameters['y-type']       = $_POST['y-type'];
+  $job_parameters['z-type']       = $_POST['z-type'];
   $job_parameters['buckets'] = $buckets;
   $payload->add( 'job_parameters', $job_parameters );
   $payload->add( 'cluster', $_SESSION['cluster'] );
@@ -205,33 +208,33 @@ exit();
 function solute_setup( $buckets, $count )
 {
   global $zfixed;
+  global $xtype;
+  global $ytype;
+  global $ztype;
 
   $solute_text = <<<HTML
     <fieldset>
     <legend>Setup solutes</legend>
 HTML;
 
-  $xtype = 's';
-  $ytype = 'ff0';
-  if ( isset( $buckets[1]['s_min'] ) )
-    $xtype = 's';
-  else if ( isset( $buckets[1]['D_min'] ) )
-    $xtype = 'D';
-  else if ( isset( $buckets[1]['mw_min'] ) )
-    $xtype = 'mw';
-  if ( isset( $buckets[1]['ff0_min'] ) )
-    $ytype = 'ff0';
-  if ( isset( $buckets[1]['f/f0_min'] ) )
-    $ytype = 'ff0';
-  else if ( isset( $buckets[1]['vbar_min'] ) )
-    $ytype = 'vbar';
-  else if ( isset( $buckets[1]['f_min'] ) )
-    $ytype = 'f';
-  $xlo = $xtype . '_min';
-  $xhi = $xtype . '_max';
-  $ylo = $ytype . '_min';
-  $yhi = $ytype . '_max';
+  $xlo = 'x_min';
+  $xhi = 'x_max';
+  $ylo = 'y_min';
+  $yhi = 'y_max';
 
+  $solute_text .= <<<HTML
+    <div id='solutes-types'>
+      X-type       <input type='text' name='xtype' id='xtype'
+                    size='8' value='$xtype' />
+      Y-type       <input type='text' name='xtype' id='xtype'
+                    size='8' value='$ytype' />
+      Fixed-type   <input type='text' name='xtype' id='xtype'
+                    size='8' value='$ztype' />
+      Fixed-value  <input type='text' name='xtype' id='xtype'
+                    size='8' value='$zfixed' />
+    </div>
+    <br/><br/>
+HTML;
 
   for ( $i = 1; $i <= $count; $i++ )
   {
@@ -261,6 +264,7 @@ HTML;
     <input type='hidden' name='solute-value' value="$count"/>
     <input type='hidden' name='x-type' value="$xtype"/>
     <input type='hidden' name='y-type' value="$ytype"/>
+    <input type='hidden' name='z-type' value="$ztype"/>
     <input type='hidden' name='z-fixed' value="$zfixed"/>
     </fieldset>
 HTML;
@@ -274,6 +278,9 @@ function upload_file( &$buckets, $upload_dir )
   global $solute_count, $max_buckets;
   global $uploadFileName;
   global $zfixed;
+  global $xtype;
+  global $ytype;
+  global $ztype;
 
   $buckets = array();
   
@@ -292,37 +299,79 @@ function upload_file( &$buckets, $upload_dir )
 
   $nums  = explode(" ", $lines[0] );
   $solute_count = (int) $nums[0];  // First line total solutes
-  $zfixed       = ( sizeof( $nums ) > 3 ) ?  (double)trim( $nums[ 3 ] ) : 0.0;
-  $xnum  = ( sizeof( $nums ) > 1 ) ?  (int)trim( $nums[ 1 ] ) : 1;
-  $ynum  = ( sizeof( $nums ) > 2 ) ?  (int)trim( $nums[ 2 ] ) : 4;
-  $xtype = 's';
-  $ytype = 'ff0';
-
-  switch ($xnum) 
+  $zfixed = 0.0;
+  $xtype  = 's';
+  $ytype  = 'ff0';
+  $ztype  = 'vbar';
+  $xnum   = 0;
+  $ynum   = 1;
+  $znum   = 3;
+  $nnums  = sizeof( $nums );
+  $fvers  = 0;
+  if ( $nnums > 4 )
   {
-     case 0 :
-        $xtype = 'mw';
-        break;
-     case 1 :
-     default  :
-        $xtype = 's';
-        break;
-     case 2 :
-        $xtype = 'D';
-        break;
-  }
-  switch ($ynum) 
-  {
-     case 3 :
-        $ytype = 'f';
-        break;
-     case 4 :
-     default :
-        $ytype = 'ff0';
-        break;
-     case 5 :
-        $ytype = 'vbar';
-        break;
+     $ztype  = 'vbar';
+     $xnum   = (int)trim( $nums[ 1 ] );
+     $ynum   = (int)trim( $nums[ 2 ] );
+     if ( trim( $nums[ 4 ] ) == '#' )
+     {  // Map old designations to new ones
+        $fvers  = 1;
+        $zfixed = (double)trim( $nums[ 3 ] );
+        $znum   = ( $zfixed == 0.0 ) ? 3 : 1;
+        $xnold  = $xnum;
+        $ynold  = $ynum;
+        switch ( $xnold )
+        {
+           case 0:
+              $xtype = 'mw';
+              $xnum  = 2;
+              break;
+           case 1:
+              $xtype = 's';
+              $xnum  = 0;
+              break;
+           case 2:
+              $xtype = 'D';
+              $xnum  = 4;
+              break;
+           case 3:
+              $xtype = 'f';
+              $xnum  = 5;
+              break;
+           case 4:
+              $xtype = 'ff0';
+              $xnum  = 1;
+              break;
+           case 5:
+              $xtype = 'vbar';
+              $xnum  = 3;
+              break;
+        }
+     }
+     else
+     {
+        $fvers  = 2;
+        $znum   = (int)trim( $nums[ 3 ] );
+        $zfixed = (double)trim( $nums[ 4 ] );
+        $xtype  = ( $xnum == 0 ) ? 's'    : $xtype;
+        $xtype  = ( $xnum == 1 ) ? 'ff0'  : $xtype;
+        $xtype  = ( $xnum == 2 ) ? 'MW'   : $xtype;
+        $xtype  = ( $xnum == 3 ) ? 'vbar' : $xtype;
+        $xtype  = ( $xnum == 4 ) ? 'D'    : $xtype;
+        $xtype  = ( $xnum == 5 ) ? 'f'    : $xtype;
+        $ytype  = ( $ynum == 0 ) ? 's'    : $ytype;
+        $ytype  = ( $ynum == 1 ) ? 'ff0'  : $ytype;
+        $ytype  = ( $ynum == 2 ) ? 'MW'   : $ytype;
+        $ytype  = ( $ynum == 3 ) ? 'vbar' : $ytype;
+        $ytype  = ( $ynum == 4 ) ? 'D'    : $ytype;
+        $ytype  = ( $ynum == 5 ) ? 'f'    : $ytype;
+        $ztype  = ( $znum == 0 ) ? 's'    : $ztype;
+        $ztype  = ( $znum == 1 ) ? 'ff0'  : $ztype;
+        $ztype  = ( $znum == 2 ) ? 'MW'   : $ztype;
+        $ztype  = ( $znum == 3 ) ? 'vbar' : $ztype;
+        $ztype  = ( $znum == 4 ) ? 'D'    : $ztype;
+        $ztype  = ( $znum == 5 ) ? 'f'    : $ztype;
+     }
   }
   
   // Check that the solute count is in range
@@ -358,10 +407,10 @@ function upload_file( &$buckets, $upload_dir )
   }
 
   // Get the values, checking for floating numbers too
-  $xtlo  = $xtype . '_min';
-  $xthi  = $xtype . '_max';
-  $ytlo  = $ytype . '_min';
-  $ythi  = $ytype . '_max';
+  $xtlo  = 'x_min';
+  $xthi  = 'x_max';
+  $ytlo  = 'y_min';
+  $ythi  = 'y_max';
   $error = false;
   for ($i = 1; $i <= $solute_count; $i++ )
   {
