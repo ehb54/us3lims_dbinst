@@ -422,6 +422,9 @@ function upload_file( &$buckets, $upload_dir )
       if ( preg_match( '/^[-+]?[0-9]*\.?[0-9]*$/', $num ) )
         settype( $num, 'float' );
 
+      else if ( preg_match( '/^[-+]?[0-9]\.[0-9]*[eE][-+][0-9]*$/', $num ) )
+        settype( $num, 'float' );
+
       else
       {
         $error   = true;
