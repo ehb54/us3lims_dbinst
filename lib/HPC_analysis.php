@@ -252,20 +252,13 @@ class HPC_GA extends HPC_analysis
           or die( "Query failed : $query<br />" . mysql_error());
     $settingsID = mysql_insert_id();
     $bucket     = $job_parameters['buckets'][1];
-    $xtype      = 's';
-    $ytype      = 'ff0';
-    if ( isset( $bucket['mw_min'] ) )
-      $xtype       = 'mw';
-    if ( isset( $bucket['D_min'] ) )
-      $xtype       = 'D';
-    if ( isset( $bucket['f_min'] ) )
-      $ytype       = 'f';
-    if ( isset( $bucket['vbar_min'] ) )
-      $ytype       = 'vbar';
-    $xtlo       = $xtype . '_min';
-    $xthi       = $xtype . '_max';
-    $ytlo       = $ytype . '_min';
-    $ythi       = $ytype . '_max';
+    $xtype      = $job_parameters['x-type'];
+    $ytype      = $job_parameters['y-type'];
+
+    $xtlo       = 'x_min';
+    $xthi       = 'x_max';
+    $ytlo       = 'y_min';
+    $ythi       = 'y_max';
 
     // Now save the buckets
     for ( $i = 1; $i <= sizeof( $job_parameters['buckets'] ); $i++ )
