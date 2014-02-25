@@ -103,6 +103,9 @@ while ( list( $cluster, $running, $queued, $status ) = mysql_fetch_row( $result 
    if ( in_array( $cluster, $down_clusters ) )
      $status = 'down';
 
+   if ( in_array( $cluster, $draining_clusters ) )
+     $status = 'draining';
+
    for ( $i = 0; $i < count( $clusters ); $i++ )
    {
      if ( $clusters[$i]->short_name == $cluster )
@@ -149,6 +152,7 @@ HTML;
       if (  in_array( $cluster->short_name, $_SESSION['clusterAuth'] ) )
       {
         $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
+        $disabled = ( $cluster->status == 'draining' ) ? " disabled='disabled'" : $disabled;
 
         $value = "$cluster->name:$cluster->short_name:$cluster->queue";
         $text .= "     <tr><td class='cluster'>" .
@@ -159,7 +163,8 @@ HTML;
                  "<td>$cluster->queue</td>"   .
                  "<td>$cluster->running / $cluster->queued</td></tr>\n";
 
-        $checked = "";
+        if ( $disabled == "" )
+           $checked = "";
       }
     } 
     $text .= <<<HTML
