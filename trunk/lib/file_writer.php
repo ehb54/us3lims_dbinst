@@ -156,19 +156,19 @@ abstract class File_writer
             foreach( $dataset['speedsteps'] as $speedstep )
             {
               $xml->startElement( 'speedstep' );
+                $xml->writeAttribute( 'stepID',        $speedstep['stepID']  );
+                $xml->writeAttribute( 'rotorspeed',    $speedstep['speed']   );
+                $xml->writeAttribute( 'scans',         $speedstep['scans']   );
+                $xml->writeAttribute( 'timefirst',     $speedstep['timef']   );
+                $xml->writeAttribute( 'timelast',      $speedstep['timel']   );
+                $xml->writeAttribute( 'w2tfirst',      $speedstep['w2tf']    );
+                $xml->writeAttribute( 'w2tlast',       $speedstep['w2tl']    );
                 $xml->writeAttribute( 'duration_hrs',  $speedstep['durhrs']  );
                 $xml->writeAttribute( 'duration_mins', $speedstep['durmins'] );
                 $xml->writeAttribute( 'delay_hrs',     $speedstep['dlyhrs']  );
                 $xml->writeAttribute( 'delay_mins',    $speedstep['dlymins'] );
-                $xml->writeAttribute( 'rotorspeed',    $speedstep['speed']   );
                 $xml->writeAttribute( 'acceleration',  $speedstep['accel']   );
                 $xml->writeAttribute( 'accelerflag',   $speedstep['accflag'] );
-                $xml->writeAttribute( 'scans',         $speedstep['scans']   );
-                $xml->writeAttribute( 'w2tfirst',      $speedstep['w2tf']    );
-                $xml->writeAttribute( 'w2tlast',       $speedstep['w2tl']    );
-                $xml->writeAttribute( 'timefirst',     $speedstep['timef']   );
-                $xml->writeAttribute( 'timelast',      $speedstep['timel']   );
-                $xml->writeAttribute( 'stepID',        $speedstep['stepID']  );
                 $xml->writeAttribute( 'expID',         $speedstep['expID']   );
               $xml->endElement(); // speedstep
             }

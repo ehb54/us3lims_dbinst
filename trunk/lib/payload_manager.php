@@ -351,7 +351,12 @@ class Payload_2DSA extends Payload_manager
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
 
       if ( isset( $_POST['req_mgroupcount'] ) )
-         $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
+      {
+         if ( $job_parameters['mc_iterations'] > 1 )
+            $job_parameters['req_mgroupcount'] = $_POST['req_mgroupcount'];
+         else
+            $job_parameters['req_mgroupcount'] = 1;
+      }
 
       else
          $job_parameters['req_mgroupcount'] = 1;
