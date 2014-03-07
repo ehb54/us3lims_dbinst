@@ -559,7 +559,10 @@ class Payload_GA extends Payload_manager
       $job_parameters                     = array();
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
       $job_parameters['demes']            = $_POST['demes-value'];
-      $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
+      if ( $job_parameters['mc_iterations'] > 1 )
+        $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
+      else
+        $job_parameters['req_mgroupcount']  = 1;
       $job_parameters['population']       = $_POST['genes-value'];
       $job_parameters['generations']      = $_POST['generations-value'];
       $job_parameters['crossover']        = $_POST['crossover-value'];
