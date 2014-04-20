@@ -36,7 +36,7 @@ $result = mysql_query( $query )
           or die( "Query failed : $query<br />" . mysql_error());
 if ( mysql_num_rows( $result ) == 0 )
 {
-  echo "<p>No jobs are currently queued.</p>\n";
+  echo "<p>No jobs are currently queued, running, or completing.</p>\n";
   return;
 }
 
@@ -63,7 +63,7 @@ uasort( $display_info, 'cmp' );
 $content = "<div class='queue_content'>\n";
 
 $count_jobs = count( $display_info );
-$content .= "<p>There are $count_jobs job(s) queued.</p>\n";
+$content .= "<p>There are $count_jobs job(s) queued, running, or completing.</p>\n";
 
 $content .= "<table>\n";
 $content .= "<tr><td colspan='5' class='decoration'><hr/></td></tr>\n";

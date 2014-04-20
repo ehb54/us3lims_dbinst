@@ -373,7 +373,7 @@ function page_content2()
               "  onclick='window.location.href=window.location.href;' /></h5>\n";
 
   // Check if there are any jobs in the queue
-  if (sizeof( $aData ) == 3 and $aData[2] == "No jobs are currently queued.")
+  if (sizeof( $aData ) == 3 and $aData[2] == "No jobs are currently queued, running, or completing.")
   {
     $content .= "<p>$aData[2]</p>";
   }
@@ -504,7 +504,7 @@ HTML;
 
   }
 
-  if (sizeof( $aData ) != 3 or $aData[2] != "No jobs are currently queued.")
+  if (sizeof( $aData ) != 3 or $aData[2] != "No jobs are currently queued, running, or completing.")
   {
     // Print queue status timestamp a second time, if there are jobs listed
     $content .= "<h5>$aData[0]:\n" .
