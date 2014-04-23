@@ -218,15 +218,18 @@ function tripleDetail( $tripleID, $selected_docTypes = array() )
             or die( "Query failed : $query<br />\n" . mysql_error() );
   while ( list( $docType ) = mysql_fetch_array( $result ) )
   {
-    // all checkboxes should be checked initially, except svg
-    if ( empty( $selected_docTypes ) && $docType != 'svg' )
+    // all checkboxes should be checked initially, except svg/svgz
+    if ( empty( $selected_docTypes ) && $docType != 'svg' && $docType != 'svgz' )
     {
        $docTypes[ $docType ] = true;
        $docTypes2[] = $docType;
     }
 
     else if ( empty( $selected_docTypes ) )
-       $docTypes[ 'svg' ] = false;
+    {
+       $docTypes[ 'svg'  ] = false;
+       $docTypes[ 'svgz' ] = false;
+    }
 
     else
     {
@@ -303,12 +306,47 @@ HTML;
     {
       list( $anal, $subanal, $doctype_text ) = explode( ":", $label );
 
-      // Display the document type only if there are both png and svg on the page
-      $include_doctype = ( in_array( $doctype, array('png', 'svg') ) &&
-                           in_array( 'png', $selected_docTypes )     &&
-                           in_array( 'svg', $selected_docTypes )    )
-                       ? " ($doctype_text)"
-                       : "";
+      // Add document type suffix unless that is already part of the title
+      $include_doctype = "";
+
+      if ( in_array( $doctype, array( 'png', 'svg', 'svgz' ) ) )
+      {
+        if ( strpos( $subanal, 'Plot' ) === false )
+        { // No "Plot" in title, so add it
+          $include_doctype = " Plot";
+        }
+
+        // Add additional information if PNG/SVGZ both possible
+        if ( in_array( 'png', $selected_docTypes )  &&
+             ( in_array( 'svgz', $selected_docTypes ) ||
+               in_array( 'svg',  $selected_docTypes ) ) )
+        {
+          if ( strpos( $doctype, 'png' ) !== false )
+            $include_doctype .= " (PNG)";
+          else if ( strpos( $doctype, 'svgz' ) !== false )
+            $include_doctype .= " (SVGZ)";
+          else if ( strpos( $doctype, 'svg' ) !== false )
+            $include_doctype .= " (SVG)";
+        }
+      }
+
+      else if ( in_array( $doctype, array( 'html', 'rpt' ) ) )
+      { // No "Report" in title, so add it
+        if ( strpos( $subanal, 'Report' ) === false )
+        {
+          $include_doctype = " Report";
+        }
+      }
+
+      else
+      { // No "Table" in title, so add it
+        if ( strpos( $subanal, 'Table' ) === false )
+        {
+          $include_doctype = " Table";
+        }
+      }
+
+      // Add the entry for a document
       $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>" .
                "$subanal{$include_doctype}</a></li>\n";
     }

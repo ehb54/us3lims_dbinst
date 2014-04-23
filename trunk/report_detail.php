@@ -177,7 +177,7 @@ function get_document_content( $documentID )
 HTML;
   }
 
-  else if ( $doctype == 'svg' )
+  else if ( $doctype == 'svgz'  ||  $doctype == 'svg' )
   {
     // Code to echo the blob out to the user directly.
   
