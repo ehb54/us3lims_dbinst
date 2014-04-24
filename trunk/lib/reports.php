@@ -227,7 +227,6 @@ function tripleDetail( $tripleID, $selected_docTypes = array() )
 
     else if ( empty( $selected_docTypes ) )
     {
-       $docTypes[ 'svg'  ] = false;
        $docTypes[ 'svgz' ] = false;
     }
 

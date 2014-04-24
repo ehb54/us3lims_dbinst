@@ -115,7 +115,7 @@ function get_header_info( $documentID )
             "</div>\n";
 
   // html already has a header in it  
-  if ( $doctype == 'html' || $doctype == 'svg' )
+  if ( $doctype == 'html' || $doctype == 'svgz' )
     $header = "";
 
   return $header;
