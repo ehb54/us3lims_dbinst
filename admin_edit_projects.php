@@ -537,7 +537,7 @@ echo<<<HTML
     <tbody>
 
 
-    <tr><th>Please enter a title for your project. Later, you will be able to 
+    <tr><th>Please enter a brief title for your project. Later, you will be able to 
             retrieve your project by this description:</th></tr>
     <tr><td><textarea name='description' rows='6' cols='65' 
                       wrap='virtual'>$description</textarea></td></tr>
@@ -548,30 +548,33 @@ echo<<<HTML
             biological significance of this research:</th></tr>
     <tr><td><textarea name='goals' rows='6' cols='65' 
                       wrap='virtual'>$goals</textarea></td></tr>
-    <tr><th>What proteins/DNA molecules are involved in the research and what 
-            are their approximate molecular weights?</th></tr>
+    <tr><th>What types of molecules are involved in the research and what 
+	    are their approximate molecular weights? Please provide the partial specific volume if you
+	    know it or measured it:</th></tr>
     <tr><td><textarea name='molecules' rows='6' cols='65' 
                       wrap='virtual'>$molecules</textarea></td></tr>
     <tr><th>Please indicate the approximate purity of your sample(s). You can 
             express it in percent:</th></tr>
     <tr><td><input type='text' name='purity' size='40'
                    maxlength='10' value='$purity' /></td></tr>
-    <tr><th>Would the expense of providing 5 ml at 1 OD 280 concentration of 
-            your sample be acceptable? If not, what amount would you feel 
-            comfortable with? Elaborate if necessary:</th></tr>
+    <tr><th>Would the expense of providing 0.75 ml at 1 OD 280 concentration of 
+	    your sample be acceptable? 
+            </th></tr>
     <tr><td><textarea name='expense' rows='6' cols='65' 
                       wrap='virtual'>$expense</textarea></td></tr>
-    <tr><th>What buffers do you plan to use? Is phosphate or MOPS buffer an option?<br />
-            To minimize absorbance we prefer to run phosphate or MOPS buffers in 
-            low concentration (~ 5-10 mM). Salts also absorb and should be kept 
-            to a minimum, although a certain ionic strength (25-50 mM) is desired 
-            to aid with the hydrodynamic ideality behavior.<br /><br />
+    <tr><th>What buffers do you plan to use? Is phosphate or TRIS buffer an option?<br />
+            To minimize absorbance we prefer to run phosphate or TRIS buffers in 
+            low concentration (~ 5-10 mM). Salts can form density and viscosity gradients and should be kept 
+	    to a minimum, especially high density salts, and for experiments at speeds > 35,000 rpm.
+	    However, a certain ionic strength (25-50 mM) is desired 
+	    to prevent hydrodynamic non-ideality, and does not cause any significant gradients
+	    even at maximum speed.<br /><br />
 
-            Do you need to have drugs in your sample, such as reductants and 
-            nucleotide analogs?<br />
-            Please list all components in your buffer. If reductants are required 
-            it is essential that you use TCEP, which can be used at 280 nm, but 
-            not lower wavelengths.<br /><br />
+            Do you require addition of small molecules to your sample, such as reductants and 
+            nucleotides?<br />
+            Please list all components in your buffer. For absorbance-intensity experiments and reductants are required 
+	    it is essential that you use TCEP, which can be used at wavelengths > 240 nm.
+            <br /><br />
 
             Please list all buffer components:</th></tr>
     <tr><td><textarea name='bufferComponents' rows='6' cols='65' 
@@ -584,7 +587,7 @@ echo<<<HTML
             to approach the research with AUC experiments?</th></tr>
     <tr><td><textarea name='AUC_questions' rows='6' cols='65' 
                       wrap='virtual'>$AUC_questions</textarea></td></tr>
-    <tr><th>Please enter any notes about the experiment design.</th></tr>
+    <tr><th>The AUC experimental design:</th></tr>
     <tr><td><textarea name='expDesign' rows='6' cols='65' 
                       wrap='virtual'>$expDesign</textarea></td></tr>
     <tr><th>Special instructions, questions, and notes (optional):</th></tr>
