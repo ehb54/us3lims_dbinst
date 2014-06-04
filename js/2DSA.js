@@ -304,6 +304,11 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
     }
   }
 
+  else
+  {  // If not fitting meniscus, just be sure range value is low enough
+    f.meniscus_range.value = 0.001;
+  }
+
   if ( count_datasets == 1 || separate_datasets == 1 )
     return( validate_single(f) );
 

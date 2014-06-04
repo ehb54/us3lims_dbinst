@@ -74,11 +74,14 @@ if ( isset( $_POST['next'] ) )
   $_SESSION['new_expID']     = $experimentID;
 
   // Extract rawDataID and filename from cells[]
-  $_SESSION['new_cells'] = array();
-  foreach( $_POST['cells'] as $cell )
+  $_SESSION['new_cells']     = array();
+  if ( isset( $_POST['cells'] ) )
   {
-    list( $rawDataID, $filename ) = explode( ":", $cell );
-    $_SESSION['new_cells'][$rawDataID] = $filename;
+    foreach( $_POST['cells'] as $cell )
+    {
+      list( $rawDataID, $filename ) = explode( ":", $cell );
+      $_SESSION['new_cells'][$rawDataID] = $filename;
+    }
   }
 
   header( "Location: queue_setup_2.php" );
@@ -277,21 +280,24 @@ function get_cell_text()
     $rrfiles  = array();
     $kraw     = 0;
 
-    foreach( $_POST['expIDs'] as $experimentID )
-    { // First accumulate arrays of rawDataID,runID,filename
-      $query  = "SELECT rawDataID, runID, filename " .
-                "FROM   rawData, experiment " .
-                "WHERE  rawData.experimentID = $experimentID " .
-                "AND    rawData.experimentID = experiment.experimentID ";
-      $result = mysql_query( $query )
-                or die("Query failed : $query<br />\n" . mysql_error());
+    if ( isset( $_POST['expIDs'] ) )
+    {
+      foreach( $_POST['expIDs'] as $experimentID )
+      { // First accumulate arrays of rawDataID,runID,filename
+        $query  = "SELECT rawDataID, runID, filename " .
+                  "FROM   rawData, experiment " .
+                  "WHERE  rawData.experimentID = $experimentID " .
+                  "AND    rawData.experimentID = experiment.experimentID ";
+        $result = mysql_query( $query )
+                  or die("Query failed : $query<br />\n" . mysql_error());
   
-      while ( list( $rawDataID, $runID, $filename ) = mysql_fetch_array( $result ) )
-      {
-        $rrawIDs[ $kraw      ] = $rawDataID;
-        $rrunIDs[ $rawDataID ] = $runID;
-        $rrfiles[ $rawDataID ] = $filename;
-        $kraw++;
+        while ( list( $rawDataID, $runID, $filename ) = mysql_fetch_array( $result ) )
+        {
+          $rrawIDs[ $kraw      ] = $rawDataID;
+          $rrunIDs[ $rawDataID ] = $runID;
+          $rrfiles[ $rawDataID ] = $filename;
+          $kraw++;
+        }
       }
     }
 
