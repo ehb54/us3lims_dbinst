@@ -7,7 +7,7 @@
  * present. f is always a pointer to the form.
  */
 
-const READ_ERROR = -1;
+var READ_ERROR = -1;
 
 function valid_field( fieldName )
 {
