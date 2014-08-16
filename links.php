@@ -24,6 +24,7 @@ $analysis_menu = <<<HTML
   <a href='https://$org_site/2DSA_1.php'>2DSA Analysis</a>
   <a href='https://$org_site/2DSA-CG_1.php'>2DSA Custom Grid</a>
   <a href='https://$org_site/GA_1.php'>GA Analysis</a>
+  <a href='https://$org_site/DMGA_1.php'>Discrete GA</a>
   <a href='https://$org_site/runID_info.php'>RunID Info</a></li>
 
 HTML;

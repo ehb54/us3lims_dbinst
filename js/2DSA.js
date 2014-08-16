@@ -305,8 +305,14 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
   }
 
   else
-  {  // If not fitting meniscus, just be sure range value is low enough
+  {  // If not fitting meniscus, just be sure meniscus below data range
     f.meniscus_range.value = 0.001;
+
+    if ( meniscus_radius >= data_left )
+    {
+      alert( "The data's meniscus value extends beyond the left data range limit." );
+      return( false );
+    }
   }
 
   if ( count_datasets == 1 || separate_datasets == 1 )

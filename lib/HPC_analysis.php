@@ -275,4 +275,34 @@ class HPC_GA extends HPC_analysis
     }
   }
 }
+
+/*
+ * A class that writes the DMGA portion of the data to the DB
+ *  Inherits from HPC_analysis
+ */
+class HPC_DMGA extends HPC_analysis
+{
+  // Function to create the HPC Analysis DB entries for the DMGA analysis
+  protected function HPCJobParameters( $HPCAnalysisRequestID, $job_parameters )
+  {
+    $query  = "INSERT INTO DMGA_Settings SET " .
+              "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
+              "DC_modelID     = {$job_parameters['DC_modelID']},    " .
+              "mc_iterations  = {$job_parameters['mc_iterations']}, " .
+              "demes          = {$job_parameters['demes']},         " .
+              "population     = {$job_parameters['population']},    " .
+              "generations    = {$job_parameters['generations']},   " .
+              "mutation       = {$job_parameters['mutation']},      " .
+              "crossover      = {$job_parameters['crossover']},     " .
+              "plague         = {$job_parameters['plague']},        " .
+              "elitism        = {$job_parameters['elitism']},       " .
+              "migration      = {$job_parameters['migration']},     " .
+              "p_grid         = {$job_parameters['p_grid']},        " .
+              "seed           = {$job_parameters['seed']}           " ;
+    mysql_query( $query )
+          or die( "Query failed : $query<br />" . mysql_error());
+    $settingsID = mysql_insert_id();
+  }
+}
+
 ?>

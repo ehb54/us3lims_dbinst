@@ -211,6 +211,7 @@ abstract class File_writer
       $files[] = $filename['auc'];
       $files[] = $filename['edit'];
       // $files[] = $filename['model'];
+
       if ( isset( $filename['noise'] ) )
       {
         foreach ( $filename['noise'] as $noiseFile )
@@ -219,6 +220,9 @@ abstract class File_writer
 
       if ( isset( $filename['CG_model'] ) )
          $files[] = $filename['CG_model'];
+
+      if ( isset( $filename['DC_model'] ) )
+         $files[] = $filename['DC_model'];
 
       $files[] = $xml_filename;
     }
@@ -312,6 +316,23 @@ abstract class File_writer
       if ( ! $this->create_file( $fn, $dir, $contents ) )
         return false;
       $filenames[0]['CG_model'] = $fn;  // put it in with other dataset[0] files so
+                                        //  as not to confuse the tar file creation
+
+    }
+
+    // In the case of DMGA_Constr files, the DC_model
+    if ( isset( $job['job_parameters']['DC_modelID'] ) )
+    {
+      $DC_modelID = $job['job_parameters']['DC_modelID'];
+      $query  = "SELECT description, xml " .
+                "FROM model " .
+                "WHERE modelID = $DC_modelID ";
+      $result = mysql_query( $query )
+                or die( "Query failed : $query<br />" . mysql_error());
+      list( $fn, $contents ) = mysql_fetch_array( $result );
+      if ( ! $this->create_file( $fn, $dir, $contents ) )
+        return false;
+      $filenames[0]['DC_model'] = $fn;  // put it in with other dataset[0] files so
                                         //  as not to confuse the tar file creation
 
     }
@@ -686,4 +707,78 @@ class File_GA extends File_writer
   }
 
 }
+
+/*
+ * A class that writes the DMGA portion of a control xml file
+ * Inherits from File_writer
+ */
+class File_DMGA extends File_writer
+{
+  // Function to write the XML job parameters for the GA analysis
+  function writeJobParameters( $xml, $parameters )
+  {
+    $DC_modelID = $parameters['DC_modelID'];
+
+    $query  = "SELECT description FROM model " .
+              "WHERE  modelID = $DC_modelID ";
+    $result = mysql_query( $query )
+              or die( "Query failed : $query<br />" . mysql_error());
+    list( $fn ) = mysql_fetch_array( $result );
+
+    $xml->startElement( 'jobParameters' );
+      $xml->startElement( 'DC_model' );
+        $xml->writeAttribute( 'id', $DC_modelID );
+        $xml->writeAttribute( 'filename', $fn );
+      $xml->endElement(); // DC_model
+      $xml->startElement( 'mc_iterations' );
+        $xml->writeAttribute( 'value', $parameters['mc_iterations'] );
+      $xml->endElement(); // mc_iterations
+      $xml->startElement( 'req_mgroupcount' );
+        $xml->writeAttribute( 'value', $parameters['req_mgroupcount'] );
+      $xml->endElement(); // req_mgroupcount
+      $xml->startElement( 'demes' );
+        $xml->writeAttribute( 'value', $parameters['demes'] );
+      $xml->endElement(); // demes
+      $xml->startElement( 'population' );
+        $xml->writeAttribute( 'value', $parameters['population'] );
+      $xml->endElement(); // population
+      $xml->startElement( 'generations' );
+        $xml->writeAttribute( 'value', $parameters['generations'] );
+      $xml->endElement(); // generations
+      $xml->startElement( 'crossover' );
+        $xml->writeAttribute( 'value', $parameters['crossover'] );
+      $xml->endElement(); // crossover
+      $xml->startElement( 'mutation' );
+        $xml->writeAttribute( 'value', $parameters['mutation'] );
+      $xml->endElement(); // mutation
+      $xml->startElement( 'plague' );
+        $xml->writeAttribute( 'value', $parameters['plague'] );
+      $xml->endElement(); // plague
+      $xml->startElement( 'elitism' );
+        $xml->writeAttribute( 'value', $parameters['elitism'] );
+      $xml->endElement(); // elitism
+      $xml->startElement( 'migration' );
+        $xml->writeAttribute( 'value', $parameters['migration'] );
+      $xml->endElement(); // migration
+      $xml->startElement( 'seed' );
+        $xml->writeAttribute( 'value', $parameters['seed'] );
+      $xml->endElement(); // seed
+      $xml->startElement( 'p_grid' );
+        $xml->writeAttribute( 'value', $parameters['p_grid'] );
+      $xml->endElement(); // p_grid
+      $xml->startElement( 'mutate_sigma' );
+        $xml->writeAttribute( 'value', $parameters['mutate_sigma'] );
+      $xml->endElement(); // mutate_sigma
+      $xml->startElement( 'debug_timings' );
+        $xml->writeAttribute( 'value', $parameters['debug_timings'] );
+      $xml->endElement(); // debug_timings
+      $xml->startElement( 'debug_level' );
+        $xml->writeAttribute( 'value', $parameters['debug_level'] );
+      $xml->endElement(); // debug_level
+
+    $xml->endElement(); // jobParameters
+  }
+
+}
+
 ?>
