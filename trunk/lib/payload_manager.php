@@ -190,12 +190,13 @@ abstract class Payload_manager
       }
       
       // Finally, some buffer information
-      $density = 0.0;
-      $viscosity = 0.0;
-      $manual = 0;
+      $density     = 0.0;
+      $viscosity   = 0.0;
+      $compress    = 0.0;
+      $manual      = 0;
       $description = '';
 
-      $query  = "SELECT viscosity, density, description " .
+      $query  = "SELECT viscosity, density, description, compressibility " .
                 "FROM rawData, solutionBuffer, buffer " .
                 "WHERE rawData.rawDataID = $rawDataID " .
                 "AND rawData.solutionID = solutionBuffer.solutionID " .
@@ -203,7 +204,7 @@ abstract class Payload_manager
       $result = mysql_query( $query )
                 or die( "Query failed : $query<br />" . mysql_error());
       if ( mysql_num_rows ( $result ) > 0 )
-        list( $viscosity, $density, $description ) = mysql_fetch_array( $result );      // should be 1
+        list( $viscosity, $density, $description, $compress ) = mysql_fetch_array( $result ); // should be 1
 
       // Turn on 'manual' flag where '  [M]' is present in buffer description
       str_replace( '  [M]', '', $description, $manual );
@@ -217,6 +218,7 @@ abstract class Payload_manager
       $params['centerpiece_width']  = $centerpiece_width;
       $params['density']      = $density;
       $params['viscosity']    = $viscosity;
+      $params['compress']     = $compress;
       $params['manual' ]      = $manual;
       $params['analytes']     = $analytes;
       $params['speedsteps']   = $speedsteps;
@@ -656,4 +658,110 @@ class Payload_GA extends Payload_manager
     $parameters['z-type'] = $ztype;
   }
 }
+
+/*
+ * A place to encapsulate the DMGA payload data
+ * Inherits from payload_manager.php
+ *
+ */
+class Payload_DMGA extends Payload_manager
+{
+  public function analysisType()
+  {
+    return 'DMGA';
+  }
+
+  // Function to save all the data on the screen
+  function acquirePostedData( $dataset_id, $num_datasets )
+  {
+    // From config.php
+    global $dbname, $dbhost;
+    global $udpport, $ipaddr;
+
+    // These items only get posted the first time
+    if ( $dataset_id == 0 )
+    {
+      $this->add( 'method', $this->analysisType() );
+
+      $udp                  = array();
+      $udp['udpport']       = $udpport;
+      $udp['ip']            = $ipaddr;
+      $this->add( 'server', $udp );
+
+      $this->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
+      $this->add( 'datasetCount', $num_datasets );
+
+      $database             = array();
+      $database['name']     = $dbname;
+      $database['host']     = $dbhost;
+      $database['user_email'] = $_SESSION['email'];
+      $database['submitter_email'] = $_SESSION['submitter_email'];
+      $this->add( 'database', $database );
+
+      $job_parameters                     = array();
+      $job_parameters['DC_modelID']       = $_POST['DC_modelID'];
+      $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
+      $job_parameters['demes']            = $_POST['demes-value'];
+      if ( $job_parameters['mc_iterations'] > 1 )
+        $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
+      else
+        $job_parameters['req_mgroupcount']  = 1;
+      $job_parameters['population']       = $_POST['genes-value'];
+      $job_parameters['generations']      = $_POST['generations-value'];
+      $job_parameters['crossover']        = $_POST['crossover-value'];
+      $job_parameters['mutation']         = $_POST['mutation-value'];
+      $job_parameters['plague']           = $_POST['plague-value'];
+      $job_parameters['elitism']          = $_POST['elitism-value'];
+      $job_parameters['migration']        = $_POST['migration-value'];
+
+      // This one is in %, so it needs to be divided by 100
+      $job_parameters['regularization']   = $_POST['regularization-value'] / 100.0;
+
+      $job_parameters['seed']             = $_POST['seed-value'];
+      $job_parameters['conc_threshold']   = $_POST['conc_threshold-value'];
+      $job_parameters['p_grid']           = $_POST['p_grid-value'];
+      $job_parameters['mutate_sigma']     = $_POST['mutate_sigma-value'];
+      $job_parameters['debug_timings']    = ( isset( $_POST['debug_timings'] ) &&
+                                                     $_POST['debug_timings']   == 'on' )
+                                          ? 1 : 0;
+      $job_parameters['debug_level']      = $_POST['debug_level-value'];
+      $job_parameters['experimentID']     = $_SESSION['experimentID'];
+      $this->add( 'job_parameters', $job_parameters );
+
+      $dataset = array();
+        $dataset[ 0 ]['files']      = array();   // This will be done later
+        $dataset[ 0 ]['parameters'] = array();
+    }
+
+    // These will be done every time
+    $parameters                 = array();
+    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
+    $centerpiece_shape = $parameters['centerpiece_shape'];
+
+    // Create new elements for this dataset
+    //?? $parameters                 = $dataset['parameters'];
+    $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
+    $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
+    $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
+    $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
+  //  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
+    $parameters['noiseIDs']     = array();
+    $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
+    
+    $parameters['simpoints']    = $_POST['simpoints-value'];
+    $parameters['band_volume']  = ( $centerpiece_shape == 'band forming' )
+                                ? $_POST['band_volume-value']
+                                : 0.0;
+    $parameters['radial_grid']  = $_POST['radial_grid'];
+    $parameters['time_grid']    = $_POST['time_grid'];
+
+    // Get arrays with multiple dataset data
+    $dataset                    = $this->get('dataset');
+    // Add new datasets
+    $dataset[$dataset_id]       = $parameters;
+    $this->add( 'dataset', $dataset );
+
+  }
+}
+
 ?>

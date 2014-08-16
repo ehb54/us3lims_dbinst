@@ -18,10 +18,13 @@ echo<<<HTML
         <br />
         Value:   <input name='mc_iterations' 
                         id='mc_iterations'
+                        size='12'
                         value='1' />
-        Minimum: <input id="montecarlo-min" 
+        Minimum: <input id="montecarlo-min"
+                        size='12'
                         disabled="disabled" />
-        Maximum: <input id="montecarlo-max" 
+        Maximum: <input id="montecarlo-max"
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -85,10 +88,13 @@ echo<<<HTML
         <br />
         Value:   <input name='simpoints-value' 
                         id='simpoints-value'
+                        size='12'
                         value='200' />
-        Minimum: <input id="simpoints-min" 
+        Minimum: <input id="simpoints-min"
+                        size='12'
                         disabled="disabled" />
-        Maximum: <input id="simpoints-max" 
+        Maximum: <input id="simpoints-max"
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -104,10 +110,13 @@ echo<<<HTML
         <br />
         Value:   <input name='band_volume-value' 
                         id='band_volume-value'
+                        size='12'
                         value='0.015' />
-        Minimum: <input id="band_volume-min" 
+        Minimum: <input id="band_volume-min"
+                        size='12'
                         disabled="disabled" />
-        Maximum: <input id="band_volume-max" 
+        Maximum: <input id="band_volume-max"
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -157,10 +166,13 @@ echo<<<HTML
           <br/>
           Value:   <input name='debug_level-value'
                           id='debug_level-value'
+                          size='3'
                           value='0' />
           Minimum: <input id='debug_level-min'
+                          size='3'
                           disabled='disabled' />
           Maximum: <input id='debug_level-max'
+                          size='3'
                           disabled='disabled' />
 
         </fieldset>
@@ -282,7 +294,7 @@ function CG_select_setup()
 HTML;
 
     return;
-}
+  }
 
   $models = '';
   while ( list( $modelID, $description, $lastUpdated ) = mysql_fetch_array( $result ) )
@@ -297,6 +309,51 @@ echo<<<HTML
       <fieldset class='option_value'>
         <legend>Custom Grid Model</legend>
           <select name="CG_modelID">
+            $models
+          </select>
+      </fieldset>
+HTML;
+}
+
+// Function to display a discrete GA model dropdown
+function DMGA_select_setup()
+{
+  $personID = $_SESSION['id'];
+  $query  = "SELECT model.modelID, description, lastUpdated " .
+            "FROM modelPerson, model " .
+            "WHERE personID = $personID " .
+            "AND modelPerson.modelID = model.modelID " .
+            "AND description LIKE '%DMGA_Constr%' " .
+            "ORDER BY lastUpdated DESC ";
+            //"AND description LIKE '%CustomGrid%' " .
+  $result = mysql_query( $query )
+            or die( "Query failed : $query<br />\n" . mysql_error() );
+
+  if ( mysql_num_rows( $result ) == 0 )
+  {
+    echo <<<HTML
+      <fieldset class='option_value'>
+        <legend>Discrete GA Constraints Model</legend>
+        <p>There are no discrete GA constraints models available</p>
+      </fieldset>
+HTML;
+
+    return;
+  }
+
+  $models = '';
+  while ( list( $modelID, $description, $lastUpdated ) = mysql_fetch_array( $result ) )
+  {
+    $descr = explode( ".", $description );
+    array_pop( $descr );                  // pop off the .model part
+    $description = implode( ".", $descr );
+    $models .= "            <option value='$modelID'>$lastUpdated $description</option>\n";
+  }
+ 
+echo<<<HTML
+      <fieldset class='option_value'>
+        <legend>Discrete GA Constraints Model</legend>
+          <select name="DC_modelID">
             $models
           </select>
       </fieldset>
@@ -378,10 +435,13 @@ echo<<<HTML
             <br />
             Value:   <input name='meniscus_points' 
                             id='meniscus_points'
+                            size='12'
                             value='10' />
             Minimum: <input id="meniscus-min" 
+                            size='12'
                             disabled="disabled" />
             Maximum: <input id="meniscus-max" 
+                            size='12'
                             disabled="disabled" />
           </fieldset>
         </div>
@@ -407,10 +467,13 @@ echo<<<HTML
             <br />
             Value:   <input name='max_iterations' 
                             id='max_iterations'
+                            size='12'
                             value='3' />
             Minimum: <input id="iterations-min" 
+                            size='12'
                             disabled="disabled" />
             Maximum: <input id="iterations-max" 
+                            size='12'
                             disabled="disabled" />
           </fieldset>
         </div>
@@ -434,10 +497,13 @@ echo<<<HTML
         <br />
         Value:   <input name='demes-value' 
                         id='demes-value'
+                        size='4'
                         value='31' />
         Minimum: <input id="demes-min" 
+                        size='3'
                         disabled="disabled" />
         Maximum: <input id="demes-max" 
+                        size='3'
                         disabled="disabled" />
 
         </td>
@@ -475,10 +541,13 @@ echo<<<HTML
         <br />
         Value:   <input name='genes-value' 
                         id='genes-value'
+                        size='12'
                         value='100' />
         Minimum: <input id="genes-min" 
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="genes-max" 
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -494,10 +563,13 @@ echo<<<HTML
         <br />
         Value:   <input name='generations-value' 
                         id='generations-value'
+                        size='12'
                         value='100' />
         Minimum: <input id="generations-min" 
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="generations-max" 
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -513,10 +585,13 @@ echo<<<HTML
         <br />
         Value:   <input name='crossover-value' 
                         id='crossover-value'
+                        size='12'
                         value='50' />
         Minimum: <input id="crossover-min" 
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="crossover-max" 
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -532,10 +607,13 @@ echo<<<HTML
         <br />
         Value:   <input name='mutation-value' 
                         id='mutation-value'
+                        size='12'
                         value='50' />
         Minimum: <input id="mutation-min" 
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="mutation-max" 
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -551,10 +629,13 @@ echo<<<HTML
         <br />
         Value:   <input name='plague-value' 
                         id='plague-value'
+                        size='12'
                         value='4' />
         Minimum: <input id="plague-min" 
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="plague-max" 
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -570,10 +651,13 @@ echo<<<HTML
         <br />
         Value:   <input name='elitism-value' 
                         id='elitism-value'
+                        size='12'
                         value='2' />
         Minimum: <input id="elitism-min" 
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="elitism-max" 
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -589,10 +673,13 @@ echo<<<HTML
         <br />
         Value:   <input name='migration-value' 
                         id='migration-value'
+                        size='12'
                         value='3' />
         Minimum: <input id="migration-min" 
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="migration-max" 
+                        size=12
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -608,10 +695,13 @@ echo<<<HTML
         <br />
         Value:   <input name='regularization-value' 
                         id='regularization-value'
+                        size='12'
                         value='5' />
         Minimum: <input id="regularization-min" 
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="regularization-max" 
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -627,10 +717,13 @@ echo<<<HTML
         <br />
         Value:   <input name='seed-value' 
                         id='seed-value'
+                        size='12'
                         value='0' />
         Minimum: <input id="seed-min" 
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="seed-max" 
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;
@@ -646,10 +739,13 @@ echo<<<HTML
         <br/>
         Value:   <input name="conc_threshold-value"
                         id="conc_threshold-value"
+                        size='12'
                         value="0.00001" />
         Minimum: <input id="conc_threshold-min"
+                        size='12'
                         disabled="disabled"/>
         Maximum: <input id="conc_threshold-max"
+                        size='12'
                         disabled="disabled"/>
       </fieldset>
 HTML;
@@ -665,10 +761,13 @@ echo<<<HTML
         <br/>
         Value:   <input name="s_grid-value"
                         id="s_grid-value"
+                        size='12'
                         value="100" />
         Minimum: <input id="s_grid-min"
+                        size='12'
                         disabled="disabled"/>
         Maximum: <input id="s_grid-max"
+                        size='12'
                         disabled="disabled"/>
       </fieldset>
 HTML;
@@ -685,11 +784,36 @@ echo<<<HTML
         <br/>
         Value:   <input name="k_grid-value"
                         id="k_grid-value"
+                        size='12'
                         value="100" />
         Minimum: <input id="k_grid-min"
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="k_grid-max"
+                        size='12'
                         disabled="disabled" />
+      </fieldset>
+HTML;
+}
+
+// Function to display the s_grid input
+function p_grid_setup()
+{
+echo<<<HTML
+      <fieldset>
+        <legend>Constraints Parameter Grid</legend>
+        <div class="newslider" id="p_grid-slider"></div>
+        <br/>
+        Value:   <input name="p_grid-value"
+                        id="p_grid-value"
+                        size='12'
+                        value="100" />
+        Minimum: <input id="p_grid-min"
+                        size='12'
+                        disabled="disabled"/>
+        Maximum: <input id="p_grid-max"
+                        size='12'
+                        disabled="disabled"/>
       </fieldset>
 HTML;
 }
@@ -704,10 +828,13 @@ echo<<<HTML
         <br/>
         Value: <input name="mutate_sigma-value"
                       id="mutate_sigma-value"
+                      size='12'
                       value="20" />
         Minimum: <input id="mutate_sigma-min"
+                      size='12'
                       disabled="disabled"/>
         Maximum: <input id="mutate_sigma-max"
+                      size='12'
                       disabled="disabled"/>
       </fieldset>
 HTML;
@@ -724,10 +851,13 @@ echo<<<HTML
         <br/>
         Value:   <input name="mutate_s-value"
                         id="mutate_s-value"
+                        size='12'
                         value="20" />
         Minimum: <input id="mutate_s-min"
+                        size='12'
                         disabled="disabled"/>
         Maximum: <input id="mutate_s-max"
+                        size='12'
                         disabled="disabled"/>
       </fieldset>
 HTML;
@@ -743,10 +873,13 @@ echo<<<HTML
         <br/>
         Value:   <input name="mutate_k-value"
                         id="mutate_k-value"
+                        size='12'
                         value="20" />
         Minimum: <input id="mutate_k-min"
+                        size='12'
                         disabled="disabled"/>
         Maximum: <input id="mutate_k-max"
+                        size='12'
                         disabled="disabled"/>
       </fieldset>
 HTML;
@@ -763,10 +896,13 @@ echo<<<HTML
         <br/>
         Value:   <input name="mutate_sk-value"
                         id="mutate_sk-value"
+                        size='12'
                         value="20" />
         Minimum: <input id="mutate_sk-min"
+                        size='12'
                         disabled="disabled" />
         Maximum: <input id="mutate_sk-max"
+                        size='12'
                         disabled="disabled" />
       </fieldset>
 HTML;

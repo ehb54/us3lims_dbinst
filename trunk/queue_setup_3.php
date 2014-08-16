@@ -244,7 +244,10 @@ HTML;
 
   <p><input type="button" value="Setup GA Control"
             onclick='window.location="GA_1.php"' />
-     <input type="button" value="Clear Queue"
+     <input type="button" value="Setup Discrete Model GA Control"
+            onclick='window.location="DMGA_1.php"' /></p>
+
+  <p><input type="button" value="Clear Queue"
             onclick='window.location="{$_SERVER['PHP_SELF']}?clear=clear"'/></p>
   <!--
      <input type="button" value="Setup 2DSA Control with MW Constraint"
