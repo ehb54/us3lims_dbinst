@@ -545,6 +545,9 @@ class File_2DSA extends File_writer
       $xml->startElement( 'debug_level' );
         $xml->writeAttribute( 'value', $parameters['debug_level'] );
       $xml->endElement(); // debug_level
+      $xml->startElement( 'debug_text' );
+        $xml->writeAttribute( 'value', $parameters['debug_text'] );
+      $xml->endElement(); // debug_text
     $xml->endElement(); // jobParameters
   }
 
@@ -602,6 +605,9 @@ class File_2DSA_CG extends File_writer
       $xml->startElement( 'debug_level' );
         $xml->writeAttribute( 'value', $parameters['debug_level'] );
       $xml->endElement(); // debug_level
+      $xml->startElement( 'debug_text' );
+        $xml->writeAttribute( 'value', $parameters['debug_text'] );
+      $xml->endElement(); // debug_text
     $xml->endElement(); // jobParameters
   }
 
@@ -680,6 +686,9 @@ class File_GA extends File_writer
       $xml->startElement( 'debug_level' );
         $xml->writeAttribute( 'value', $parameters['debug_level'] );
       $xml->endElement(); // debug_level
+      $xml->startElement( 'debug_text' );
+        $xml->writeAttribute( 'value', $parameters['debug_text'] );
+      $xml->endElement(); // debug_text
       $xml->startElement( 'bucket_fixed' );
         $xml->writeAttribute( 'value',     $parameters['bucket_fixed'] );
         $xml->writeAttribute( 'fixedtype', $parameters['z-type'] );
@@ -769,12 +778,18 @@ class File_DMGA extends File_writer
       $xml->startElement( 'mutate_sigma' );
         $xml->writeAttribute( 'value', $parameters['mutate_sigma'] );
       $xml->endElement(); // mutate_sigma
+      $xml->startElement( 'minimize_opt' );
+        $xml->writeAttribute( 'value', $parameters['minimize_opt'] );
+      $xml->endElement(); // mutate_sigma
       $xml->startElement( 'debug_timings' );
         $xml->writeAttribute( 'value', $parameters['debug_timings'] );
       $xml->endElement(); // debug_timings
       $xml->startElement( 'debug_level' );
         $xml->writeAttribute( 'value', $parameters['debug_level'] );
       $xml->endElement(); // debug_level
+      $xml->startElement( 'debug_text' );
+        $xml->writeAttribute( 'value', $parameters['debug_text'] );
+      $xml->endElement(); // debug_text
 
     $xml->endElement(); // jobParameters
   }

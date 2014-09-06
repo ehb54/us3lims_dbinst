@@ -176,6 +176,13 @@ echo<<<HTML
                           disabled='disabled' />
 
         </fieldset>
+        <fieldset>
+          <legend>Debug Text</legend>
+          Value:   <input name='debug_text-value' 
+                          id='debug_text-value'
+                          size='24'
+                          value='' />
+        </fieldset>
       </fieldset>
 HTML;
 }
@@ -490,9 +497,6 @@ echo<<<HTML
       <fieldset class='option_value'>
         <legend>Demes</legend>
 
-        <table class='noborder' >
-        <tr><td>
-
         <div class='newslider' id='demes-slider'></div>
         <br />
         Value:   <input name='demes-value' 
@@ -506,9 +510,8 @@ echo<<<HTML
                         size='3'
                         disabled="disabled" />
 
-        </td>
-
-        <td style='width:50%;'>
+        <div>
+        <p>
           Note: The actual number of
           demes is dependent on the capacity and the architecture of the selected back end system.  
           Generally, demes + 1 will be adjusted upward in units of 8, 12, or 16, but limited
@@ -523,9 +526,8 @@ echo<<<HTML
             <tr><td>alamo</td><td style='text-align:center;'>31</td></tr>
             <tr><td>bcf</td><td style='text-align:center;'>31</td></tr>
           </table>
-        </td></tr>
-
-        </table>
+        </p>
+        </div>
 
       </fieldset>
 HTML;
@@ -542,7 +544,7 @@ echo<<<HTML
         Value:   <input name='genes-value' 
                         id='genes-value'
                         size='12'
-                        value='100' />
+                        value='200' />
         Minimum: <input id="genes-min" 
                         size='12'
                         disabled="disabled" />
@@ -807,7 +809,7 @@ echo<<<HTML
         Value:   <input name="p_grid-value"
                         id="p_grid-value"
                         size='12'
-                        value="100" />
+                        value="1000" />
         Minimum: <input id="p_grid-min"
                         size='12'
                         disabled="disabled"/>
@@ -829,7 +831,7 @@ echo<<<HTML
         Value: <input name="mutate_sigma-value"
                       id="mutate_sigma-value"
                       size='12'
-                      value="20" />
+                      value="0" />
         Minimum: <input id="mutate_sigma-min"
                       size='12'
                       disabled="disabled"/>
@@ -904,6 +906,20 @@ echo<<<HTML
         Maximum: <input id="mutate_sk-max"
                         size='12'
                         disabled="disabled" />
+      </fieldset>
+HTML;
+}
+
+// Function to display minimize option input
+function minimize_opt_setup()
+{
+echo<<<HTML
+      <fieldset class='option_value'>
+        <legend>Gradient Search Minimization</legend>
+          <select name="minimize_opt-value">
+            <option value="2" selected="selected">At any final generation</option>
+            <option value="1">Only after full generations</option>
+          </select>
       </fieldset>
 HTML;
 }

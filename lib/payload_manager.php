@@ -375,6 +375,7 @@ class Payload_2DSA extends Payload_manager
                                                      $_POST['debug_timings']   == 'on' )
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
+      $job_parameters['debug_text']       = $_POST['debug_text-value'];
       $job_parameters['experimentID']     = $_SESSION['experimentID'];
       $this->add( 'job_parameters', $job_parameters );
 
@@ -478,6 +479,7 @@ class Payload_2DSA_CG extends Payload_manager
                                                      $_POST['debug_timings']   == 'on' )
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
+      $job_parameters['debug_text']       = $_POST['debug_text-value'];
       $job_parameters['experimentID']     = $_SESSION['experimentID'];
       $this->add( 'job_parameters', $job_parameters );
 
@@ -588,6 +590,7 @@ class Payload_GA extends Payload_manager
                                                      $_POST['debug_timings']   == 'on' )
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
+      $job_parameters['debug_text']       = $_POST['debug_text-value'];
       $job_parameters['bucket_fixed']     = $_POST['z-fixed'];
       $job_parameters['x-type']           = $_POST['x-type'];
       $job_parameters['y-type']           = $_POST['y-type'];
@@ -721,10 +724,12 @@ class Payload_DMGA extends Payload_manager
       $job_parameters['conc_threshold']   = $_POST['conc_threshold-value'];
       $job_parameters['p_grid']           = $_POST['p_grid-value'];
       $job_parameters['mutate_sigma']     = $_POST['mutate_sigma-value'];
+      $job_parameters['minimize_opt']     = $_POST['minimize_opt-value'];
       $job_parameters['debug_timings']    = ( isset( $_POST['debug_timings'] ) &&
                                                      $_POST['debug_timings']   == 'on' )
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
+      $job_parameters['debug_text']       = $_POST['debug_text-value'];
       $job_parameters['experimentID']     = $_SESSION['experimentID'];
       $this->add( 'job_parameters', $job_parameters );
 

@@ -56,7 +56,7 @@ $(document).ready(function()
   {
     animate: true,
     range:   "min",
-    value:   100,
+    value:   200,
     min:     25,
     max:     1000,
     step:    1,
@@ -332,14 +332,14 @@ $(document).ready(function()
 
   // P_grid Slider setup
   $("#p_grid-min").attr('value', 50 );
-  $("#p_grid-max").attr('value', 1000);
+  $("#p_grid-max").attr('value', 5000);
   $("#p_grid-slider").slider(
   {
     animate: true,
     range:   "min",
-    value:   100,
+    value:   1000,
     min:     50,
-    max:     1000,
+    max:     5000,
     step:    1,
     slide: function( event, ui )
     {
@@ -353,15 +353,15 @@ $(document).ready(function()
   });
 
   // Mutate_sigma Slider setup
-  $("#mutate_sigma-min").attr('value', 10 );
-  $("#mutate_sigma-max").attr('value', 40 );
+  $("#mutate_sigma-min").attr('value', -10 );
+  $("#mutate_sigma-max").attr('value', 10 );
   $("#mutate_sigma-slider").slider(
   {
     animate: true,
     range:   "min",
-    value:   20,
-    min:     10,
-    max:     40,
+    value:   0,
+    min:     -10,
+    max:     10,
     step:    1,
     slide: function( event, ui )
     {
