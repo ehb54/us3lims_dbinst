@@ -248,6 +248,7 @@ function display( $dataset_id, $num_datasets )
 
     p_grid_setup();
     mutate_sigma_setup();
+    minimize_opt_setup();
 
     debug_option();
   }

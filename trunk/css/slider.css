@@ -4,9 +4,10 @@
 
 /*the slider background*/
 .newslider {
-width:230px;
+/**width:230px;**/
+width:460px;
 height:11px;
-background:url(../images/slider-bg.png);
+background:url(../images/slider-bg-500px.png);
 position:relative;
 margin:0;
 padding:0 10px;
@@ -25,7 +26,7 @@ background:url(../images/slider-button.png);
  
 /*This is the fill bar color*/
 .ui-widget-header {
-background:url(../images/fill.png) no-repeat left;
+background:url(../images/fill-494px.png) no-repeat left;
 height:8px;
 left:1px;
 top:1px;
