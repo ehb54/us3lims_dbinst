@@ -18,6 +18,7 @@ if ( ( $_SESSION['userlevel'] != 3 ) &&
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+include $class_dir . 'experiment_status.php';
 
 // Start displaying page
 $page_title = 'HPC Request Data';
@@ -81,6 +82,7 @@ else
             or die( "Query failed : $query<br />\n" . mysql_error());
            
    $row = mysql_fetch_assoc( $result );
+   $clusterName = $row[ 'clusterName' ];
 
    echo "<pre>\n\n";
    echo "HPCAnalysisRequestID  : $reqID\n";
@@ -124,6 +126,7 @@ else
    // Get queue messages from disk directory, if it still exists
    global $submit_dir;
    global $dbname;
+   global $uses_airavata;
  
    $msg_filename = "$submit_dir$requestGUID/$dbname-$reqID-messages.txt";
    $queue_msgs = false;
@@ -156,7 +159,14 @@ else
    if ( isset( $_GET['jobstatus'] ) )
    {
       echo "$link3\n";
-      echo getJobstatus( $row['gfacID'] );
+      if ( $uses_airavata === true && $clusterName != 'juropa.fz-juelich.de')
+      {
+         echo getExperimentStatus( $row['gfacID'] );
+      }
+      else
+      {
+         echo getJobstatus( $row['gfacID'] );
+      }
    }
 
    else

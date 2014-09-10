@@ -34,6 +34,9 @@ include 'lib/HPC_analysis.php';
 include 'lib/file_writer.php';
 include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
+include $class_dir . 'submit_airavata.php';
+
+global $uses_airavata;
 
 // Create the payload manager and restore the data
 $payload = new Payload_GA( $_SESSION );
@@ -129,15 +132,21 @@ HTML;
        case 'alamo-local' :
           $job = new submit_local();
           break;
-    
+
+       case 'juropa'     :
+          $job = new submit_gfac();
+          break;
+
        case 'stampede'   :
        case 'lonestar'   :
        case 'trestles'   :
        case 'gordon'     :
-       case 'juropa'     :
        case 'alamo'      :
        case 'bcf'        :
-          $job = new submit_gfac();
+          if ( $uses_airavata === true )
+             $job = new submit_airavata();
+          else
+             $job = new submit_gfac();
           break;
 
        default           :
