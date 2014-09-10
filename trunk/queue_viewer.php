@@ -25,6 +25,8 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';       // Information about the clusters
 
+include '/srv/www/htdocs/common/class/thrift_includes.php';
+
 if ( isset( $_POST['delete'] ) )
 {
   do_delete();
@@ -100,12 +102,11 @@ function order_select( $current_order = NULL )
 // A function to delete the selected job
 function do_delete()
 {
-  global $clusters;             // From utility.php
-
+  global $clusters, $uses_airavata;             // From utility.php
+  var_dump($uses_airavata);
   $cluster  = $_POST['cluster'];
   $gfacID   = $_POST['gfacID'];
   $jobEmail = $_POST['jobEmail'];
-
   // Find out which cluster we're deleting from
   $found = false;
   foreach ( $clusters as $info )
@@ -132,20 +133,24 @@ function do_delete()
     case 'alamo-local' :
       $status = cancelLocalJob( $shortname, $gfacID );
       break;
-
+    case 'juropa'    :
+      $status = cancelJob( $gfacID );
+      break;
+	
     case 'stampede'  :
     case 'lonestar'  :
     case 'trestles'  :
     case 'gordon'    :
-    case 'juropa'    :
     case 'alamo'     :
     case 'bcf'       :
-      $status = cancelJob( $gfacID );
+      if ( $uses_airavata === true )
+        $status = cancelAiravataJob( $gfacID );
+      else
+        $status = cancelJob( $gfacID );
       break;
 
     default          :
       break;
-
   }
 }
 
@@ -268,6 +273,14 @@ function cancelJob( $gfacID )
     updateLimsStatus( $gfacID, 'aborted', $lastMessage );
     updateGFACStatus( $gfacID, 'CANCELED', $lastMessage );
   }
+}
+
+function cancelAiravataJob( $experimentID )
+{
+   global $airavataclient,$transport;
+   var_dump($experimentID);
+   $airavataclient->terminateExperiment($experimentID);
+   $transport->close();
 }
 
 function parse_response( $xml, &$msg )
@@ -423,7 +436,6 @@ HTML;
 
       $k		= $i - 1;
       $fields = explode( " ", $aData[$i] );
-
       for ( $j = 0; $j < sizeof( $fields ); $j++ )
       {
         // Eliminate empty fields to get fields into 
@@ -525,7 +537,6 @@ function display_buttons2($jobdata)
   $jobtype       = $jobdata[3];
   $HPCAnalysisID = $jobdata[2];
   $gc_file       = $jobdata[10];
-
   $content       = '';
 
   $lines = file( "/share/apps64/ultrascan/etc/queue_status_detail" );

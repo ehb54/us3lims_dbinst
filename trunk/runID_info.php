@@ -19,11 +19,15 @@ if ( ($_SESSION['userlevel'] != 2) &&   // data analyst can see own runID's
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+include $class_dir . 'experiment_status.php';
 
 // Start displaying page
 $page_title = "Info by Run ID";
 $css = 'css/admin.css';
 include 'header.php';
+
+global $uses_airavata;
+
 ?>
 <!-- Begin page content -->
 <div id='content'>
@@ -701,8 +705,9 @@ function HPCDetail( $requestID )
 
   // Save for later
   $requestGUID  = $row['HPCAnalysisRequestGUID'];
-
-  $text = <<<HTML
+  $cluster = $row['clusterName'];
+  #var_dump($cluster); 
+ $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
   <caption>HPC Request Detail</caption>
 
@@ -722,7 +727,16 @@ HTML;
   $row['jobfile'] = '<pre>' . htmlentities( $row['jobfile'] ) . '</pre>';
 
   // Get GFAC job status
-  $row['gfacStatus'] = nl2br( getJobstatus( $row['gfacID'] ) );
+  global $uses_airavata;
+
+  if ( $uses_airavata === true && $cluster != 'juropa.fz-juelich.de' )
+  {
+    $row['gfacStatus'] = nl2br( getExperimentStatus( $row['gfacID'] ) );
+  }
+  else
+  {
+    $row['gfacStatus'] = nl2br( getJobstatus( $row['gfacID'] ) );
+  }
 
   // Get queue messages from disk directory, if it still exists
   global $submit_dir;

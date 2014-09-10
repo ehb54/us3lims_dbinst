@@ -34,6 +34,9 @@ include 'lib/HPC_analysis.php';
 include 'lib/file_writer.php';
 include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
+include $class_dir . 'submit_airavata.php';
+
+global $uses_airavata;
 
 // Make sure the advancement level is set
 $advanceLevel = ( isset($_SESSION['advancelevel']) )
@@ -135,6 +138,10 @@ HTML;
           $job = new submit_local();
           break;
     
+       case 'juropa'     :
+          $job = new submit_gfac();
+          break;
+
        case 'stampede'   :
        case 'lonestar'   :
        case 'trestles'   :
@@ -142,7 +149,10 @@ HTML;
        case 'juropa'     :
        case 'alamo'      :
        case 'bcf'        :
-          $job = new submit_gfac();
+          if ( $uses_airavata === true )
+             $job = new submit_airavata();
+          else
+             $job = new submit_gfac();
           break;
 
        default           :
@@ -221,3 +231,4 @@ include 'footer.php';
 exit();
 
 ?>
+
