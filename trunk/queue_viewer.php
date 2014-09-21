@@ -24,13 +24,11 @@ if ( isset( $_POST['sort_order'] ) )
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';       // Information about the clusters
-
-include '/srv/www/htdocs/common/class/thrift_includes.php';
+include $class_dir . 'experiment_cancel.php';
 
 if ( isset( $_POST['delete'] ) )
 {
   do_delete();
-
   header( "Location: {$_SERVER['PHP_SELF']}" );
   exit();
 }
@@ -103,7 +101,7 @@ function order_select( $current_order = NULL )
 function do_delete()
 {
   global $clusters, $uses_airavata;             // From utility.php
-  var_dump($uses_airavata);
+//  var_dump($uses_airavata);
   $cluster  = $_POST['cluster'];
   $gfacID   = $_POST['gfacID'];
   $jobEmail = $_POST['jobEmail'];
@@ -124,7 +122,8 @@ function do_delete()
   // We need to find out if it's a GFAC or local job
   $hex = "[0-9a-fA-F]";
   if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
-       ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) )
+       ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) &&
+       ! preg_match( "/^US3-AIRA/", $gfacID ) )
      $shortname .= '-local';   // Not a GFAC ID
 
   switch ( $shortname )
@@ -144,7 +143,15 @@ function do_delete()
     case 'alamo'     :
     case 'bcf'       :
       if ( $uses_airavata === true )
+      {
         $status = cancelAiravataJob( $gfacID );
+        if ( $status )
+        {
+          // Let's update what user sees until canceled
+          updateLimsStatus( $gfacID, 'aborted',  $lastMessage );
+          updateGFACStatus( $gfacID, 'CANCELED', $lastMessage );
+        }
+      }
       else
         $status = cancelJob( $gfacID );
       break;
@@ -273,14 +280,6 @@ function cancelJob( $gfacID )
     updateLimsStatus( $gfacID, 'aborted', $lastMessage );
     updateGFACStatus( $gfacID, 'CANCELED', $lastMessage );
   }
-}
-
-function cancelAiravataJob( $experimentID )
-{
-   global $airavataclient,$transport;
-   var_dump($experimentID);
-   $airavataclient->terminateExperiment($experimentID);
-   $transport->close();
 }
 
 function parse_response( $xml, &$msg )
