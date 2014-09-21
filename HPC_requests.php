@@ -19,6 +19,7 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include $class_dir . 'experiment_status.php';
+include $class_dir . 'experiment_errors.php';
 
 // Start displaying page
 $page_title = 'HPC Request Data';
@@ -158,14 +159,18 @@ else
 
    if ( isset( $_GET['jobstatus'] ) )
    {
+      $gfacID  = $row[ 'gfacID' ];
       echo "$link3\n";
+
       if ( $uses_airavata === true && $clusterName != 'juropa.fz-juelich.de')
       {
-         echo getExperimentStatus( $row['gfacID'] );
+         echo getExperimentStatus( $gfacID );
+         echo " -- ";
+         echo getExperimentErrors( $gfacID );
       }
       else
       {
-         echo getJobstatus( $row['gfacID'] );
+         echo getJobstatus( $gfacID );
       }
    }
 
