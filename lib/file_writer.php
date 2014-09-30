@@ -780,7 +780,7 @@ class File_DMGA extends File_writer
       $xml->endElement(); // mutate_sigma
       $xml->startElement( 'minimize_opt' );
         $xml->writeAttribute( 'value', $parameters['minimize_opt'] );
-      $xml->endElement(); // mutate_sigma
+      $xml->endElement(); // minimize_opt
       $xml->startElement( 'debug_timings' );
         $xml->writeAttribute( 'value', $parameters['debug_timings'] );
       $xml->endElement(); // debug_timings

@@ -19,7 +19,7 @@ if ( ($_SESSION['userlevel'] != 2) &&   // data analyst can see own runID's
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
-include $class_dir . 'experiment_status.php';
+include_once $class_dir . 'experiment_status.php';
 
 // Start displaying page
 $page_title = "Info by Run ID";
