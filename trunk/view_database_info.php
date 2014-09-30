@@ -16,6 +16,10 @@ if ( ($_SESSION['userlevel'] < 2) )
 include 'config.php';
 include 'db.php';
 
+$hostaddr = $dbhost;
+if ( $hostaddr == 'localhost' )
+   $hostaddr = gethostname();
+
 // Start displaying page
 $page_title = "Database Login Info";
 $css = 'css/view_database_info.css';
@@ -61,7 +65,7 @@ which can be opened by selecting:</p>
       <td>$dbname</td></tr>
 
   <tr><th>Host Address</th>
-      <td>uslims3.uthscsa.edu</td></tr>
+      <td>$hostaddr</td></tr>
 
   <tr><th>Investigator Email</th>
       <td>{$_SESSION['email']}</td></tr>

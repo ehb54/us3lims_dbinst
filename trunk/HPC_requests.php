@@ -161,7 +161,6 @@ else
    {
       $gfacID  = $row[ 'gfacID' ];
       echo "$link3\n";
-
       if ( $uses_airavata === true && $clusterName != 'juropa.fz-juelich.de')
       {
          echo getExperimentStatus( $gfacID );
@@ -185,3 +184,4 @@ include 'footer.php';
 exit();
 
 ?>
+

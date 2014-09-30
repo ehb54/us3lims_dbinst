@@ -6,10 +6,9 @@
  *
  */
 
-$admin_list = array( 'dzollars@gmail.com',
-                     'gegorbet@gmail.com',
+$admin_list = array( 'gegorbet@gmail.com',
                      'demeler@biochem.uthscsa.edu',
-                     'bruce.dubbs@gmail.com' );
+                     'dzollars@gmail.com' );
 
 function emailsyntax_is_valid($email)
 {
@@ -76,10 +75,11 @@ $clusters = array(
   new cluster_info( "trestles.sdsc.edu",           "trestles",    "normal"  ), 
 ##  new cluster_info( "gordon.sdsc.edu",             "gordon",      "normal"  ), 
   new cluster_info( "juropa.fz-juelich.de",        "juropa",      "default" ), 
-  new cluster_info( "alamo.uthscsa.edu",           "alamo",       "default" ),
+##  new cluster_info( "alamo.uthscsa.edu",           "alamo",       "default" ),
 ##  new cluster_info( "bcf.uthscsa.edu",             "bcf",         "default" ),
-  new cluster_info( "alamo.uthscsa.edu",           "alamo-local", "default" ),
-  new cluster_info( "bcf.uthscsa.edu",             "bcf-local",   "default" )
+##  new cluster_info( "alamo.uthscsa.edu",           "alamo-local", "default" ),
+##  new cluster_info( "bcf.uthscsa.edu",             "bcf-local",   "default" )
+  new cluster_info( "alamo.uthscsa.edu",           "alamo",       "default" )
   );
 
 global $svcport;

@@ -134,7 +134,7 @@ HTML;
        case 'alamo'    :
        case 'bcf'      :
           if ( $uses_airavata === true )
-             $job = new submit_airvata();
+             $job = new submit_airavata();
           else
              $job = new submit_gfac();
           break;
@@ -180,7 +180,7 @@ HTML;
 }
 
 // Start displaying page
-$page_title = '2DSA Analysis Submitted';
+$page_title = '2DSA-CG Analysis Submitted';
 include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";
