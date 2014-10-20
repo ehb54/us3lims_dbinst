@@ -303,7 +303,7 @@ function get_cell_text()
 
     // Now construct the list items of run,filename;
     //  but only where the AUC has at least one Edit child
-    $rawData_list = "<select name='cells[]' multiple='multiple' size='8'>\n" .
+    $rawData_list = "<select name='cells[]' multiple='multiple' size='20'>\n" .
                        "  <option value='null'>Select cells...</option>\n";
 
     for ( $kraw = 0; $kraw < count($rrawIDs); $kraw++ )

@@ -58,6 +58,26 @@ abstract class Payload_manager
         return $dataset;
     }
 
+    function get_ds_range( $index = 0, $count = 1 )
+    {
+        $dataset = $this->payload['queue']['payload'];
+        $indexi  = $index;
+        $dsetds  = $dataset['dataset'];
+        $dataset['dataset'] = array();
+
+        for ( $k = 0; $k < $count; $k++ )
+        {
+           $temp    = array();
+           $temp    = $dsetds[$indexi];
+           $dataset['dataset'][$k] = $temp;
+           $indexi++;
+        }
+
+        $dataset['datasetCount'] = $count;
+
+        return $dataset;
+    }
+
     function remove( $key ) 
     {
         unset($this->payload['queue']['payload'][$key]);
@@ -356,6 +376,8 @@ class Payload_2DSA extends Payload_manager
       {
          if ( $job_parameters['mc_iterations'] > 1 )
             $job_parameters['req_mgroupcount'] = $_POST['req_mgroupcount'];
+         else if ( $num_datasets > 1 )
+            $job_parameters['req_mgroupcount'] = $_POST['req_mgroupcount'];
          else
             $job_parameters['req_mgroupcount'] = 1;
       }
@@ -465,7 +487,7 @@ class Payload_2DSA_CG extends Payload_manager
          $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
 
       else
-         $job_parameters['req_mgroupcount'] = 1;
+         $job_parameters['req_mgroupcount']  = 1;
 
       $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
       $job_parameters['meniscus_range']   = ( $_POST['meniscus_option'] == 1 )
@@ -564,6 +586,8 @@ class Payload_GA extends Payload_manager
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
       $job_parameters['demes']            = $_POST['demes-value'];
       if ( $job_parameters['mc_iterations'] > 1 )
+        $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
+      else if ( $num_datasets > 1 )
         $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
       else
         $job_parameters['req_mgroupcount']  = 1;
@@ -706,6 +730,8 @@ class Payload_DMGA extends Payload_manager
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
       $job_parameters['demes']            = $_POST['demes-value'];
       if ( $job_parameters['mc_iterations'] > 1 )
+        $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
+      else if ( $num_datasets > 1 )
         $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
       else
         $job_parameters['req_mgroupcount']  = 1;

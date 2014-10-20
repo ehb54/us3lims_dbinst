@@ -113,6 +113,23 @@ $(document).ready(function()
     $("#band_volume-slider").slider( 'value', this.value );
   });
 
+  // Parallel masters group count setup
+  $("#PMGC_enable").change( function()
+  {
+    if ( $("#PMGC_enable").is(":checked") )
+    {
+       $("#PMGC_count").show();
+       $("#req_mgroupcount").attr( 'value', 8 );
+    }
+
+    else
+    {
+       $("#PMGC_count").hide();
+       $("#req_mgroupcount").attr( 'value', 1 );
+    }
+
+  });
+
   // Debug_level Slider setup
   $("#debug_level-min").attr('value', 0 );
   $("#debug_level-max").attr('value', 4 );

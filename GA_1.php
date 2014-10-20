@@ -51,6 +51,13 @@ $advanced_review   = ( isset( $_SESSION['advanced_review'] ) )
 // To support multiple datasets, let's keep track of which one we're on
 $num_datasets = sizeof( $_SESSION['request'] );
 
+// Verify that this is not composite jobs
+if ( $num_datasets > 1  &&  $separate_datasets == 1 )
+{
+  header("Location: queue_setup_1.php");
+  exit();
+}
+
 // Create the payload manager
 $payload  = new Payload_GA( $_SESSION );
 
@@ -191,7 +198,10 @@ function display( $dataset_id, $num_datasets )
             if ( $dataset_id == 0 ) 
             {
               montecarlo(); 
-              PMGC_option();
+              if ( $num_datasets == 1 )
+              {
+                PMGC_option();
+              }
             }
       ?>
 

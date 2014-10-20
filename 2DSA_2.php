@@ -49,35 +49,49 @@ $filenames = array();
 $HPCAnalysisRequestID = 0;
 
 $files_ok  = true;  // Let's also make sure there weren't any problems writing the files
+
 if ( $_SESSION['separate_datasets'] )
-{
+{ // Multiple datasets and non-global: build composite jobs
   $dataset_count = $payload->get( 'datasetCount' );
-  for ( $i = 0; $i < $dataset_count; $i++ )
-  {
-    $single = $payload->get_dataset( $i );
-    $HPCAnalysisRequestID = $HPC->writeDB( $single );
-    $filenames[ $i ] = $file->write( $single, $HPCAnalysisRequestID );
-    if ( $filenames[ $i ] === false )
+  $mgroup_count  = max( 1, $payload->get( 'req_mgroupcount' ) );
+  $reqds_count   = 50;              // Initial datasets per request
+  $groups        = max( 2, (int)( $reqds_count / $mgroup_count ) + 1 );
+  $reqds_count   = $mgroup_count * $groups;  // Multiple of PMGC
+  $ds_remain     = $dataset_count;  // Remaining datasets
+  $index         = 0;               // Input datasets index
+  $kr            = 0;               // Output request index
+
+  while ( $ds_remain > 0 )
+  { // Loop to build HPC requests of composite jobs
+    $reqds_count   = min( $reqds_count, $ds_remain );
+
+    $composite     = $payload->get_ds_range( $index, $reqds_count );
+    $HPCAnalysisRequestID = $HPC->writeDB( $composite );
+    $filenames[ $kr ] = $file->write( $composite, $HPCAnalysisRequestID );
+    if ( $filenames[ $kr ] === false )
       $files_ok = false;
 
     else
-    {
-      // Write the xml file content to the db
-      $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ $i ] ) );
-      $edit_filename = $single['dataset'][0]['edit'];
+    { // Write the xml file content to the db
+      $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ $kr ] ) );
+      $edit_filename = $composite['dataset'][0]['edit'];
+
       $query  = "UPDATE HPCAnalysisRequest " .
                 "SET requestXMLfile = '$xml_content', " .
                 "editXMLFilename = '$edit_filename' " .
                 "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
       mysql_query( $query )
             or die("Query failed : $query<br />\n" . mysql_error());
-      
     }
+
+    $index        += $reqds_count;
+    $ds_remain    -= $reqds_count;
+    $kr++;
   }
 }
 
 else
-{
+{ // Multiple datasets and global
   $globalfit = $payload->get();
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
@@ -89,13 +103,13 @@ else
     // Write the xml file content to the db
     $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ 0 ] ) );
     $edit_filename = $globalfit['dataset'][0]['edit'];
+
     $query  = "UPDATE HPCAnalysisRequest " .
               "SET requestXMLfile = '$xml_content', " .
               "editXMLFilename = '$edit_filename' " .
               "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
     mysql_query( $query )
           or die("Query failed : $query<br />\n" . mysql_error());
-    
   }
 }
 
