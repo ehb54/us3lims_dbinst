@@ -70,11 +70,14 @@ if ( isset($_POST['TIGRE']) )
     {
       if ( isset($_SESSION['separate_datasets']) )
       {
-         if ( $_SESSION['separate_datasets'] == 0 )
+        if ( $_SESSION['separate_datasets'] == 0 )
         {
           $queue = 'ngenseq';
         }
       }
+
+      if ( $num_datasets > 4 )
+        $queue = 'ngenseq';
     }
     $_SESSION['cluster']['queue']     = $queue;
   }
@@ -223,8 +226,11 @@ function display( $dataset_id, $num_datasets )
   {
     s_grid_points();
     ff0_grid_points();
-//    uniform_grid_setup();
     montecarlo();
+    if ( $num_datasets > 1 )
+    {
+      PMGC_option();
+    }
     tinoise_option();
   }
  

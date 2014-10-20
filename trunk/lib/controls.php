@@ -37,6 +37,25 @@ echo<<<HTML
       <fieldset>
         <legend>Parallel Masters Group Option</legend>
 
+        <div>
+          <p>
+          Note: The actual group count number is dependent on the capacity and the 
+          architecture of the selected back end system. Generally, the group count number
+          will be adjusted downward to 1/2/4/8/16/32 depending on the number of demes or
+          datasets requested and the capacity of the system. Currently, the maximum number of
+          cores that can be requested ( that is, #cores_per_group x #groups ) are as follows:
+          </p>
+          <table class='noborder' style='margin:0px auto;'>
+            <tr><th>Cluster</th><th>Max cores</th></tr>
+            <tr><td>stampede</td><td style='text-align:center;'>1024</td></tr>
+            <tr><td>lonestar</td><td style='text-align:center;'>1152</td></tr>
+            <tr><td>trestles</td><td style='text-align:center;'>1024</td></tr>
+            <tr><td>juropa</td><td style='text-align:center;'>1024</td></tr>
+            <tr><td>alamo</td><td style='text-align:center;'>32</td></tr>
+            <tr><td>bcf</td><td style='text-align:center;'>(no PMG)</td></tr>
+          </table>
+        </div>
+
         <table class='noborder' >
         <tr><td>
 
@@ -50,27 +69,12 @@ echo<<<HTML
               <option value='2'>2</option>
               <option value='4'>4</option>
               <option value='8'>8</option>
+              <option value='16'>16</option>
+              <option value='32'>32</option>
             </select>
         </fieldset>
 
         </td>
-
-        <td style='width:50%;'>
-          Note: The actual group count number is dependent on the capacity and the 
-          architecture of the selected back end system. Generally, the group count number
-          will be adjusted downward to 1, 2, 4, or 8 depending on the number of montecarlo 
-          iterations requested and the capacity of the system. Currently, the maximum 
-          number of cores that can be requested ( that is, MC x PMGC ) are as follows:
-          <table class='noborder' style='margin:0px auto;'>
-            <tr><th>Cluster</th><th>Max cores</th></tr>
-            <tr><td>stampede</td><td style='text-align:center;'>256</td></tr>
-            <tr><td>lonestar</td><td style='text-align:center;'>288</td></tr>
-            <tr><td>trestles</td><td style='text-align:center;'>256</td></tr>
-            <tr><td>juropa</td><td style='text-align:center;'>256</td></tr>
-            <tr><td>alamo</td><td style='text-align:center;'>(no PMG)</td></tr>
-            <tr><td>bcf</td><td style='text-align:center;'>(no PMG)</td></tr>
-          </table>
-        </td></tr>
 
         </table>
 

@@ -34,6 +34,20 @@ abstract class File_writer
     if ( ! ( $filenames = $this->write_support_files( $job, $current_dir ) ) )
       return false;
 
+    // Determine if this is a global fit
+    $global_fit = 0;
+    if ( $job['datasetCount'] > 1 )
+    {
+      if ( $_SESSION['separate_datasets'] )
+      {
+        $global_fit = 0;
+      }
+      else
+      {
+        $global_fit = 1;
+      }
+    }
+
     // Now write xml file
     $xml_filename = sprintf( "hpcrequest-%s-%s-%05d.xml",
                              $job['database']['host'],
@@ -66,6 +80,9 @@ abstract class File_writer
         $xml->startElement( 'datasetCount' );
           $xml->writeAttribute( 'value', $job['datasetCount'] );
         $xml->endElement(); // datasetCount
+        $xml->startElement( 'global_fit' );
+          $xml->writeAttribute( 'value', $global_fit );
+        $xml->endElement(); // global_fit
         $xml->startElement( 'request' );
           $xml->writeAttribute( 'id', $HPCAnalysisRequestID );
           $xml->writeAttribute( 'guid', $HPCAnalysisRequestGUID );

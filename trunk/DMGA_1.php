@@ -51,6 +51,13 @@ $advanced_review   = ( isset( $_SESSION['advanced_review'] ) )
 // To support multiple datasets, let's keep track of which one we're on
 $num_datasets = sizeof( $_SESSION['request'] );
 
+// Verify no composite job(s) with DMGA
+if ( $separate_datasets == 1  &&  $num_datasets > 1 )
+{
+  header("Location: queue_setup_1.php");
+  exit();
+}
+
 // Create the payload manager
 $payload  = new Payload_DMGA( $_SESSION );
 
@@ -78,6 +85,10 @@ if ( isset($_POST['TIGRE']) )
         {
           $queue = 'ngenseq';
         }
+      }
+      if ( $separate_datasets == 0 )
+      {
+        $queue = 'ngenseq';
       }
     }
     $_SESSION['cluster']['queue']     = $queue;
@@ -218,7 +229,10 @@ function display( $dataset_id, $num_datasets )
             {
               DMGA_select_setup();
               montecarlo(); 
-              PMGC_option();
+              if ( $num_datasets == 1 )
+              {
+                PMGC_option();
+              }
             }
       ?>
 
