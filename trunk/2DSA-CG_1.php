@@ -212,6 +212,12 @@ function display( $dataset_id, $num_datasets )
     CG_select_setup();
     uniform_grid_setup();
     montecarlo();
+
+    if ( $num_datasets > 1 )
+    {
+      PMGC_option();
+    }
+
     tinoise_option();
   }
  
