@@ -108,10 +108,17 @@ $button_message = ( $separate_datasets )
 $separate_text  = ( $separate_datasets )
                 ? "proceed as separate jobs"
                 : "proceed as a global fit";
+$GA_disabled    = "";
+$GA_notes       = "";
 if ( $separate_datasets )
 {
   $separate_checked = " checked='checked'";
   $global_checked   = "";
+  if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] ) > 1 )
+  {
+    $GA_disabled      = " disabled='disabled'";
+    $GA_notes         = "<p><b>NOTE:</b>&nbsp;&nbsp;GA disabled for multiple datasets.</p>";
+  }
 }
 
 else
@@ -225,6 +232,7 @@ HTML;
 HTML;
   }
 
+  
   echo <<<HTML
   <h4>Review submitted edit profiles and noise files for each cell</h4>
 
@@ -243,9 +251,10 @@ HTML;
             onclick='window.location="2DSA-CG_1.php"' /></p>
 
   <p><input type="button" value="Setup GA Control"
-            onclick='window.location="GA_1.php"' />
+            onclick='window.location="GA_1.php"'$GA_disabled />
      <input type="button" value="Setup Discrete Model GA Control"
-            onclick='window.location="DMGA_1.php"' /></p>
+            onclick='window.location="DMGA_1.php"'$GA_disabled /></p>
+  $GA_notes
 
   <p><input type="button" value="Clear Queue"
             onclick='window.location="{$_SERVER['PHP_SELF']}?clear=clear"'/></p>
