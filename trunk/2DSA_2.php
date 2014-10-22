@@ -53,9 +53,11 @@ $files_ok  = true;  // Let's also make sure there weren't any problems writing t
 if ( $_SESSION['separate_datasets'] )
 { // Multiple datasets and non-global: build composite jobs
   $dataset_count = $payload->get( 'datasetCount' );
-  $mgroup_count  = max( 1, $payload->get( 'req_mgroupcount' ) );
+  $job_params    = $payload->get( 'job_parameters' );
+  $mgroup_count  = max( 1, $job_params['req_mgroupcount'] );
   $reqds_count   = 50;              // Initial datasets per request
-  $groups        = max( 2, (int)( $reqds_count / $mgroup_count ) + 1 );
+  $groups        = (int)( $reqds_count / $mgroup_count );
+  $groups        = max( 1, $groups );
   $reqds_count   = $mgroup_count * $groups;  // Multiple of PMGC
   $ds_remain     = $dataset_count;  // Remaining datasets
   $index         = 0;               // Input datasets index
