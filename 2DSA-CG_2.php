@@ -66,7 +66,7 @@ if ( $_SESSION['separate_datasets'] )
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
     if ( ( $ds_remain - $reqds_count ) < $mgroup_count )
-      $reqds_count   = $ds_remain
+      $reqds_count   = $ds_remain;
     else
       $reqds_count   = min( $reqds_count, $ds_remain );
 
