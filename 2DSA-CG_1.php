@@ -156,7 +156,7 @@ include 'header.php';
 // if ( isset($error) ) echo $error;
 
   $max_dset_id   = $num_datasets - 1;
-  $dataset_id    = ( $dataset_id < $num_datasets ) ? $dataset_id : $max_dset_id;
+  $dataset_id    = min( $dataset_id, $max_dset_id );
   $display_dsid  = ( $advanced_review == 0 ) ? 0 : $dataset_id;
 
   display( $display_dsid, $num_datasets );

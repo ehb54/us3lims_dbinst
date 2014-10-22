@@ -117,7 +117,8 @@ if ( $separate_datasets )
   if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] ) > 1 )
   {
     $GA_disabled      = " disabled='disabled'";
-    $GA_notes         = "<p><b>NOTE:</b>&nbsp;&nbsp;GA disabled for multiple datasets.</p>";
+    $GA_notes         = "<p><b>NOTE:</b>&nbsp;&nbsp;" .
+                        "GA disabled for composite job(s) with multiple datasets.</p>";
   }
 }
 
