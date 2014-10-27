@@ -55,7 +55,10 @@ if ( $_SESSION['separate_datasets'] )
   $dataset_count = $payload->get( 'datasetCount' );
   $job_params    = $payload->get( 'job_parameters' );
   $mgroup_count  = max( 1, $job_params['req_mgroupcount'] );
+  $mc_iters      = max( 1, $job_params['mc_iterations'] );
   $reqds_count   = 50;              // Initial datasets per request
+  if ( $mc_iters > 50 )
+    $reqds_count   = 25;
   $groups        = (int)( $reqds_count / $mgroup_count );
   $groups        = max( 1, $groups );
   $reqds_count   = $mgroup_count * $groups;  // Multiple of PMGC
