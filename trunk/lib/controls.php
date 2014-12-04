@@ -433,10 +433,10 @@ function fit_meniscus()
 echo<<<HTML
       <fieldset class='option_value'>
         <legend>Fit Meniscus</legend>
-        <input type="radio" name="meniscus_option" value="1" onclick="show_ctl(5);"/> On<br/>
-        <input type="radio" name="meniscus_option" value="0" onclick="hide(5);" 
+        <input type="radio" name="meniscus_option" value="1" onclick="show_ctl(1);"/> On<br/>
+        <input type="radio" name="meniscus_option" value="0" onclick="hide(1);" 
                checked='checked'/> Off<br/>
-        <div style="display:none" id="mag5">
+        <div style="display:none" id="mag1">
           <br/>
           <input type="text" name="meniscus_range" value="0.03"/>Meniscus Fit Range (cm)<br/>
           <br/>
@@ -467,10 +467,10 @@ echo<<<HTML
       <fieldset class='option_value'>
         <legend>Use Iterative Method</legend>
         <input type="radio" name="iterations_option" value="1" 
-               onclick="show_ctl(6);"/> On<br/>
+               onclick="show_ctl(2);"/> On<br/>
         <input type="radio" name="iterations_option" value="0" 
-               onclick="hide(6);" checked='checked'/> Off<br/>
-        <div style="display:none" id="mag6">
+               onclick="hide(2);" checked='checked'/> Off<br/>
+        <div style="display:none" id="mag2">
           <br/>
           <fieldset>
             <legend>Maximum Number of Iterations</legend>
@@ -925,6 +925,116 @@ echo<<<HTML
             <option value="1">Only after full generations</option>
           </select>
       </fieldset>
+HTML;
+}
+
+// Function to display various PCSA parameters
+function pcsa_pars_setup()
+{
+echo<<<HTML
+    <fieldset name='curve_type' id='curve_type'>
+      <legend>Parametrically Constrained Spectrum Analysis Curve Type</legend>
+      <select name="curve_type" id='curve_type' onChange="show_hide(this.value,3,4)">
+        <option value="SL">Straight Line</option>
+        <option value="IS" selected='selected'>Increasing Sigmoid</option>
+        <option value="DS">Decreasing Sigmoid</option>
+        <option value="All">All [ SL + IS + DS ]</option>
+        <option value="HL">Horizontal Line [ C(s) ]</option>
+      </select>
+    </fieldset>
+    <fieldset class='option_value'>
+      <legend>S-Value & f/f0 Ranges</legend>
+      <input type="text" value="1" name="s_value_min"/> S-Value Minimum<br/>
+      <input type="text" value="10" name="s_value_max"/> S-Value Maximum<br/>
+      <input type="text" value="1" name="ff0_min"/> f/f0 Minimum<br/>
+      <input type="text" value="4" name="ff0_max"/> f/f0 Maximum<br/>
+    </fieldset>
+    <div style="display:block" id="mag3">
+    <fieldset name='vars_count' id='vars_count'>
+      <legend>Variations Count</legend>
+        <div class='newslider' id='varcount-slider'></div>
+        <br />
+        Value:   <input name='vars_count' 
+                        id='varcount_points'
+                        size='12'
+                        value='10' />
+        Minimum: <input id="varcount-min"
+                        size='12'
+                        disabled="disabled" />
+        Maximum: <input id="varcount-max"
+                        size='12'
+                        disabled="disabled" />
+    </fieldset>
+    </div>
+    <div style="display:none" id="mag4">
+    <fieldset name='hlvs_count' id='hlvs_count'>
+      <legend>Variations Count (HL)</legend>
+        <div class='newslider' id='hlvcount-slider'></div>
+        <br />
+        Value:   <input name='hl_vars_count' 
+                        id='hlvcount_points'
+                        size='12'
+                        value='100' />
+        Minimum: <input id="hlvcount-min"
+                        size='12'
+                        disabled="disabled" />
+        Maximum: <input id="hlvcount-max"
+                        size='12'
+                        disabled="disabled" />
+    </fieldset>
+    </div>
+    <fieldset name='gfit_iters' id='gfit_iters'>
+      <legend>Grid Fit Iterations</legend>
+        <div class='newslider' id='gfititer-slider'></div>
+        <br />
+        Value:   <input name='gfit_iterations' 
+                        id='gfit_iterations'
+                        size='12'
+                        value='3' />
+        Minimum: <input id="gfititer-min"
+                        size='12'
+                        disabled="disabled" />
+        Maximum: <input id="gfititer-max"
+                        size='12'
+                        disabled="disabled" />
+    </fieldset>
+    <fieldset name='thr_deltr_ratio' id='thr_deltr_ratio'>
+      <legend>Threshold Delta-RMSD Ratio</legend>
+      <select name="thr_deltr_ratio" id='thr_deltr_ratio'>
+        <option value="0.0001">0.001</option>
+        <option value="0.0001" selected='selected'>0.0001</option>
+        <option value="0.0001">0.00001</option>
+        <option value="0.0001">0.000001</option>
+      </select>
+    </fieldset>
+    <fieldset name='curve_points' id='curve_points'>
+      <legend>Curve Resolution Points</legend>
+        <div class='newslider' id='curvpoint-slider'></div>
+        <br />
+        Value:   <input name='curves_points' 
+                        id='curves_points'
+                        size='12'
+                        value='200' />
+        Minimum: <input id="curvpoint-min"
+                        size='12'
+                        disabled="disabled" />
+        Maximum: <input id="curvpoint-max"
+                        size='12'
+                        disabled="disabled" />
+    </fieldset>
+    <fieldset class='option_value'>
+      <legend>Tikhonov Regularization</legend>
+      <input type="radio" name="tikreg_option"  onclick="hide(5);"
+                   value="0" checked='checked'/>&nbsp; Off<br/>
+      <input type="radio" name="tikreg_option"  onclick="show_ctl(5);"
+                   value="1" />&nbsp; On (specified alpha)<br/>
+      <input type="radio" name="tikreg_option"  onclick="hide(5);"
+                   value="2" />&nbsp; On (auto-computed alpha)<br/>
+      <div style="display:none" id="mag5">
+        <br/>
+        <input type="text" name="tikreg_alpha" value="0.01" size='6'/>&nbsp;&nbsp; Regularization Alpha Parameter<br/>
+      </div>
+    </fieldset>
 HTML;
 }
 

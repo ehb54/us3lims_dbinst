@@ -231,6 +231,7 @@ HTML;
 
   if ( $dataset_id == 0 )
   {
+    rinoise_option();
     fit_meniscus();
     iterations_option();
 
@@ -241,9 +242,6 @@ HTML;
   band_volume_input();
   radial_grid_input();
   time_grid_input();
-
-  if ( $dataset_id == 0 )
-    rinoise_option();
 
   echo<<<HTML
     </div>
