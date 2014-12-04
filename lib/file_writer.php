@@ -571,12 +571,12 @@ class File_2DSA extends File_writer
 }
 
 /*
- * A class that writes the 2DSA portion of a control xml file
+ * A class that writes the 2DSA-CustomGrid portion of a control xml file
  * Inherits from File_writer
  */
 class File_2DSA_CG extends File_writer
 {
-  // Function to write the XML job parameters for the 2DSA analysis
+  // Function to write the XML job parameters for the 2DSA_CG analysis
   function writeJobParameters( $xml, $parameters )
   {
     $CG_modelID = $parameters['CG_modelID'];
@@ -808,6 +808,75 @@ class File_DMGA extends File_writer
         $xml->writeAttribute( 'value', $parameters['debug_text'] );
       $xml->endElement(); // debug_text
 
+    $xml->endElement(); // jobParameters
+  }
+
+}
+
+/*
+ * A class that writes the PCSA portion of a control xml file
+ * Inherits from File_writer
+ */
+class File_PCSA extends File_writer
+{
+  // Function to write the XML job parameters for the PCSA analysis
+  function writeJobParameters( $xml, $parameters )
+  {
+    $xml->startElement( 'jobParameters' );
+      $xml->startElement( 'curve_type' );
+        $xml->writeAttribute( 'value', $parameters['curve_type'] );
+      $xml->endElement(); // curve_type
+      $xml->startElement( 'req_mgroupcount' );
+        $xml->writeAttribute( 'value', $parameters['req_mgroupcount'] );
+      $xml->endElement(); // req_mgroupcount
+      $xml->startElement( 'tinoise_option' );
+        $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
+      $xml->endElement(); // tinoise_option
+      $xml->startElement( 'rinoise_option' );
+        $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
+      $xml->endElement(); // rinoise_option
+      $xml->startElement( 's_min' );
+        $xml->writeAttribute( 'value', $parameters['s_min'] );
+      $xml->endElement(); // s_min
+      $xml->startElement( 's_max' );
+        $xml->writeAttribute( 'value', $parameters['s_max'] );
+      $xml->endElement(); // s_max
+      $xml->startElement( 'ff0_min' );
+        $xml->writeAttribute( 'value', $parameters['ff0_min'] );
+      $xml->endElement(); // ff0_min
+      $xml->startElement( 'ff0_max' );
+        $xml->writeAttribute( 'value', $parameters['ff0_max'] );
+      $xml->endElement(); // ff0_max
+      $xml->startElement( 'vars_count' );
+        $xml->writeAttribute( 'value', $parameters['vars_count'] );
+      $xml->endElement(); // vars_count
+      $xml->startElement( 'gfit_iterations' );
+        $xml->writeAttribute( 'value', $parameters['gfit_iterations'] );
+      $xml->endElement(); // gfit_iterations
+      $xml->startElement( 'thr_deltr_ratio' );
+        $xml->writeAttribute( 'value', $parameters['thr_deltr_ratio'] );
+      $xml->endElement(); // thr_deltr_ratio
+      $xml->startElement( 'curves_points' );
+        $xml->writeAttribute( 'value', $parameters['curves_points'] );
+      $xml->endElement(); // curves_points
+      $xml->startElement( 'tikreg_option' );
+        $xml->writeAttribute( 'value', $parameters['tikreg_option'] );
+      $xml->endElement(); // tikreg_option
+      $xml->startElement( 'tikreg_alpha' );
+        $xml->writeAttribute( 'value', $parameters['tikreg_alpha'] );
+      $xml->endElement(); // tikreg_alpha
+      $xml->startElement( 'mc_iterations' );
+        $xml->writeAttribute( 'value', $parameters['mc_iterations'] );
+      $xml->endElement(); // mc_iterations
+      $xml->startElement( 'debug_timings' );
+        $xml->writeAttribute( 'value', $parameters['debug_timings'] );
+      $xml->endElement(); // debug_timings
+      $xml->startElement( 'debug_level' );
+        $xml->writeAttribute( 'value', $parameters['debug_level'] );
+      $xml->endElement(); // debug_level
+      $xml->startElement( 'debug_text' );
+        $xml->writeAttribute( 'value', $parameters['debug_text'] );
+      $xml->endElement(); // debug_text
     $xml->endElement(); // jobParameters
   }
 

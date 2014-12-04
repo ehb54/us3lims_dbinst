@@ -795,4 +795,124 @@ class Payload_DMGA extends Payload_manager
   }
 }
 
+/*
+ * A place to encapsulate the PCSA payload data
+ * Inherits from payload_manager.php
+ *
+ */
+class Payload_PCSA extends Payload_manager
+{
+  public function analysisType()
+  {
+    return 'PCSA';
+  }
+
+  // Function to save all the data on the screen
+  function acquirePostedData( $dataset_id, $num_datasets )
+  {
+    // From config.php
+    global $dbname, $dbhost;
+    global $udpport, $ipaddr;
+
+    // A lot of this only gets posted the first time through
+    if ( $dataset_id == 0 )
+    {
+      $this->add( 'method', $this->analysisType() );
+
+      $udp                  = array();
+      $udp['udpport']       = $udpport;
+      $udp['ip']            = $ipaddr;
+      $this->add( 'server', $udp );
+
+      $this->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
+      $this->add( 'datasetCount', $num_datasets );
+
+      $database             = array();
+      $database['name']     = $dbname;
+      $database['host']     = $dbhost;
+      $database['user_email'] = $_SESSION['email'];
+      $database['submitter_email'] = $_SESSION['submitter_email'];
+      $this->add( 'database', $database );
+
+      $job_parameters                     = array();
+      $job_parameters['curve_type']       = $_POST['curve_type'];
+      $job_parameters['s_min']            = $_POST['s_value_min'];
+      $job_parameters['s_max']            = $_POST['s_value_max'];
+      $job_parameters['ff0_min']          = $_POST['ff0_min'];
+      $job_parameters['ff0_max']          = $_POST['ff0_max'];
+
+      if ( $job_parameters['curve_type'] != 'HL' )
+         $job_parameters['vars_count']       = $_POST['vars_count'];
+      else
+         $job_parameters['vars_count']       = $_POST['hl_vars_count'];
+
+      $job_parameters['gfit_iterations']  = $_POST['gfit_iterations'];
+      $job_parameters['thr_deltr_ratio']  = $_POST['thr_deltr_ratio'];
+      $job_parameters['curves_points']    = $_POST['curves_points'];
+      $job_parameters['tikreg_option']    = $_POST['tikreg_option'];
+      $job_parameters['tikreg_alpha']     = $_POST['tikreg_alpha'];
+
+      $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
+
+      if ( isset( $_POST['req_mgroupcount'] ) )
+      {
+         if ( $job_parameters['mc_iterations'] > 1 )
+            $job_parameters['req_mgroupcount'] = $_POST['req_mgroupcount'];
+         else if ( $num_datasets > 1 )
+            $job_parameters['req_mgroupcount'] = $_POST['req_mgroupcount'];
+         else
+            $job_parameters['req_mgroupcount'] = 1;
+      }
+
+      else
+         $job_parameters['req_mgroupcount'] = 1;
+
+      $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
+      $job_parameters['rinoise_option']   = $_POST['rinoise_option'];
+      $job_parameters['debug_timings']    = ( isset( $_POST['debug_timings'] ) &&
+                                                     $_POST['debug_timings']   == 'on' )
+                                          ? 1 : 0;
+      $job_parameters['debug_level']      = $_POST['debug_level-value'];
+      $job_parameters['debug_text']       = $_POST['debug_text-value'];
+      $job_parameters['experimentID']     = $_SESSION['experimentID'];
+      $this->add( 'job_parameters', $job_parameters );
+
+      $dataset = array();
+        $dataset[ 0 ]['files']      = array();   // This will be done later
+        $dataset[ 0 ]['parameters'] = array();
+    }
+
+    // These will be done every time
+    $parameters                 = array();
+    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
+    $centerpiece_shape = $parameters['centerpiece_shape'];
+
+    // Create new elements for this dataset
+    //?? $parameters                 = $dataset['parameters'];
+    $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
+    $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
+    $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
+    $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
+  //  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
+    $parameters['noiseIDs']     = array();
+    $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
+    
+    $parameters['simpoints']    = $_POST['simpoints-value'];
+    $parameters['band_volume']  = ( $centerpiece_shape == 'band forming' )
+                                ? $_POST['band_volume-value']
+                                : 0.0;
+    $parameters['radial_grid']  = $_POST['radial_grid'];
+    $parameters['time_grid']    = $_POST['time_grid'];
+
+    // Get arrays with multiple dataset data
+    $dataset                    = $this->get('dataset');
+    // Add new datasets
+    $dataset[$dataset_id]       = $parameters;
+    $this->add( 'dataset', $dataset );
+
+$this->show( 0, "Payload manager PCSA\n" );
+  }
+
+}
+
 ?>

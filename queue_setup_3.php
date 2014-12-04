@@ -257,7 +257,9 @@ HTML;
             onclick='window.location="DMGA_1.php"'$GA_disabled /></p>
   $GA_notes
 
-  <p><input type="button" value="Clear Queue"
+  <p><input type="button" value="Setup PCSA Control"
+            onclick='window.location="PCSA_1.php"' />
+     <input type="button" value="Clear Queue"
             onclick='window.location="{$_SERVER['PHP_SELF']}?clear=clear"'/></p>
   <!--
      <input type="button" value="Setup 2DSA Control with MW Constraint"

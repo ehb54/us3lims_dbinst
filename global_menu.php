@@ -32,6 +32,7 @@ $analysis_menu = <<<HTML
                 <li><a href='2DSA_1.php'>2DSA Analysis</a></li>
                 <li><a href='GA_1.php'>GA Analysis</a></li>
                 <li><a href='DMGA_1.php'>Discrete GA Analysis</a></li>
+                <li><a href='PCSA_1.php'>PCSA Analysis</a></li>
               </ul></li>
 
 HTML;
