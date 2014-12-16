@@ -1032,7 +1032,7 @@ echo<<<HTML
                    value="2" />&nbsp; On (auto-computed alpha)<br/>
       <div style="display:none" id="mag5">
         <br/>
-        <input type="text" name="tikreg_alpha" value="0.01" size='6'/>&nbsp;&nbsp; Regularization Alpha Parameter<br/>
+        <input type="text" name="tikreg_alpha" value="0.275" size='6'/>&nbsp;&nbsp; Regularization Alpha Parameter<br/>
       </div>
     </fieldset>
 HTML;

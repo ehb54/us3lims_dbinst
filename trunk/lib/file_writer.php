@@ -223,6 +223,7 @@ abstract class File_writer
 
     // Create tar file including all files
     $files = array();
+    $files[] = $xml_filename;
     foreach ( $filenames as $filename )
     {
       $files[] = $filename['auc'];
@@ -240,8 +241,6 @@ abstract class File_writer
 
       if ( isset( $filename['DC_model'] ) )
          $files[] = $filename['DC_model'];
-
-      $files[] = $xml_filename;
     }
 
     $save_cwd = getcwd();         // So we can come back to the current 
