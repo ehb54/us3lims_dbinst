@@ -214,9 +214,10 @@ abstract class Payload_manager
       $viscosity   = 0.0;
       $compress    = 0.0;
       $manual      = 0;
+      $smanual     = 0;
       $description = '';
 
-      $query  = "SELECT viscosity, density, description, compressibility " .
+      $query  = "SELECT viscosity, density, description, compressibility, manual " .
                 "FROM rawData, solutionBuffer, buffer " .
                 "WHERE rawData.rawDataID = $rawDataID " .
                 "AND rawData.solutionID = solutionBuffer.solutionID " .
@@ -224,10 +225,12 @@ abstract class Payload_manager
       $result = mysql_query( $query )
                 or die( "Query failed : $query<br />" . mysql_error());
       if ( mysql_num_rows ( $result ) > 0 )
-        list( $viscosity, $density, $description, $compress ) = mysql_fetch_array( $result ); // should be 1
+        list( $viscosity, $density, $description, $compress, $manual ) = mysql_fetch_array( $result ); // should be 1
 
       // Turn on 'manual' flag where '  [M]' is present in buffer description
-      str_replace( '  [M]', '', $description, $manual );
+      str_replace( '  [M]', '', $description, $smanual );
+      $manual      = ( $smanual != 0 ) ? $smanual : $manual;
+
 
       // Save the simulation parameters looked up in the db
       $params['rotor_stretch'] = $rotor_stretch;
