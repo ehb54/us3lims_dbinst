@@ -942,12 +942,42 @@ echo<<<HTML
         <option value="HL">Horizontal Line [ C(s) ]</option>
       </select>
     </fieldset>
+    <fieldset name='solute_type' id='solute_type'>
+      <legend>X - Y - Z Solute Type</legend>
+      <select name="solute_type" id='solute_type' onChange="show_hide(this.value,3,4)">
+        <option value="013.skv">s - f/f0 - vbar</option>
+        <option value="023.swv">s - mw - vbar</option>
+        <option value="031.svk">s - vbar - f/f0</option>
+        <option value="032.svw">s - vbar - mw</option>
+        <option value="043.sdv">s - D - vbar</option>
+        <option value="103.ksv">f/f0 - s - vbar</option>
+        <option value="123.kwv">f/f0 - mw - vbar</option>
+        <option value="132.kvw">f/f0 - vbar - mw</option>
+        <option value="143.kdv">f/f0 - D - vbar</option>
+        <option value="203.wsv">mw - s - vbar</option>
+        <option value="213.wkv">mw - f/f0 - vbar</option>
+        <option value="231.wvk">mw - vbar - f/f0</option>
+        <option value="243.wdv">mw - D - vbar</option>
+        <option value="301.vsk">vbar - s - f/f0</option>
+        <option value="302.vsw">vbar - s - mw</option>
+        <option value="312.vkv">vbar - f/f0 - mw</option>
+        <option value="321.vwk">vbar - mw - f/f0</option>
+        <option value="341.vdv">vbar - D - f/f0</option>
+        <option value="342.vdv">vbar - D - mw</option>
+        <option value="403.dsv">D - s - vbar</option>
+        <option value="413.dkv">D - k - vbar</option>
+        <option value="423.dkv">D - mw - vbar</option>
+        <option value="431.dvk">D - vbar - f/f0</option>
+        <option value="432.dvw">D - vbar - mw</option>
+      </select>
+    </fieldset>
     <fieldset class='option_value'>
-      <legend>S-Value & f/f0 Ranges</legend>
-      <input type="text" value="1" name="s_value_min"/> S-Value Minimum<br/>
-      <input type="text" value="10" name="s_value_max"/> S-Value Maximum<br/>
-      <input type="text" value="1" name="ff0_min"/> f/f0 Minimum<br/>
-      <input type="text" value="4" name="ff0_max"/> f/f0 Maximum<br/>
+      <legend>X - Y - Z Ranges / Value</legend>
+      <input type="text" value="1" name="x_min"/> X Minimum<br/>
+      <input type="text" value="10" name="x_max"/> X Maximum<br/>
+      <input type="text" value="1" name="y_min"/> Y Minimum<br/>
+      <input type="text" value="4" name="y_max"/> Y Maximum<br/>
+      <input type="text" value="0" name="z_value"/> Z Value / Coefficients (Z=0 -> dataset vbar)<br/>
     </fieldset>
     <div style="display:block" id="mag3">
     <fieldset name='vars_count' id='vars_count'>

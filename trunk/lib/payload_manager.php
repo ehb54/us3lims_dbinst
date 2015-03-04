@@ -839,10 +839,12 @@ class Payload_PCSA extends Payload_manager
 
       $job_parameters                     = array();
       $job_parameters['curve_type']       = $_POST['curve_type'];
-      $job_parameters['s_min']            = $_POST['s_value_min'];
-      $job_parameters['s_max']            = $_POST['s_value_max'];
-      $job_parameters['ff0_min']          = $_POST['ff0_min'];
-      $job_parameters['ff0_max']          = $_POST['ff0_max'];
+      $job_parameters['solute_type']      = $_POST['solute_type'];
+      $job_parameters['x_min']            = $_POST['x_min'];
+      $job_parameters['x_max']            = $_POST['x_max'];
+      $job_parameters['y_min']            = $_POST['y_min'];
+      $job_parameters['y_max']            = $_POST['y_max'];
+      $job_parameters['z_value']          = $_POST['z_value'];
 
       if ( $job_parameters['curve_type'] != 'HL' )
          $job_parameters['vars_count']       = $_POST['vars_count'];

@@ -317,10 +317,10 @@ class HPC_PCSA extends HPC_analysis
     $query  = "INSERT INTO PCSA_Settings SET " .
               "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
               "curve_type           = '{$job_parameters['curve_type']}',     " .
-              "s_min                = {$job_parameters['s_min']},            " .
-              "s_max                = {$job_parameters['s_max']},            " .
-              "ff0_min              = {$job_parameters['ff0_min']},          " .
-              "ff0_max              = {$job_parameters['ff0_max']},          " .
+              "s_min                = {$job_parameters['x_min']},            " .
+              "s_max                = {$job_parameters['x_max']},            " .
+              "ff0_min              = {$job_parameters['y_min']},            " .
+              "ff0_max              = {$job_parameters['y_max']},            " .
               "vars_count           = {$job_parameters['vars_count']},       " .
               "gfit_iterations      = {$job_parameters['gfit_iterations']},  " .
               "curves_points        = {$job_parameters['curves_points']},    " .
