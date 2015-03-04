@@ -825,6 +825,9 @@ class File_PCSA extends File_writer
       $xml->startElement( 'curve_type' );
         $xml->writeAttribute( 'value', $parameters['curve_type'] );
       $xml->endElement(); // curve_type
+      $xml->startElement( 'solute_type' );
+        $xml->writeAttribute( 'value', $parameters['solute_type'] );
+      $xml->endElement(); // curve_type
       $xml->startElement( 'req_mgroupcount' );
         $xml->writeAttribute( 'value', $parameters['req_mgroupcount'] );
       $xml->endElement(); // req_mgroupcount
@@ -834,18 +837,21 @@ class File_PCSA extends File_writer
       $xml->startElement( 'rinoise_option' );
         $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
       $xml->endElement(); // rinoise_option
-      $xml->startElement( 's_min' );
-        $xml->writeAttribute( 'value', $parameters['s_min'] );
-      $xml->endElement(); // s_min
-      $xml->startElement( 's_max' );
-        $xml->writeAttribute( 'value', $parameters['s_max'] );
-      $xml->endElement(); // s_max
-      $xml->startElement( 'ff0_min' );
-        $xml->writeAttribute( 'value', $parameters['ff0_min'] );
-      $xml->endElement(); // ff0_min
-      $xml->startElement( 'ff0_max' );
-        $xml->writeAttribute( 'value', $parameters['ff0_max'] );
-      $xml->endElement(); // ff0_max
+      $xml->startElement( 'x_min' );
+        $xml->writeAttribute( 'value', $parameters['x_min'] );
+      $xml->endElement(); // x_min
+      $xml->startElement( 'x_max' );
+        $xml->writeAttribute( 'value', $parameters['x_max'] );
+      $xml->endElement(); // x_max
+      $xml->startElement( 'y_min' );
+        $xml->writeAttribute( 'value', $parameters['y_min'] );
+      $xml->endElement(); // y_min
+      $xml->startElement( 'y_max' );
+        $xml->writeAttribute( 'value', $parameters['y_max'] );
+      $xml->endElement(); // y_max
+      $xml->startElement( 'z_value' );
+        $xml->writeAttribute( 'value', $parameters['z_value'] );
+      $xml->endElement(); // z_value
       $xml->startElement( 'vars_count' );
         $xml->writeAttribute( 'value', $parameters['vars_count'] );
       $xml->endElement(); // vars_count

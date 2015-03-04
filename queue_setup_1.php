@@ -7,6 +7,7 @@
  */
 include_once 'checkinstance.php';
 
+//$time0=microtime(true);
 if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 3) &&
      ($_SESSION['userlevel'] != 4) &&
@@ -52,6 +53,7 @@ else if ( isset( $_SESSION['new_submitter'] ) )
 $add_owner = ( isset( $_POST['add_owner'] ) ) ? 1 : 0;
 
 $experimentID = 0;
+//$time1=microtime(true) - $time0;
 if ( isset( $_POST['expIDs'] ) )
 {
   $_SESSION['new_expIDs'] = array();
@@ -65,6 +67,7 @@ else if ( isset( $_SESSION['new_expID'] ) )
 {
   $experimentID = $_SESSION['new_expID'];
 }
+//$time2=microtime(true) - $time0;
 
 // Let's see if we should go to the next page
 if ( isset( $_POST['next'] ) )
@@ -104,12 +107,16 @@ include 'lib/motd.php';
 <?php
 // Verify that submission is ok now
 motd_block();
+//$time3=microtime(true) - $time0;
 
 // If we are here, either userlevel is 4 or it's not blocked
 
 $email_text      = get_email_text();
+//$time4=microtime(true) - $time0;
 $experiment_text = get_experiment_text();
+//$time5=microtime(true) - $time0;
 $cell_text       = get_cell_text();
+//$time6=microtime(true) - $time0;
 $submit_text     = "<p style='padding-bottom:3em;'></p>\n";  // a spacer
 if ( $experimentID != 0 )
 {
@@ -122,6 +129,18 @@ if ( $experimentID != 0 )
 HTML;
 }
 
+//$time7=microtime(true) - $time0;
+//$email_text .= "  <p>time1 = $time1 </p>";
+//$email_text .= "  <p>time2 = $time2 </p>";
+//$email_text .= "  <p>time3 = $time3 </p>";
+//$email_text .= "  <p>time4 = $time4 </p>";
+//$email_text .= "  <p>time5 = $time5 </p>";
+//$email_text .= "  <p>time6 = $time6 </p>";
+//$email_text .= "  <p>time7 = $time7 </p>";
+//  <form action="{$_SERVER['PHP_SELF']}#title" method="post">
+//$this_url = "https://$org_site/queue_setup_1.php";
+//$this_url = "{$_SERVER['PHP_SELF']}#title" method="post">
+//  <form action="$this_url#title" method="post">
 echo <<<HTML
   <form action="{$_SERVER['PHP_SELF']}#title" method="post">
     <fieldset>
@@ -144,10 +163,12 @@ motd_submit();
 // Add rss information from TACC
 require_once 'lib/rss_fetch.inc';
 
+//$time8=microtime(true) - $time0;
 $url = 'http://www.tacc.utexas.edu/rss/TACCUserNews.xml';
 $num_items = 3;
 $rss = fetch_rss($url);
 $items = array_slice($rss->items, 0, $num_items);
+//  $items = array();
 
 echo "<h3>{$rss->channel['title']}</h3>\n";
 
@@ -166,6 +187,9 @@ foreach ( $items as $item )
 HTML;
 }
 echo "</table>\n";
+//$time9=microtime(true) - $time0;
+//echo "  <p>time8 = $time8 </p>";
+//echo "  <p>time9 = $time9 </p>";
 
 ?>
 
@@ -217,6 +241,7 @@ function get_experiment_text()
 {
   global $experimentID;
 
+//$time0=microtime(true);
   // Get a list of experiments
   $query  = "SELECT   experimentID, DATE( dateUpdated ) AS udate, runID " .
             "FROM     projectPerson, project, experiment " .
@@ -238,6 +263,8 @@ function get_experiment_text()
               : "";
     $experiment_list .= "  <option value='$expID'$selected>$udate $runID</option>\n";
   }
+//$time1=microtime(true)-$time0;
+//$experiment_list .= "  <option value=time1>$time1</option>\n";
 
   $experiment_list .= "</select>\n";
 
@@ -263,6 +290,7 @@ HTML;
 function get_cell_text()
 {
   global $experimentID;
+//$time0=microtime(true);
 
   if ( $experimentID == 0 )
   {
@@ -279,6 +307,7 @@ function get_cell_text()
     $rrunIDs  = array();
     $rrfiles  = array();
     $kraw     = 0;
+//$time1=microtime(true)-$time0;
 
     if ( isset( $_POST['expIDs'] ) )
     {
@@ -300,6 +329,7 @@ function get_cell_text()
         }
       }
     }
+//$time2=microtime(true)-$time0;
 
     // Now construct the list items of run,filename;
     //  but only where the AUC has at least one Edit child
@@ -322,6 +352,8 @@ function get_cell_text()
       if ( $count > 0 )
         $rawData_list .= "  <option value='$rawDataID:$filename'>$runID $filename</option>\n";
     }
+//$time3=microtime(true)-$time0;
+//$rawData_list .= "  <option value='time1time2time3'>$time1 $time2 $time3</option>\n";
   
     $rawData_list .= "</select>\n";
   }
