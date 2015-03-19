@@ -75,11 +75,13 @@ $clusters = array(
   new cluster_info( "trestles.sdsc.edu",           "trestles",    "normal"  ), 
 ##  new cluster_info( "gordon.sdsc.edu",             "gordon",      "normal"  ), 
   new cluster_info( "juropa.fz-juelich.de",        "juropa",      "default" ), 
-##  new cluster_info( "alamo.uthscsa.edu",           "alamo",       "default" ),
+##  new cluster_info( "alamo.uthscsa.edu",           "alamo",       "batch"   ),
 ##  new cluster_info( "bcf.uthscsa.edu",             "bcf",         "default" ),
-##  new cluster_info( "alamo.uthscsa.edu",           "alamo-local", "default" ),
+  new cluster_info( "jacinto.uthscsa.edu",         "jacinto-local", "default" ),
+  new cluster_info( "alamo.uthscsa.edu",           "alamo-local",   "batch"   ),
 ##  new cluster_info( "bcf.uthscsa.edu",             "bcf-local",   "default" )
-  new cluster_info( "alamo.uthscsa.edu",           "alamo",       "default" )
+  new cluster_info( "jacinto.uthscsa.edu",         "jacinto",     "default" ),
+  new cluster_info( "alamo.uthscsa.edu",           "alamo",       "batch"   )
   );
 
 global $svcport;
