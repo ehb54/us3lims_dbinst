@@ -282,6 +282,21 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
     // alert("ff0_min = " + ff0_min +
     //       "\nff0_max = " + ff0_max);
 
+    if ( ff0_min < 1.0 )
+    {
+      var swap = confirm( "The minimum f/f0-value is less than 1.0. The " +
+                          "interpretation of f/f0 less than one is " +
+                          "nonsensical. If you would like to set this value " +
+                          "to one, please click on OK to continue. If you " +
+                          "would rather edit this or other parameter values, " +
+                          "click cancel to return to the submission form." );
+
+      if ( ! swap ) return( false );
+
+      f.ff0_min.value = "1";
+      ff0_min         = 1.0;
+    }
+
     if ( ff0_max < ff0_min )
     {
       var swap = confirm( "The maximum f/f0-value is less than the minimum " +
@@ -292,6 +307,11 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
 
       if ( ! swap ) return( false );
 
+      if ( ff0_max < 1.0 )
+      {
+         ff0_max         = ff0_min;
+         ff0_min         = ff0_max + 0.5;
+      }
       f.ff0_min.value = ff0_max;
       f.ff0_max.value = ff0_min;
     }
