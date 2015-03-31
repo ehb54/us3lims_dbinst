@@ -36,7 +36,7 @@ include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
 include $class_dir . 'submit_airavata.php';
 
-global $uses_airavata;
+global $uses_thrift;
 
 // Create the payload manager and restore the data
 $payload = new Payload_PCSA( $_SESSION );
@@ -134,14 +134,19 @@ HTML;
   // EXEC COMMAND FOR TIGRE 
   if ( isset($_SESSION['cluster']) )
   {
-    $cluster = $_SESSION['cluster']['shortname'];
+    $cluster     = $_SESSION['cluster']['shortname'];
     unset( $_SESSION['cluster'] );
+    $clus_thrift = $uses_thrift;
+    if ( in_array( $cluster, $thr_clust_excls ) )
+      $clus_thrift   = false;
+    if ( in_array( $cluster, $thr_clust_incls ) )
+      $clus_thrift   = true;
 
     // Currently we are supporting two submission methods.
     switch ( $cluster )
     {
-       case 'bcf-local'   :
-       case 'alamo-local' :
+       case 'alamo-local'   :
+       case 'jacinto-local' :
           $job = new submit_local();
           break;
        case 'juropa'   : 
@@ -149,11 +154,11 @@ HTML;
           break;
        case 'stampede' :
        case 'lonestar' :
+       case 'trestles' :
        case 'gordon'   :
        case 'alamo'    :
-       case 'bcf'      :
-       case 'trestles' :
-          if ( $uses_airavata === true )
+       case 'jacinto'  :
+          if ( $clus_thrift === true )
              $job = new submit_airavata();
           else
              $job = new submit_gfac();
