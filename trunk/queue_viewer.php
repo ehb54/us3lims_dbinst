@@ -100,8 +100,8 @@ function order_select( $current_order = NULL )
 // A function to delete the selected job
 function do_delete()
 {
-  global $clusters, $uses_airavata;             // From utility.php
-//  var_dump($uses_airavata);
+  global $clusters, $uses_thrift;               // From utility.php
+//  var_dump($uses_thrift);
   $cluster  = $_POST['cluster'];
   $gfacID   = $_POST['gfacID'];
   $jobEmail = $_POST['jobEmail'];
@@ -125,11 +125,16 @@ function do_delete()
        ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) &&
        ! preg_match( "/^US3-AIRA/", $gfacID ) )
      $shortname .= '-local';   // Not a GFAC ID
-
+  $clus_thrift = $uses_thrift;
+  if ( in_array( $shortname, $thr_clust_excls ) )
+     $clus_thrift   = false;
+  if ( in_array( $shortname, $thr_clust_incls ) )
+     $clus_thrift   = true;
+ 
   switch ( $shortname )
   {
-    case 'bcf-local'   :
-    case 'alamo-local' :
+    case 'alamo-local'   :
+    case 'jacinto-local' :
       $status = cancelLocalJob( $shortname, $gfacID );
       break;
     case 'juropa'    :
@@ -141,8 +146,8 @@ function do_delete()
     case 'trestles'  :
     case 'gordon'    :
     case 'alamo'     :
-    case 'bcf'       :
-      if ( $uses_airavata === true )
+    case 'jacinto'   :
+      if ( $clus_thrift === true )
       {
         $status = cancelAiravataJob( $gfacID );
         if ( $status )

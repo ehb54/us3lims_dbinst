@@ -127,7 +127,8 @@ else
    // Get queue messages from disk directory, if it still exists
    global $submit_dir;
    global $dbname;
-   global $uses_airavata;
+   global $uses_thrift;
+   list( $cluster )  = explode( '.', $clusterName );
  
    $msg_filename = "$submit_dir$requestGUID/$dbname-$reqID-messages.txt";
    $queue_msgs = false;
@@ -159,9 +160,16 @@ else
 
    if ( isset( $_GET['jobstatus'] ) )
    {
+      $clus_thrift    = $uses_thrift;
+      if ( in_array( $cluster, $thr_clust_excls ) )
+         $clus_thrift    = false;
+      if ( in_array( $cluster, $thr_clust_incls ) )
+         $clus_thrift    = true;
+
       $gfacID  = $row[ 'gfacID' ];
       echo "$link3\n";
-      if ( $uses_airavata === true && $clusterName != 'juropa.fz-juelich.de')
+
+      if ( $clus_thrift )
       {
          echo getExperimentStatus( $gfacID );
          echo " -- ";

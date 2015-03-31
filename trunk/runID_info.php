@@ -26,7 +26,7 @@ $page_title = "Info by Run ID";
 $css = 'css/admin.css';
 include 'header.php';
 
-global $uses_airavata;
+global $uses_thrift;
 
 ?>
 <!-- Begin page content -->
@@ -727,9 +727,14 @@ HTML;
   $row['jobfile'] = '<pre>' . htmlentities( $row['jobfile'] ) . '</pre>';
 
   // Get GFAC job status
-  global $uses_airavata;
+  global $uses_thrift;
+  $clus_thrift   = $uses_thrift;
+  if ( in_array( $cluster, $thr_clust_excls ) )
+    $clus_thrift   = false;
+  if ( in_array( $cluster, $thr_clust_incls ) )
+    $clus_thrift   = true;
 
-  if ( $uses_airavata === true && $cluster != 'juropa.fz-juelich.de' )
+  if ( $clus_thrift === true )
   {
     $row['gfacStatus'] = nl2br( getExperimentStatus( $row['gfacID'] ) );
   }
