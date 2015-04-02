@@ -160,6 +160,7 @@ HTML;
        case 'gordon'   :
        case 'alamo'    :
        case 'jacinto'  :
+       case 'comet'    :
           if ( $clus_thrift === true )
              $job = new submit_airavata();
           else

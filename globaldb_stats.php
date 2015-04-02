@@ -32,13 +32,15 @@ if (ob_get_length() === false)
   ob_start();
 
 $cluster_list = array(
-                'stampede.tacc.xsede.org'          =>    'stampede',
-                'lonestar.tacc.teragrid.org'          => 'lonestar.tacc',
-                'juropa.fz-juelich.de'            =>     'juropa',
-##                'gordon.sdsc.edu'                     => 'gordon',
-                'trestles.sdsc.edu'                   => 'trestles',
-                'alamo.uthscsa.edu'                   => 'alamo',
-                'bcf.uthscsa.edu'                     => 'bcf'
+                'stampede.tacc.xsede.org'         => 'stampede',
+                'lonestar.tacc.teragrid.org'      => 'lonestar.tacc',
+                'juropa.fz-juelich.de'            => 'juropa',
+                'gordon.sdsc.edu'                 => 'gordon',
+                'trestles.sdsc.edu'               => 'trestles',
+                'comet.sdsc.edu'                  => 'comet',
+                'alamo.uthscsa.edu'               => 'alamo',
+                'jacinto.uthscsa.edu'             => 'jacinto',
+                'bcf.uthscsa.edu'                 => 'bcf'
                 );
 
 // Figure out which clusters were selected

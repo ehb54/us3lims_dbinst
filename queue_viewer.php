@@ -144,6 +144,7 @@ function do_delete()
     case 'stampede'  :
     case 'lonestar'  :
     case 'trestles'  :
+    case 'comet'     :
     case 'gordon'    :
     case 'alamo'     :
     case 'jacinto'   :

@@ -66,7 +66,7 @@ if ( isset($_POST['TIGRE']) )
     $_SESSION['cluster']              = array();
     $_SESSION['cluster']['name']      = $cluster_name;
     $_SESSION['cluster']['shortname'] = $cluster_shortname;
-    if ( $cluster_shortname == 'alamo' )
+    if ( $cluster_shortname == 'jacinto' )
     {
       if ( isset($_SESSION['separate_datasets']) )
       {
