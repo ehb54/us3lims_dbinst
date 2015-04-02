@@ -50,9 +50,11 @@ echo<<<HTML
             <tr><td>stampede</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>lonestar</td><td style='text-align:center;'>1152</td></tr>
             <tr><td>trestles</td><td style='text-align:center;'>1024</td></tr>
+            <tr><td>comet</td><td style='text-align:center;'>1152</td></tr>
+            <tr><td>gordon</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>juropa</td><td style='text-align:center;'>1024</td></tr>
-            <tr><td>alamo</td><td style='text-align:center;'>32</td></tr>
-            <tr><td>bcf</td><td style='text-align:center;'>(no PMG)</td></tr>
+            <tr><td>alamo</td><td style='text-align:center;'>72</td></tr>
+            <tr><td>jacinto</td><td style='text-align:center;'>64</td></tr>
           </table>
         </div>
 
@@ -526,9 +528,10 @@ echo<<<HTML
             <tr><td>lonestar</td><td style='text-align:center;'>35</td></tr>
             <tr><td>trestles</td><td style='text-align:center;'>63</td></tr>
             <tr><td>gordon</td><td style='text-align:center;'>63</td></tr>
+            <tr><td>comet</td><td style='text-align:center;'>35</td></tr>
             <tr><td>juropa</td><td style='text-align:center;'>63</td></tr>
-            <tr><td>alamo</td><td style='text-align:center;'>31</td></tr>
-            <tr><td>bcf</td><td style='text-align:center;'>31</td></tr>
+            <tr><td>alamo</td><td style='text-align:center;'>35</td></tr>
+            <tr><td>jacinto</td><td style='text-align:center;'>31</td></tr>
           </table>
         </p>
         </div>
