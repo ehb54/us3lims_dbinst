@@ -53,7 +53,7 @@ echo<<<HTML
             <tr><td>comet</td><td style='text-align:center;'>1152</td></tr>
             <tr><td>gordon</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>juropa</td><td style='text-align:center;'>1024</td></tr>
-            <tr><td>alamo</td><td style='text-align:center;'>72</td></tr>
+            <tr><td>alamo</td><td style='text-align:center;'>384</td></tr>
             <tr><td>jacinto</td><td style='text-align:center;'>64</td></tr>
           </table>
         </div>
@@ -508,7 +508,7 @@ echo<<<HTML
         Value:   <input name='demes-value' 
                         id='demes-value'
                         size='4'
-                        value='31' />
+                        value='1' />
         Minimum: <input id="demes-min" 
                         size='3'
                         disabled="disabled" />
@@ -518,19 +518,19 @@ echo<<<HTML
 
         <div>
         <p>
-          Note: The actual number of
-          demes is dependent on the capacity and the architecture of the selected back end system.  
+          Note: The default demes value of 1 signifies automatic cluster-dependent determination.
+          The actual number of demes is dependent on the capacity and the architecture of the
+          selected back end system.  
           Generally, demes + 1 will be adjusted upward in units of 8, 12, or 16, but limited
           to the capacity of the system. Currently, the maximum demes values are as follows:
           <table class='noborder' style='margin:0px auto;'>
             <tr><th>Cluster</th><th>Max demes</th></tr>
             <tr><td>stampede</td><td style='text-align:center;'>63</td></tr>
-            <tr><td>lonestar</td><td style='text-align:center;'>35</td></tr>
-            <tr><td>trestles</td><td style='text-align:center;'>63</td></tr>
+            <tr><td>lonestar</td><td style='text-align:center;'>71</td></tr>
             <tr><td>gordon</td><td style='text-align:center;'>63</td></tr>
-            <tr><td>comet</td><td style='text-align:center;'>35</td></tr>
+            <tr><td>comet</td><td style='text-align:center;'>71</td></tr>
             <tr><td>juropa</td><td style='text-align:center;'>63</td></tr>
-            <tr><td>alamo</td><td style='text-align:center;'>35</td></tr>
+            <tr><td>alamo</td><td style='text-align:center;'>23</td></tr>
             <tr><td>jacinto</td><td style='text-align:center;'>31</td></tr>
           </table>
         </p>
