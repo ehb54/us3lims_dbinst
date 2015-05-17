@@ -34,7 +34,7 @@ $(document).ready(function()
   {
     animate: true,
     range:   "min",
-    value:   31,
+    value:   1,
     min:     1,
     max:     100,
     step:    1,
