@@ -18,13 +18,13 @@ $admin_email        = 'zollarsd@biochem.uthscsa.edu';
 $dbusername         = '';  # the name of the MySQL user
 $dbpasswd           = '';  # the password for the MySQL user
 $dbname             = '';  # the name of the database
-$dbhost             = 'uslims3.uthscsa.edu'; # the host on which MySQL runs, generally localhost
+$dbhost             = 'localhost'; # the host on which MySQL runs, generally localhost
 
 // Global DB
 $globaldbuser       = '';  # the name of the MySQL user
 $globaldbpasswd     = '';  # the password for the MySQL user
 $globaldbname       = '';  # the name of the database
-$globaldbhost       = 'uslims3.uthscsa.edu'; # the host on which MySQL runs, generally localhost
+$globaldbhost       = 'localhost'; # the host on which MySQL runs, generally localhost
 
 // Admin function
 $v1_host            = "";
@@ -38,6 +38,9 @@ $v2_pass            = "";
 $ipaddr             = '129.111.140.156'; # the external IP address of the host machine
 $udpport            = 12233; # the port to send udp messages to
 $svcport            = 8080;  # the port for GFAC services
+$uses_thrift        = true;  # flags use of Thrift rather than Gfac
+$thr_clust_excls    = array( 'juropa' ); # Never uses Thrift
+$thr_clust_incls    = array( 'alamo' ); # Always uses Thrift
 
 $top_image          = '#';  # name of the logo to use
 $top_banner         = 'images/#';  # name of the banner at the top
