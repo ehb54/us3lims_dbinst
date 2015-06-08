@@ -8,6 +8,9 @@ include 'config.php';
 
 if (!isset($page_title)) $page_title = '';
 if (!isset($page_css  )) $page_css   = 'page';
+$title_devel = '';
+if ( preg_match( "/_devel/", $class_dir ) )
+   $title_devel = '&nbsp;&nbsp;[Development]';
 
 echo<<<HTML
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -35,7 +38,7 @@ Released      : 6/30/2011
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <title>$page_title -
-         $org_name</title>
+         $org_name $title_devel</title>
   <meta name="Author" content="$site_author" />
   <meta name="keywords" content="$site_keywords" />
   <meta name="description" content="$site_desc" />
@@ -98,7 +101,7 @@ echo<<<HTML
    </tr>
    </table>
    <span style='font-size:20px;font-weight:bold;color:white;padding:0 1em;'>
-    $org_name ($dbname)</span>
+    $org_name ($dbname)$title_devel</span>
 
 HTML;
 
