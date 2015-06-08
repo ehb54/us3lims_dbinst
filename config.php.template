@@ -53,8 +53,8 @@ $disclaimer_file    = ''; # the name of a text file with disclaimer info
 
 // Dates
 date_default_timezone_set( 'America/Chicago' );
-$last_update        = '2013/09/12'; # the date the website was last updated
-$copyright_date     = '2013'; # copyright date
+$last_update        = '2015/06/08'; # the date the website was last updated
+$copyright_date     = '2015'; # copyright date
 $current_year       = date( 'Y' );
 
 //////////// End of user specific configuration
