@@ -101,6 +101,7 @@ function order_select( $current_order = NULL )
 function do_delete()
 {
   global $clusters, $uses_thrift;               // From utility.php
+  global $info;
 //  var_dump($uses_thrift);
   $cluster  = $_POST['cluster'];
   $gfacID   = $_POST['gfacID'];
@@ -123,7 +124,7 @@ function do_delete()
   $hex = "[0-9a-fA-F]";
   if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
        ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) &&
-       ! preg_match( "/^US3-AIRA/", $gfacID ) )
+       ! preg_match( "/^US3-A/", $gfacID ) )
      $shortname .= '-local';   // Not a GFAC ID
   $clus_thrift = $uses_thrift;
   if ( in_array( $shortname, $thr_clust_excls ) )
