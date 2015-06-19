@@ -49,7 +49,6 @@ echo<<<HTML
             <tr><th>Cluster</th><th>Max cores</th></tr>
             <tr><td>stampede</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>lonestar</td><td style='text-align:center;'>1152</td></tr>
-            <tr><td>trestles</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>comet</td><td style='text-align:center;'>1152</td></tr>
             <tr><td>gordon</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>juropa</td><td style='text-align:center;'>1024</td></tr>
@@ -943,6 +942,7 @@ echo<<<HTML
         <option value="DS">Decreasing Sigmoid</option>
         <option value="All">All [ SL + IS + DS ]</option>
         <option value="HL">Horizontal Line [ C(s) ]</option>
+        <option value="2O">2nd-Order Power Law</option>
       </select>
     </fieldset>
     <fieldset name='solute_type' id='solute_type'>

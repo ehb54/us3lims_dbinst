@@ -154,11 +154,10 @@ HTML;
           break;
        case 'stampede' :
        case 'lonestar' :
-       case 'trestles' :
+       case 'comet'    :
        case 'gordon'   :
        case 'alamo'    :
        case 'jacinto'  :
-       case 'comet'    :
           if ( $clus_thrift === true )
              $job = new submit_airavata();
           else
