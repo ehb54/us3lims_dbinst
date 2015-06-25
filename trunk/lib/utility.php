@@ -78,7 +78,7 @@ $clusters = array(
   new cluster_info( "jacinto.uthscsa.edu",         "jacinto",     "default" ),
   new cluster_info( "jacinto.uthscsa.edu",         "jacinto-local", "default" ),
   new cluster_info( "alamo.uthscsa.edu",           "alamo-local",   "batch"   ),
-  new cluster_info( "juropa.fz-juelich.de",        "juropa",      "default" )
+  new cluster_info( "jureca.fz-juelich.de",        "jureca",      "batch" )
   );
 
 global $svcport;
@@ -141,7 +141,7 @@ function tigre()
   {
     $text .= <<<HTML
     <table>
-    <tr><th>Cluster</th><th>Status</th><th>Queue Name</th> <th>running/queued</th> </tr>
+    <tr><th>Cluster</th><th>Status</th><th>Queue Name</th> <th>Running / Queued</th> <th>Likely Run Wait</th></tr>
 
 HTML;
 
@@ -154,6 +154,31 @@ HTML;
       {
         $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
         $disabled = ( $cluster->status == 'draining' ) ? " disabled='disabled'" : $disabled;
+        $clload   = "<td>n/a</td>";
+        if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
+        {
+          $cque     = $cluster->queued;
+          $crun     = $cluster->running;
+          if ( $cque != 0  &&   $crun != 0 )
+          {
+            $qrrat     = (int)( ( $crun * 100 ) / $cque );
+            if ( $qrrat < 80 )
+              $clload     = "<td BGCOLOR='red'>long</td>";
+            else if ( $qrrat > 120 )
+              $clload     = "<td BGCOLOR='green'>short</td>";
+            else
+              $clload     = "<td BGCOLOR='yellow'>medium</td>";
+          }
+          else if ( $cque == 0  &&   $crun == 0 )
+            $clload     = "<td BGCOLOR='green'>short</td>";
+          if ( preg_match( "/^alamo/", $cluster->short_name ) )
+          {
+            if ( $cque == 0 )
+              $clload     = "<td BGCOLOR='green'>short</td>";
+            else
+              $clload     = "<td BGCOLOR='red'>long</td>";
+          }
+        }
 
         $value = "$cluster->name:$cluster->short_name:$cluster->queue";
         $text .= "     <tr><td class='cluster'>" .
@@ -162,7 +187,8 @@ HTML;
                  "$cluster->short_name</td>\n" .
                  "<td>$cluster->status</td> " .
                  "<td>$cluster->queue</td>"   .
-                 "<td>$cluster->running / $cluster->queued</td></tr>\n";
+                 "<td>$cluster->running / $cluster->queued</td> " .
+                 "$clload</tr>\n";
 
         if ( $disabled == "" )
            $checked = "";
