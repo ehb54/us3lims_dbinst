@@ -138,7 +138,7 @@ HTML;
           $job = new submit_local();
           break;
 
-       case 'juropa'     :
+       case 'jureca'     :
           $job = new submit_gfac();
           break;
 
@@ -185,6 +185,7 @@ HTML;
       }
     }
 
+    $job->close_transport();
     chdir( $save_cwd );
   }
 

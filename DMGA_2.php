@@ -143,7 +143,7 @@ HTML;
           $job = new submit_local();
           break;
     
-       case 'juropa'     :
+       case 'jureca'     :
           $job = new submit_gfac();
           break;
 
@@ -151,7 +151,7 @@ HTML;
        case 'lonestar'   :
        case 'trestles'   :
        case 'gordon'     :
-       case 'juropa'     :
+       case 'jureca'     :
        case 'alamo'      :
        case 'jacinto'    :
        case 'comet'      :
@@ -191,6 +191,7 @@ HTML;
       }
     }
 
+    $job->close_transport();
     chdir( $save_cwd );
   }
 

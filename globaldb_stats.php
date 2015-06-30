@@ -32,13 +32,12 @@ if (ob_get_length() === false)
   ob_start();
 
 $cluster_list = array(
-                'stampede.tacc.xsede.org'         => 'stampede',
                 'lonestar.tacc.teragrid.org'      => 'lonestar.tacc',
-                'juropa.fz-juelich.de'            => 'juropa',
-                'gordon.sdsc.edu'                 => 'gordon',
-                'trestles.sdsc.edu'               => 'trestles',
+                'stampede.tacc.xsede.org'         => 'stampede',
                 'comet.sdsc.edu'                  => 'comet',
+                'gordon.sdsc.edu'                 => 'gordon',
                 'alamo.uthscsa.edu'               => 'alamo',
+                'jureca.fz-juelich.de'            => 'jureca',
                 'jacinto.uthscsa.edu'             => 'jacinto',
                 'bcf.uthscsa.edu'                 => 'bcf'
                 );
