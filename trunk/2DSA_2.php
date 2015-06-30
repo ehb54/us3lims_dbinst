@@ -141,6 +141,7 @@ HTML;
       $clus_thrift   = false;
     if ( in_array( $cluster, $thr_clust_incls ) )
       $clus_thrift   = true;
+    $subm_type   = 0;
 
     // Currently we are supporting two submission methods.
     switch ( $cluster )
@@ -148,22 +149,31 @@ HTML;
        case 'jacinto-local'   :
        case 'alamo-local' :
           $job = new submit_local();
+          $subm_type   = 2;
           break;
-       case 'juropa'   : 
+       case 'jureca'   : 
           $job = new submit_gfac();
+          $subm_type   = 1;
           break;
        case 'stampede' :
        case 'lonestar' :
+       case 'comet'    :
        case 'gordon'   :
        case 'alamo'    :
        case 'jacinto'  :
-       case 'trestles' :
-       case 'comet' :
+       {
           if ( $clus_thrift === true )
+          {
              $job = new submit_airavata();
+             $subm_type   = 0;
+          }
           else
+          {
              $job = new submit_gfac();
+             $subm_type   = 1;
+          }
           break;
+       }
 
        default         :
           $output_msg .= "<br /><span class='message'>Unsupported cluster $cluster!</span><br />\n";
@@ -179,6 +189,16 @@ HTML;
       chdir( dirname( $filename ) );
 
       $job-> clear();
+
+/** 
+      if ( $subm_type === 0 )
+         $job = new submit_airavata();
+      else if ( $subm_type === 1 )
+         $job = new submit_gfac();
+      else
+         $job = new submit_local();
+ **/
+
       $job-> parse_input( basename( $filename ) );
       if ( ! DEBUG ) $job-> submit();
       $retval = $job->get_messages();
@@ -188,8 +208,23 @@ HTML;
         $output_msg .= "<br /><span class='message'>Message from the queue...</span><br />\n" .
                         print_r( $retval, true ) . " <br />\n";
       }
+else {
+$output_msg .= "<br /><span class='message'>Message from the queue...filename=$filename</span><br/>\n";
+$output_msg .= "</pre>\n";
+echo <<<HTML
+<!-- Begin page content -->
+<div id='content'>
+ <h1 class="title">$page_title</h1>
+ <!-- Place page content here -->
+ $message
+ <p>$output_msg</p>
+</div>
+HTML;
+exit(0);
+}
     }
 
+    $job->close_transport();
     chdir( $save_cwd );
   }
   $output_msg .= "</pre>\n";

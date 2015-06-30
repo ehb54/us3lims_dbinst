@@ -138,7 +138,7 @@ function do_delete()
     case 'jacinto-local' :
       $status = cancelLocalJob( $shortname, $gfacID );
       break;
-    case 'juropa'    :
+    case 'jureca'    :
       $status = cancelJob( $gfacID );
       break;
 	

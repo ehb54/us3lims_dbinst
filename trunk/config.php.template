@@ -6,7 +6,7 @@
 
 $org_name           = 'UltraScan3 LIMS portal';
 $org_site           = 'uslims3.uthscsa.edu/uslims3_instance';
-$site_author        = 'Dan Zollars, University of Texas Health Science Center';
+$site_author        = 'Borries Demeler, University of Texas Health Science Center';
 $site_keywords      = 'ultrascan analytical ultracentrifugation lims';
                       # The website keywords (meta tag)
 $site_desc          = 'Website for the UltraScan3 LIMS portal'; # Site description
@@ -48,7 +48,8 @@ $top_banner         = 'images/#';  # name of the banner at the top
 $full_path          = '/srv/www/htdocs/uslims3/uslims3_instance/';  # Location of the system code
 $data_dir           = '/srv/www/htdocs/uslims3/uslims3_instance/data/'; # Full path
 $submit_dir         = '/srv/www/htdocs/uslims3/uslims3_data/'; # Full path
-$class_dir          = '/srv/www/htdocs/common/class/'; #Full path
+$class_dir          = '/srv/www/htdocs/common/class/';       # Production class path
+//$class_dir          = '/srv/www/htdocs/common/class_devel/'; # Development class path
 $disclaimer_file    = ''; # the name of a text file with disclaimer info
 
 // Dates

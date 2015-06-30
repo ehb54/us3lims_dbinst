@@ -149,7 +149,7 @@ HTML;
        case 'jacinto-local' :
           $job = new submit_local();
           break;
-       case 'juropa'   : 
+       case 'jureca'   : 
           $job = new submit_gfac();
           break;
        case 'stampede' :
@@ -189,6 +189,7 @@ HTML;
       }
     }
 
+    $job->close_transport();
     chdir( $save_cwd );
   }
   $output_msg .= "</pre>\n";
