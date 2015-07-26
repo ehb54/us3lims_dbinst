@@ -15,22 +15,22 @@ include 'header.php';
 ?>
 <div id='content'>
 
-  <h1 class="title">Welcome to the TeraGrid Science Gateway for UltraScan!</h1>
+  <h1 class="title">Welcome to the XSEDE Science Gateway for UltraScan!</h1>
 
 <p> This website offers access to the UltraScan
-Laboratory Information Management System (USLIMS), a <a
-href='https://www.teragrid.org/web/science-gateways/'> TeraGrid Science
-Gateway</a> supported by an allocation through a TeraGrid community
-account. This system provides web and database support for users of the
+Laboratory Information Management System (USLIMS), an <a
+href='https://www.xsede.org/gateways-overview'> XSEDE Science Gateway</a>
+supported by an allocation through an XSEDE community account.
+This system provides web and database support for users of the
 <a href='http://ultrascan.uthscsa.edu'>UltraScan software</a>. You
 can use this portal to access data associated with your sedimentation
 experiments, and share your data with collaborators. Authorized users
 can also use this site to model analytical ultracentrifugation experiments
 with UltraScan's high-performance analysis modules by submitting
 analysis jobs to computing clusters available at the University of
-Texas Health Science Center and TeraGrid sites at the Texas Advanced
+Texas Health Science Center and XSEDE sites at the Texas Advanced
 Computing Center and at Indiana University.  These services are made
-available through an NSF TeraGrid community account (see below for
+available through an NSF XSEDE community account (see below for
 funding credits).  To obtain access to this resource please contact the
 <a href='mailto:demeler@biochem.uthscsa.edu'>project director</a>.  </p>
 
@@ -73,8 +73,8 @@ for such a service.</p>
 <p><b>
 Calculations were performed on the UltraScan LIMS cluster at the<br/>
 Bioinformatics Core Facility at the University of Texas Health<br/>
-Science Center at San Antonio and the Lonestar cluster at the<br/>
-Texas Advanced Computing Center supported by NSF Teragrid Grant<br/>
+Science Center at San Antonio and multiple High Performance Computing
+clusters supported by NSF XSEDE Grant<br/>
 #MCB070038 (to Borries Demeler)."</b></p>
 
 <p>Please enter the link to each manuscript citing this resource on the
