@@ -70,15 +70,15 @@ class cluster_info
 }
 
 $clusters = array( 
-  new cluster_info( "stampede.tacc.xsede.org",     "stampede",    "normal"  ), 
   new cluster_info( "lonestar.tacc.teragrid.org",  "lonestar",    "normal"  ), 
+  new cluster_info( "stampede.tacc.xsede.org",     "stampede",    "normal"  ), 
   new cluster_info( "comet.sdsc.edu",              "comet",       "compute" ), 
   new cluster_info( "gordon.sdsc.edu",             "gordon",      "normal"  ), 
   new cluster_info( "alamo.uthscsa.edu",           "alamo",       "batch"   ),
+  new cluster_info( "alamo.uthscsa.edu",           "alamo-local", "batch"   ),
   new cluster_info( "jacinto.uthscsa.edu",         "jacinto",     "default" ),
-  new cluster_info( "jacinto.uthscsa.edu",         "jacinto-local", "default" ),
-  new cluster_info( "alamo.uthscsa.edu",           "alamo-local",   "batch"   ),
-  new cluster_info( "jureca.fz-juelich.de",        "jureca",      "batch" )
+  new cluster_info( "jacinto.uthscsa.edu",       "jacinto-local", "default" ),
+  new cluster_info( "jureca.fz-juelich.de",        "jureca",      "batch"   )
   );
 
 global $svcport;
@@ -155,8 +155,10 @@ HTML;
         $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
         $disabled = ( $cluster->status == 'draining' ) ? " disabled='disabled'" : $disabled;
         $clload   = "<td>n/a</td>";
+        $clstat   = "<td>$cluster->status</td>";
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
+          $clstat   = "<td STYLE='color: green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
           if ( $cque != 0  &&   $crun != 0 )
@@ -179,13 +181,21 @@ HTML;
               $clload     = "<td BGCOLOR='red'>long</td>";
           }
         }
+        else if ( $cluster->status == 'down' )
+        {
+          $clstat   = "<td STYLE='color: red'>$cluster->status</td>";
+        }
+        else if ( $cluster->status == 'draining' )
+        {
+          $clstat   = "<td STYLE='color: DarkViolet'>$cluster->status</td>";
+        }
 
         $value = "$cluster->name:$cluster->short_name:$cluster->queue";
         $text .= "     <tr><td class='cluster'>" .
                  "<input type='radio' name='cluster' " .
                  "value='$value'$checked$disabled />" .
                  "$cluster->short_name</td>\n" .
-                 "<td>$cluster->status</td> " .
+                 "$clstat " .
                  "<td>$cluster->queue</td>"   .
                  "<td>$cluster->running / $cluster->queued</td> " .
                  "$clload</tr>\n";
@@ -193,7 +203,7 @@ HTML;
         if ( $disabled == "" )
            $checked = "";
       }
-    } 
+    }
     $text .= <<<HTML
     </table>
     <p><input class='submit' type='submit' name='TIGRE' value='Submit'/></p>
