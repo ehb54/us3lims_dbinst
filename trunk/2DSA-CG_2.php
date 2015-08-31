@@ -150,10 +150,6 @@ HTML;
           $job = new submit_local();
           break;
 
-       case 'jureca'   :
-          $job = new submit_gfac();
-          break;
-
        case 'stampede' :
        case 'lonestar' :
        case 'trestles' :
@@ -161,6 +157,7 @@ HTML;
        case 'alamo'    :
        case 'jacinto'  :
        case 'comet'    :
+       case 'jureca'   :
           if ( $clus_thrift === true )
              $job = new submit_airavata();
           else
