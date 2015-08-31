@@ -141,7 +141,6 @@ HTML;
       $clus_thrift   = false;
     if ( in_array( $cluster, $thr_clust_incls ) )
       $clus_thrift   = true;
-    $subm_type   = 0;
 
     // Currently we are supporting two submission methods.
     switch ( $cluster )
@@ -149,11 +148,6 @@ HTML;
        case 'jacinto-local'   :
        case 'alamo-local' :
           $job = new submit_local();
-          $subm_type   = 2;
-          break;
-       case 'jureca'   : 
-          $job = new submit_gfac();
-          $subm_type   = 1;
           break;
        case 'stampede' :
        case 'lonestar' :
@@ -161,16 +155,15 @@ HTML;
        case 'gordon'   :
        case 'alamo'    :
        case 'jacinto'  :
+       case 'jureca'   : 
        {
           if ( $clus_thrift === true )
           {
              $job = new submit_airavata();
-             $subm_type   = 0;
           }
           else
           {
              $job = new submit_gfac();
-             $subm_type   = 1;
           }
           break;
        }
@@ -189,15 +182,6 @@ HTML;
       chdir( dirname( $filename ) );
 
       $job-> clear();
-
-/** 
-      if ( $subm_type === 0 )
-         $job = new submit_airavata();
-      else if ( $subm_type === 1 )
-         $job = new submit_gfac();
-      else
-         $job = new submit_local();
- **/
 
       $job-> parse_input( basename( $filename ) );
       if ( ! DEBUG ) $job-> submit();

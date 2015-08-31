@@ -143,10 +143,6 @@ HTML;
           $job = new submit_local();
           break;
     
-       case 'jureca'     :
-          $job = new submit_gfac();
-          break;
-
        case 'stampede'   :
        case 'lonestar'   :
        case 'trestles'   :

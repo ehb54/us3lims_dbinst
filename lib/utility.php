@@ -101,7 +101,7 @@ while ( list( $cluster, $running, $queued, $status ) = mysql_fetch_row( $result 
 {
    if ( in_array( $cluster, $down_clusters ) )
      $status = 'down';
-//if($cluster == 'comet')
+//if($cluster == 'jureca')
 // $status = 'up';
 
    if ( in_array( $cluster, $draining_clusters ) )
