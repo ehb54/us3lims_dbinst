@@ -213,7 +213,7 @@ function display( $dataset_id, $num_datasets )
     uniform_grid_setup();
     montecarlo();
 
-    if ( $num_datasets > 1 )
+    if ( $num_datasets > 1  &&  $separate_datasets == 2 )
     {
       PMGC_option();
     }

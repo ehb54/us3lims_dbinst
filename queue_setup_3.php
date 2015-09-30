@@ -90,7 +90,8 @@ if ( isset( $_POST['separate_datasets'] ) )
 {
   $separate_datasets = $_POST['separate_datasets'] == 'global'
                      ? 0
-                     : 1;
+                     : ( $_POST['separate_datasets'] == 'separate'
+                         ? 1 : 2 );
 }
 
 else if ( isset( $_SESSION['separate_datasets'] ) )
@@ -105,27 +106,44 @@ $_SESSION['separate_datasets'] = $separate_datasets;
 $button_message = ( $separate_datasets )
                 ? "Click here to proceed as a global fit"
                 : "Click here to proceed as separate jobs";
-$separate_text  = ( $separate_datasets )
+$separate_text  = ( $separate_datasets == 1 )
                 ? "proceed as separate jobs"
-                : "proceed as a global fit";
+                : ( ( $separate_dataset == 2 )
+                  ? "proceed as composite jobs(s)"
+                  : "proceed as a global fit" );
 $GA_disabled    = "";
 $GA_notes       = "";
-if ( $separate_datasets )
+if ( $separate_datasets != 0 )
 {
-  $separate_checked = " checked='checked'";
-  $global_checked   = "";
+  $separate_checked  = "";
+  $composite_checked = "";
+  $global_checked    = "";
+  $button_message    = "Click here to proceed as a global fit";
+  if ( $separate_datasets == 1 )
+  {
+    $separate_checked  = " checked='checked'";
+    $separate_text     = "proceed as separate jobs";
+  }
+  else
+  {
+    $composite_checked = " checked='checked'";
+    $separate_text     = "proceed as composite job(s)";
+  }
   if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] ) > 1 )
   {
-    $GA_disabled      = " disabled='disabled'";
-    $GA_notes         = "<p><b>NOTE:</b>&nbsp;&nbsp;" .
-                        "GA disabled for composite job(s) with multiple datasets.</p>";
+    $GA_disabled       = " disabled='disabled'";
+    $GA_notes          = "<p><b>NOTE:</b>&nbsp;&nbsp;" .
+                         "GA disabled for non-global job(s) with multiple datasets.</p>";
   }
 }
 
 else
 {
-  $separate_checked = "";
-  $global_checked   = " checked='checked'";
+  $separate_checked  = "";
+  $composite_checked = "";
+  $global_checked    = " checked='checked'";
+  $separate_text     = "proceed as a global fit";
+  $button_message    = "Click here to proceed as separate jobs";
 }
 
 include 'config.php';
@@ -200,6 +218,11 @@ HTML;
                          value='separate'$separate_checked
                          onclick='this.form.submit();' />
                          Proceed as separate jobs</label></td></tr>
+          <tr><td><label>
+                  <input type='radio' name='separate_datasets'
+                         value='composite'$composite_checked
+                         onclick='this.form.submit();' />
+                         Proceed as composite job(s)</label></td></tr>
           <tr><td><label>
                   <input type='radio' name='separate_datasets'
                          value='global'$global_checked

@@ -227,7 +227,7 @@ function display( $dataset_id, $num_datasets )
     s_grid_points();
     ff0_grid_points();
     montecarlo();
-    if ( $num_datasets > 1 )
+    if ( $num_datasets > 1  &&  $separate_datasets == 2 )
     {
       PMGC_option();
     }

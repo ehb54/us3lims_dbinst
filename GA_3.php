@@ -133,29 +133,31 @@ HTML;
     // Currently we are supporting two submission methods.
     switch ( $cluster )
     {
-       case 'alamo-local'   :
-       case 'jacinto-local' :
-          $job = new submit_local();
-          break;
+      case 'alamo-local'   :
+      case 'jacinto-local' :
+      case 'us3iab-node0'  :
+      case 'us3iab-node1'  :
+        $job = new submit_local();
+        $clus_thrift   = false;
+        break;
 
-       case 'jureca'     :
-       case 'stampede'   :
-       case 'lonestar'   :
-       case 'trestles'   :
-       case 'gordon'     :
-       case 'alamo'      :
-       case 'jacinto'    :
-       case 'comet'      :
-          if ( $clus_thrift === true )
-             $job = new submit_airavata();
-          else
-             $job = new submit_gfac();
-          break;
+      case 'stampede'   :
+      case 'lonestar'   :
+      case 'comet'      :
+      case 'gordon'     :
+      case 'alamo'      :
+      case 'jacinto'    :
+      case 'jureca'     :
+        if ( $clus_thrift === true )
+          $job = new submit_airavata();
+        else
+          $job = new submit_gfac();
+        break;
 
-       default           :
-          $output_msg .= "<br /><span class='message'>Unsupported cluster $cluster!</span><br />\n";
-          $filenames = array();
-          break;
+      default           :
+        $output_msg .= "<br /><span class='message'>Unsupported cluster $cluster!</span><br />\n";
+        $filenames = array();
+        break;
     }
    
     $save_cwd = getcwd();         // So we can come back to the current 
@@ -182,7 +184,8 @@ HTML;
       }
     }
 
-    $job->close_transport();
+    if ( $clus_thrift === true )
+      $job->close_transport();
     chdir( $save_cwd );
   }
 
