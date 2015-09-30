@@ -47,10 +47,11 @@ $HPC       = new HPC_PCSA();
 $file      = new File_PCSA();
 $filenames = array();
 $HPCAnalysisRequestID = 0;
+$separate_datasets    = $_SESSION['separate_datasets'];
 
 $files_ok  = true;  // Let's also make sure there weren't any problems writing the files
 
-if ( $_SESSION['separate_datasets'] )
+if ( $separate_datasets > 0 )
 { // Multiple datasets and non-global: build composite jobs
   $dataset_count = $payload->get( 'datasetCount' );
   $job_params    = $payload->get( 'job_parameters' );
@@ -59,6 +60,11 @@ if ( $_SESSION['separate_datasets'] )
   $reqds_count   = 50;              // Initial datasets per request
   if ( $mc_iters > 50 )
     $reqds_count   = 25;
+  if ( $separate_datasets == 1 )
+  {
+    $reqds_count   = 1;
+    $mgroup_count  = 1;
+  }
   $groups        = (int)( $reqds_count / $mgroup_count );
   $groups        = max( 1, $groups );
   $reqds_count   = $mgroup_count * $groups;  // Multiple of PMGC
@@ -142,30 +148,34 @@ HTML;
     if ( in_array( $cluster, $thr_clust_incls ) )
       $clus_thrift   = true;
 
-    // Currently we are supporting two submission methods.
+    // Currently we are supporting three submission methods:
+    //  Local, Airavata, GFAC(deprecated).
     switch ( $cluster )
     {
-       case 'alamo-local'   :
-       case 'jacinto-local' :
-          $job = new submit_local();
-          break;
-       case 'jureca'   : 
-       case 'stampede' :
-       case 'lonestar' :
-       case 'comet'    :
-       case 'gordon'   :
-       case 'alamo'    :
-       case 'jacinto'  :
-          if ( $clus_thrift === true )
-             $job = new submit_airavata();
-          else
-             $job = new submit_gfac();
-          break;
+      case 'alamo-local'   :
+      case 'jacinto-local' :
+      case 'us3iab-node0'  :
+      case 'us3iab-node1'  :
+        $job = new submit_local();
+        $clus_thrift   = false;
+        break;
+      case 'stampede' :
+      case 'lonestar' :
+      case 'comet'    :
+      case 'gordon'   :
+      case 'alamo'    :
+      case 'jacinto'  :
+      case 'jureca'   : 
+        if ( $clus_thrift === true )
+          $job = new submit_airavata();
+        else
+          $job = new submit_gfac();
+        break;
 
-       default         :
-          $output_msg .= "<br /><span class='message'>Unsupported cluster $cluster!</span><br />\n";
-          $filenames = array();
-          break;
+      default         :
+        $output_msg .= "<br /><span class='message'>Unsupported cluster $cluster!</span><br />\n";
+        $filenames = array();
+        break;
     }
    
     $save_cwd = getcwd();         // So we can come back to the current 
@@ -187,7 +197,8 @@ HTML;
       }
     }
 
-    $job->close_transport();
+    if ( $clus_thrift === true )
+      $job->close_transport();
     chdir( $save_cwd );
   }
   $output_msg .= "</pre>\n";

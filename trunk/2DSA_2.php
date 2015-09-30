@@ -47,10 +47,11 @@ $HPC       = new HPC_2DSA();
 $file      = new File_2DSA();
 $filenames = array();
 $HPCAnalysisRequestID = 0;
+$separate_datasets = $_SESSION['separate_datasets'];
 
 $files_ok  = true;  // Let's also make sure there weren't any problems writing the files
 
-if ( $_SESSION['separate_datasets'] )
+if ( $separate_datasets > 0 )
 { // Multiple datasets and non-global: build composite jobs
   $dataset_count = $payload->get( 'datasetCount' );
   $job_params    = $payload->get( 'job_parameters' );
@@ -59,6 +60,11 @@ if ( $_SESSION['separate_datasets'] )
   $reqds_count   = 50;              // Initial datasets per request
   if ( $mc_iters > 50 )
     $reqds_count   = 25;
+  if ( $separate_datasets == 1 )
+  {
+    $reqds_count   = 1;
+    $mgroup_count  = 1;
+  }
   $groups        = (int)( $reqds_count / $mgroup_count );
   $groups        = max( 1, $groups );
   $reqds_count   = $mgroup_count * $groups;  // Multiple of PMGC
@@ -145,8 +151,10 @@ HTML;
     // Currently we are supporting two submission methods.
     switch ( $cluster )
     {
-       case 'jacinto-local'   :
-       case 'alamo-local' :
+       case 'jacinto-local' :
+       case 'alamo-local'   :
+       case 'us3iab-node0'  :
+       case 'us3iab-node1'  :
           $job = new submit_local();
           break;
        case 'stampede' :
@@ -156,17 +164,11 @@ HTML;
        case 'alamo'    :
        case 'jacinto'  :
        case 'jureca'   : 
-       {
           if ( $clus_thrift === true )
-          {
              $job = new submit_airavata();
-          }
           else
-          {
              $job = new submit_gfac();
-          }
           break;
-       }
 
        default         :
           $output_msg .= "<br /><span class='message'>Unsupported cluster $cluster!</span><br />\n";
@@ -208,7 +210,8 @@ exit(0);
 }
     }
 
-    $job->close_transport();
+    if ( $clus_thrift === true )
+       $job->close_transport();
     chdir( $save_cwd );
   }
   $output_msg .= "</pre>\n";
