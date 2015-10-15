@@ -527,9 +527,9 @@ echo<<<HTML
             <tr><td>stampede</td><td style='text-align:center;'>63</td></tr>
             <tr><td>lonestar</td><td style='text-align:center;'>71</td></tr>
             <tr><td>gordon</td><td style='text-align:center;'>63</td></tr>
-            <tr><td>comet</td><td style='text-align:center;'>71</td></tr>
-            <tr><td>jureca</td><td style='text-align:center;'>71</td></tr>
-            <tr><td>alamo</td><td style='text-align:center;'>23</td></tr>
+            <tr><td>comet</td><td style='text-align:center;'>47</td></tr>
+            <tr><td>jureca</td><td style='text-align:center;'>47</td></tr>
+            <tr><td>alamo</td><td style='text-align:center;'>47</td></tr>
             <tr><td>jacinto</td><td style='text-align:center;'>31</td></tr>
           </table>
         </p>
@@ -1034,10 +1034,10 @@ echo<<<HTML
     <fieldset name='thr_deltr_ratio' id='thr_deltr_ratio'>
       <legend>Threshold Delta-RMSD Ratio</legend>
       <select name="thr_deltr_ratio" id='thr_deltr_ratio'>
-        <option value="0.0001">0.001</option>
+        <option value="0.001">0.001</option>
         <option value="0.0001" selected='selected'>0.0001</option>
-        <option value="0.0001">0.00001</option>
-        <option value="0.0001">0.000001</option>
+        <option value="0.00001">0.00001</option>
+        <option value="0.000001">0.000001</option>
       </select>
     </fieldset>
     <fieldset name='curve_points' id='curve_points'>
