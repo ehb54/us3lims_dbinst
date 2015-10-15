@@ -138,15 +138,16 @@ function do_delete()
     case 'jacinto-local' :
       $status = cancelLocalJob( $shortname, $gfacID );
       break;
-    case 'jureca'    :
-      $status = cancelJob( $gfacID );
-      break;
+//    case 'jureca'    :
+//      $status = cancelJob( $gfacID );
+//      break;
 	
     case 'stampede'  :
     case 'lonestar'  :
     case 'trestles'  :
     case 'comet'     :
     case 'gordon'    :
+    case 'jureca'    :
     case 'alamo'     :
     case 'jacinto'   :
       if ( $clus_thrift === true )
