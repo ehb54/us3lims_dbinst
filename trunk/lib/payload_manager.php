@@ -121,7 +121,7 @@ abstract class Payload_manager
       $cellname      = "1";
       $channel       = "A";
       $chanindex     = 0;
-      $query  = "SELECT coeff1, coeff2, filename " .
+      $query  = "SELECT coeff1, coeff2, filename, rawData.experimentID " .
                 "FROM rawData, experiment, rotorCalibration " .
                 "WHERE rawData.rawDataID = $rawDataID " .
                 "AND rawData.experimentID = experiment.experimentID " .
@@ -130,7 +130,7 @@ abstract class Payload_manager
                 or die( "Query failed : $query<br />" . mysql_error());
       if ( mysql_num_rows( $result ) > 0 )
       {
-        list( $coeff1, $coeff2, $filename ) = mysql_fetch_array( $result );   // should be 1
+        list( $coeff1, $coeff2, $filename, $experID ) = mysql_fetch_array( $result );   // should be 1
         $rotor_stretch = "$coeff1 $coeff2";
         list( $run, $dtype, $cellname, $channel, $waveln, $ftype ) = explode( ".", $filename );
         $chanindex = strpos( "ABCDEFGH", $channel ) / 2;
@@ -245,6 +245,10 @@ abstract class Payload_manager
       $params['manual' ]      = $manual;
       $params['analytes']     = $analytes;
       $params['speedsteps']   = $speedsteps;
+      $params['rawDataID']    = $rawDataID;
+      $params['experimentID'] = $experID;
+
+      $_SESSION['request'][$dataset_id]['experimentID'] = $experID;
 
     }
 
@@ -306,6 +310,10 @@ class Payload_2DSA extends Payload_manager
     // From config.php
     global $dbname, $dbhost;
     global $udpport, $ipaddr;
+
+    // These will be done every time
+    $parameters                 = array();
+    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
 
     // A lot of this only gets posted the first time through
     if ( $dataset_id == 0 )
@@ -401,7 +409,7 @@ class Payload_2DSA extends Payload_manager
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['debug_text']       = $_POST['debug_text-value'];
-      $job_parameters['experimentID']     = $_SESSION['experimentID'];
+      $job_parameters['experimentID']     = $parameters['experimentID'];
       $this->add( 'job_parameters', $job_parameters );
 
       $dataset = array();
@@ -410,17 +418,13 @@ class Payload_2DSA extends Payload_manager
     }
 
     // These will be done every time
-    $parameters                 = array();
-    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
     $centerpiece_shape = $parameters['centerpiece_shape'];
 
     // Create new elements for this dataset
     //?? $parameters                 = $dataset['parameters'];
-    $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
     $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
     $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
     $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
-  //  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
     $parameters['noiseIDs']     = array();
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
     
@@ -505,7 +509,7 @@ class Payload_2DSA_CG extends Payload_manager
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['debug_text']       = $_POST['debug_text-value'];
-      $job_parameters['experimentID']     = $_SESSION['experimentID'];
+      $job_parameters['experimentID']     = $_SESSION['request'][0]['experimentID'];
       $this->add( 'job_parameters', $job_parameters );
 
       $dataset = array();
@@ -524,7 +528,6 @@ class Payload_2DSA_CG extends Payload_manager
     $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
     $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
     $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
-  //  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
     $parameters['noiseIDs']     = array();
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
     
@@ -587,7 +590,11 @@ class Payload_GA extends Payload_manager
 
       $job_parameters                     = array();
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
-      $job_parameters['demes']            = $_POST['demes-value'];
+      // Adjust demes so procs (demes+1) is a multiple of 4 (or demes is "1")
+      $demes                              = $_POST['demes-value'];
+      $demes                = (int)( ( $demes + 1 ) / 4 ) * 4 - 1;
+      $demes                = ( $demes < 4 ) ? 1 : $demes;
+      $job_parameters['demes']            = $demes;
       if ( $job_parameters['mc_iterations'] > 1 )
         $job_parameters['req_mgroupcount']  = $_POST['req_mgroupcount'];
       else if ( $num_datasets > 1 )
@@ -622,7 +629,7 @@ class Payload_GA extends Payload_manager
       $job_parameters['x-type']           = $_POST['x-type'];
       $job_parameters['y-type']           = $_POST['y-type'];
       $job_parameters['z-type']           = $_POST['z-type'];
-      $job_parameters['experimentID']     = $_SESSION['experimentID'];
+      $job_parameters['experimentID']     = $_SESSION['request'][0]['experimentID'];
       // buckets
       $this->add( 'job_parameters', $job_parameters );
 
@@ -642,7 +649,6 @@ class Payload_GA extends Payload_manager
     $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
     $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
     $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
-  //  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
     $parameters['noiseIDs']     = array();
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
     
@@ -759,7 +765,7 @@ class Payload_DMGA extends Payload_manager
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['debug_text']       = $_POST['debug_text-value'];
-      $job_parameters['experimentID']     = $_SESSION['experimentID'];
+      $job_parameters['experimentID']     = $_SESSION['request'][0]['experimentID'];
       $this->add( 'job_parameters', $job_parameters );
 
       $dataset = array();
@@ -778,7 +784,6 @@ class Payload_DMGA extends Payload_manager
     $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
     $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
     $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
-  //  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
     $parameters['noiseIDs']     = array();
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
     
@@ -879,7 +884,7 @@ class Payload_PCSA extends Payload_manager
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['debug_text']       = $_POST['debug_text-value'];
-      $job_parameters['experimentID']     = $_SESSION['experimentID'];
+      $job_parameters['experimentID']     = $_SESSION['request'][0]['experimentID'];
       $this->add( 'job_parameters', $job_parameters );
 
       $dataset = array();
@@ -898,7 +903,6 @@ class Payload_PCSA extends Payload_manager
     $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
     $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
     $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
-  //  $parameters['modelID']      = $_SESSION['request'][$dataset_id]['modelID'];
     $parameters['noiseIDs']     = array();
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
     

@@ -527,6 +527,7 @@ function get_latest_edits( )
 
     $cell = $_SESSION['cells'][$rawDataID];
     $_SESSION['request'][$count]['rawDataID']    = $rawDataID;
+    $_SESSION['request'][$count]['experimentID'] = $cell['experimentID'];
     $_SESSION['request'][$count]['path']         = $cell['path'];
     $_SESSION['request'][$count]['filename']     = $cell['filename'];
     $_SESSION['request'][$count]['editedDataID'] = $editedDataID;

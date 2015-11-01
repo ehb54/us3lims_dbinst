@@ -61,23 +61,25 @@ if ( $_SESSION[ 'separate_datasets' ] )
 
   $dataset_count = $payload->get( 'datasetCount' );
 
-  for ( $i = 0; $i < $dataset_count; $i++ )
+  for ( $ii = 0; $ii < $dataset_count; $ii++ )
   {
-    $single               = $payload->get_dataset( $i );
+    $single               = $payload->get_dataset( $ii );
     $HPCAnalysisRequestID = $HPC->writeDB( $single );
-    $filenames[ $i ]      = $file->write( $single, $HPCAnalysisRequestID );
+    $filenames[ $ii ]     = $file->write( $single, $HPCAnalysisRequestID );
 
-    if ( $filenames[ $i ] === false )
+    if ( $filenames[ $ii ] === false )
       $files_ok = false;
 
     else
     {
       // Write the xml file content to the db
-      $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ $i ] ) );
+      $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ $ii ] ) );
       $edit_filename = $single[ 'dataset' ][ 0 ][ 'edit' ];
-      
+      $experimentID  = $_SESSION['request'][$ii]['experimentID'];
+
       $query  = "UPDATE HPCAnalysisRequest " .
                 "SET requestXMLfile = '$xml_content', " .
+                "experimentID = '$experimentID', " .
                 "editXMLFilename = '$edit_filename' " .
                 "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
       

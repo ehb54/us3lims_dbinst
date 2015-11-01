@@ -103,17 +103,19 @@ while ( list( $cluster, $running, $queued, $status ) = mysql_fetch_row( $result 
      $status = 'down';
 //if($cluster == 'jureca')
 // $status = 'up';
+//if($cluster == 'alamo')
+// $status = 'up';
 
    if ( in_array( $cluster, $draining_clusters ) )
      $status = 'draining';
 
-   for ( $i = 0; $i < count( $clusters ); $i++ )
+   for ( $ii = 0; $ii < count( $clusters ); $ii++ )
    {
-     if ( $clusters[$i]->short_name == $cluster )
+     if ( $clusters[$ii]->short_name == $cluster )
      {
-       $clusters[$i]->running = $running;
-       $clusters[$i]->queued  = $queued;
-       $clusters[$i]->status  = $status;
+       $clusters[$ii]->running = $running;
+       $clusters[$ii]->queued  = $queued;
+       $clusters[$ii]->status  = $status;
      }
    }
 }
@@ -156,11 +158,14 @@ HTML;
         $disabled = ( $cluster->status == 'draining' ) ? " disabled='disabled'" : $disabled;
         $clload   = "<td>n/a</td>";
         $clstat   = "<td>$cluster->status</td>";
+
+        // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
           $clstat   = "<td STYLE='color: green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
+  
           if ( $cque != 0  &&   $crun != 0 )
           {
             $qrrat     = (int)( ( $crun * 100 ) / $cque );
@@ -171,20 +176,19 @@ HTML;
             else
               $clload     = "<td BGCOLOR='yellow'>medium</td>";
           }
-          else if ( $cque == 0  &&   $crun == 0 )
+  
+          else if ( $cque == 0 )
             $clload     = "<td BGCOLOR='green'>short</td>";
-          if ( preg_match( "/^alamo/", $cluster->short_name ) )
-          {
-            if ( $cque == 0 )
-              $clload     = "<td BGCOLOR='green'>short</td>";
-            else
-              $clload     = "<td BGCOLOR='red'>long</td>";
-          }
+  
+          else
+            $clload     = "<td BGCOLOR='red'>long</td>";
         }
+  
         else if ( $cluster->status == 'down' )
         {
           $clstat   = "<td STYLE='color: red'>$cluster->status</td>";
         }
+  
         else if ( $cluster->status == 'draining' )
         {
           $clstat   = "<td STYLE='color: DarkViolet'>$cluster->status</td>";
