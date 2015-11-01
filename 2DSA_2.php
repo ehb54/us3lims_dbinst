@@ -89,9 +89,11 @@ if ( $separate_datasets > 0 )
     { // Write the xml file content to the db
       $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ $kr ] ) );
       $edit_filename = $composite['dataset'][0]['edit'];
+      $experimentID  = $_SESSION['request'][$index]['experimentID'];
 
       $query  = "UPDATE HPCAnalysisRequest " .
                 "SET requestXMLfile = '$xml_content', " .
+                "experimentID = '$experimentID', " .
                 "editXMLFilename = '$edit_filename' " .
                 "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
       mysql_query( $query )
