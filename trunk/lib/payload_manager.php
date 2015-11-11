@@ -465,6 +465,10 @@ class Payload_2DSA_CG extends Payload_manager
     global $dbname, $dbhost;
     global $udpport, $ipaddr;
 
+    // These will be done every time
+    $parameters                 = array();
+    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
+
     // A lot of this only gets posted the first time through
     if ( $dataset_id == 0 )
     {
@@ -509,7 +513,8 @@ class Payload_2DSA_CG extends Payload_manager
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['debug_text']       = $_POST['debug_text-value'];
-      $job_parameters['experimentID']     = $_SESSION['request'][0]['experimentID'];
+      $job_parameters['experimentID']     = $parameters['experimentID'];
+      $this->add( 'job_parameters', $job_parameters );
       $this->add( 'job_parameters', $job_parameters );
 
       $dataset = array();
@@ -518,8 +523,6 @@ class Payload_2DSA_CG extends Payload_manager
     }
 
     // These will be done every time
-    $parameters                 = array();
-    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
     $centerpiece_shape = $parameters['centerpiece_shape'];
 
     // Create new elements for this dataset
@@ -567,6 +570,10 @@ class Payload_GA extends Payload_manager
     // From config.php
     global $dbname, $dbhost;
     global $udpport, $ipaddr;
+
+    // These will be done every time
+    $parameters                 = array();
+    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
 
     // These items only get posted the first time
     if ( $dataset_id == 0 )
@@ -629,7 +636,7 @@ class Payload_GA extends Payload_manager
       $job_parameters['x-type']           = $_POST['x-type'];
       $job_parameters['y-type']           = $_POST['y-type'];
       $job_parameters['z-type']           = $_POST['z-type'];
-      $job_parameters['experimentID']     = $_SESSION['request'][0]['experimentID'];
+      $job_parameters['experimentID']     = $parameters['experimentID'];
       // buckets
       $this->add( 'job_parameters', $job_parameters );
 
@@ -639,8 +646,6 @@ class Payload_GA extends Payload_manager
     }
 
     // These will be done every time
-    $parameters                 = array();
-    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
     $centerpiece_shape = $parameters['centerpiece_shape'];
 
     // Create new elements for this dataset
@@ -714,6 +719,10 @@ class Payload_DMGA extends Payload_manager
     global $dbname, $dbhost;
     global $udpport, $ipaddr;
 
+    // These will be done every time
+    $parameters                 = array();
+    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
+
     // These items only get posted the first time
     if ( $dataset_id == 0 )
     {
@@ -765,7 +774,7 @@ class Payload_DMGA extends Payload_manager
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['debug_text']       = $_POST['debug_text-value'];
-      $job_parameters['experimentID']     = $_SESSION['request'][0]['experimentID'];
+      $job_parameters['experimentID']     = $parameters['experimentID'];
       $this->add( 'job_parameters', $job_parameters );
 
       $dataset = array();
@@ -774,8 +783,6 @@ class Payload_DMGA extends Payload_manager
     }
 
     // These will be done every time
-    $parameters                 = array();
-    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
     $centerpiece_shape = $parameters['centerpiece_shape'];
 
     // Create new elements for this dataset
@@ -821,6 +828,10 @@ class Payload_PCSA extends Payload_manager
     // From config.php
     global $dbname, $dbhost;
     global $udpport, $ipaddr;
+
+    // These will be done every time
+    $parameters                 = array();
+    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
 
     // A lot of this only gets posted the first time through
     if ( $dataset_id == 0 )
@@ -884,7 +895,7 @@ class Payload_PCSA extends Payload_manager
                                           ? 1 : 0;
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['debug_text']       = $_POST['debug_text-value'];
-      $job_parameters['experimentID']     = $_SESSION['request'][0]['experimentID'];
+      $job_parameters['experimentID']     = $parameters['experimentID'];
       $this->add( 'job_parameters', $job_parameters );
 
       $dataset = array();
@@ -893,8 +904,6 @@ class Payload_PCSA extends Payload_manager
     }
 
     // These will be done every time
-    $parameters                 = array();
-    $this->getDBParams( $dataset_id, $parameters );   // DB parameters
     $centerpiece_shape = $parameters['centerpiece_shape'];
 
     // Create new elements for this dataset
