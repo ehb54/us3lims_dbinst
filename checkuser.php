@@ -80,9 +80,10 @@ else if ( $count > 1 )
 if ( $count < 1 )
 {
   remove_session();
-  $message =  "Error: The account for $email has not been " .
-              "correctly set up.  Please set up a new account first.";
-  include 'newaccount.php';
+  $message =  "Error: The account for <i>\"$email\"</i> has not been " .
+              "correctly set up. <br/>Please set up a new account first " .
+              "or correctly type the email address.";
+  include 'login.php';
   exit();
 }
 
