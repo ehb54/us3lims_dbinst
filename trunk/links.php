@@ -161,4 +161,94 @@ echo<<<HTML
 
 </div>
 HTML;
+
+// Function used by 2DSA_1.php, 2DSA-CG_1.php, ... to re-determine
+//  the latest noise associated with latest edits
+function set_latest_noises( )
+{
+  $nreq     = count( $_SESSION['request'] );
+  $nndiff   = 0;
+  $count    = 0;
+  while ( $count < $nreq )
+  { // Loop through latest edits examining associated noises
+    $editedDataID = $_SESSION['request'][$count]['editedDataID'];
+    $rawDataID    = $_SESSION['request'][$count]['rawDataID'];
+
+    $nIDsOld      = $_SESSION['request'][$count]['noiseIDs'];
+    $noiseIDs     = array();
+
+    $query  = "SELECT noiseID, noiseType, timeEntered " .
+              "FROM noise " .
+              "WHERE editedDataID = $editedDataID " .
+              "ORDER BY timeEntered DESC ";
+
+    $result = mysql_query( $query )
+            or die("Query failed : $query<br />\n" . mysql_error());
+
+    $knoise = 0;
+    $prtype = "";
+    $prtime = 0;
+    while ( list( $noiseID, $noiseType, $time ) = mysql_fetch_array( $result ) )
+    { // Loop through noises in reverse date order to save IDs of latest for the edit
+      if ( $knoise == 0 )
+      { // First encountered noise is the latest
+        $noiseIDs[$knoise] = $noiseID;
+        $prtype = $noiseType;
+        $prtime = $time;
+        $knoise++;
+      }
+      else if ( $knoise == 1 )
+      { // If second is different type, same time; it is latest
+        if ( $prtype == $noiseType )    break;
+        if ( ( $time - $prtime ) > 2 )  break;
+        $noiseIDs[$knoise] = $noiseID;
+        $knoise++;
+        break;
+      }
+    }
+
+    $_SESSION['request'][$count]['noiseIDs']     = $noiseIDs;
+    $_SESSION['cells'][$rawDataID]['noiseIDs']   = $noiseIDs;
+    $nno1    = count( $nIDsOld  );
+    $nno2    = count( $noiseIDs );
+    if ( $nno1 != $nno2 )
+    { // Different count of noises in edit, all are new
+      $nndiff += $nno2;
+    }
+    else
+    { // Same count:  examine for differing IDs
+      for ( $ii = 0; $ii < $nno1; $ii++ )
+      {
+        if ( $nIDsOld[ $ii ] != $noiseIDs[ $ii ] )
+          $nndiff++;
+      }
+    }
+    $count++;
+  }
+  $new_noise = '';
+
+  // Compose additional page string documenting any new noise determination
+  if ( $nndiff === 0 )
+  {
+    $new_noise = "<div style='color:blue;'>" .
+      "Previously selected latest edits and noises are in force." .
+      "</div>\n";
+  }
+  else if ( $nndiff === 1 )
+  {
+    $new_noise = "<div style='color:blue;'>" .
+      "Previously selected latest edits are in force.<br/>" .
+      "1 new latest noise was detected." .
+      "</div>\n";
+  }
+  else
+  {
+    $new_noise = "<div style='color:blue;'>" .
+      "Previously selected latest edits are in force.<br/>" .
+      "$nndiff new latest noises were detected." .
+      "</div>\n";
+  }
+  $_SESSION['new_noise'] = $new_noise;
+}
+
 ?>

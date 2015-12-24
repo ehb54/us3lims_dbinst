@@ -147,12 +147,21 @@ $css = 'css/slider.css';
 $js = 'js/analysis.js,js/PCSA.js';
 include 'header.php';
 
+$new_noise = '';
+if ( isset($_SESSION['edit_select_type'])  &&
+     $_SESSION['edit_select_type'] == 0 )
+{  // If latest edits and noise, reset the noises
+  set_latest_noises();
+  $new_noise = $_SESSION['new_noise'];
+}
+
 ?>
 <!-- Begin page content -->
 <div id='content'>
 
   <h1 class="title"><?php echo $page_title; ?></h1>
   <!-- Place page content here -->
+  <?php echo $new_noise; ?>
 
 <div>
 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"
