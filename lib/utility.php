@@ -71,6 +71,7 @@ class cluster_info
 
 $clusters = array( 
   new cluster_info( "lonestar.tacc.teragrid.org",  "lonestar",    "normal"  ), 
+  new cluster_info( "lonestar5.tacc.teragrid.org", "lonestar5",   "normal"  ), 
   new cluster_info( "stampede.tacc.xsede.org",     "stampede",    "normal"  ), 
   new cluster_info( "comet.sdsc.edu",              "comet",       "compute" ), 
   new cluster_info( "gordon.sdsc.edu",             "gordon",      "normal"  ), 
@@ -82,8 +83,6 @@ $clusters = array(
   );
 
 global $svcport;
-//$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:8080/ogce-rest/job";
-//$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:9090/ogce-rest/job";
 $gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:" . $svcport . "/ogce-rest/job";
 
 // Change for sandbox testing

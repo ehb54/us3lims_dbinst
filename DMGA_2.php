@@ -147,6 +147,7 @@ HTML;
     
        case 'stampede'   :
        case 'lonestar'   :
+       case 'lonestar5'  :
        case 'trestles'   :
        case 'gordon'     :
        case 'jureca'     :
