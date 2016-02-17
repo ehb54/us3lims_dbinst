@@ -49,6 +49,7 @@ echo<<<HTML
             <tr><th>Cluster</th><th>Max cores</th></tr>
             <tr><td>stampede</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>lonestar</td><td style='text-align:center;'>1152</td></tr>
+            <tr><td>lonestar5</td><td style='text-align:center;'>1152</td></tr>
             <tr><td>comet</td><td style='text-align:center;'>1152</td></tr>
             <tr><td>gordon</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>jureca</td><td style='text-align:center;'>1152</td></tr>
@@ -526,6 +527,7 @@ echo<<<HTML
             <tr><th>Cluster</th><th>Max demes</th></tr>
             <tr><td>stampede</td><td style='text-align:center;'>63</td></tr>
             <tr><td>lonestar</td><td style='text-align:center;'>71</td></tr>
+            <tr><td>lonestar5</td><td style='text-align:center;'>47</td></tr>
             <tr><td>gordon</td><td style='text-align:center;'>63</td></tr>
             <tr><td>comet</td><td style='text-align:center;'>47</td></tr>
             <tr><td>jureca</td><td style='text-align:center;'>47</td></tr>

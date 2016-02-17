@@ -159,13 +159,14 @@ HTML;
        case 'us3iab-node1'  :
           $job = new submit_local();
           break;
-       case 'stampede' :
-       case 'lonestar' :
-       case 'comet'    :
-       case 'gordon'   :
-       case 'alamo'    :
-       case 'jacinto'  :
-       case 'jureca'   : 
+       case 'stampede'  :
+       case 'lonestar'  :
+       case 'lonestar5' :
+       case 'comet'     :
+       case 'gordon'    :
+       case 'alamo'     :
+       case 'jacinto'   :
+       case 'jureca'    : 
           if ( $clus_thrift === true )
              $job = new submit_airavata();
           else
