@@ -214,7 +214,7 @@ exit(0);
     }
 
     if ( $clus_thrift === true )
-       $job->close_transport();
+       $job->close_transport();   // Will be dummy for newer classes
     chdir( $save_cwd );
   }
   $output_msg .= "</pre>\n";

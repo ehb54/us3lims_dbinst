@@ -32,6 +32,7 @@ if (ob_get_length() === false)
   ob_start();
 
 $cluster_list = array(
+                'ls5.tacc.utexas.edu'             => 'lonestar5',
                 'lonestar.tacc.teragrid.org'      => 'lonestar.tacc',
                 'stampede.tacc.xsede.org'         => 'stampede',
                 'comet.sdsc.edu'                  => 'comet',

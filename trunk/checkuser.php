@@ -57,11 +57,27 @@ if ( $count == 1 )
   $_SESSION['submitter_email'] = $email;
   $_SESSION['userlevel']    = $userlevel;
   $_SESSION['instance']     = $dbname;
+  $_SESSION['user_id' ]     = $fname . "_" . $lname . "_" . $personGUID;
 
   // Set cluster authorizations
   $clusterAuth = array();
   $clusterAuth = explode(":", $clusterAuthorizations );
   $_SESSION['clusterAuth'] = $clusterAuth;
+
+  // Set GateWay host ID
+  $gwhostids = array();
+  $gwhostids[ 'uslims3.uthscsa.edu' ]       = 'uslims3.uthscsa.edu_917092f2-7ca3-4bad-8b99-aa83d951bfca'; 
+  $gwhostids[ 'uslims3.fz-juelich.de' ]     = 'uslims3.fz-juelich.de_ae70148f-3909-419f-b016-68ab3ff86dc9';
+  $gwhostids[ 'uslims3.latrobe.edu.au' ]    = 'uslims3.latrobe.edu.au_ddf7fd58-845d-4408-bcfc-80dba25440c9';
+  $gwhostids[ 'uslims3.mbu.iisc.ernet.in' ] = 'uslims3.mbu.iisc.ernet.in_612ab140-978a-4313-bc31-5cea75c5a4fe';
+  $gwhostids[ 'gw143.iu.xsede.org'        ] = 'gw143.iu.xsede.org_3bce3fc7-25ed-41eb-97fb-c0930569ceeb';
+  $gwhost    = dirname( $org_site );
+
+  if ( !isset( $gwhostids[ $gwhost ] ) )
+    $gwhost    = 'uslims3.uthscsa.edu';
+
+  $_SESSION[ 'gwhostid' ] = $gwhostids[ $gwhost ];
+
 }
 
 else if ( $count > 1 )

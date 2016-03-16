@@ -65,6 +65,9 @@ abstract class File_writer
       $xml->writeAttribute( 'version', '1.0' );
 
       $xml->startElement( 'job' );
+        $xml->startElement( 'gateway' );
+          $xml->writeAttribute( 'id', $job['database']['gwhostid'] );
+        $xml->endElement(); // gateway
         $xml->startElement( 'cluster' );
           $xml->writeAttribute( 'name', $job['cluster']['name'] );
           $xml->writeAttribute( 'shortname', $job['cluster']['shortname'] );
@@ -96,6 +99,7 @@ abstract class File_writer
           $xml->endElement(); // host
           $xml->startElement( 'user' );
             $xml->writeAttribute( 'email', $job['database']['user_email'] );
+            $xml->writeAttribute( 'user_id', $job['database']['user_id'] );
           $xml->endElement(); // user
           $xml->startElement( 'submitter' );
             $xml->writeAttribute( 'email', $job['database']['submitter_email'] );
