@@ -331,8 +331,10 @@ class Payload_2DSA extends Payload_manager
       $database             = array();
       $database['name']     = $dbname;
       $database['host']     = $dbhost;
-      $database['user_email'] = $_SESSION['email'];
+      $database['user_email']      = $_SESSION['email'];
       $database['submitter_email'] = $_SESSION['submitter_email'];
+      $database['user_id']         = $_SESSION['user_id'];
+      $database['gwhostid']        = $_SESSION['gwhostid'];
       $this->add( 'database', $database );
 
       $job_parameters                     = array();
@@ -487,6 +489,8 @@ class Payload_2DSA_CG extends Payload_manager
       $database['host']     = $dbhost;
       $database['user_email'] = $_SESSION['email'];
       $database['submitter_email'] = $_SESSION['submitter_email'];
+      $database['user_id']         = $_SESSION['user_id'];
+      $database['gwhostid']        = $_SESSION['gwhostid'];
       $this->add( 'database', $database );
 
       $job_parameters                     = array();
@@ -593,6 +597,8 @@ class Payload_GA extends Payload_manager
       $database['host']     = $dbhost;
       $database['user_email'] = $_SESSION['email'];
       $database['submitter_email'] = $_SESSION['submitter_email'];
+      $database['user_id']         = $_SESSION['user_id'];
+      $database['gwhostid']        = $_SESSION['gwhostid'];
       $this->add( 'database', $database );
 
       $job_parameters                     = array();
@@ -741,6 +747,8 @@ class Payload_DMGA extends Payload_manager
       $database['host']     = $dbhost;
       $database['user_email'] = $_SESSION['email'];
       $database['submitter_email'] = $_SESSION['submitter_email'];
+      $database['user_id']         = $_SESSION['user_id'];
+      $database['gwhostid']        = $_SESSION['gwhostid'];
       $this->add( 'database', $database );
 
       $job_parameters                     = array();
@@ -851,6 +859,8 @@ class Payload_PCSA extends Payload_manager
       $database['host']     = $dbhost;
       $database['user_email'] = $_SESSION['email'];
       $database['submitter_email'] = $_SESSION['submitter_email'];
+      $database['user_id']         = $_SESSION['user_id'];
+      $database['gwhostid']        = $_SESSION['gwhostid'];
       $this->add( 'database', $database );
 
       $job_parameters                     = array();
