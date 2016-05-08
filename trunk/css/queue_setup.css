@@ -3,21 +3,23 @@
 fieldset
 {
   margin-top             : 2em;
+  width                  : 50em;
 }
 
 input
 {
-  width                  : 30em;
+  width                  : 25em;
 }
 
 ul.multi_notes
 {
-  width                  : 60em;
+  width                  : 50em;
   padding                : 1em;
 }
 
 ul.multi_notes li
 {
   padding-top            : 1em;
+  width                  : 50em;
 }
 

@@ -27,6 +27,10 @@ if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 include 'config.php';
 include 'db.php';
 
+$advancelevel   = ( isset($_SESSION['advancelevel']) )
+                ? $_SESSION['advancelevel'] : 0;
+
+// Save queue information if Save Queue Information posted
 $data_missing = false;
 if ( isset( $_POST['save'] ) )
 {
@@ -180,6 +184,8 @@ else
   $edmanu_checked="  checked='checked'";
 }
 
+if ( $advancelevel != 0 )
+{
 // Display and set edit selection type radio buttons
 echo <<<HTML
 
@@ -211,6 +217,19 @@ echo <<<HTML
  </fieldset>
 
 HTML;
+}
+else
+{  // advancelevel==0
+echo <<<HTML
+
+ <div><p>
+   By default, all the latest edits and noises for chosen cells will
+   be selected. To make individual manual edit and noise selections,
+   the user must have a non-0 "Advance Level" setting. That option
+   is rarely needed.
+ </p></div>
+HTML;
+}
 
 if ( $edit_select_type == 1 )
 { // If manual selection, present each edit profile

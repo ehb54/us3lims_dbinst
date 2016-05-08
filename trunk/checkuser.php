@@ -58,6 +58,7 @@ if ( $count == 1 )
   $_SESSION['userlevel']    = $userlevel;
   $_SESSION['instance']     = $dbname;
   $_SESSION['user_id' ]     = $fname . "_" . $lname . "_" . $personGUID;
+  $_SESSION['advancelevel'] = $advancelevel;
 
   // Set cluster authorizations
   $clusterAuth = array();
