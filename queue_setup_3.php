@@ -101,6 +101,8 @@ else
   $separate_datasets = 1;
 
 $_SESSION['separate_datasets'] = $separate_datasets;
+$advancelevel   = ( isset($_SESSION['advancelevel']) )
+                ? $_SESSION['advancelevel'] : 0;
 
 // Set up some web stuff
 $button_message = ( $separate_datasets )
@@ -108,11 +110,11 @@ $button_message = ( $separate_datasets )
                 : "Click here to proceed as separate jobs";
 $separate_text  = ( $separate_datasets == 1 )
                 ? "proceed as separate jobs"
-                : ( ( $separate_dataset == 2 )
-                  ? "proceed as composite jobs(s)"
-                  : "proceed as a global fit" );
+                : "proceed as a global fit";
 $GA_disabled    = "";
 $GA_notes       = "";
+$GA_opt_text    = "";
+
 if ( $separate_datasets != 0 )
 {
   $separate_checked  = "";
@@ -135,6 +137,15 @@ if ( $separate_datasets != 0 )
     $GA_notes          = "<p><b>NOTE:</b>&nbsp;&nbsp;" .
                          "GA disabled for non-global job(s) with multiple datasets.</p>";
   }
+  else
+  {
+    $GA_opt_text = <<<HTML
+  <p><input type="button" value="Setup GA Control"
+            onclick='window.location="GA_1.php"'$GA_disabled />
+     <input type="button" value="Setup Discrete Model GA Control"
+            onclick='window.location="DMGA_1.php"'$GA_disabled /></p>
+HTML;
+  }
 }
 
 else
@@ -144,6 +155,12 @@ else
   $global_checked    = " checked='checked'";
   $separate_text     = "proceed as a global fit";
   $button_message    = "Click here to proceed as separate jobs";
+  $GA_opt_text = <<<HTML
+  <p><input type="button" value="Setup GA Control"
+            onclick='window.location="GA_1.php"'$GA_disabled />
+     <input type="button" value="Setup Discrete Model GA Control"
+            onclick='window.location="DMGA_1.php"'$GA_disabled /></p>
+HTML;
 }
 
 include 'config.php';
@@ -168,13 +185,6 @@ if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] > 0 ) )
   foreach ( $_SESSION['request'] as $removeID => $cellinfo )
   {
     $editedData_text  = get_editedData( $cellinfo['editedDataID'] );
-/*    $model_text       = get_model( $cellinfo['modelID'] );
-
-also insert below in $out_text:
-      <tr><th>Model</th>
-          <td>$model_text</td></tr>
-*/
-
     $noise_text       = get_noise( $cellinfo['noiseIDs'] );
 
     $out_text .= <<<HTML
@@ -200,17 +210,17 @@ HTML;
               "" : " disabled='disabled' ";
 
   $multiset_notes = "";
-  if ( $disabled )
-  {
+  if ( $disabled  &&  $advancelevel != 0 )
+  { // Multiset and Advance Level
     $multiset_notes = <<<HTML
     <fieldset>
     <legend>Multiple dataset notes:</legend>
     <ul class='multi_notes'>
       <li><form action='$_SERVER[PHP_SELF]' method='post'>
-          Multiple datasets can be submitted as either a global fit to
-          a single model or separated into multiple jobs. Currently,
-          you are set up to $separate_text. To change, select one of
-          the options below before proceeding.
+          Multiple datasets can be submitted either separated into
+          multiple jobs or as a global fit to a single model.
+          Currently, you are set up to $separate_text. To change,
+          select one of the options below before proceeding.
 
           <table cellspacing='0' cellpadding='3px'>
           <tr><td><label>
@@ -220,14 +230,14 @@ HTML;
                          Proceed as separate jobs</label></td></tr>
           <tr><td><label>
                   <input type='radio' name='separate_datasets'
-                         value='composite'$composite_checked
-                         onclick='this.form.submit();' />
-                         Proceed as composite job(s)</label></td></tr>
-          <tr><td><label>
-                  <input type='radio' name='separate_datasets'
                          value='global'$global_checked
                          onclick='this.form.submit();' />
                          Proceed as a global fit</label></td></tr>
+          <tr><td><label>
+                  <input type='radio' name='separate_datasets'
+                         value='composite'$composite_checked
+                         onclick='this.form.submit();' />
+                         Proceed as composite job(s)</label></td></tr>
           </table>
           </form></li>
       <li><form action='$_SERVER[PHP_SELF]' method='post'>
@@ -255,10 +265,39 @@ HTML;
 
 HTML;
   }
+  else if ( $disabled  &&  $advancelevel == 0 )
+  { // Multiset and NOT Advance Level
+    $multiset_notes = <<<HTML
+    <fieldset>
+    <legend>Multiple dataset notes:</legend>
+    <ul class='multi_notes'>
+      <li><form action='$_SERVER[PHP_SELF]' method='post'>
+          Multiple datasets can be submitted either separated into
+          multiple jobs or as a global fit to a single model.
+          Currently, you are set up to $separate_text. To change,
+          select one of the options below before proceeding.
 
-  
+          <table cellspacing='0' cellpadding='3px'>
+          <tr><td><label>
+                  <input type='radio' name='separate_datasets'
+                         value='separate'$separate_checked
+                         onclick='this.form.submit();' />
+                         Proceed as separate jobs</label></td></tr>
+          <tr><td><label>
+                  <input type='radio' name='separate_datasets'
+                         value='global'$global_checked
+                         onclick='this.form.submit();' />
+                         Proceed as a global fit</label></td></tr>
+          </table>
+          </form></li>
+    </ul>
+    </fieldset>
+
+HTML;
+  }
+
   echo <<<HTML
-  <h4>Review submitted edit profiles and noise files for each cell</h4>
+  <h4>Select data flow and analysis types</h4>
 
   <div>
   $multiset_notes
@@ -274,11 +313,7 @@ HTML;
      <input type="button" value="Setup 2DSA Control with Custom Grid"
             onclick='window.location="2DSA-CG_1.php"' /></p>
 
-  <p><input type="button" value="Setup GA Control"
-            onclick='window.location="GA_1.php"'$GA_disabled />
-     <input type="button" value="Setup Discrete Model GA Control"
-            onclick='window.location="DMGA_1.php"'$GA_disabled /></p>
-  $GA_notes
+  $GA_opt_text
 
   <p><input type="button" value="Setup PCSA Control"
             onclick='window.location="PCSA_1.php"' />
@@ -293,19 +328,29 @@ HTML;
   <p><input type="button" value="Nonlinear Model GA Control"
             onclick='window.location="GA_SC_1.php"' disabled='disabled' $disabled />
   -->
+  $GA_notes
 
-  <p>Double check the information for each cell, and if it is not correct, 
-     please click on one of the buttons to edit it again, or to start over.
-     If the queue information is correct, please select the <em>Analysis</em>
-     global menu above and choose which type of analysis you would like to
-     perform.</p>
-    $out_text
+HTML;
+
+  if ( $disabled  &&  $advancelevel != 0 )
+  { // Multiset and Advance Level
+    echo <<<HTML
+    <h4>Review submitted edit profiles and noise files for each cell</h4>
+
+    <p>Double check the information for each cell, and if it is not correct, 
+       please click on one of the buttons to edit it again, or to start over.
+       If the queue information is correct, please select the <em>Analysis</em>
+       global menu above and choose which type of analysis you would like to
+       perform.</p>
+      $out_text
+HTML;
+  }
+  echo <<<HTML
 
   </form>
   </div>
 
 HTML;
-
 }
 
 else

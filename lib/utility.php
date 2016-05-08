@@ -70,7 +70,6 @@ class cluster_info
 }
 
 $clusters = array( 
-  new cluster_info( "lonestar.tacc.teragrid.org",  "lonestar",    "normal"  ), 
   new cluster_info( "ls5.tacc.utexas.edu",         "lonestar5",   "normal"  ), 
   new cluster_info( "stampede.tacc.xsede.org",     "stampede",    "normal"  ), 
   new cluster_info( "comet.sdsc.edu",              "comet",       "compute" ), 

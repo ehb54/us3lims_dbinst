@@ -119,7 +119,7 @@ $(document).ready(function()
     if ( $("#PMGC_enable").is(":checked") )
     {
        $("#PMGC_count").show();
-       $("#req_mgroupcount").attr( 'value', 8 );
+       $("#req_mgroupcount").attr( 'value', 4 );
     }
 
     else
