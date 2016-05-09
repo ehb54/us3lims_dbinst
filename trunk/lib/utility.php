@@ -66,6 +66,7 @@ class cluster_info
       $this->running    = "*";
       $this->queued     = "*";
       $this->status     = "*";
+//if($s == 'us3iab-node0') $n = $s . $hostname;
    }
 }
 
@@ -78,7 +79,9 @@ $clusters = array(
   new cluster_info( "alamo.uthscsa.edu",           "alamo-local", "batch"   ),
   new cluster_info( "jacinto.uthscsa.edu",         "jacinto",     "default" ),
   new cluster_info( "jacinto.uthscsa.edu",       "jacinto-local", "default" ),
-  new cluster_info( "jureca.fz-juelich.de",        "jureca",      "batch"   )
+  new cluster_info( "jureca.fz-juelich.de",        "jureca",      "batch"   ),
+  new cluster_info( "us3iab-node0.localhost",     "us3iab-node0", "normal"  ),
+  new cluster_info( "us3iab-node1.localhost",     "us3iab-node1", "normal"  )
   );
 
 global $svcport;
@@ -129,6 +132,7 @@ include "db.php";
 function tigre()
 {
   global $clusters;
+  global $org_site;
 
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
@@ -194,7 +198,15 @@ HTML;
           $clstat   = "<td STYLE='color: DarkViolet'>$cluster->status</td>";
         }
 
-        $value = "$cluster->name:$cluster->short_name:$cluster->queue";
+        $clname = $cluster->name;
+        if ( preg_match( '/localhost/', $clname ) )
+        {  // Form local cluster name
+          $parts  = explode( "/", $org_site );
+          $lohost = $parts[ 0 ];
+          $clname = preg_replace( '/uslims3/', $cluster->short_name, $lohost );
+        }
+
+        $value = "$clname:$cluster->short_name:$cluster->queue";
         $text .= "     <tr><td class='cluster'>" .
                  "<input type='radio' name='cluster' " .
                  "value='$value'$checked$disabled />" .
