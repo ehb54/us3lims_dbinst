@@ -481,7 +481,7 @@ echo<<<HTML
             Value:   <input name='max_iterations' 
                             id='max_iterations'
                             size='12'
-                            value='3' />
+                            value='10' />
             Minimum: <input id="iterations-min" 
                             size='12'
                             disabled="disabled" />

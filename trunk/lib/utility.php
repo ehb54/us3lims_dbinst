@@ -66,7 +66,6 @@ class cluster_info
       $this->running    = "*";
       $this->queued     = "*";
       $this->status     = "*";
-//if($s == 'us3iab-node0') $n = $s . $hostname;
    }
 }
 
