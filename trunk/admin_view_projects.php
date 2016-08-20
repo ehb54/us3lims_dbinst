@@ -128,7 +128,7 @@ function person_project_select( $select_name, $current_ID = NULL )
 // Function to display a table of all records
 function project_info( $personID )
 {
-  $query  = "SELECT p.projectID, description, goals, status " .
+  $query  = "SELECT p.projectID, description, goals, status, lastUpdated " .
             "FROM projectPerson p, project j " .
             "WHERE p.personID = $personID " .
             "AND p.projectID = j.projectID " .
@@ -144,6 +144,7 @@ function project_info( $personID )
           <th>Description</th>
           <th>Goals</th>
           <th>Status</th>
+          <th>Last Updated</th>
       </tr>
     </thead>
 
@@ -170,6 +171,7 @@ $table .= <<<HTML
           <td><a href='admin_edit_projects.php?edit=$projectID'>$description</a></td>
           <td>$goals</td>
           <td>$status</td>
+          <td>$lastUpdated</td>
       </tr>
 HTML;
 

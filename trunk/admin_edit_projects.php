@@ -495,7 +495,7 @@ function edit_record()
   }
 
   $query  = "SELECT goals, molecules, purity, expense, bufferComponents, " .
-            "saltInformation, AUC_questions, expDesign, notes, description, status  " .
+            "saltInformation, AUC_questions, expDesign, notes, description, status, lastUpdated  " .
             "FROM project " .
             "WHERE projectID = $projectID ";
   $result = mysql_query($query) 
@@ -516,6 +516,7 @@ function edit_record()
 
   $status      = $row['status'];
   $status_text = project_status_select( 'status', $status );
+  $lastUpdated = $row['lastUpdated'];
 
   // Let's see if we're coming from the New Record or the Update button
   $rec_status = ( isset( $_GET['edit'] ) )
@@ -594,7 +595,7 @@ echo<<<HTML
     <tr><td><textarea name='notes' rows='6' cols='65' 
                       wrap='virtual'>$notes</textarea></td></tr>
     <tr><th>Status:</th></tr>
-    <tr><td>$status_text</td></tr>
+    <tr><td>$status_text &nbsp;&nbsp;&nbsp (last updated: $lastUpdated)</td></tr>
 
 
     </tbody>
