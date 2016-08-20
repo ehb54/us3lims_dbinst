@@ -472,7 +472,7 @@ function edit_record()
   }
 
   $query  = "SELECT goals, molecules, purity, expense, bufferComponents, " .
-            "saltInformation, AUC_questions, expDesign, notes, description, status  " .
+            "saltInformation, AUC_questions, expDesign, notes, description, status, lastUpdated  " .
             "FROM project " .
             "WHERE projectID = $projectID ";
   $result = mysql_query($query) 
@@ -492,6 +492,7 @@ function edit_record()
   $description         = html_entity_decode( stripslashes( $row['description'] ) );
 
   $status = $row['status'];
+  $lastUpdated = $row['lastUpdated'];
   global $project_status;               // From lib/selectboxes.php
   $status = $project_status[ $status ];
 
@@ -570,7 +571,7 @@ echo<<<HTML
     <tr><td><textarea name='notes' rows='6' cols='65' 
                       wrap='virtual'>$notes</textarea></td></tr>
     <tr><th>Status:</th></tr>
-    <tr><td>$status</td></tr>
+    <tr><td>$status &nbsp;&nbsp;&nbsp;(last updated: $lastUpdated)</td></tr>
 
 
     </tbody>

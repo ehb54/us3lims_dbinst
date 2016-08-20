@@ -86,7 +86,7 @@ function create_table()
 {
   $ID   = $_SESSION['id'];
 
-  $query  = "SELECT p.projectID, description, goals, status " .
+  $query  = "SELECT p.projectID, description, goals, status, lastUpdated " .
             "FROM projectPerson p, project j " .
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
@@ -102,6 +102,7 @@ function create_table()
           <th>Description</th>
           <th>Goals</th>
           <th>Status</th>
+          <th>Last Updated</th>
       </tr>
     </thead>
 
@@ -128,6 +129,7 @@ $table .= <<<HTML
           <td><a href='edit_projects.php?edit=$projectID'>$description</a></td>
           <td>$goals</td>
           <td>$status</td>
+          <td>$lastUpdated</td>
       </tr>
 HTML;
 
