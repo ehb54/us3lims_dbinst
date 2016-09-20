@@ -30,13 +30,20 @@ if ( ! mysql_select_db( $globaldbname, $globaldb ) )
   return;
 }
 
-$query  = "SELECT gfacID, us3_db FROM analysis " .
-          "ORDER BY time ";
+$is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
+
+$query  = "SELECT gfacID, us3_db FROM analysis ";
+if ( $is_uiab )
+  $query .= "WHERE us3_db = '$dbname' ";
+$query .= "ORDER BY time ";
 $result = mysql_query( $query )
           or die( "Query failed : $query<br />" . mysql_error());
 if ( mysql_num_rows( $result ) == 0 )
 {
-  echo "<p>No jobs are currently queued, running, or completing.</p>\n";
+  if ( $is_uiab )
+    echo "<p>No <b>$dbname</b> jobs are currently queued, running, or completing.</p>\n";
+  else
+    echo "<p>No jobs are currently queued, running, or completing.</p>\n";
   return;
 }
 
@@ -63,7 +70,10 @@ uasort( $display_info, 'cmp' );
 $content = "<div class='queue_content'>\n";
 
 $count_jobs = count( $display_info );
-$content .= "<p>There are $count_jobs job(s) queued, running, or completing.</p>\n";
+if ( $is_uiab )
+  $content .= "<p>There are $count_jobs <b>$dbname</b> job(s) queued, running, or completing.</p>\n";
+else
+  $content .= "<p>There are $count_jobs job(s) queued, running, or completing.</p>\n";
 
 $content .= "<table>\n";
 $content .= "<tr><td colspan='5' class='decoration'><hr/></td></tr>\n";
