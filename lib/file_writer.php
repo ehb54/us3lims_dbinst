@@ -45,6 +45,18 @@ abstract class File_writer
       else
       {
         $global_fit = 1;
+        // See if we have all total_concentrations, as needed for global-fit
+        $min_totc   = 99999.9;
+        foreach ( $job['dataset'] as $dataset_id => $dataset )
+        { // Find the minimum total_concentration for all datasets
+          $totc     = $dataset['total_concentration'];
+          if ( $totc < $min_totc )
+            $min_totc  = $totc;
+        }
+        if ( $min_totc <= 0.0 )
+        { // Return a special flag indicating not all 2DSA-IT present
+          return "2DSA-IT-MISSING";
+        }
       }
     }
 
@@ -173,6 +185,9 @@ abstract class File_writer
             $xml->startElement( 'centerpiece_width' );
               $xml->writeAttribute( 'value', $dataset['centerpiece_width'] );
             $xml->endElement(); // centerpiece_width
+            $xml->startElement( 'total_concentration' );
+              $xml->writeAttribute( 'value', $dataset['total_concentration'] );
+            $xml->endElement(); // dataset total concentration
 
             foreach( $dataset['speedsteps'] as $speedstep )
             {
