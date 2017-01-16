@@ -111,8 +111,15 @@ else
   $globalfit = $payload->get();
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
+  $missit_msg = '';
   if ( $filenames[ 0 ] === false )
     $files_ok = false;
+
+  else if ( $filenames[ 0 ] === '2DSA-IT-MISSING' )
+  {
+    $files_ok = false;
+    $missit_msg = "<br/><b>Global Fit without all needed 2DSA-IT models</b/>";
+  }
 
   else
   {
@@ -153,14 +160,15 @@ HTML;
     // Currently we are supporting two submission methods.
     switch ( $cluster )
     {
-       case 'jacinto-local' :
+       case 'bcf-local'     :
        case 'alamo-local'   :
+       case 'jacinto-local' :
        case 'us3iab-node0'  :
        case 'us3iab-node1'  :
+       case 'us3iab-devel'  :
           $job = new submit_local();
           break;
        case 'stampede'  :
-       case 'lonestar'  :
        case 'lonestar5' :
        case 'comet'     :
        case 'gordon'    :
@@ -225,6 +233,7 @@ else
   $output_msg = <<<HTML
   Thank you, there have been one or more problems writing the various files necessary
   for job submission. Please contact your system administrator.
+  $missit_msg
 
 HTML;
 

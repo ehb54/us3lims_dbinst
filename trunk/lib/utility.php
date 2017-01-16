@@ -70,17 +70,18 @@ class cluster_info
 }
 
 $clusters = array( 
-  new cluster_info( "ls5.tacc.utexas.edu",         "lonestar5",   "normal"  ), 
-  new cluster_info( "stampede.tacc.xsede.org",     "stampede",    "normal"  ), 
-  new cluster_info( "comet.sdsc.edu",              "comet",       "compute" ), 
-  new cluster_info( "gordon.sdsc.edu",             "gordon",      "normal"  ), 
-  new cluster_info( "alamo.uthscsa.edu",           "alamo",       "batch"   ),
-  new cluster_info( "alamo.uthscsa.edu",           "alamo-local", "batch"   ),
-  new cluster_info( "jacinto.uthscsa.edu",         "jacinto",     "default" ),
-  new cluster_info( "jacinto.uthscsa.edu",       "jacinto-local", "default" ),
-  new cluster_info( "jureca.fz-juelich.de",        "jureca",      "batch"   ),
-  new cluster_info( "us3iab-node0.localhost",     "us3iab-node0", "normal"  ),
-  new cluster_info( "us3iab-node1.localhost",     "us3iab-node1", "normal"  )
+  new cluster_info( "ls5.tacc.utexas.edu",      "lonestar5",     "normal"  ), 
+  new cluster_info( "stampede.tacc.xsede.org",  "stampede",      "normal"  ), 
+  new cluster_info( "comet.sdsc.xsede.org",     "comet",         "compute" ), 
+  new cluster_info( "gordon.sdsc.xsede.org",    "gordon",        "normal"  ), 
+  new cluster_info( "alamo.uthscsa.edu",        "alamo",         "batch"   ),
+  new cluster_info( "alamo.uthscsa.edu",        "alamo-local",   "batch"   ),
+  new cluster_info( "jacinto.uthscsa.edu",      "jacinto",       "default" ),
+  new cluster_info( "jacinto.uthscsa.edu",      "jacinto-local", "default" ),
+  new cluster_info( "jureca.fz-juelich.de",     "jureca",        "batch"   ),
+  new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",  "normal"  ),
+  new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",  "normal"  ),
+  new cluster_info( "dev1-linux.attlocal.net",  "us3iab-devel",  "normal"  )
   );
 
 global $svcport;
@@ -173,11 +174,11 @@ HTML;
           {
             $qrrat     = (int)( ( $crun * 100 ) / $cque );
             if ( $qrrat < 80 )
-              $clload     = "<td BGCOLOR='red'>long</td>";
+              $clload     = "<td width=70 BGCOLOR='red'>long</td>";
             else if ( $qrrat > 120 )
-              $clload     = "<td BGCOLOR='green'>short</td>";
+              $clload     = "<td width=70 BGCOLOR='green'>short</td>";
             else
-              $clload     = "<td BGCOLOR='yellow'>medium</td>";
+              $clload     = "<td width=70 BGCOLOR='yellow'>medium</td>";
           }
   
           else if ( $cque == 0 )
@@ -206,7 +207,7 @@ HTML;
         }
 
         $value = "$clname:$cluster->short_name:$cluster->queue";
-        $text .= "     <tr><td class='cluster'>" .
+        $text .= "     <tr><td class='cluster' width=115 >" .
                  "<input type='radio' name='cluster' " .
                  "value='$value'$checked$disabled />" .
                  "$cluster->short_name</td>\n" .
@@ -365,4 +366,5 @@ function LIMS_mailer( $email, $subject, $message )
 
   mail($email, "$subject - $now", $message, $headers);
 }
+
 ?>

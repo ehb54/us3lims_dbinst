@@ -70,10 +70,20 @@ uasort( $display_info, 'cmp' );
 $content = "<div class='queue_content'>\n";
 
 $count_jobs = count( $display_info );
+$is_are     = "are";
+$strjob     = "jobs";
+if ( $count_jobs == 1 )
+{
+  $is_are     = "is";
+  $strjob     = "job";
+}
+  
 if ( $is_uiab )
-  $content .= "<p>There are $count_jobs <b>$dbname</b> job(s) queued, running, or completing.</p>\n";
+  $content .= "<p>There $is_are $count_jobs <b>$dbname</b> $strjob" .
+              " queued, running, or completing.</p>\n";
 else
-  $content .= "<p>There are $count_jobs job(s) queued, running, or completing.</p>\n";
+  $content .= "<p>There $is_are $count_jobs $strjob" .
+              " queued, running, or completing.</p>\n";
 
 $content .= "<table>\n";
 $content .= "<tr><td colspan='5' class='decoration'><hr/></td></tr>\n";

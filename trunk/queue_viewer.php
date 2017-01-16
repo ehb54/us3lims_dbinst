@@ -121,26 +121,35 @@ function do_delete()
   if ( ! $found ) return;
 
   // We need to find out if it's a GFAC or local job
-  $hex = "[0-9a-fA-F]";
-  if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
-       ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) &&
-       ! preg_match( "/^US3-A/", $gfacID ) )
-     $shortname .= '-local';   // Not a GFAC ID
-  $clus_thrift = $uses_thrift;
-  if ( in_array( $shortname, $thr_clust_excls ) )
+  if ( preg_match( "/us3iab/", $shortname ) )
+  {
      $clus_thrift   = false;
-  if ( in_array( $shortname, $thr_clust_incls ) )
-     $clus_thrift   = true;
+  }
+  else
+  {
+    $hex = "[0-9a-fA-F]";
+    if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
+         ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) &&
+         ! preg_match( "/^US3-A/", $gfacID ) )
+       $shortname .= '-local';   // Not a GFAC ID
+    $clus_thrift = $uses_thrift;
+    if ( in_array( $shortname, $thr_clust_excls ) )
+       $clus_thrift   = false;
+    if ( in_array( $shortname, $thr_clust_incls ) )
+       $clus_thrift   = true;
+  }
  
   switch ( $shortname )
   {
     case 'alamo-local'   :
     case 'jacinto-local' :
+    case 'us3iab-node0'  :
+    case 'us3iab-node1'  :
+    case 'us3iab-devel'  :
+    case 'dev1-linux'    :
+    case 'localhost'     :
       $status = cancelLocalJob( $shortname, $gfacID );
       break;
-//    case 'jureca'    :
-//      $status = cancelJob( $gfacID );
-//      break;
 	
     case 'stampede'  :
     case 'lonestar'  :
@@ -173,9 +182,10 @@ function do_delete()
 // Function to cancel a local job
 function cancelLocalJob( $cluster, $gfacID )
 {
-   $system = "$cluster.uthscsa.edu";
-   $system = preg_replace( "/\-local/", "", $system );
-   $cmd    = "/usr/bin/ssh -x us3@$system qstat -a $gfacID 2>&1";
+//   $system = "$cluster.uthscsa.edu";
+//   $system = preg_replace( "/\-local/", "", $system );
+//   $cmd    = "/usr/bin/ssh -x us3@$system qstat -a $gfacID 2>&1";
+   $cmd    = "qstat -a $gfacID 2>&1|tail -n 1";
 
    $result = exec( $cmd );
 
@@ -212,7 +222,9 @@ function cancelLocalJob( $cluster, $gfacID )
         // we should use qdel -r $gfacID instead of the following.
         $parts = explode( ".", $gfacID );
         $jobID = $parts[ 0 ];
-        $cmd    = "/usr/bin/ssh -x us3@$system qdel $jobID 2>&1";
+        //$cmd    = "/usr/bin/ssh -x us3@$system qdel $jobID 2>&1";
+        //$cmd    = "qdel $jobID 2>&1";
+        $cmd    = "qdel $gfacID 2>&1";
         $result = exec( $cmd );
 
         $lastMessage = "This job has been canceled";

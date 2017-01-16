@@ -290,6 +290,66 @@ abstract class Payload_manager
         }
       }
     }
+
+    // Function to parse a model XML in order to return total concentration
+    function total_concentration( $xml )
+    {
+      $tot_conc = 0.0;
+      $name     = "";
+
+      $parser   = new XMLReader();
+      $parser->xml( $xml );
+
+      while( $parser->read() )
+      {
+        $type       = $parser->nodeType;
+
+        if ( $type == XMLReader::ELEMENT )
+        {
+          $name       = $parser->name;
+
+          if ( $name == "analyte" )
+          {
+            $parser->moveToAttribute( 'signal' );
+            $concen     = $parser->value;
+            $tot_conc  += $concen;
+          }
+        }
+      }
+      $parser->close();
+
+      return $tot_conc;
+    }
+
+    // Function to read a 2DSA-IT model for an edit
+    //   and return the model's total concentration
+    function model_concentration( $editedDataID )
+    {
+      $tot_conc = 0.0;
+      $modelXML = "";
+      $query    = "SELECT xml FROM model " .
+                  "WHERE editedDataID = $editedDataID " .
+                  "AND description LIKE '%2DSA-IT%' ";
+      $result   = mysql_query( $query )
+            or die( "Query failed : $query<br/>\n" . mysql_error() );
+
+      if ( mysql_num_rows( $result ) > 0 )
+      {
+        list( $modelXML ) = mysql_fetch_array( $result );
+
+        if ( $modelXML != "" )
+        {
+          $tot_conc = $this->total_concentration( $modelXML );
+        }
+      }
+      else
+      {
+        $tot_conc = $editedDataID;
+      }
+
+      return $tot_conc;
+    }
+
 }
 
 /*
@@ -424,8 +484,10 @@ class Payload_2DSA extends Payload_manager
 
     // Create new elements for this dataset
     //?? $parameters                 = $dataset['parameters'];
+    $editedDataID   = $_SESSION['request'][$dataset_id]['editedDataID'];
+    $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
     $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
-    $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
+    $parameters['editedDataID'] = $editedDataID;
     $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
     $parameters['noiseIDs']     = array();
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
@@ -436,6 +498,8 @@ class Payload_2DSA extends Payload_manager
                                 : 0.0;
     $parameters['radial_grid']  = $_POST['radial_grid'];
     $parameters['time_grid']    = $_POST['time_grid'];
+    $parameters['total_concentration']
+                                = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
     $dataset                    = $this->get('dataset');
@@ -538,9 +602,10 @@ class Payload_2DSA_CG extends Payload_manager
 
     // Create new elements for this dataset
     //?? $parameters                 = $dataset['parameters'];
+    $editedDataID   = $_SESSION['request'][$dataset_id]['editedDataID'];
     $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
     $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
-    $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
+    $parameters['editedDataID'] = $editedDataID;
     $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
     $parameters['noiseIDs']     = array();
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
@@ -551,6 +616,8 @@ class Payload_2DSA_CG extends Payload_manager
                                 : 0.0;
     $parameters['radial_grid']  = $_POST['radial_grid'];
     $parameters['time_grid']    = $_POST['time_grid'];
+    $parameters['total_concentration']
+                                = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
     $dataset                    = $this->get('dataset');
@@ -671,9 +738,10 @@ class Payload_GA extends Payload_manager
 
     // Create new elements for this dataset
     //?? $parameters                 = $dataset['parameters'];
+    $editedDataID   = $_SESSION['request'][$dataset_id]['editedDataID'];
     $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
     $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
-    $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
+    $parameters['editedDataID'] = $editedDataID;
     $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
     $parameters['noiseIDs']     = array();
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
@@ -684,6 +752,8 @@ class Payload_GA extends Payload_manager
                                 : 0.0;
     $parameters['radial_grid']  = $_POST['radial_grid'];
     $parameters['time_grid']    = $_POST['time_grid'];
+    $parameters['total_concentration']
+                                = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
     $dataset                    = $this->get('dataset');
@@ -818,9 +888,10 @@ class Payload_DMGA extends Payload_manager
 
     // Create new elements for this dataset
     //?? $parameters                 = $dataset['parameters'];
+    $editedDataID   = $_SESSION['request'][$dataset_id]['editedDataID'];
     $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
     $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
-    $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
+    $parameters['editedDataID'] = $editedDataID;
     $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
     $parameters['noiseIDs']     = array();
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
@@ -831,6 +902,8 @@ class Payload_DMGA extends Payload_manager
                                 : 0.0;
     $parameters['radial_grid']  = $_POST['radial_grid'];
     $parameters['time_grid']    = $_POST['time_grid'];
+    $parameters['total_concentration']
+                                = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
     $dataset                    = $this->get('dataset');
@@ -941,9 +1014,10 @@ class Payload_PCSA extends Payload_manager
 
     // Create new elements for this dataset
     //?? $parameters                 = $dataset['parameters'];
+    $editedDataID   = $_SESSION['request'][$dataset_id]['editedDataID'];
     $parameters['rawDataID']    = $_SESSION['request'][$dataset_id]['rawDataID'];
     $parameters['auc']          = $_SESSION['request'][$dataset_id]['filename'];
-    $parameters['editedDataID'] = $_SESSION['request'][$dataset_id]['editedDataID'];
+    $parameters['editedDataID'] = $editedDataID;
     $parameters['edit']         = $_SESSION['request'][$dataset_id]['editFilename'];
     $parameters['noiseIDs']     = array();
     $parameters['noiseIDs']     = $_SESSION['request'][$dataset_id]['noiseIDs'];
@@ -954,6 +1028,8 @@ class Payload_PCSA extends Payload_manager
                                 : 0.0;
     $parameters['radial_grid']  = $_POST['radial_grid'];
     $parameters['time_grid']    = $_POST['time_grid'];
+    $parameters['total_concentration']
+                                = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
     $dataset                    = $this->get('dataset');

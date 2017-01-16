@@ -56,7 +56,7 @@ $(document).ready(function()
   {
     animate: true,
     range:   "min",
-    value:   100,
+    value:   200,
     min:     25,
     max:     1000,
     step:    1,
