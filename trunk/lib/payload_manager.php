@@ -344,7 +344,7 @@ abstract class Payload_manager
       }
       else
       {
-        $tot_conc = $editedDataID;
+        $tot_conc = -1;   // Mark no 2DSA-IT found
       }
 
       return $tot_conc;
