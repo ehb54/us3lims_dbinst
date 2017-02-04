@@ -207,10 +207,7 @@ function display( $dataset_id, $num_datasets )
             if ( $dataset_id == 0 ) 
             {
               montecarlo(); 
-              if ( $num_datasets == 1 )
-              {
-                PMGC_option();
-              }
+              PMGC_option();
             }
       ?>
 
