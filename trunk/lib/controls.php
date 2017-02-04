@@ -41,7 +41,7 @@ echo<<<HTML
           <p>
           Note: The actual group count number is dependent on the capacity and the 
           architecture of the selected back end system. Generally, the group count number
-          will be adjusted downward to 1/2/4/8/16/32 depending on the number of demes or
+          will be adjusted downward to 1-7/8/16/32 depending on the number of demes or
           datasets requested and the capacity of the system. Currently, the maximum number of
           cores that can be requested ( that is, #cores_per_group x #groups ) are as follows:
           </p>
