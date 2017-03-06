@@ -154,14 +154,14 @@ function do_update()
   $ID        = $_SESSION['id'];
   $projectID = $_POST['projectID'];
 
-  // Since we always send out emails here, and the user could press the 
+  // Since we always send out emails here, and the user could press the
   //  Update button even though nothing has changed, let's check
   $query  = "SELECT goals, molecules, purity, expense, " .
             "bufferComponents, saltInformation, AUC_questions, " .
             "expDesign, notes, description " .
             "FROM project " .
             "WHERE projectID = $projectID ";
-  $result = mysql_query($query) 
+  $result = mysql_query($query)
             or die("Query failed : $query<br />\n" . mysql_error());
 
   $row    = mysql_fetch_array($result, MYSQL_ASSOC);
@@ -324,7 +324,7 @@ function display_record()
             "bufferComponents, saltInformation, AUC_questions, expDesign, notes, description, status " .
             "FROM project " .
             "WHERE projectID = $projectID ";
-  $result = mysql_query($query) 
+  $result = mysql_query($query)
             or die("Query failed : $query<br />\n" . mysql_error());
 
   $row    = mysql_fetch_array($result, MYSQL_ASSOC);
@@ -363,7 +363,7 @@ echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
-      <tr><th colspan='8'>Edit My Projects</th></tr>
+      <tr><th colspan='8'>Edit My Project</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>Jump to: $nav_listbox
@@ -475,7 +475,7 @@ function edit_record()
             "saltInformation, AUC_questions, expDesign, notes, description, status, lastUpdated  " .
             "FROM project " .
             "WHERE projectID = $projectID ";
-  $result = mysql_query($query) 
+  $result = mysql_query($query)
             or die("Query failed : $query<br />\n" . mysql_error());
 
   $row = mysql_fetch_array($result);
@@ -497,7 +497,7 @@ function edit_record()
   $status = $project_status[ $status ];
 
   // Let's see if we're coming from the New Record or the Update button
-  $rec_status = ( isset( $_GET['edit'] ) ) 
+  $rec_status = ( isset( $_GET['edit'] ) )
               ? "<input type='hidden' name='rec_status' value='new' />"
               : "<input type='hidden' name='rec_status' value='update' />";
 
@@ -516,59 +516,59 @@ echo<<<HTML
     <tbody>
 
 
-    <tr><th>Please enter a title for your project. Later, you will be able to 
+    <tr><th>Please enter a title for your project. Later, you will be able to
             retrieve your project by this description:</th></tr>
-    <tr><td><textarea name='description' rows='6' cols='65' 
+    <tr><td><textarea name='description' rows='6' cols='65'
                       wrap='virtual'>$description</textarea></td></tr>
-    <tr><th>Please provide a detailed description of your research. Include an 
-            introduction to your research project and explain the goals of your 
-            research. We will use this information to optimally design your 
-            experiment. Please provide enough background so we can assess the 
+    <tr><th>Please provide a detailed description of your research. Include an
+            introduction to your research project and explain the goals of your
+            research. We will use this information to optimally design your
+            experiment. Please provide enough background so we can assess the
             biological significance of this research:</th></tr>
-    <tr><td><textarea name='goals' rows='6' cols='65' 
+    <tr><td><textarea name='goals' rows='6' cols='65'
                       wrap='virtual'>$goals</textarea></td></tr>
-    <tr><th>What proteins/DNA molecules are involved in the research and what 
+    <tr><th>What proteins/DNA molecules are involved in the research and what
             are their approximate molecular weights? Also, please
             provide the sequence in single-letter code.</th></tr>
-    <tr><td><textarea name='molecules' rows='6' cols='65' 
+    <tr><td><textarea name='molecules' rows='6' cols='65'
                       wrap='virtual'>$molecules</textarea></td></tr>
-    <tr><th>Please indicate the approximate purity of your sample(s). You can 
+    <tr><th>Please indicate the approximate purity of your sample(s). You can
             express it in percent:</th></tr>
     <tr><td><input type='text' name='purity' size='40'
                    maxlength='10' value='$purity' /></td></tr>
-    <tr><th>Would the expense of providing 5 ml at 1 OD 280 concentration of 
-            your sample be acceptable? If not, what amount would you feel 
+    <tr><th>Would the expense of providing 5 ml at 1 OD 280 concentration of
+            your sample be acceptable? If not, what amount would you feel
             comfortable with? Elaborate if necessary:</th></tr>
-    <tr><td><textarea name='expense' rows='6' cols='65' 
+    <tr><td><textarea name='expense' rows='6' cols='65'
                       wrap='virtual'>$expense</textarea></td></tr>
     <tr><th>What buffers do you plan to use? Is phosphate or MOPS buffer an option?<br />
-            To minimize absorbance we prefer to run phosphate or MOPS buffers in 
-            low concentration (~ 5-10 mM). Salts also absorb and should be kept 
-            to a minimum, although a certain ionic strength (25-50 mM) is desired 
+            To minimize absorbance we prefer to run phosphate or MOPS buffers in
+            low concentration (~ 5-10 mM). Salts also absorb and should be kept
+            to a minimum, although a certain ionic strength (25-50 mM) is desired
             to aid with the hydrodynamic ideality behavior.<br /><br />
 
-            Do you need to have drugs in your sample, such as reductants and 
+            Do you need to have drugs in your sample, such as reductants and
             nucleotide analogs?<br />
-            Please list all components in your buffer. If reductants are required 
-            it is essential that you use TCEP, which can be used at 280 nm, but 
+            Please list all components in your buffer. If reductants are required
+            it is essential that you use TCEP, which can be used at 280 nm, but
             not lower wavelengths.<br /><br />
 
             Please list all buffer components:</th></tr>
-    <tr><td><textarea name='bufferComponents' rows='6' cols='65' 
+    <tr><td><textarea name='bufferComponents' rows='6' cols='65'
                       wrap='virtual'>$bufferComponents</textarea></td></tr>
-    <tr><th>Is a salt concentration between 20-50 mM for your experiment 
+    <tr><th>Is a salt concentration between 20-50 mM for your experiment
             acceptable? If not, please explain why not.</th></tr>
-    <tr><td><textarea name='saltInformation' rows='6' cols='65' 
+    <tr><td><textarea name='saltInformation' rows='6' cols='65'
                       wrap='virtual'>$saltInformation</textarea></td></tr>
-    <tr><th>What questions are you trying to answer with AUC? How do you propose 
+    <tr><th>What questions are you trying to answer with AUC? How do you propose
             to approach the research with AUC experiments?</th></tr>
-    <tr><td><textarea name='AUC_questions' rows='6' cols='65' 
+    <tr><td><textarea name='AUC_questions' rows='6' cols='65'
                       wrap='virtual'>$AUC_questions</textarea></td></tr>
     <tr><th>Please enter any notes about the experiment design.</th></tr>
-    <tr><td><textarea name='expDesign' rows='6' cols='65' 
+    <tr><td><textarea name='expDesign' rows='6' cols='65'
                       wrap='virtual'>$expDesign</textarea></td></tr>
     <tr><th>Special instructions, questions, and notes (optional):</th></tr>
-    <tr><td><textarea name='notes' rows='6' cols='65' 
+    <tr><td><textarea name='notes' rows='6' cols='65'
                       wrap='virtual'>$notes</textarea></td></tr>
     <tr><th>Status:</th></tr>
     <tr><td>$status &nbsp;&nbsp;&nbsp;(last updated: $lastUpdated)</td></tr>
