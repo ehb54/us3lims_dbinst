@@ -57,7 +57,7 @@ $_SESSION['print_text']  = $table;
 include 'footer.php';
 exit();
 
-// Function to create a new record 
+// Function to create a new record
 function do_new()
 {
   $ID   = $_SESSION['id'];
@@ -91,7 +91,7 @@ function create_table()
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysql_query($query) 
+  $result = mysql_query($query)
             or die("Query failed : $query<br />\n" . mysql_error());
 
   $table = <<<HTML
@@ -108,7 +108,7 @@ function create_table()
 
     <tfoot>
       <tr><td colspan='5'><input type='submit' name='new' value = 'New' />
-                          <input type='button' value='Print Version' 
+                          <input type='button' value='Print Version'
                                  onclick='print_version();' /></td></tr>
     </tfoot>
 
@@ -126,7 +126,7 @@ HTML;
 
 $table .= <<<HTML
       <tr>
-          <td><a href='edit_projects.php?edit=$projectID'>$description</a></td>
+          <td><a href='edit_projects.php?ID=$projectID'>$description</a></td>
           <td>$goals</td>
           <td>$status</td>
           <td>$lastUpdated</td>

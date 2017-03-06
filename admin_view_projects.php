@@ -168,7 +168,7 @@ HTML;
 
 $table .= <<<HTML
       <tr>
-          <td><a href='admin_edit_projects.php?edit=$projectID'>$description</a></td>
+          <td><a href='admin_edit_projects.php?ID=$projectID'>$description</a></td>
           <td>$goals</td>
           <td>$status</td>
           <td>$lastUpdated</td>
