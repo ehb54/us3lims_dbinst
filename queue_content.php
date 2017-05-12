@@ -33,14 +33,14 @@ if ( ! mysql_select_db( $globaldbname, $globaldb ) )
 $is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
 
 $query  = "SELECT gfacID, us3_db FROM analysis ";
-if ( $is_uiab )
+if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
   $query .= "WHERE us3_db = '$dbname' ";
 $query .= "ORDER BY time ";
 $result = mysql_query( $query )
           or die( "Query failed : $query<br />" . mysql_error());
 if ( mysql_num_rows( $result ) == 0 )
 {
-  if ( $is_uiab )
+  if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
     echo "<p>No <b>$dbname</b> jobs are currently queued, running, or completing.</p>\n";
   else
     echo "<p>No jobs are currently queued, running, or completing.</p>\n";
@@ -78,7 +78,7 @@ if ( $count_jobs == 1 )
   $strjob     = "job";
 }
   
-if ( $is_uiab )
+if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
   $content .= "<p>There $is_are $count_jobs <b>$dbname</b> $strjob" .
               " queued, running, or completing.</p>\n";
 else

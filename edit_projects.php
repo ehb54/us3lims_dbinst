@@ -361,9 +361,12 @@ function display_record()
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
-  <table cellspacing='0' cellpadding='10' class='style1'>
+  <table cellspacing='0' cellpadding='10' class='style1' id='fixed'>
     <thead>
-      <tr><th colspan='8'>Edit My Project</th></tr>
+      <tr>
+        <th style="width: 16%;"></th>
+        <th>Edit My Project</th>
+      </tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>Jump to: $nav_listbox

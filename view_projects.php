@@ -96,13 +96,13 @@ function create_table()
 
   $table = <<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post" >
-  <table cellspacing='0' cellpadding='7' class='style1 sortable' style='width:95%;'>
+  <table cellspacing='0' cellpadding='7' class='style1 sortable' id='fixed' style='width:95%;'>
     <thead>
       <tr>
-          <th>Description</th>
-          <th>Goals</th>
-          <th>Status</th>
-          <th>Last Updated</th>
+          <th style="width: 14%;">Description</th>
+          <th style="width: 70%;">Goals</th>
+          <th style="width: 11%;">Status</th>
+          <th style="width: 11%;">Last Updated</th>
       </tr>
     </thead>
 
