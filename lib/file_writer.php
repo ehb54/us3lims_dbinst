@@ -66,6 +66,12 @@ abstract class File_writer
                              $job['database']['name'],
                              $HPCAnalysisRequestID );
 
+    $snamclus = $job['cluster']['shortname'];
+    $ipadserv = $job['server']['ip'];
+    if ( preg_match( "/-local/", $snamclus )  &&
+         isset( $job['server']['ip_ext'] ) )
+      $ipadserv = $job['server']['ip_ext'];
+
     $xml = new XMLWriter();
     $xml->openMemory();
     $xml->setIndent( true );
@@ -82,12 +88,12 @@ abstract class File_writer
         $xml->endElement(); // gateway
         $xml->startElement( 'cluster' );
           $xml->writeAttribute( 'name', $job['cluster']['name'] );
-          $xml->writeAttribute( 'shortname', $job['cluster']['shortname'] );
+          $xml->writeAttribute( 'shortname', $snamclus );
           $xml->writeAttribute( 'queue', $job['cluster']['queue'] );
         $xml->endElement(); // cluster
         $xml->startElement( 'udp' );
           $xml->writeAttribute( 'port', $job['server']['udpport'] );
-          $xml->writeAttribute( 'server', $job['server']['ip'] );
+          $xml->writeAttribute( 'server', $ipadserv );
         $xml->endElement(); // udp
         $xml->startElement( 'directory' );
           $xml->writeAttribute( 'name', $current_dir );
@@ -148,6 +154,12 @@ abstract class File_writer
                   $xml->writeAttribute( 'filename', $noiseFile );
                 $xml->endElement(); // noise
               }
+            }
+            if ( isset( $filenames[$dataset_id]['tmst_fn'] ) )
+            {
+              $xml->startElement( 'timestate' );
+                $xml->writeAttribute( 'filename', $filenames[$dataset_id]['tmst_fn'] );
+              $xml->endElement(); // timestate
             }
           $xml->endElement(); // files
           $xml->startElement( 'parameters' );
@@ -260,6 +272,12 @@ abstract class File_writer
 
       if ( isset( $filename['DC_model'] ) )
          $files[] = $filename['DC_model'];
+
+      if ( isset( $filename['tmst_fn'] ) )
+         $files[] = $filename['tmst_fn'];
+
+      if ( isset( $filename['tdef_fn'] ) )
+         $files[] = $filename['tdef_fn'];
     }
 
     $save_cwd = getcwd();         // So we can come back to the current 
@@ -283,15 +301,22 @@ abstract class File_writer
   // If successful, returns a data structure with all the filenames in it
   function write_support_files( $job, $dir )
   {
+    $experID   = 0;
     $filenames = array();
+    $expIDs    = array();
     foreach ( $job['dataset'] as $dataset_id => $dataset )
     {
       // auc files
-      $query  = "SELECT data FROM rawData " .
+      $query  = "SELECT data, experimentID FROM rawData " .
                 "WHERE rawDataID = {$dataset['rawDataID']} ";
       $result = mysql_query( $query )
                 or die( "Query failed : $query<br />" . mysql_error());
-      list( $aucdata ) = mysql_fetch_array( $result );
+      list( $aucdata, $expID ) = mysql_fetch_array( $result );
+      if ( $expID != $experID )
+      {
+        $expIDs[$dataset_id] = $expID;
+        $experID             = $expID;
+      }
       if ( ! $this->create_file( $dataset['auc'], $dir, $aucdata ) )
         return false;
       $filenames[$dataset_id]['auc'] = $dataset['auc'];
@@ -336,7 +361,31 @@ abstract class File_writer
           return false;
         $filenames[$dataset_id]['noise'][$ndx] = $noise_file;
       }
-    }
+
+      // TimeState
+      if ( isset( $expIDs[$dataset_id] ) )
+      { // We have an experiment ID for this dataset
+        $expID   = $expIDs[$dataset_id];
+        $query   = "SELECT filename, definitions, data, length(data) " .
+                   "FROM timestate " .
+                   "WHERE experimentID = $expID ";
+        $result  = mysql_query( $query )
+                   or die( "Query failed : $query<br />" . mysql_error());
+        if ( mysql_num_rows( $result ) > 0 )
+        { // TimeState DB record exists:  write the tmst,def files
+          list( $tmst_fn, $def, $data ) = mysql_fetch_array( $result );
+
+          if ( $this->create_file( $tmst_fn, $dir, $data ) )
+          { // TMST file successfully created:  create def (xml) file
+            $filenames[$dataset_id]['tmst_fn'] = $tmst_fn;
+            $tdef_fn = $tmst_fn;
+            $tdef_fn = preg_replace( "/\.tmst$/", ".xml", $tdef_fn );
+            if ( $this->create_file( $tdef_fn, $dir, $def ) )
+              $filenames[$dataset_id]['tdef_fn'] = $tdef_fn;
+          } // END: .tmst file write succeeded
+        } // END: TimeState record for experiment exists
+      } // END: expID for dataset is set
+    } // END:  datasets loop
 
     // In the case of 2DSA_CG files, the CG_model
     if ( isset( $job['job_parameters']['CG_modelID'] ) )

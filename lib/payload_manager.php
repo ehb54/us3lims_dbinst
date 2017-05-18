@@ -114,6 +114,7 @@ abstract class Payload_manager
     // Function to look up certain info from the db
     function getDBParams( $dataset_id, &$params )
     {
+      $timelast  = 0;
       $rawDataID = $_SESSION['request'][$dataset_id]['rawDataID'];
       
       // we need the stretch function from the rotor table
@@ -165,6 +166,9 @@ abstract class Payload_manager
         $speedstep['timel']   = $timel;
 
         $speedsteps[] = $speedstep;
+
+        if ( $timel > $timelast )
+          $timelast     = $timel;
       }
 
       // We need the centerpiece bottom
@@ -247,6 +251,7 @@ abstract class Payload_manager
       $params['speedsteps']   = $speedsteps;
       $params['rawDataID']    = $rawDataID;
       $params['experimentID'] = $experID;
+      $params['timelast']     = $timelast;
 
       $_SESSION['request'][$dataset_id]['experimentID'] = $experID;
 
@@ -369,7 +374,7 @@ class Payload_2DSA extends Payload_manager
   {
     // From config.php
     global $dbname, $dbhost;
-    global $udpport, $ipaddr;
+    global $udpport, $ipaddr, $ipa_ext;
 
     // These will be done every time
     $parameters                 = array();
@@ -383,6 +388,7 @@ class Payload_2DSA extends Payload_manager
       $udp                  = array();
       $udp['udpport']       = $udpport;
       $udp['ip']            = $ipaddr;
+      $udp['ip_ext']        = $ipa_ext;
       $this->add( 'server', $udp );
 
       $this->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
@@ -472,6 +478,7 @@ class Payload_2DSA extends Payload_manager
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['debug_text']       = $_POST['debug_text-value'];
       $job_parameters['experimentID']     = $parameters['experimentID'];
+      $job_parameters['timelast']         = $parameters['timelast'];
       $this->add( 'job_parameters', $job_parameters );
 
       $dataset = array();
@@ -529,7 +536,7 @@ class Payload_2DSA_CG extends Payload_manager
   {
     // From config.php
     global $dbname, $dbhost;
-    global $udpport, $ipaddr;
+    global $udpport, $ipaddr, $ipa_ext;
 
     // These will be done every time
     $parameters                 = array();
@@ -543,6 +550,7 @@ class Payload_2DSA_CG extends Payload_manager
       $udp                  = array();
       $udp['udpport']       = $udpport;
       $udp['ip']            = $ipaddr;
+      $udp['ip_ext']        = $ipa_ext;
       $this->add( 'server', $udp );
 
       $this->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
@@ -589,7 +597,6 @@ class Payload_2DSA_CG extends Payload_manager
       $job_parameters['debug_level']      = $_POST['debug_level-value'];
       $job_parameters['debug_text']       = $_POST['debug_text-value'];
       $job_parameters['experimentID']     = $parameters['experimentID'];
-      $this->add( 'job_parameters', $job_parameters );
       $this->add( 'job_parameters', $job_parameters );
 
       $dataset = array();
@@ -647,7 +654,7 @@ class Payload_GA extends Payload_manager
   {
     // From config.php
     global $dbname, $dbhost;
-    global $udpport, $ipaddr;
+    global $udpport, $ipaddr, $ipa_ext;
 
     // These will be done every time
     $parameters                 = array();
@@ -661,6 +668,7 @@ class Payload_GA extends Payload_manager
       $udp                  = array();
       $udp['udpport']       = $udpport;
       $udp['ip']            = $ipaddr;
+      $udp['ip_ext']        = $ipa_ext;
       $this->add( 'server', $udp );
 
       $this->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
@@ -808,7 +816,7 @@ class Payload_DMGA extends Payload_manager
   {
     // From config.php
     global $dbname, $dbhost;
-    global $udpport, $ipaddr;
+    global $udpport, $ipaddr, $ipa_ext;
 
     // These will be done every time
     $parameters                 = array();
@@ -822,6 +830,7 @@ class Payload_DMGA extends Payload_manager
       $udp                  = array();
       $udp['udpport']       = $udpport;
       $udp['ip']            = $ipaddr;
+      $udp['ip_ext']        = $ipa_ext;
       $this->add( 'server', $udp );
 
       $this->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
@@ -931,7 +940,7 @@ class Payload_PCSA extends Payload_manager
   {
     // From config.php
     global $dbname, $dbhost;
-    global $udpport, $ipaddr;
+    global $udpport, $ipaddr, $ipa_ext;
 
     // These will be done every time
     $parameters                 = array();
@@ -945,6 +954,7 @@ class Payload_PCSA extends Payload_manager
       $udp                  = array();
       $udp['udpport']       = $udpport;
       $udp['ip']            = $ipaddr;
+      $udp['ip_ext']        = $ipa_ext;
       $this->add( 'server', $udp );
 
       $this->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
