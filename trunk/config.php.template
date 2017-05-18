@@ -35,7 +35,8 @@ $v2_host            = "";
 $v2_user            = "";
 $v2_pass            = "";
 
-$ipaddr             = '129.111.140.156'; # the external IP address of the host machine
+$ipaddr             = '129.111.140.156'; # the primary IP address of the host for udp
+$ipa_ext            = '129.111.140.156'; # the external IP address of the host for udp
 $udpport            = 12233; # the port to send udp messages to
 $svcport            = 8080;  # the port for GFAC services
 $uses_thrift        = true;  # flags use of Thrift rather than Gfac
