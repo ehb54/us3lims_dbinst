@@ -87,7 +87,7 @@ submission website</a>.</p>
    of our website. Thanks!</p>
 
 <p><a href='mailto:demeler@biochem.uthscsa.edu'>Borries Demeler, Ph.D.</a><br/>
-Associate Professor<br/> 
+Professor<br/> 
 UltraScan Project Director</p>
 
 </div>
