@@ -188,26 +188,6 @@ function do_update()
   }
 
 
-  // Ok, we're still here, so something has changed. Let's create a diff
-  $diff = '';
-  $diff .= get_xdiff( $goals,            $_POST['goals'],            "Goals"             );
-  $diff .= get_xdiff( $molecules,        $_POST['molecules'],        "Molecules"         );
-  $diff .= get_xdiff( $purity,           $_POST['purity'],           "Purity"            );
-  $diff .= get_xdiff( $expense,          $_POST['expense'],          "Expense"           );
-  $diff .= get_xdiff( $bufferComponents, $_POST['bufferComponents'], "Buffer Components" );
-  $diff .= get_xdiff( $AUC_questions,    $_POST['AUC_questions'],    "AUC Questions"     );
-  $diff .= get_xdiff( $expDesign,        $_POST['expDesign'],        "Experiment Design" );
-  $diff .= get_xdiff( $notes,            $_POST['notes'],            "Notes"             );
-  $diff .= get_xdiff( $description,      $_POST['description'],      "Description"       );
-
-  $diff_text = '';
-  if ( ! empty( $diff ) )
-  {
-     $diff_text = <<<HTML
- Differences are as follows:
-  $diff
-HTML;
-  }
 
   // Now update the database with the new information
   $goals               =        addslashes(htmlentities($_POST['goals']));
@@ -251,7 +231,6 @@ HTML;
            : ( $subject );
   $message = "Dear $fname $lname,
   You have entered a new project in your $org_name account at $org_site.
-  $diff_text
 
   The complete/new project information is:
 
