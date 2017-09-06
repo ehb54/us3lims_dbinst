@@ -43,6 +43,7 @@ if ( ! isset( $_GET[ 'RequestID' ] ) )
                " where HPCAnalysisRequestID>" . $start_hpcr;
       $result = mysql_query( $query )
             or die( "Query failed : $query<br />\n" . mysql_error());
+
    }
 
    if ( mysql_num_rows( $result ) > 0 )
@@ -55,6 +56,7 @@ if ( ! isset( $_GET[ 'RequestID' ] ) )
             <th>Submit Time</th>
             <th>Cluster</th>
             <th>Method</th>
+            <th>Last Message</th>
           </tr>
         </thead>
         <tbody>
@@ -62,9 +64,15 @@ HTML;
 
       while ( list( $reqID, $time, $cluster, $method ) = mysql_fetch_array( $result ) )
       {
+
+         $query2= "SELECT * FROM HPCAnalysisResult WHERE HPCAnalysisRequestID=$reqID";
+         $result2 = mysql_query( $query2 )
+             or die( "Query failed : $query2<br/>\n" . mysql_error() );
+         $row2 = mysql_fetch_array( $result2 );
+         $lastMessage = $row2['lastMessage'];
          $link = "<a href='{$_SERVER['PHP_SELF']}?RequestID=$reqID'>$reqID</a>";
 
-         $table .= "<tr><td>$link</td><td>$time</td><td>$cluster</td><td>$method</td></tr>\n";
+         $table .= "<tr><td>$link</td><td>$time</td><td>$cluster</td><td>$method</td><td>$lastMessage</td></tr>\n";
       }
 
       $table .= "</tbody></table>\n";
