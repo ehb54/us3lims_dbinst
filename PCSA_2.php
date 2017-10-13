@@ -161,22 +161,25 @@ HTML;
     //  Local, Airavata, GFAC(deprecated).
     switch ( $cluster )
     {
-      case 'alamo-local'   :
-      case 'jacinto-local' :
-      case 'us3iab-node0'  :
-      case 'us3iab-node1'  :
-      case 'us3iab-devel'  :
+      case 'alamo-local'     :
+      case 'jetstream-local' :
+      case 'bcf-local'       :
+      case 'jacinto-local'   :
+      case 'us3iab-node0'    :
+      case 'us3iab-node1'    :
+      case 'us3iab-devel'    :
         $job = new submit_local();
         $clus_thrift   = false;
         break;
+
       case 'stampede'  :
-      case 'lonestar'  :
+      case 'stampede2' :
       case 'lonestar5' :
       case 'comet'     :
-      case 'gordon'    :
       case 'alamo'     :
       case 'jacinto'   :
       case 'jureca'    : 
+      case 'jetstream' :
         if ( $clus_thrift === true )
           $job = new submit_airavata();
         else

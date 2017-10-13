@@ -148,6 +148,7 @@ function do_delete()
     case 'us3iab-devel'  :
     case 'dev1-linux'    :
     case 'localhost'     :
+    case 'jetstream-local' :
       $status = cancelLocalJob( $shortname, $gfacID );
       break;
 	
@@ -182,10 +183,23 @@ function do_delete()
 // Function to cancel a local job
 function cancelLocalJob( $cluster, $gfacID )
 {
-//   $system = "$cluster.uthscsa.edu";
-//   $system = preg_replace( "/\-local/", "", $system );
-//   $cmd    = "/usr/bin/ssh -x us3@$system qstat -a $gfacID 2>&1";
-   $cmd    = "qstat -a $gfacID 2>&1|tail -n 1";
+   $system    = "$cluster.uthscsa.edu";
+   $is_jetstr = preg_match( "/jetstream/", $cluster );
+   $is_local  = preg_match( "/-local/", $cluster );
+   if ( $is_jetstr )
+   {
+      $system    = "js-157-184.jetstream-cloud.org";
+      $cmd       = "/usr/bin/ssh -x us3@$system squeue $gfacID 2>&1|tail -n 1";
+   }
+   else
+   {
+      $cmd       = "qstat -a $gfacID 2>&1|tail -n 1";
+      if ( $is_local )
+      {
+         $system    = preg_replace( "/\-local/", "", $system );
+         $cmd       = "/usr/bin/ssh -x us3@$system $cmd";
+      }
+   }
 
    $result = exec( $cmd );
 
@@ -198,7 +212,9 @@ function cancelLocalJob( $cluster, $gfacID )
    }
 
    $values = preg_split( "/\s+/", $result );
-   switch ( $values[ 9 ] )
+//   switch ( $values[ 9 ] )
+   $jstat  = ( $is_jetstr == 0 ) ? $values[ 9 ] : $values[ 4 ];
+   switch ( $jstat )
    {
       case "E" :                      // Job is exiting after having run
         $lastMessage = "Job is exiting";
@@ -222,9 +238,19 @@ function cancelLocalJob( $cluster, $gfacID )
         // we should use qdel -r $gfacID instead of the following.
         $parts = explode( ".", $gfacID );
         $jobID = $parts[ 0 ];
-        //$cmd    = "/usr/bin/ssh -x us3@$system qdel $jobID 2>&1";
-        //$cmd    = "qdel $jobID 2>&1";
-        $cmd    = "qdel $gfacID 2>&1";
+        if ( $is_jetstr )
+        {
+           $system = "js-157-184.jetstream-cloud.org";
+           $cmd    = "/usr/bin/ssh -x us3@$system scancel $gfacID 2>&1|tail -n 1";
+        }
+        else
+        {
+           $cmd    = "qdel $jobID 2>&1";
+           if ( $is_local )
+           {
+              $cmd    = "/usr/bin/ssh -x us3@$system $cmd";
+           }
+        }
         $result = exec( $cmd );
 
         $lastMessage = "This job has been canceled";
