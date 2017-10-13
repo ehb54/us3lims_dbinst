@@ -140,20 +140,24 @@ HTML;
     // Currently we are supporting two submission methods.
     switch ( $cluster )
     {
-       case 'alamo-local'   :
-       case 'jacinto-local' :
+       case 'alamo-local'     :
+       case 'jetstream-local' :
+       case 'jacinto-local'   :
+       case 'bcf-local'       :
+       case 'us3iab-node0'    :
+       case 'us3iab-node1'    :
+       case 'us3iab-devel'    :
           $job = new submit_local();
           break;
     
-       case 'stampede'   :
-       case 'lonestar'   :
-       case 'lonestar5'  :
-       case 'trestles'   :
-       case 'gordon'     :
-       case 'jureca'     :
-       case 'alamo'      :
-       case 'jacinto'    :
-       case 'comet'      :
+       case 'stampede'  :
+       case 'stampede2' :
+       case 'lonestar5' :
+       case 'comet'     :
+       case 'alamo'     :
+       case 'jacinto'   :
+       case 'jureca'    : 
+       case 'jetstream' :
           if ( $clus_thrift === true )
              $job = new submit_airavata();
           else
