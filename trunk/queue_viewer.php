@@ -188,7 +188,7 @@ function cancelLocalJob( $cluster, $gfacID )
    $is_local  = preg_match( "/-local/", $cluster );
    if ( $is_jetstr )
    {
-      $system    = "js-157-184.jetstream-cloud.org";
+      $system    = "js-169-137.jetstream-cloud.org";
       $cmd       = "/usr/bin/ssh -x us3@$system squeue $gfacID 2>&1|tail -n 1";
    }
    else
@@ -240,7 +240,7 @@ function cancelLocalJob( $cluster, $gfacID )
         $jobID = $parts[ 0 ];
         if ( $is_jetstr )
         {
-           $system = "js-157-184.jetstream-cloud.org";
+           $system = "js-169-137.jetstream-cloud.org";
            $cmd    = "/usr/bin/ssh -x us3@$system scancel $gfacID 2>&1|tail -n 1";
         }
         else
