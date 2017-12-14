@@ -79,8 +79,8 @@ $clusters = array(
   new cluster_info( "jacinto.uthscsa.edu",      "jacinto",       "default" ),
   new cluster_info( "jacinto.uthscsa.edu",      "jacinto-local", "default" ),
   new cluster_info( "jureca.fz-juelich.de",     "jureca",        "batch"   ),
-  new cluster_info( "js-157-184.jetstream-cloud.org", "jetstream",       "batch" ),
-  new cluster_info( "js-157-184.jetstream-cloud.org", "jetstream-local", "batch" ),
+  new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" ),
+  new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" ),
   new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",  "normal"  ),
   new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",  "normal"  ),
   new cluster_info( "dev1-linux",               "us3iab-devel",  "normal"  )
