@@ -326,7 +326,7 @@ abstract class Payload_manager
       return $tot_conc;
     }
 
-    // Function to read a 2DSA-IT model for an edit
+    // Function to read a 2DSA-IT or 2DSA-CG-IT model for an edit
     //   and return the model's total concentration
     function model_concentration( $editedDataID )
     {
@@ -335,6 +335,7 @@ abstract class Payload_manager
       $query    = "SELECT xml FROM model " .
                   "WHERE editedDataID = $editedDataID " .
                   "AND description LIKE '%2DSA-IT%' " .
+                  "OR description LIKE '%2DSA-CG-IT%' " .
                   "ORDER BY modelID DESC";
       $result   = mysql_query( $query )
             or die( "Query failed : $query<br/>\n" . mysql_error() );
