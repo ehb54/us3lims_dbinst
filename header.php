@@ -82,6 +82,7 @@ echo<<<HTML
    <tr><td><img src='images/USLIMS3-banner.png' alt='USLims 3 banner' /></td>
        <td style='vertical-align:middle;width:400px;'>
 
+<!--
        <div id="cse-search-form">Loading</div>
        <script src="https://www.google.com/jsapi" type="text/javascript"></script>
        <script type="text/javascript"> 
@@ -96,6 +97,7 @@ echo<<<HTML
          }, true);
        // ]]>
        </script>
+-->
 
        </td>
    </tr>
