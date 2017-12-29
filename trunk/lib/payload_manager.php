@@ -334,7 +334,8 @@ abstract class Payload_manager
       $modelXML = "";
       $query    = "SELECT xml FROM model " .
                   "WHERE editedDataID = $editedDataID " .
-                  "AND description LIKE '%2DSA-IT%' " .
+                  "AND description LIKE '%2DSA%IT%' " .
+                  "AND description NOT LIKE '%-GL-%' " .
                   "OR description LIKE '%2DSA-CG-IT%' " .
                   "ORDER BY modelID DESC";
       $result   = mysql_query( $query )
