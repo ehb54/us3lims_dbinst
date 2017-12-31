@@ -336,7 +336,6 @@ abstract class Payload_manager
                   "WHERE editedDataID = $editedDataID " .
                   "AND description LIKE '%2DSA%IT%' " .
                   "AND description NOT LIKE '%-GL-%' " .
-                  "OR description LIKE '%2DSA-CG-IT%' " .
                   "ORDER BY modelID DESC";
       $result   = mysql_query( $query )
             or die( "Query failed : $query<br/>\n" . mysql_error() );
@@ -406,23 +405,29 @@ class Payload_2DSA extends Payload_manager
       $database['gwhostid']        = $_SESSION['gwhostid'];
       $this->add( 'database', $database );
 
-      $job_parameters                     = array();
-      $job_parameters['s_min']            = $_POST['s_value_min'];
-      $job_parameters['s_max']            = $_POST['s_value_max'];
-      $job_parameters['ff0_min']          = $_POST['ff0_min'];
-      $job_parameters['ff0_max']          = $_POST['ff0_max'];
+      $job_parameters       = array();
+      $s_min_in             = $_POST['s_value_min'];
+      $s_max_in             = $_POST['s_value_max'];
+      $k_min_in             = $_POST['ff0_min'];
+      $k_max_in             = $_POST['ff0_max'];
+      $s_range              = $s_max_in - $s_min_in;
+      $k_range              = $k_max_in - $k_min_in;
 
       // Compute 'uniform_grid' (grid repetitions)
-      $gpoints_s                          = $_POST['s_grid_points'];
-      $gpoints_k                          = $_POST['ff0_grid_points'];
+      $gpoints_s            = $_POST['s_grid_points'];
+      $gpoints_k            = $_POST['ff0_grid_points'];
       if ( $gpoints_s < 10 )
          $gpoints_s = 10;
-      if ( $gpoints_s > 200 )
-         $gpoints_s = 200;
+      if ( $gpoints_s > 800 )
+         $gpoints_s = 800;
       if ( $gpoints_k < 10 )
          $gpoints_k = 10;
-      if ( $gpoints_k > 200 )
-         $gpoints_k = 200;
+      if ( $gpoints_k > 800 )
+         $gpoints_k = 800;
+      $gptin_s   = $gpoints_s;
+      $gptin_k   = $gpoints_k;
+      $s_delta   = $s_range / ( $gpoints_s - 1 );
+      $k_delta   = $k_range / ( $gpoints_k - 1 );
       $gpoints   = $gpoints_s * $gpoints_k;
       $repsgrid  = pow( $gpoints, 0.25 );
       $gridreps  = (int)( $repsgrid + 0.5 );
@@ -448,9 +453,24 @@ class Payload_2DSA extends Payload_manager
       }
       $gpoints_s = $subpts_s * $gridreps;
       $gpoints_k = $subpts_k * $gridreps;
+      if ( $gpoints_s < $gptin_s )
+         $gpoints_s = $gpoints_s + $gridreps;
+      if ( $gpoints_k < $gptin_k )
+         $gpoints_k = $gpoints_k + $gridreps;
+      $s_range_u = ( $gpoints_s - 1 ) * $s_delta;
+      $k_range_u = ( $gpoints_k - 1 ) * $k_delta;
+      $s_min_use = $s_min_in;
+      $s_max_use = $s_min_use + $s_range_u;
+      $k_min_use = $k_min_in;
+      $k_max_use = $k_min_use + $k_range_u;
+
       $job_parameters['s_grid_points']    = $gpoints_s;
       $job_parameters['ff0_grid_points']  = $gpoints_k;
       $job_parameters['uniform_grid']     = $gridreps;
+      $job_parameters['s_min']            = $s_min_use;
+      $job_parameters['s_max']            = $s_max_use;
+      $job_parameters['ff0_min']          = $k_min_use;
+      $job_parameters['ff0_max']          = $k_max_use;
 
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
 
