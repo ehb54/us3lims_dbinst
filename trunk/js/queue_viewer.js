@@ -14,7 +14,8 @@ function update_queue_content()
               },
     complete: function()
               {
-                setTimeout( update_queue_content, 20000 );
+                //setTimeout( update_queue_content, 20000 );
+                setTimeout( update_queue_content, 60000 );
               }
   })
 }

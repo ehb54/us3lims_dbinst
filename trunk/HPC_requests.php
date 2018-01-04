@@ -31,20 +31,36 @@ echo "</pre>\n\n";
 
 if ( ! isset( $_GET[ 'RequestID' ] ) )
 {
-   $query = "SELECT HPCAnalysisRequestID, submitTime, clusterName, method FROM HPCAnalysisRequest";
+   $query = "SELECT count(*) FROM HPCAnalysisRequest";
    $result = mysql_query( $query )
          or die( "Query failed : $query<br />\n" . mysql_error());
+   list( $numrow ) = mysql_fetch_array( $result );
 
-   $numrow = mysql_num_rows( $result );
+   $start_hpcr = 1;
+
    if ( $numrow > 2000 )
-   {
       $start_hpcr = $numrow - 1000;
-      $query = "SELECT HPCAnalysisRequestID, submitTime, clusterName, method FROM HPCAnalysisRequest" .
-               " where HPCAnalysisRequestID>" . $start_hpcr;
-      $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error());
 
+   // First build array of last messages for each request id
+   $last_msgs = array();
+   $query = "SELECT HPCAnalysisRequestID, lastMessage FROM HPCAnalysisResult" .
+            " where HPCAnalysisRequestID > " . $start_hpcr;
+   $result = mysql_query( $query )
+         or die( "Query failed : $query<br />\n" . mysql_error());
+   if ( mysql_num_rows( $result ) > 0 )
+   {
+      while ( list( $reqID, $lastmsg ) = mysql_fetch_array( $result ) )
+      {
+         $last_msgs[ $reqID ] = $lastmsg;
+      }
    }
+
+   // Now build lines of the HPC Request list
+   $query = "SELECT HPCAnalysisRequestID, submitTime, clusterName, method FROM HPCAnalysisRequest" .
+            " WHERE HPCAnalysisRequestID > " . $start_hpcr .
+            " ORDER BY HPCAnalysisRequestID DESC";
+   $result = mysql_query( $query )
+         or die( "Query failed : $query<br />\n" . mysql_error());
 
    if ( mysql_num_rows( $result ) > 0 )
    {
@@ -64,12 +80,10 @@ HTML;
 
       while ( list( $reqID, $time, $cluster, $method ) = mysql_fetch_array( $result ) )
       {
-
-         $query2= "SELECT * FROM HPCAnalysisResult WHERE HPCAnalysisRequestID=$reqID";
-         $result2 = mysql_query( $query2 )
-             or die( "Query failed : $query2<br/>\n" . mysql_error() );
-         $row2 = mysql_fetch_array( $result2 );
-         $lastMessage = $row2['lastMessage'];
+         if ( isset( $last_msgs[ $reqID ] ) )
+            $lastMessage = $last_msgs[ $reqID ];
+         else
+            $lastMessage = "????";
          $link = "<a href='{$_SERVER['PHP_SELF']}?RequestID=$reqID'>$reqID</a>";
 
          $table .= "<tr><td>$link</td><td>$time</td><td>$cluster</td><td>$method</td><td>$lastMessage</td></tr>\n";

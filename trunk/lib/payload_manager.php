@@ -418,12 +418,12 @@ class Payload_2DSA extends Payload_manager
       $gpoints_k            = $_POST['ff0_grid_points'];
       if ( $gpoints_s < 10 )
          $gpoints_s = 10;
-      if ( $gpoints_s > 800 )
-         $gpoints_s = 800;
+      if ( $gpoints_s > 2100 )
+         $gpoints_s = 2100;
       if ( $gpoints_k < 10 )
          $gpoints_k = 10;
-      if ( $gpoints_k > 800 )
-         $gpoints_k = 800;
+      if ( $gpoints_k > 2100 )
+         $gpoints_k = 2100;
       $gptin_s   = $gpoints_s;
       $gptin_k   = $gpoints_k;
       $s_delta   = $s_range / ( $gpoints_s - 1 );
