@@ -153,13 +153,15 @@ function do_delete()
       break;
 	
     case 'stampede'  :
+    case 'stampede2' :
     case 'lonestar'  :
     case 'lonestar5' :
     case 'trestles'  :
     case 'comet'     :
-    case 'gordon'    :
+    case 'jetstream' :
     case 'jureca'    :
     case 'alamo'     :
+    case 'gordon'    :
     case 'jacinto'   :
       if ( $clus_thrift === true )
       {
