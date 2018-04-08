@@ -47,6 +47,14 @@ if ( isset($_POST['TIGRE']) )
   if ( isset($_POST['cluster']) )
   {
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
+    $gwhostid   = 'uslims3';
+    if ( isset( $_SESSION[ 'gwhostid' ] ) )
+      $gwhostid   = $_SESSION[ 'gwhostid' ];
+    list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
+    if ( preg_match( "/alamo/", $gwhostid )  &&  $cluster_shortname == 'alamo' )
+    {  // alamo-to-alamo uses alamo-local as cluster
+      $cluster_shortname = 'alamo-local';
+    }
     $_SESSION['cluster']              = array();
     $_SESSION['cluster']['name']      = $cluster_name;
     $_SESSION['cluster']['shortname'] = $cluster_shortname;

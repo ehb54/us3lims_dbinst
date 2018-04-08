@@ -17,6 +17,8 @@ if ( ($_SESSION['userlevel'] != 3) &&
 
 include 'config.php';
 include 'db.php';
+// ini_set('display_errors', 'On');
+
 
 // Start displaying page
 $page_title = 'View Users';
@@ -29,7 +31,7 @@ include 'header.php';
 
 <?php
 // Display a table
-$table = create_table();
+$table = create_table($link);
 echo $table;
 
 $_SESSION['print_title'] = "LIMS Users";
@@ -42,15 +44,15 @@ include 'footer.php';
 exit();
 
 // Function to create a table of all records
-function create_table()
+function create_table($link)
 {
   $query  = "SELECT personID, lname, fname, " .
             "organization, address, city, state, zip, country, " .
             "phone, email " .
             "FROM people " .
             "ORDER BY lname, fname ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   $table = <<<HTML
   <table cellspacing='0' cellpadding='7' class='style1 sortable' style='width:95%;'>
@@ -63,14 +65,14 @@ function create_table()
       </tr>
     </thead>
     <tfoot>
-      <tr><td colspan='5'><input type='button' value='Print Version' 
+      <tr><td colspan='5'><input type='button' value='Print Version'
                                  onclick='print_version();' /></td></tr>
     </tfoot>
 
     <tbody>
 HTML;
 
-  while ( $row = mysql_fetch_array($result) )
+  while ( $row = mysqli_fetch_array($result) )
   {
     foreach ($row as $key => $value)
     {

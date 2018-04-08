@@ -16,35 +16,37 @@ if ( $_SESSION['userlevel'] < 1 )
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+// ini_set('display_errors', 'On');
+
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
 {
-  do_prior();
+  do_prior( $link );
   exit();
 }
 
 else if (isset($_POST['next']))
 {
-  do_next();
+  do_next( $link );
   exit();
 }
 
 else if (isset($_POST['new']))
 {
-  do_new();
+  do_new( $link );
   exit();
 }
 
 // Are we being directed here from a push button?
 if (isset($_POST['update']))
 {
-  do_update();
+  do_update( $link );
   exit();
 }
 
 // Start displaying page
-$page_title = 'Edit My Projects';
+$page_title = 'My Projects';
 $js = 'js/edit_projects.js';
 include 'header.php';
 include 'lib/selectboxes.php';
@@ -56,13 +58,14 @@ include 'lib/selectboxes.php';
   <h1 class="title">Edit My Projects</h1>
   <!-- Place page content here -->
 
+
 <?php
 // Edit or display a record
 if ( isset($_POST['edit']) || isset($_GET['edit']) )
-  edit_record();
+  edit_record( $link );
 
 else
-  display_record();
+  display_record( $link );
 
 ?>
 </div>
@@ -72,7 +75,7 @@ include 'footer.php';
 exit();
 
 // Function to redirect to prior record
-function do_prior()
+function do_prior( $link )
 {
   $ID = $_SESSION['id'];
   $projectID = $_POST['projectID'];
@@ -82,16 +85,16 @@ function do_prior()
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find prior record
   $current = null;
-  list($current) = mysql_fetch_array($result);
-  while ($current != null && $projectID != $current)
+  list( $current ) = mysqli_fetch_array( $result );
+  while ( $current != null  &&  $projectID != $current )
   {
     $prior = $current;
-    list($current) = mysql_fetch_array($result);
+    list( $current ) = mysqli_fetch_array( $result );
   }
 
   $redirect = ($prior == null) ? "" : "?ID=$prior";
@@ -100,7 +103,7 @@ function do_prior()
 }
 
 // Function to redirect to next record
-function do_next()
+function do_next( $link )
 {
   $ID = $_SESSION['id'];
   $projectID = $_POST['projectID'];
@@ -110,14 +113,14 @@ function do_next()
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find next record
   $next = null;
   while ($projectID != $next)
-    list($next) = mysql_fetch_array($result);
-  list($next) = mysql_fetch_array($result);
+    list($next) = mysqli_fetch_array( $result );
+  list($next) = mysqli_fetch_array( $result );
 
   $redirect = ($next == null) ? "?ID=$projectID" : "?ID=$next";
   header("Location: $_SERVER[PHP_SELF]$redirect");
@@ -125,7 +128,7 @@ function do_next()
 }
 
 // Function to create a new record
-function do_new()
+function do_new( $link )
 {
   $ID = $_SESSION['id'];
   $uuid = uuid();
@@ -133,26 +136,26 @@ function do_new()
   // Insert an ID
   $query = "INSERT INTO project ( projectGUID ) " .
            "VALUES (' $uuid' ) ";
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
-  $new = mysql_insert_id();
+  mysqli_query( $link, $query )
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $new = mysqli_insert_id( $link );
 
   // Add the ownership record
   $query  = "INSERT INTO projectPerson SET " .
             "projectID = $new, " .
             "personID  = $ID ";
-  mysql_query( $query )
-        or die( "Query failed : $query<br />\n" . mysql_error() );
+  mysqli_query( $link, $query )
+        or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
   header("Location: $_SERVER[PHP_SELF]?edit=$new");
   exit();
 }
 
 // Function to update the current record
-function do_update()
+function do_update( $link )
 {
   $ID        = $_SESSION['id'];
-  $projectID = $_POST['projectID'];
+  $projectID = htmlentities($_POST['projectID']);
 
   // Since we always send out emails here, and the user could press the
   //  Update button even though nothing has changed, let's check
@@ -161,10 +164,10 @@ function do_update()
             "expDesign, notes, description " .
             "FROM project " .
             "WHERE projectID = $projectID ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row    = mysql_fetch_array($result, MYSQL_ASSOC);
+  $row    = mysqli_fetch_array( $result, MYSQL_ASSOC );
 
   // Create local variables
   foreach ($row as $key => $value)
@@ -188,6 +191,26 @@ function do_update()
   }
 
 
+  // Ok, we're still here, so something has changed. Let's create a diff
+  $diff = '';
+  $diff .= get_xdiff( $goals,            $_POST['goals'],            "Goals"             );
+  $diff .= get_xdiff( $molecules,        $_POST['molecules'],        "Molecules"         );
+  $diff .= get_xdiff( $purity,           $_POST['purity'],           "Purity"            );
+  $diff .= get_xdiff( $expense,          $_POST['expense'],          "Expense"           );
+  $diff .= get_xdiff( $bufferComponents, $_POST['bufferComponents'], "Buffer Components" );
+  $diff .= get_xdiff( $AUC_questions,    $_POST['AUC_questions'],    "AUC Questions"     );
+  $diff .= get_xdiff( $expDesign,        $_POST['expDesign'],        "Experiment Design" );
+  $diff .= get_xdiff( $notes,            $_POST['notes'],            "Notes"             );
+  $diff .= get_xdiff( $description,      $_POST['description'],      "Description"       );
+
+  $diff_text = '';
+  if ( ! empty( $diff ) )
+  {
+     $diff_text = <<<HTML
+ Differences are as follows:
+  $diff
+HTML;
+  }
 
   // Now update the database with the new information
   $goals               =        addslashes(htmlentities($_POST['goals']));
@@ -214,63 +237,64 @@ function do_update()
            "description  = '$description' " .
            "WHERE projectID = $projectID ";
 
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
+  mysqli_query( $link, $query )
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  // The project is new or has changed, so let's mail the user
-  global $org_name, $org_site, $dbname, $admin_email;
-  $db_abbrev = substr( $dbname, strrpos( $dbname, "uslims3_" ) + 8 );
-
-  $fname   = $_SESSION['firstname'];
-  $lname   = $_SESSION['lastname'];
-  $email   = $_SESSION['email'] . ",$admin_email";
-
-  $subject = "$lname project ($db_abbrev): {$_POST['description']}";
-  $subject = ( strlen( $subject ) > 50 )
-           ? ( substr( $subject, 0, 50 ) . '...' )
-           : ( $subject );
-  $message = "Dear $fname $lname,
-  You have entered a new project in your $org_name account at $org_site.
-
-  The complete/new project information is:
-
-  Goals:
-  {$_POST['goals']}
-
-  Molecules:
-  {$_POST['molecules']}
-
-  Purity
-  {$_POST['purity']}
-
-  Expense:
-  {$_POST['expense']}
-
-  Buffer Components:
-  {$_POST['bufferComponents']}
-
-  Salt Information:
-  {$_POST['saltInformation']}
-
-  AUC Questions:
-  {$_POST['AUC_questions']}
-
-  Experiment Design:
-  {$_POST['expDesign']}
-
-  Notes:
-  {$_POST['notes']}
-
-  Description:
-  {$_POST['description']}
-
-  Please save this message for your reference.
-  Thanks!
-  The $org_name Admins.
-
-  This is an automated response, do not reply!";
-
-  LIMS_mailer($email, $subject, $message);
+  // // The project is new or has changed, so let's mail the user
+  // global $org_name, $org_site, $dbname, $admin_email;
+  // $db_abbrev = substr( $dbname, strrpos( $dbname, "uslims3_" ) + 8 );
+  //
+  // $fname   = $_SESSION['firstname'];
+  // $lname   = $_SESSION['lastname'];
+  // $email   = $_SESSION['email'] . ",$admin_email";
+  //
+  // $subject = "$lname project ($db_abbrev): {$_POST['description']}";
+  // $subject = ( strlen( $subject ) > 50 )
+  //          ? ( substr( $subject, 0, 50 ) . '...' )
+  //          : ( $subject );
+  // $message = "Dear $fname $lname,
+  // You have entered a new project in your $org_name account at $org_site.
+  // $diff_text
+  //
+  // The complete/new project information is:
+  //
+  // Goals:
+  // {$_POST['goals']}
+  //
+  // Molecules:
+  // {$_POST['molecules']}
+  //
+  // Purity
+  // {$_POST['purity']}
+  //
+  // Expense:
+  // {$_POST['expense']}
+  //
+  // Buffer Components:
+  // {$_POST['bufferComponents']}
+  //
+  // Salt Information:
+  // {$_POST['saltInformation']}
+  //
+  // AUC Questions:
+  // {$_POST['AUC_questions']}
+  //
+  // Experiment Design:
+  // {$_POST['expDesign']}
+  //
+  // Notes:
+  // {$_POST['notes']}
+  //
+  // Description:
+  // {$_POST['description']}
+  //
+  // Please save this message for your reference.
+  // Thanks!
+  // The $org_name Admins.
+  //
+  // This is an automated response, do not reply!";
+  //
+  // LIMS_mailer($email, $subject, $message);
 
   header("Location: $_SERVER[PHP_SELF]?ID=$projectID");
   exit();
@@ -292,29 +316,52 @@ function get_xdiff( $old, $new, $label )
 }
 
 // Function to display and navigate records
-function display_record()
+function display_record( $link )
 {
   // Find a record to display
-  $projectID = get_id();
+  $projectID = htmlentities( get_id( $link ) );
   if ($projectID === false)
+    return;
+
+  // Anything other than a number here is a security risk
+  if (!(is_numeric($projectID)))
     return;
 
   $query  = "SELECT projectGUID, goals, molecules, purity, expense, " .
             "bufferComponents, saltInformation, AUC_questions, expDesign, notes, description, status " .
             "FROM project " .
-            "WHERE projectID = $projectID ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
+            "WHERE projectID = ? ";
 
-  $row    = mysql_fetch_array($result, MYSQL_ASSOC);
+  // Prepared statement
+  if ($stmt = mysqli_prepare( $link, $query ) )
+  {
+    $stmt->bind_param( 'i', $projectID );
+    $stmt->execute();
+    $stmt->store_result();
+    $num_of_rows = $stmt->num_rows;
+    $stmt->bind_result( $projectGUID, $goals, $molecules, $purity, $expense,
+                        $bufferComponents, $saltInformation, $AUC_questions,
+                        $expDesign, $notes, $description, $status );
+    $stmt->fetch();
+
+    $stmt->free_result();
+    $stmt->close();
+  }
+
+  /* This code was replace by the prepared statement above
+  $result = mysqli_query($link,$query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+
+  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
 
   // Create local variables; make sure IE displays empty cells properly
   foreach ($row as $key => $value)
   {
-    $$key = (empty($value)) ? "&nbsp;" : html_entity_decode( stripslashes( nl2br($value) ) );
+    $$key = (empty($value)) ? "&nbsp;" : htmlentities( stripslashes( nl2br($value) ) );
   }
+  */
 
-  $status = $row['status'];
+  // $status = $row['status'];
   global $project_status;               // From lib/selectboxes.php
   $status = $project_status[ $status ];
 
@@ -329,9 +376,9 @@ function display_record()
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  while (list($t_id, $t_description) = mysql_fetch_array($result))
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  while ( list($t_id, $t_description) = mysqli_fetch_array( $result ) )
   {
     $selected = ($projectID == $t_id) ? " selected='selected'" : "";
     $nav_listbox .= "  <option$selected value='$t_id'>$t_description</option>\n";
@@ -340,7 +387,7 @@ function display_record()
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
-  <table cellspacing='0' cellpadding='10' class='style1' id='fixed'>
+  <table cellspacing='0' cellpadding='10' class='style1'id='fixed'>
     <thead>
       <tr>
         <th style="width: 16%;"></th>
@@ -389,7 +436,7 @@ HTML;
 }
 
 // Function to figure out which record to display
-function get_id()
+function get_id( $link )
 {
   // See if we are being directed to a particular record
   if (isset($_GET['ID']))
@@ -404,12 +451,12 @@ function get_id()
             "AND p.projectID = j.projectID " .
             "ORDER BY description " .
             "LIMIT 1 ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  if (mysql_num_rows($result) == 1)
+  if ( mysqli_num_rows( $result ) == 1 )
   {
-    list($projectID) = mysql_fetch_array($result);
+    list($projectID) = mysqli_fetch_array( $result );
     return( $projectID );
   }
 
@@ -437,14 +484,14 @@ HTML;
 }
 
 // Function to edit a record
-function edit_record()
+function edit_record( $link )
 {
   // Get the record we need to edit
   if ( isset( $_POST['edit'] ) )
-    $projectID = $_POST['projectID'];
+    $projectID = htmlentities($_POST['projectID']);
 
   else if ( isset( $_GET['edit'] ) )
-    $projectID = $_GET['edit'];
+    $projectID = htmlentities($_GET['edit']);
 
   else
   {
@@ -453,28 +500,52 @@ function edit_record()
     return;
   }
 
+  // Anything other than a number here is a security risk
+  if (!(is_numeric($projectID)))
+    return;
+
   $query  = "SELECT goals, molecules, purity, expense, bufferComponents, " .
             "saltInformation, AUC_questions, expDesign, notes, description, status, lastUpdated  " .
             "FROM project " .
-            "WHERE projectID = $projectID ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
+            "WHERE projectID = ? ";
 
-  $row = mysql_fetch_array($result);
+  // Prepared statement
+  if ( $stmt = mysqli_prepare( $link, $query ) )
+  {
+    $stmt->bind_param( 'i', $projectID );
+    $stmt->execute();
+    $stmt->store_result();
+    $num_of_rows = $stmt->num_rows;
+    $stmt->bind_result( $goals, $molecules, $purity, $expense, $bufferComponents,
+                        $saltInformation, $AUC_questions, $expDesign, $notes,
+                        $description, $status, $lastUpdated );
+    $stmt->fetch();
 
-  $goals               = html_entity_decode( stripslashes( $row['goals'] ) );
-  $molecules           = html_entity_decode( stripslashes( $row['molecules'] ) );
-  $purity              = html_entity_decode( stripslashes( $row['purity'] ) );
-  $expense             = html_entity_decode( stripslashes( $row['expense'] ) );
-  $bufferComponents    = html_entity_decode( stripslashes( $row['bufferComponents'] ) );
-  $saltInformation     = html_entity_decode( stripslashes( $row['saltInformation'] ) );
-  $AUC_questions       = html_entity_decode( stripslashes( $row['AUC_questions'] ) );
-  $expDesign           = html_entity_decode( stripslashes( $row['expDesign'] ) );
-  $notes               = html_entity_decode( stripslashes( $row['notes'] ) );
-  $description         = html_entity_decode( stripslashes( $row['description'] ) );
+    $stmt->free_result();
+    $stmt->close();
+  }
+
+  /* This code was replace by the prepared statement above
+  $result = mysqli_query($link,$query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+
+  $row = mysqli_fetch_array($result);
+
+  $goals               = htmlentities( stripslashes( $row['goals'] ) );
+  $molecules           = htmlentities( stripslashes( $row['molecules'] ) );
+  $purity              = htmlentities( stripslashes( $row['purity'] ) );
+  $expense             = htmlentities( stripslashes( $row['expense'] ) );
+  $bufferComponents    = htmlentities( stripslashes( $row['bufferComponents'] ) );
+  $saltInformation     = htmlentities( stripslashes( $row['saltInformation'] ) );
+  $AUC_questions       = htmlentities( stripslashes( $row['AUC_questions'] ) );
+  $expDesign           = htmlentities( stripslashes( $row['expDesign'] ) );
+  $notes               = htmlentities( stripslashes( $row['notes'] ) );
+  $description         = htmlentities( stripslashes( $row['description'] ) );
 
   $status = $row['status'];
   $lastUpdated = $row['lastUpdated'];
+  */
+
   global $project_status;               // From lib/selectboxes.php
   $status = $project_status[ $status ];
 

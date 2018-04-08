@@ -13,6 +13,7 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include 'lib/reports.php';
+ini_set('display_errors', 'On');
 
 // Start displaying page
 $page_title = "View Reports";
@@ -33,10 +34,10 @@ if ( isset( $_POST['change_cell'] ) )
    $personID = isset( $_POST['personID'] ) ? $_POST['personID'] : $myID;
    $reportID = isset( $_POST['reportID'] ) ? $_POST['reportID'] : -1;
 
-   $person_info = people_select( 'people_select', $personID );
-   $run_info    = run_select( 'run_select', $reportID, $personID );
-   $triple_list = tripleList( $reportID );
-   $combo_info  = combo_info( $reportID );
+   $person_info = people_select( $link, 'people_select', $personID );
+   $run_info    = run_select( $link, 'run_select', $reportID, $personID );
+   $triple_list = tripleList( $link, $reportID );
+   $combo_info  = combo_info( $link, $reportID );
 
   $text =<<<HTML
   <div id='personID'>$person_info</div>
@@ -64,9 +65,9 @@ else if ( isset( $_GET['triple'] ) )
       $dbTypes = array();
       $query  = "SELECT DISTINCT documentType FROM reportDocument " .
                 "ORDER BY documentType ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />\n" . mysql_error() );
-      while ( list( $dbType ) = mysql_fetch_array( $result ) )
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+      while ( list( $dbType ) = mysqli_fetch_array( $result ) )
          $dbTypes[] = $dbType;
 
       // Now prune out document types that aren't in the db
@@ -78,16 +79,16 @@ else if ( isset( $_GET['triple'] ) )
       }
    }
 
-   $text = tripleDetail( $_GET['triple'], $docTypes );
+   $text = tripleDetail( $link, $_GET['triple'], $docTypes );
 }
 
 else if ( isset( $_GET['combo'] ) )
-   $text = comboDetail( $_GET['combo'] );
+   $text = comboDetail( $link, $_GET['combo'] );
 
 else
 {
-  $person_info = people_select( 'people_select', $myID );
-  $run_info    = run_select( 'run_select' );
+  $person_info = people_select( $link, 'people_select', $myID );
+  $run_info    = run_select( $link, 'run_select' );
 
   $text =<<<HTML
   <div id='personID'>$person_info</div>

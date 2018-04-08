@@ -11,11 +11,13 @@ if ( ($_SESSION['userlevel'] < 3) )    // super, admin and super admin only
 {
   header('Location: index.php');
   exit();
-} 
+}
 
 include 'config.php';
 include 'db.php';
 include 'lib/selectboxes.php';
+// ini_set('display_errors', 'On');
+
 
 // Start displaying page
 $page_title = "Select Another User";
@@ -30,19 +32,19 @@ include 'header.php';
 <?php
   if ( isset( $_POST['personID'] ) )
   {
-    $text  = person_select( 'personID', $_POST['personID'] );
-    $text .= change_person_info( $_POST['personID'] );
+    $text  = person_select( $link, 'personID', $_POST['personID'] );
+    $text .= change_person_info( $link, $_POST['personID'] );
   }
 
   else if ( isset( $_GET['restore'] ) &&
             $_GET['restore'] == 'true' )
   {
-    $text  = person_select( 'personID', $_SESSION['loginID'] );
-    $text .= restore_info();
+    $text  = person_select( $link, 'personID', $_SESSION['loginID'] );
+    $text .= restore_info($link);
   }
 
   else
-    $text  = person_select( 'personID', $_SESSION['id'] );
+    $text  = person_select( $link, 'personID', $_SESSION['id'] );
 
   echo $text;
 
@@ -56,14 +58,29 @@ include 'footer.php';
 exit();
 
 // Function to update user session variables and display info
-function change_person_info( $personID )
+function change_person_info( $link, $personID )
 {
   $query  = "SELECT fname, lname, phone, clusterAuthorizations " .
             "FROM people " .
-            "WHERE personID = $personID ";
-  $result = mysql_query($query)
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  $row    = mysql_fetch_assoc($result);
+            "WHERE personID = ? ";
+
+  // Prepared statement
+  if ($stmt = mysqli_prepare($link, $query)) {
+   $stmt->bind_param('i', $personID);
+   $stmt->execute();
+   $stmt->store_result();
+   $num_of_rows = $stmt->num_rows;
+   $stmt->bind_result($fname, $lname, $phone, $clusterAuthorizations);
+   $stmt->fetch();
+
+   $stmt->free_result();
+   $stmt->close();
+  }
+
+  /* This code was replace by the prepared statement above
+  $result = mysqli_query($link, $query)
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $row    = mysqli_fetch_assoc($result);
 
   // Register the variables:
 
@@ -71,8 +88,9 @@ function change_person_info( $personID )
   {
      $$key = stripslashes( $val );
   }
+  */
 
-  // The loginID, email and userlevel don't change, even if working 
+  // The loginID, email and userlevel don't change, even if working
   // on behalf of another
   $_SESSION['id']           = $personID;
   $_SESSION['firstname']    = $fname;
@@ -84,9 +102,9 @@ function change_person_info( $personID )
   $query  = "SELECT clusterAuthorizations " .
             "FROM people " .
             "WHERE personID = $loginID ";
-  $result = mysql_query($query)
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  $row    = mysql_fetch_assoc($result);
+  $result = mysqli_query($link, $query)
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $row    = mysqli_fetch_assoc($result);
   foreach( $row AS $key => $val )
   {
      $$key = stripslashes( $val );
@@ -111,16 +129,31 @@ HTML;
 }
 
 // Function to restore user session variables and display info to login values
-function restore_info()
+function restore_info($link)
 {
   $personID = $_SESSION['loginID'];
 
   $query  = "SELECT fname, lname, phone, clusterAuthorizations " .
             "FROM people " .
-            "WHERE personID = $personID ";
-  $result = mysql_query($query)
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  $row    = mysql_fetch_assoc($result);
+            "WHERE personID = ? ";
+
+  // Prepared statement
+  if ($stmt = mysqli_prepare($link, $query)) {
+   $stmt->bind_param('i', $personID);
+   $stmt->execute();
+   $stmt->store_result();
+   $num_of_rows = $stmt->num_rows;
+   $stmt->bind_result($fname, $lname, $phone, $clusterAuthorizations);
+   $stmt->fetch();
+
+   $stmt->free_result();
+   $stmt->close();
+  }
+
+  /* This code was replace by the prepared statement above
+  $result = mysqli_query($link, $query)
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $row    = mysqli_fetch_assoc($result);
 
   // Register the variables:
 
@@ -128,8 +161,9 @@ function restore_info()
   {
      $$key = stripslashes( $val );
   }
+  */
 
-  // The loginID, email and userlevel don't change, even if working 
+  // The loginID, email and userlevel don't change, even if working
   // on behalf of another
   $_SESSION['id']           = $personID;
   $_SESSION['firstname']    = $fname;

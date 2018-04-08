@@ -20,6 +20,7 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include_once $class_dir . 'experiment_status.php';
+// ini_set('display_errors', 'On');
 
 // Start displaying page
 $page_title = "Info by Run ID";
@@ -38,16 +39,16 @@ global $uses_thrift;
 <?php
   if ( isset( $_POST['experimentID'] ) )
   {
-    $text  = experiment_select( 'experimentID', $_POST['experimentID'] );
+    $text  = experiment_select( $link, 'experimentID', $_POST['experimentID'] );
     if ( $_POST['experimentID'] != -1 )               // -1 is Please select...
-       $text .= runID_info( $_POST['experimentID'] );
+       $text .= runID_info( $link, $_POST['experimentID'] );
   }
 
   else if ( isset( $_GET['RequestID'] ) )
-    $text = HPCDetail( $_GET['RequestID'] );
+    $text = HPCDetail( $link, $_GET['RequestID'] );
 
   else
-    $text  = experiment_select( 'experimentID' );
+    $text  = experiment_select( $link, 'experimentID' );
 
   echo $text;
 
@@ -59,7 +60,7 @@ include 'footer.php';
 exit();
 
 // Function to create a dropdown for available runIDs
-function experiment_select( $select_name, $current_ID = NULL )
+function experiment_select( $link, $select_name, $current_ID = NULL )
 {
   $myID = $_SESSION['id'];
 
@@ -71,15 +72,15 @@ function experiment_select( $select_name, $current_ID = NULL )
             "AND projectPerson.personID = people.personID " .
             $users_clause .
             "ORDER BY lname, runID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) == 0 ) return "";
+  if ( mysqli_num_rows( $result ) == 0 ) return "";
 
   $text = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n" .
           "  <select name='$select_name' size='1' onchange='form.submit();'>\n" .
           "    <option value=-1>Please select...</option>\n";
-  while ( list( $experimentID, $runID, $lname ) = mysql_fetch_array( $result ) )
+  while ( list( $experimentID, $runID, $lname ) = mysqli_fetch_array( $result ) )
   {
     $selected = ( $current_ID == $experimentID ) ? " selected='selected'" : "";
     $text .= "    <option value='$experimentID'$selected>$lname: $runID</option>\n";
@@ -92,16 +93,32 @@ function experiment_select( $select_name, $current_ID = NULL )
 }
 
 // A function to retrieve information about that runID
-function runID_info( $experimentID )
+function runID_info( $link, $experimentID )
 {
   $query  = "SELECT people.personID, personGUID, lname, fname, email " .
             "FROM experiment, projectPerson, people " .
-            "WHERE experiment.experimentID = $experimentID " .
+            "WHERE experiment.experimentID = ? " .
             "AND experiment.projectID = projectPerson.projectID " .
             "AND projectPerson.personID = people.personID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  list( $ID, $GUID, $lname, $fname, $email ) = mysql_fetch_array( $result );
+
+  // Prepared statement
+  if ($stmt = mysqli_prepare($link, $query)) {
+   $stmt->bind_param('i', $experimentID);
+   $stmt->execute();
+   $stmt->store_result();
+   $num_of_rows = $stmt->num_rows;
+   $stmt->bind_result($ID, $GUID, $lname, $fname, $email);
+   $stmt->fetch();
+
+   $stmt->free_result();
+   $stmt->close();
+  }
+
+  /* This code was replace by the prepared statement above
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  list( $ID, $GUID, $lname, $fname, $email ) = mysqli_fetch_array( $result );
+  */
 
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
@@ -123,11 +140,27 @@ HTML;
 
   $query  = "SELECT experimentGUID, coeff1, coeff2, type, runType " .
             "FROM experiment, rotorCalibration " .
-            "WHERE experimentID = $experimentID " .
+            "WHERE experimentID = ? " .
             "AND experiment.rotorCalibrationID = rotorCalibration.rotorCalibrationID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  list( $GUID, $coeff1, $coeff2, $type, $runType ) = mysql_fetch_array( $result );
+
+  // Prepared statement
+  if ($stmt = mysqli_prepare($link, $query)) {
+   $stmt->bind_param('i', $experimentID);
+   $stmt->execute();
+   $stmt->store_result();
+   $num_of_rows = $stmt->num_rows;
+   $stmt->bind_result($experimentGUID, $coeff1, $coeff2, $type, $runType);
+   $stmt->fetch();
+
+   $stmt->free_result();
+   $stmt->close();
+  }
+
+  /* This code was replace by the prepared statement above
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : ".htmlentities($query)."<br />\n" . mysqli_error($link) );
+  list( $GUID, $coeff1, $coeff2, $type, $runType ) = mysqli_fetch_array( $result );
+  */
   $text .= <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
   <caption>Run Information</caption>
@@ -151,12 +184,23 @@ HTML;
 
   $query  = "SELECT rawDataID, rawDataGUID, filename, solutionID " .
             "FROM rawData " .
-            "WHERE experimentID = $experimentID " .
+            "WHERE experimentID = ? " .
             "ORDER BY filename ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
 
-  if ( mysql_num_rows( $result ) == 0 )
+  // Prepared statement
+  if ($stmt = mysqli_prepare($link, $query)) {
+   $stmt->bind_param('i', $experimentID);
+   $stmt->execute();
+   $stmt->store_result();
+   $num_of_rows = $stmt->num_rows;
+   $stmt->bind_result($rawDataID, $rawDataGUID, $filename, $solutionID);
+
+  /* This code was replace by the prepared statement above
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  */
+
+  if ( $num_of_rows == 0 )
     return $text;
 
   $rawIDs      = array();
@@ -175,14 +219,14 @@ HTML;
   <tbody>
 HTML;
 
-  while ( list( $ID, $GUID, $filename, $solutionID ) = mysql_fetch_array( $result ) )
+  while ($stmt->fetch())
   {
-    $rawIDs[]      = $ID;
+    $rawIDs[]      = $rawDataID;
     $solutionIDs[] = $solutionID;
 
     $text .= <<<HTML
-    <tr><td>$ID</td>
-        <td>$GUID</td>
+    <tr><td>$rawDataID</td>
+        <td>$rawDataGUID</td>
         <td>$filename</td>
         <td>$solutionID</td>
     </tr>
@@ -190,7 +234,11 @@ HTML;
 HTML;
 
   }
-  
+
+  $stmt->free_result();
+  $stmt->close();
+ }
+
   $text .= "</tbody>\n\n" .
            "</table>\n";
 
@@ -199,10 +247,10 @@ HTML;
             "FROM editedData " .
             "WHERE rawDataID IN ( $rawIDs_csv ) " .
             "ORDER BY editedDataID, filename ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) == 0 )
+  if ( mysqli_num_rows( $result ) == 0 )
     return $text;
 
   $text .= <<<HTML
@@ -221,7 +269,7 @@ HTML;
 HTML;
 
   $editIDs = array();
-  while ( list ( $editID, $rawID, $GUID, $filename ) = mysql_fetch_array( $result ) )
+  while ( list ( $editID, $rawID, $GUID, $filename ) = mysqli_fetch_array( $result ) )
   {
     $editIDs[] = $editID;
 
@@ -244,10 +292,10 @@ HTML;
             "ON ( model.modelID = modelPerson.modelID ) " .
             "WHERE editedDataID IN ( $editIDs_csv ) " .
             "ORDER BY modelID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) != 0 )
+  if ( mysqli_num_rows( $result ) != 0 )
   {
     $text .= <<<HTML
     <table cellspacing='0' cellpadding='0' class='admin'>
@@ -267,7 +315,7 @@ HTML;
 HTML;
 
     $modelIDs = array();
-    while ( list ( $modelID, $editID, $GUID, $variance, $meniscus, $personID ) = mysql_fetch_array( $result ) )
+    while ( list ( $modelID, $editID, $GUID, $variance, $meniscus, $personID ) = mysqli_fetch_array( $result ) )
     {
       $modelIDs[] = $modelID;
 
@@ -294,10 +342,10 @@ HTML;
               "FROM noise " .
               "WHERE modelID IN ( $modelIDs_csv ) " .
               "ORDER BY noiseID ";
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />\n" . mysql_error() );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-    if ( mysql_num_rows( $result ) != 0 )
+    if ( mysqli_num_rows( $result ) != 0 )
     {
       $text .= <<<HTML
       <table cellspacing='0' cellpadding='0' class='admin'>
@@ -316,7 +364,7 @@ HTML;
 
 HTML;
 
-      while ( list ( $noiseID, $GUID, $editID, $modelID, $modelGUID, $type ) = mysql_fetch_array( $result ) )
+      while ( list ( $noiseID, $GUID, $editID, $modelID, $modelGUID, $type ) = mysqli_fetch_array( $result ) )
       {
         $text .= <<<HTML
         <tr><td>$noiseID</td>
@@ -339,10 +387,10 @@ HTML;
             "FROM noise " .
             "WHERE editedDataID IN ( $editIDs_csv ) " .
             "ORDER BY noiseID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) != 0 )
+  if ( mysqli_num_rows( $result ) != 0 )
   {
     $text .= <<<HTML
     <table cellspacing='0' cellpadding='0' class='admin'>
@@ -361,7 +409,7 @@ HTML;
 
 HTML;
 
-    while ( list ( $noiseID, $GUID, $editID, $modelID, $modelGUID, $type ) = mysql_fetch_array( $result ) )
+    while ( list ( $noiseID, $GUID, $editID, $modelID, $modelGUID, $type ) = mysqli_fetch_array( $result ) )
     {
       $text .= <<<HTML
       <tr><td>$noiseID</td>
@@ -385,10 +433,10 @@ HTML;
             "WHERE experimentID = $experimentID " .
             "ORDER BY reportID ";
 
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) != 0 )
+  if ( mysqli_num_rows( $result ) != 0 )
   {
     $text .= <<<HTML
     <table cellspacing='0' cellpadding='0' class='admin'>
@@ -404,7 +452,7 @@ HTML;
 
 HTML;
 
-    while ( list ( $reportID, $GUID, $title ) = mysql_fetch_array( $result ) )
+    while ( list ( $reportID, $GUID, $title ) = mysqli_fetch_array( $result ) )
     {
       $reportIDs[] = $reportID;
       $text .= <<<HTML
@@ -429,10 +477,10 @@ HTML;
               "WHERE reportID IN ( $reportIDs_csv ) " .
               "ORDER BY reportID, reportTripleID ";
   
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />\n" . mysql_error() );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-    if ( mysql_num_rows( $result ) != 0 )
+    if ( mysqli_num_rows( $result ) != 0 )
     {
       $text .= <<<HTML
       <table cellspacing='0' cellpadding='0' class='admin'>
@@ -452,7 +500,7 @@ HTML;
 HTML;
   
       while ( list ( $reportTripleID, $GUID, $resultID, $triple, $dataDesc, $rptID ) 
-                   = mysql_fetch_array( $result ) )
+                   = mysqli_fetch_array( $result ) )
       {
         $reportTripleIDs[] = $reportTripleID;
         $text .= <<<HTML
@@ -482,10 +530,10 @@ HTML;
               "AND l.reportDocumentID = d.reportDocumentID " .
               "ORDER BY reportTripleID, reportDocumentID ";
   
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />\n" . mysql_error() );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-    if ( mysql_num_rows( $result ) != 0 )
+    if ( mysqli_num_rows( $result ) != 0 )
     {
       $text .= <<<HTML
       <table cellspacing='0' cellpadding='0' class='admin'>
@@ -506,7 +554,7 @@ HTML;
   
       while ( list ( $reportDocumentID, $GUID, $editID, $label, $filename, 
                      $analysis, $subAnal, $docType, $tripID ) 
-                   = mysql_fetch_array( $result ) )
+                   = mysqli_fetch_array( $result ) )
       {
         $text .= <<<HTML
         <tr><td>$reportDocumentID</td>
@@ -530,10 +578,10 @@ HTML;
             "FROM HPCAnalysisRequest " .
             "WHERE experimentID = $experimentID " .
             "ORDER BY HPCAnalysisRequestID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) == 0 )
+  if ( mysqli_num_rows( $result ) == 0 )
     return $text;
 
   $requestIDs = array();
@@ -553,7 +601,7 @@ HTML;
   <tbody>
 HTML;
 
-  while ( list( $ID, $GUID, $filename, $submit, $cluster, $method ) = mysql_fetch_array( $result ) )
+  while ( list( $ID, $GUID, $filename, $submit, $cluster, $method ) = mysqli_fetch_array( $result ) )
   {
     $requestIDs[]  = $ID;
 
@@ -578,10 +626,10 @@ HTML;
             "FROM HPCAnalysisResult " .
             "WHERE HPCAnalysisRequestID IN ( $requestIDs_csv ) " .
             "ORDER BY HPCAnalysisResultID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) != 0 )
+  if ( mysqli_num_rows( $result ) != 0 )
   {
     $text .= <<<HTML
     <table cellspacing='0' cellpadding='0' class='admin'>
@@ -599,7 +647,7 @@ HTML;
 HTML;
 
     $incomplete = array();
-    while ( list( $ID, $requestID, $gfacID, $status, $updated ) = mysql_fetch_array( $result ) )
+    while ( list( $ID, $requestID, $gfacID, $status, $updated ) = mysqli_fetch_array( $result ) )
     {
       if ( $status != 'completed' )
         $incomplete[] = $gfacID;
@@ -627,7 +675,7 @@ HTML;
   // Now switch over to the global db
   global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
 
-  $globaldb = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
+  $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
 
   if ( ! $globaldb )
   {
@@ -635,7 +683,7 @@ HTML;
     return $text;
   }
 
-  if ( ! mysql_select_db( $globaldbname, $globaldb ) ) 
+  if ( ! mysqli_select_db( $globaldbname, $globaldb ) ) 
   {
     $text .= "<p>Cannot change to global database $globaldbname</p>\n";
     return $text;
@@ -664,13 +712,13 @@ HTML;
     $query  = "SELECT cluster, us3_db, status, queue_msg, time " .
               "FROM analysis " .
               "WHERE gfacID = '$gfacID' ";
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />\n" . mysql_error() );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />\n" . mysqli_error($link) );
   
-    if ( mysql_num_rows( $result ) == 1 )
+    if ( mysqli_num_rows( $result ) == 1 )
     {
       $in_queue++;
-      list( $cluster, $db, $status, $msg, $time ) = mysql_fetch_array( $result );
+      list( $cluster, $db, $status, $msg, $time ) = mysqli_fetch_array( $result );
       $text .= <<<HTML
       <tr><td>$gfacID</td>
           <td>$cluster</td>
@@ -690,17 +738,17 @@ HTML;
   $text .= "</tbody>\n\n" .
            "</table>\n";
 
-  mysql_close( $globaldb );
+  mysqli_close( $globaldb );
 
   return $text;
 }
 
-function HPCDetail( $requestID )
+function HPCDetail( $link, $requestID )
 {
   $query = "SELECT * FROM HPCAnalysisRequest WHERE HPCAnalysisRequestID=$requestID";
-  $result = mysql_query( $query )
-           or die( "Query failed : $query<br />\n" . mysql_error());
-  $row = mysql_fetch_assoc( $result );
+  $result = mysqli_query( $link, $query )
+           or die( "Query failed : $query<br />\n" . mysqli_error($link));
+  $row = mysqli_fetch_assoc( $result );
   $row['requestXMLFile'] = '<pre>' . htmlentities( $row['requestXMLFile'] ) . '</pre>';
 
   // Save for later
@@ -721,9 +769,9 @@ HTML;
   $text .= "</table>\n";
   
   $query = "SELECT * FROM HPCAnalysisResult WHERE HPCAnalysisRequestID=$requestID";
-  $result = mysql_query( $query )
-           or die( "Query failed : $query<br />\n" . mysql_error());
-  $row = mysql_fetch_assoc( $result );
+  $result = mysqli_query( $link, $query )
+           or die( "Query failed : $query<br />\n" . mysqli_error($link));
+  $row = mysqli_fetch_assoc( $result );
   $row['jobfile'] = '<pre>' . htmlentities( $row['jobfile'] ) . '</pre>';
 
   // Get GFAC job status
@@ -765,18 +813,18 @@ HTML;
     $query  = "SELECT resultID FROM HPCAnalysisResultData " .
               "WHERE HPCAnalysisResultID = $resultID " .
               "AND HPCAnalysisResultType = 'model' ";
-    $result = mysql_query( $query )
-             or die( "Query failed : $query<br />\n" . mysql_error());
-    $models = mysql_fetch_row( $result );         // An array with all of them
+    $result = mysqli_query( $link, $query )
+             or die( "Query failed : $query<br />\n" . mysqli_error($link));
+    $models = mysqli_fetch_row( $result );         // An array with all of them
     if ( $models !== false )
       $row['modelIDs'] = implode( ", ", $models );
 
     $query  = "SELECT resultID FROM HPCAnalysisResultData " .
               "WHERE HPCAnalysisResultID = $resultID " .
               "AND HPCAnalysisResultType = 'noise' ";
-    $result = mysql_query( $query )
-             or die( "Query failed : $query<br />\n" . mysql_error());
-    $noise  = mysql_fetch_row( $result );         // An array with all of them
+    $result = mysqli_query( $link, $query )
+             or die( "Query failed : $query<br />\n" . mysqli_error($link));
+    $noise  = mysqli_fetch_row( $result );         // An array with all of them
     if ( $noise !== false )
       $row['noiseIDs'] = implode( ", ", $noise );
   }

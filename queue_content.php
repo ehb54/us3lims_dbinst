@@ -11,7 +11,7 @@ if ( $_SESSION['userlevel'] < 2 )
 {
   header('Location: index.php');
   exit();
-} 
+}
 
 include_once 'config.php';
 
@@ -24,7 +24,7 @@ if ( ! $globaldb )
   return;
 }
 
-if ( ! mysql_select_db( $globaldbname, $globaldb ) ) 
+if ( ! mysql_select_db( $globaldbname, $globaldb ) )
 {
   echo "<p>Cannot change to global database $globaldbname</p>\n";
   return;
@@ -77,7 +77,7 @@ if ( $count_jobs == 1 )
   $is_are     = "is";
   $strjob     = "job";
 }
-  
+
 if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
   $content .= "<p>There $is_are $count_jobs <b>$dbname</b> $strjob" .
               " queued, running, or completing.</p>\n";
@@ -156,7 +156,7 @@ function get_status( $gfacID, $us3_db )
     return false;
 
   $status = mysql_fetch_array( $result, MYSQL_ASSOC );
-  
+
   // Make a few helpful changes
   $triple = '';
   if ( ! empty( $status['editXMLFilename'] ) )
@@ -252,7 +252,7 @@ function is_authorized( $current_db, $jobEmail )
 {
   global $dbname;             // The database we're logged into
   $authorized = false;
-  
+
   // $jobEmail could have multiple emails in it
   $pos = strpos( $jobEmail, $_SESSION['email'] );
 
@@ -269,7 +269,7 @@ function is_authorized( $current_db, $jobEmail )
   else if ( ($_SESSION['userlevel'] >= 2) &&
             ($pos !== false)              )
     $authorized = true;
-   
+
   return ($authorized);
 }
 

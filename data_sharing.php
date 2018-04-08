@@ -12,17 +12,18 @@ $message = '';
 
 include 'config.php';
 include 'db.php';
+// ini_set('display_errors', 'On');
 
 // Update permits table if we submitted some data
-if ( isset( $_POST['count'] ) ) 
+if ( isset( $_POST['count'] ) )
 {
   $count = $_POST['count'];
 
   $query  = "DELETE FROM permits " .
             "WHERE personID = $loginID " .
             "AND instrumentID IS NULL ";    // Only delete the collaborator records
-  mysql_query($query) 
-        or die( "Query failed : $query<br/>\n" . mysql_error() );
+  mysqli_query($link, $query)
+        or die( "Query failed : $query<br/>\n" . mysqli_error($link) );
 
   foreach ( $_POST[ 'cb' ] as $invID => $value )
   {
@@ -32,8 +33,8 @@ if ( isset( $_POST['count'] ) )
                "SET personID   = $loginID, " .
                "collaboratorID = $invID, " .
                "instrumentID   = NULL ";
-      mysql_query($query) 
-            or die( "Query failed : $query<br/>\n" . mysql_error() );
+      mysqli_query($link, $query)
+            or die( "Query failed : $query<br/>\n" . mysqli_error($link) );
     }
   }
 
@@ -45,13 +46,13 @@ $names = array();
 $IDs   = array();
 $query  = "SELECT personID, lname, fname FROM people " .
           "ORDER BY lname, fname ";
-$result = mysql_query($query) 
-          or die( "Query failed : $query<br/>\n" . mysql_error() );
+$result = mysqli_query($link, $query)
+          or die( "Query failed : $query<br/>\n" . mysqli_error($link) );
 
-$count  = mysql_num_rows( $result );
+$count  = mysqli_num_rows( $result );
 for ( $i = 0; $i < $count; $i++ )
 {
-  list( $iID, $lname, $fname ) = mysql_fetch_array( $result );
+  list( $iID, $lname, $fname ) = mysqli_fetch_array( $result );
   if ( $iID != $loginID )           // Skip ourself!
   {
     $names[ $i ] = "$lname, $fname";
@@ -64,10 +65,10 @@ $collaborators = array();
 $query  = "SELECT collaboratorID FROM permits " .
           "WHERE personID = $loginID " .
           "AND instrumentID IS NULL ";
-$result = mysql_query($query) 
-          or die( "Query failed : $query<br/>\n" . mysql_error() );
+$result = mysqli_query($link, $query)
+          or die( "Query failed : $query<br/>\n" . mysqli_error($link) );
 
-while ( list( $cID ) =  mysql_fetch_array( $result ) )
+while ( list( $cID ) =  mysqli_fetch_array( $result ) )
 {
   $collaborators[] = $cID;
 }
@@ -76,6 +77,7 @@ while ( list( $cID ) =  mysql_fetch_array( $result ) )
 $page_title = "Share Data with Other Investigators";
 $js = 'js/data_sharing.js';
 include 'header.php';
+
 ?>
 <!-- Begin page content -->
 <div id='content'>
@@ -112,12 +114,12 @@ include 'header.php';
     echo "<td><input type='checkbox' name='cb[$inv]'$checked " .
          "     onclick='reset_message();' /> $names[$e]</td>\n";
   /////////
-    
+
     $e = $rows * 2 + $i;
     if ( $extra == 1 ) $e--;
     $inv = $IDs[$e];
     $checked = ( in_array( $inv, $collaborators ) ) ? " checked='checked'" : "";
-    
+
     if ( $i < $rows-1  || $extra == 0 )
     echo "<td><input type='checkbox' name='cb[$inv]'$checked " .
          "     onclick='reset_message();' /> $names[$e]</td>\n";
@@ -126,7 +128,7 @@ include 'header.php';
 
   }
 ?>
-  </table> 
+  </table>
 
   <p><input type='hidden' name='count' value='<?php echo $count;?>' />
      <input type="submit" value="Update Settings"/></p>

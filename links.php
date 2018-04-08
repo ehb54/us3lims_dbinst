@@ -40,7 +40,7 @@ HTML;
 $general_menu = <<<HTML
   <h4>General</h4>
   <a href='https://$org_site/profile.php?edit=12'>Change My Info</a>
-  <a href='http://$org_site/view_database_info.php'>Database Login Info</a>
+  <a href='https://$org_site/view_database_info.php'>Database Login Info</a>
   <a href="partners.php">Partners</a>
   <a href='contacts.php'>Contacts</a>
   <a href='mailto:$admin_email'>Webmaster</a>
@@ -64,7 +64,7 @@ if ( $userlevel == 5 )  // level 5 = super admin ( developer )
 {
   $sidebar_menu = <<<HTML
   <h4>Navigation</h4>
-  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href="https://$org_site/index.php">Welcome!</a>
   <a href='https://$org_site/admin_links.php'>Admin Info</a>
   $projects_menu
   $analysis_menu
@@ -78,7 +78,7 @@ else if ( $userlevel == 4 )  // userlevel 4 = admin
 {
   $sidebar_menu = <<<HTML
   <h4>Navigation</h4>
-  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href="https://$org_site/index.php">Welcome!</a>
   <a href='https://$org_site/admin_links.php'>Admin Info</a>
   $projects_menu
   $analysis_menu
@@ -92,7 +92,7 @@ else if ( $userlevel == 3 )  // userlevel 3 = superuser
 {
   $sidebar_menu = <<<HTML
   <h4>Navigation</h4>
-  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href="https://$org_site/index.php">Welcome!</a>
   <a href='https://$org_site/admin_links.php'>Admin Info</a>
   $projects_menu
   $analysis_menu
@@ -106,7 +106,7 @@ else if ( $userlevel == 2 )  // userlevel 2 = Data analyst
 {
   $sidebar_menu = <<<HTML
   <h4>Navigation</h4>
-  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href="https://$org_site/index.php">Welcome!</a>
   $projects_menu
   $analysis_menu
   $monitor_menu
@@ -119,7 +119,7 @@ else if ( $userlevel == 1 )  // level 1 = privileged user
 {
   $sidebar_menu = <<<HTML
   <h4>Navigation</h4>
-  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href="https://$org_site/index.php">Welcome!</a>
   $projects_menu
   $general_menu_1
 
@@ -130,7 +130,7 @@ else if ( $userlevel == 0 )  // level 0 = regular user
 {
   $sidebar_menu = <<<HTML
   <h4>Navigation</h4>
-  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href="https://$org_site/index.php">Welcome!</a>
   $projects_menu
   $general_menu_1
 
@@ -164,7 +164,7 @@ HTML;
 
 // Function used by 2DSA_1.php, 2DSA-CG_1.php, ... to re-determine
 //  the latest noise associated with latest edits
-function set_latest_noises( )
+function set_latest_noises( $link )
 {
   $nreq     = count( $_SESSION['request'] );
   $nndiff   = 0;
@@ -182,13 +182,13 @@ function set_latest_noises( )
               "WHERE editedDataID = $editedDataID " .
               "ORDER BY timeEntered DESC ";
 
-    $result = mysql_query( $query )
-            or die("Query failed : $query<br />\n" . mysql_error());
+    $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     $knoise = 0;
     $prtype = "";
     $prtime = 0;
-    while ( list( $noiseID, $noiseType, $time ) = mysql_fetch_array( $result ) )
+    while ( list( $noiseID, $noiseType, $time ) = mysqli_fetch_array( $result ) )
     { // Loop through noises in reverse date order to save IDs of latest for the edit
       if ( $knoise == 0 )
       { // First encountered noise is the latest

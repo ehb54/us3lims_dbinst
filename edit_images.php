@@ -16,37 +16,39 @@ if ( $_SESSION['userlevel'] < 1 )
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+// ini_set('display_errors', 'On');
+
 
 $uploadFilename = '';
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
 {
-  do_prior();
+  do_prior($link);
   exit();
 }
 
 else if (isset($_POST['next']))
 {
-  do_next();
+  do_next($link);
   exit();
 }
 
 else if (isset($_POST['delete']))
 {
-  do_delete();
+  do_delete($link);
   exit();
 }
 
 else if (isset($_POST['new']))
 {
-  do_new();
+  do_new($link);
   exit();
 }
 
 else if (isset($_POST['update']))
 {
-  do_update();
+  do_update($link);
   exit();
 }
 
@@ -71,10 +73,10 @@ include 'header.php';
 <?php
 // Edit or display a record
 if ( isset($_POST['edit']) || isset($_GET['edit']) )
-  edit_record();
+  edit_record($link);
 
 else
-  display_record();
+  display_record($link);
 
 ?>
 </div>
@@ -84,7 +86,7 @@ include 'footer.php';
 exit();
 
 // Function to redirect to prior record
-function do_prior()
+function do_prior($link)
 {
   $ID = $_SESSION['id'];
   $imageID = $_POST['imageID'];
@@ -94,16 +96,16 @@ function do_prior()
             "WHERE p.personID = $ID " .
             "AND p.imageID = i.imageID " .
             "ORDER BY description ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find prior record
   $current = null;
-  list($current) = mysql_fetch_array($result);
+  list($current) = mysqli_fetch_array($result);
   while ($current != null && $imageID != $current)
   {
     $prior = $current;
-    list($current) = mysql_fetch_array($result);
+    list($current) = mysqli_fetch_array($result);
   }
 
   $redirect = ($prior == null) ? "" : "?ID=$prior";
@@ -112,7 +114,7 @@ function do_prior()
 }
 
 // Function to redirect to next record
-function do_next()
+function do_next($link)
 {
   $ID = $_SESSION['id'];
   $imageID = $_POST['imageID'];
@@ -122,14 +124,14 @@ function do_next()
             "WHERE p.personID = $ID " .
             "AND p.imageID = i.imageID " .
             "ORDER BY description ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find next record
   $next = null;
   while ($imageID != $next)
-    list($next) = mysql_fetch_array($result);
-  list($next) = mysql_fetch_array($result);
+    list($next) = mysqli_fetch_array($result);
+  list($next) = mysqli_fetch_array($result);
 
   $redirect = ($next == null) ? "?ID=$imageID" : "?ID=$next";
   header("Location: $_SERVER[PHP_SELF]$redirect");
@@ -137,7 +139,7 @@ function do_next()
 }
 
 // Function to delete the current record
-function do_delete()
+function do_delete($link)
 {
   $imageID = $_POST['imageID'];
 
@@ -145,29 +147,29 @@ function do_delete()
   //   fk constraints
   $query = "DELETE FROM imageAnalyte " .
            "WHERE imageID = $imageID ";
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
+  mysqli_query( $link, $query )
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   $query = "DELETE FROM imageSolution " .
            "WHERE imageID = $imageID ";
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
+  mysqli_query( $link, $query )
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   $query = "DELETE FROM imagePerson " .
            "WHERE imageID = $imageID ";
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
+  mysqli_query( $link, $query )
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   $query = "DELETE FROM image " .
            "WHERE imageID = $imageID ";
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
+  mysqli_query( $link, $query )
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   header("Location: $_SERVER[PHP_SELF]");
 }
 
 // Function to create a new record
-function do_new()
+function do_new($link)
 {
   $ID = $_SESSION['id'];
   $uuid = uuid();
@@ -175,22 +177,22 @@ function do_new()
   $query = "INSERT INTO image " .
            "SET imageGUID  = '$uuid', " .
            "description  = '' " ;
-  mysql_query($query)
-        or die("Query failed : $query<br />\n" . mysql_error());
-  $new = mysql_insert_id();
+  mysqli_query( $link, $query )
+        or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $new = mysqli_insert_id($link);
 
   // Add the ownership record
   $query  = "INSERT INTO imagePerson SET " .
             "imageID = $new, " .
             "personID  = $ID ";
-  mysql_query( $query )
-        or die( "Query failed : $query<br />\n" . mysql_error() );
+  mysqli_query( $link, $query )
+        or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
   header("Location: {$_SERVER['PHP_SELF']}?edit=$new");
 }
 
 // Function to update the current record
-function do_update()
+function do_update($link)
 {
   global $data_dir;
   global $uploadFilename;
@@ -209,8 +211,8 @@ function do_update()
   $query = "UPDATE image " .
            "SET description  = '$description' " .
            "WHERE imageID = $imageID ";
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
+  mysqli_query( $link, $query )
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Process gel image upload, if present
   if ( isset( $_FILES['gelPicture'] ) )
@@ -218,7 +220,7 @@ function do_update()
 
   if ( $gelPicture !== false )
   {
-    // We can't allow uploading of picture without either buffer, analyte 
+    // We can't allow uploading of picture without either buffer, analyte
     //   or solution linkage
     if ( (!isset($_POST['analyteID'] )) &&
          (!isset($_POST['bufferID'] ))  &&
@@ -238,32 +240,32 @@ function do_update()
              "SET gelPicture = '$gelPicture', " .
              "filename = '$newFilename' " .
              "WHERE imageID = $imageID ";
-    mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query( $link, $query )
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     // Now create buffer, analyte and solution link table entries
     $query  = "DELETE FROM imageBuffer " .
               "WHERE imageID = $imageID ";
-    mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query( $link, $query )
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     $query  = "DELETE FROM imageAnalyte " .
               "WHERE imageID = $imageID ";
-    mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query( $link, $query )
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     $query  = "DELETE FROM imageSolution " .
               "WHERE imageID = $imageID ";
-    mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query( $link, $query )
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     if ( $imageType == 'buffer' )
     {
       $query  = "INSERT INTO imageBuffer " .
                 "SET imageID = $imageID, " .
                 "bufferID    = $bufferID ";
-      mysql_query($query)
-        or die("Query failed : $query<br />\n" . mysql_error());
+      mysqli_query( $link, $query )
+        or die("Query failed : $query<br />\n" . mysqli_error($link));
     }
 
     else if ( $imageType == 'analyte' )
@@ -271,8 +273,8 @@ function do_update()
       $query  = "INSERT INTO imageAnalyte " .
                 "SET imageID = $imageID, " .
                 "analyteID   = $analyteID ";
-      mysql_query($query)
-        or die("Query failed : $query<br />\n" . mysql_error());
+      mysqli_query( $link, $query )
+        or die("Query failed : $query<br />\n" . mysqli_error($link));
     }
 
     else if ( $imageType == 'solution' )
@@ -280,8 +282,8 @@ function do_update()
       $query  = "INSERT INTO imageSolution " .
                 "SET imageID = $imageID, " .
                 "solutionID   = $solutionID ";
-      mysql_query($query)
-        or die("Query failed : $query<br />\n" . mysql_error());
+      mysqli_query( $link, $query )
+        or die("Query failed : $query<br />\n" . mysqli_error($link));
     }
 
   }
@@ -291,30 +293,51 @@ function do_update()
 }
 
 // Function to display and navigate records
-function display_record()
+function display_record($link)
 {
   // Find a record to display
-  $imageID = get_id();
+  $imageID = htmlentities(get_id($link));
   if ($imageID === false)
+    return;
+
+  // Anything other than a number here is a security risk
+  if (!(is_numeric($imageID)))
     return;
 
   $query  = "SELECT imageGUID, description, filename, LENGTH(gelPicture) AS imageLength " .
             "FROM image " .
-            "WHERE imageID = $imageID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+            "WHERE imageID = ? ";
 
-  $row    = mysql_fetch_array($result, MYSQL_ASSOC);
+  // Prepared statement
+  if ($stmt = mysqli_prepare($link, $query)) {
+   $stmt->bind_param('i', $imageID);
+   $stmt->execute();
+   $stmt->store_result();
+   $num_of_rows = $stmt->num_rows;
+   $stmt->bind_result($imageGUID, $description, $filename, $LENGTH_gelPicture);
+   $stmt->fetch();
+
+   $stmt->free_result();
+   $stmt->close();
+  }
+
+  /* This code was replace by the prepared statement above
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+
+  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
 
   // Create local variables; make sure IE displays empty cells properly
   foreach ($row as $key => $value)
   {
     $$key = (empty($value)) ? "&nbsp;" : html_entity_decode( stripslashes( nl2br($value) ) );
   }
+  */
 
   $ID = $_SESSION['id'];
-  $imageLength = $row['imageLength'];
-  $gelPicture  = ( $imageLength > 0 ) 
+  $imageLength = $LENGTH_gelPicture;
+  // $imageLength = $row['imageLength'];
+  $gelPicture  = ( $imageLength > 0 )
                ? "<a href='show_image.php?ID=$imageID'>Show Picture</a> ($filename)"
                : "";
 
@@ -327,9 +350,9 @@ function display_record()
             "WHERE p.personID = $ID " .
             "AND p.imageID = i.imageID " .
             "ORDER BY description ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  while (list($t_id, $t_description) = mysql_fetch_array($result))
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  while (list($t_id, $t_description) = mysqli_fetch_array($result))
   {
     $selected = ($imageID == $t_id) ? " selected='selected'" : "";
     $nav_listbox .= "  <option$selected value='$t_id'>$t_description</option>\n";
@@ -367,7 +390,7 @@ HTML;
 }
 
 // Function to figure out which record to display
-function get_id()
+function get_id($link)
 {
   // See if we are being directed to a particular record
   if (isset($_GET['ID']))
@@ -382,12 +405,12 @@ function get_id()
             "AND p.imageID = i.imageID " .
             "ORDER BY description " .
             "LIMIT 1 ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  if (mysql_num_rows($result) == 1)
+  if (mysqli_num_rows($result) == 1)
   {
-    list($imageID) = mysql_fetch_array($result);
+    list($imageID) = mysqli_fetch_array($result);
     return( $imageID );
   }
 
@@ -415,7 +438,7 @@ HTML;
 }
 
 // Function to edit a record
-function edit_record()
+function edit_record($link)
 {
   // Get the record we need to edit
   if ( isset( $_POST['edit'] ) )
@@ -434,10 +457,10 @@ function edit_record()
   $query  = "SELECT description " .
             "FROM image " .
             "WHERE imageID = $imageID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row = mysql_fetch_array($result);
+  $row = mysqli_fetch_array($result);
 
   $description         = html_entity_decode( stripslashes( $row['description'] ) );
 
@@ -470,7 +493,7 @@ echo<<<HTML
                       <label><input type='radio' name='imageType' id='imageSolution'
                                     value='solution' />
                                     Solution</label></td>
-                  <td><div id='imageLink'>&lt;--- Please select an image type when 
+                  <td><div id='imageLink'>&lt;--- Please select an image type when
                                           uploading a file</div></td></tr>
             </table></td></tr>
 
@@ -487,17 +510,17 @@ function upload_file( &$image, $upload_dir )
   global $uploadFilename;
 
   $image = false;
-  
-  if ( ( ! isset( $_FILES['gelPicture'] ) )   || 
+
+  if ( ( ! isset( $_FILES['gelPicture'] ) )   ||
        ( $_FILES['gelPicture']['size'] == 0 ) )
     return 'No file was uploaded';
 
   $uploadFilename=$_FILES['gelPicture']['name'];
   $uploadFile = $upload_dir . "/" . $uploadFilename;
 
-  if ( ! move_uploaded_file( $_FILES['gelPicture']['tmp_name'], $uploadFile) ) 
+  if ( ! move_uploaded_file( $_FILES['gelPicture']['tmp_name'], $uploadFile) )
     return 'Uploaded file could not be moved to data directory';
-  
+
   $fh = fopen( $uploadFile, "r" );
   if ( !$fh )
      return 'Uploaded file could not be opened';

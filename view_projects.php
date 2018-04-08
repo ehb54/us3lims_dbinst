@@ -23,10 +23,12 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 
+ini_set('display_errors', 'On');
+
 // Are we being directed here from a push button?
 if (isset($_POST['new']))
 {
-  do_new();
+  do_new( $link );
   exit();
 }
 
@@ -44,7 +46,7 @@ include 'header.php';
 
 <?php
 // Display a table
-$table = create_table();
+$table = create_table( $link );
 echo $table;
 
 $_SESSION['print_title'] = "LIMS v3 Projects";
@@ -58,7 +60,7 @@ include 'footer.php';
 exit();
 
 // Function to create a new record
-function do_new()
+function do_new( $mysqli_con )
 {
   $ID   = $_SESSION['id'];
   $uuid = uuid();
@@ -66,23 +68,23 @@ function do_new()
   // Insert an ID
   $query  = "INSERT INTO project ( projectGUID ) " .
             "VALUES ( '$uuid' ) ";
-  mysql_query( $query )
-        or die( "Query failed : $query<br />\n" . mysql_error() );
-  $new = mysql_insert_id();
+  mysqli_query( $mysqli_con, $query )
+        or die( "Query failed : $query<br />\n" . mysqli_error( $mysqli_con ) );
+  $new = mysqli_insert_id( $mysqli_con );
 
   // Add the ownership record
   $query  = "INSERT INTO projectPerson SET " .
             "projectID = $new, " .
             "personID  = $ID ";
-  mysql_query( $query )
-        or die( "Query failed : $query<br />\n" . mysql_error() );
+  mysqli_query( $mysqli_con, $query )
+        or die( "Query failed : $query<br />\n" . mysqli_error( $mysqli_con ) );
 
   header( "Location: edit_projects.php?edit=$new" );
   exit();
 }
 
 // Function to display a table of all records
-function create_table()
+function create_table( $mysqli_con )
 {
   $ID   = $_SESSION['id'];
 
@@ -91,18 +93,18 @@ function create_table()
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $mysqli_con, $query )
+        or die( "Query failed : $query<br />\n" . mysqli_error( $mysqli_con ));
 
   $table = <<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post" >
   <table cellspacing='0' cellpadding='7' class='style1 sortable' id='fixed' style='width:95%;'>
     <thead>
       <tr>
-          <th style="width: 14%;">Description</th>
+          <th style="width: 15%;">Description</th>
           <th style="width: 70%;">Goals</th>
           <th style="width: 11%;">Status</th>
-          <th style="width: 11%;">Last Updated</th>
+          <th style="width: 12%;">Last Updated</th>
       </tr>
     </thead>
 
@@ -115,7 +117,7 @@ function create_table()
     <tbody>
 HTML;
 
-  while ( $row = mysql_fetch_array($result) )
+  while ( $row = mysqli_fetch_array( $result ) )
   {
     foreach ($row as $key => $value)
     {

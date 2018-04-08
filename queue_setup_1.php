@@ -6,6 +6,8 @@
  *
  */
 include_once 'checkinstance.php';
+// ini_set('display_errors', 'On');
+
 
 //$time0=microtime(true);
 if ( ($_SESSION['userlevel'] != 2) &&
@@ -15,7 +17,7 @@ if ( ($_SESSION['userlevel'] != 2) &&
 {
   header('Location: index.php');
   exit();
-} 
+}
 
 if ( isset( $_GET['reset'] ) )
 {
@@ -111,18 +113,18 @@ motd_block();
 
 // If we are here, either userlevel is 4 or it's not blocked
 
-$email_text      = get_email_text();
+$email_text      = get_email_text($link);
 //$time4=microtime(true) - $time0;
-$experiment_text = get_experiment_text();
+$experiment_text = get_experiment_text($link);
 //$time5=microtime(true) - $time0;
-$cell_text       = get_cell_text();
+$cell_text       = get_cell_text($link);
 //$time6=microtime(true) - $time0;
 $submit_text     = "<p style='padding-bottom:3em;'></p>\n";  // a spacer
 if ( $experimentID != 0 )
 {
   $submit_text = <<<HTML
   <p><input type='button' value='Select Different Experiment'
-            onclick='window.location="{$_SERVER['PHP_SELF']}?reset=true";' /> 
+            onclick='window.location="{$_SERVER['PHP_SELF']}?reset=true";' />
      <input type='submit' name='next' value='Add to Queue'/>
   </p>
 
@@ -158,7 +160,7 @@ echo <<<HTML
 
 HTML;
 
-motd_submit(); 
+motd_submit();
 
 // Add rss information from TACC
 require_once 'lib/rss_fetch.inc';
@@ -199,7 +201,7 @@ echo "</table>\n";
 include 'footer.php';
 exit();
 
-function get_email_text()
+function get_email_text($link)
 {
   global $submitter_email, $add_owner;
 
@@ -237,7 +239,7 @@ HTML;
   return( $text );
 }
 
-function get_experiment_text()
+function get_experiment_text($link)
 {
   global $experimentID;
 
@@ -249,14 +251,14 @@ function get_experiment_text()
             "AND      project.projectID = projectPerson.projectID " .
             "AND      experiment.projectID = project.projectID " .
             "ORDER BY udate DESC, runID ";
-  $result = mysql_query( $query )
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   $experiment_list = "<select id='expIDs' name='expIDs[]' multiple='multiple' size='15' " .
                      "  onchange='this.form.submit();'>\n" .
                      "  <option value='null'>run ID not selected...</option>\n";
 
-  while ( list( $expID, $udate, $runID ) = mysql_fetch_array( $result ) )
+  while ( list( $expID, $udate, $runID ) = mysqli_fetch_array( $result ) )
   {
     $selected = ( $expID == $experimentID )
               ? " selected='selected'"
@@ -287,7 +289,7 @@ HTML;
   return( $text );
 }
 
-function get_cell_text()
+function get_cell_text($link)
 {
   global $experimentID;
 //$time0=microtime(true);
@@ -301,7 +303,7 @@ function get_cell_text()
 
   else
   {
-    // We have a legit experimentID, so let's get a list of cells 
+    // We have a legit experimentID, so let's get a list of cells
     //  (auc files) in experiment
     $rrawIDs  = array();
     $rrunIDs  = array();
@@ -317,10 +319,10 @@ function get_cell_text()
                   "FROM   rawData, experiment " .
                   "WHERE  rawData.experimentID = $experimentID " .
                   "AND    rawData.experimentID = experiment.experimentID ";
-        $result = mysql_query( $query )
-                  or die("Query failed : $query<br />\n" . mysql_error());
-  
-        while ( list( $rawDataID, $runID, $filename ) = mysql_fetch_array( $result ) )
+        $result = mysqli_query( $link, $query )
+                  or die("Query failed : $query<br />\n" . mysqli_error($link));
+
+        while ( list( $rawDataID, $runID, $filename ) = mysqli_fetch_array( $result ) )
         {
           $rrawIDs[ $kraw      ] = $rawDataID;
           $rrunIDs[ $rawDataID ] = $runID;
@@ -345,16 +347,16 @@ function get_cell_text()
       $query  = "SELECT COUNT(*) ".
                 "FROM editedData " .
                 "WHERE rawDataID = $rawDataID";
-      $result = mysql_query( $query )
-                or die("Query failed : $query<br />\n" . mysql_error());
-      list( $count ) = mysql_fetch_array( $result );
+      $result = mysqli_query( $link, $query )
+                or die("Query failed : $query<br />\n" . mysqli_error($link));
+      list( $count ) = mysqli_fetch_array( $result );
 
       if ( $count > 0 )
         $rawData_list .= "  <option value='$rawDataID:$filename'>$runID $filename</option>\n";
     }
 //$time3=microtime(true)-$time0;
 //$rawData_list .= "  <option value='time1time2time3'>$time1 $time2 $time3</option>\n";
-  
+
     $rawData_list .= "</select>\n";
   }
 

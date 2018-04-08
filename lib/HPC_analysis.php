@@ -48,16 +48,16 @@ abstract class HPC_analysis
     // investigatorGUID
     $query  = "SELECT personGUID FROM people " .
               "WHERE personID = {$_SESSION['id']} ";
-    $result = mysql_query( $query, $link )
-              or die( "Query failed : $query<br />" . mysql_error());
-    list( $investigatorGUID ) = mysql_fetch_array( $result );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />" . mysqli_error($link));
+    list( $investigatorGUID ) = mysqli_fetch_array( $result );
 
     // submitterGUID
     $query  = "SELECT personGUID FROM people " .
               "WHERE personID = {$_SESSION['loginID']} ";
-    $result = mysql_query( $query, $link )
-              or die( "Query failed : $query<br />" . mysql_error());
-    list( $submitterGUID ) = mysql_fetch_array( $result );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />" . mysqli_error($link));
+    list( $submitterGUID ) = mysqli_fetch_array( $result );
 
     $guid = uuid();
     // What about $job['cluster']['shortname'] and $job['cluster']['queue']?
@@ -70,16 +70,17 @@ abstract class HPC_analysis
               "submitTime =  now(), " .
               "clusterName = '{$job['cluster']['name']}', " .
               "method = '{$job['method']}' " ;
-    mysql_query( $query )
-          or die( "Query failed : $query<br />" . mysql_error());
+    mysqli_query( $link, $query )
+          or die( "Query failed : $query<br />" . mysqli_error());
 
     // Return the generated ID
-    return ( mysql_insert_id() );
+    return ( mysqli_insert_id( $link ) );
   }
 
   // Function to create the HPCDataset and HPCRequestData table entries
   function HPCDataset( $HPCAnalysisRequestID, $datasets )
   {
+    global $link;
     foreach ( $datasets as $dataset_id => $dataset )
     {
       $query  = "INSERT INTO HPCDataset SET " .
@@ -90,10 +91,10 @@ abstract class HPC_analysis
                 "radial_grid          = {$dataset['radial_grid']},  " .
                 "time_grid            = {$dataset['time_grid']},    " .
                 "rotor_stretch        = '{$dataset['rotor_stretch']}' " ;
-      mysql_query( $query )
-            or die( "Query failed : $query<br />" . mysql_error());
+      mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />" . mysqli_error($link));
 
-      $HPCDatasetID = mysql_insert_id();
+      $HPCDatasetID = mysqli_insert_id( $link );
 
       // Now for the HPCRequestData table
       if ( isset( $dataset['noiseIDs'][ 0 ] ) && $dataset['noiseIDs'][ 0 ] > 0 )
@@ -103,8 +104,8 @@ abstract class HPC_analysis
           $query  = "INSERT INTO HPCRequestData SET      " .
                     "HPCDatasetID       = $HPCDatasetID, " .
                     "noiseID             = $noiseID       " ;
-          mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
+          mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
         }
       }
     }
@@ -171,6 +172,7 @@ class HPC_2DSA extends HPC_analysis
   // Function to create the HPC Analysis DB entries for the 2DSA analysis
   protected function HPCJobParameters( $HPCAnalysisRequestID, $job_parameters )
   {
+    global $link;
     $query  = "INSERT INTO 2DSA_Settings SET " .
               "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
               "s_min                = {$job_parameters['s_min']},            " .
@@ -187,8 +189,8 @@ class HPC_2DSA extends HPC_analysis
               "max_iterations       = {$job_parameters['max_iterations']}, " .
               "rinoise_option       = {$job_parameters['rinoise_option']}    ";
 
-    mysql_query( $query )
-          or die( "Query failed : $query<br />" . mysql_error());
+    mysqli_query( $link, $query )
+          or die( "Query failed : $query<br />" . mysqli_error($link));
 
   }
 }
@@ -202,6 +204,7 @@ class HPC_2DSA_CG extends HPC_analysis
   // Function to create the HPC Analysis DB entries for the 2DSA_CG analysis
   protected function HPCJobParameters( $HPCAnalysisRequestID, $job_parameters )
   {
+    global $link;
     $query  = "INSERT INTO 2DSA_CG_Settings SET " .
               "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
               "CG_modelID           = {$job_parameters['CG_modelID']},       " .
@@ -213,8 +216,8 @@ class HPC_2DSA_CG extends HPC_analysis
               "max_iterations       = {$job_parameters['max_iterations']},   " .
               "rinoise_option       = {$job_parameters['rinoise_option']}    ";
 
-    mysql_query( $query )
-          or die( "Query failed : $query<br />" . mysql_error());
+    mysqli_query( $link, $query )
+          or die( "Query failed : $query<br />" . mysqli_error($link));
 
   }
 }
@@ -228,6 +231,7 @@ class HPC_GA extends HPC_analysis
   // Function to create the HPC Analysis DB entries for the GA analysis
   protected function HPCJobParameters( $HPCAnalysisRequestID, $job_parameters )
   {
+    global $link;
     $query  = "INSERT INTO GA_Settings SET " .
               "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
               "montecarlo_value     = {$job_parameters['mc_iterations']},  " .
@@ -248,9 +252,9 @@ class HPC_GA extends HPC_analysis
               "mutate_s             = {$job_parameters['p_mutate_s']},     " .
               "mutate_k             = {$job_parameters['p_mutate_k']},     " .
               "mutate_sk            = {$job_parameters['p_mutate_sk']}     " ;
-    mysql_query( $query )
-          or die( "Query failed : $query<br />" . mysql_error());
-    $settingsID = mysql_insert_id();
+    mysqli_query( $link, $query )
+          or die( "Query failed : $query<br />" . mysqli_error($link));
+    $settingsID = mysqli_insert_id( $link );
     $bucket     = $job_parameters['buckets'][1];
     $xtype      = $job_parameters['x-type'];
     $ytype      = $job_parameters['y-type'];
@@ -270,8 +274,8 @@ class HPC_GA extends HPC_analysis
                 "s_max         = {$bucket[$xthi]}, " .
                 "ff0_min       = {$bucket[$ytlo]}, " .
                 "ff0_max       = {$bucket[$ythi]}  " ;
-      mysql_query( $query )
-            or die( "Query failed : $query<br />" . mysql_error());
+      mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />" . mysqli_error($link));
     }
   }
 }
@@ -285,6 +289,7 @@ class HPC_DMGA extends HPC_analysis
   // Function to create the HPC Analysis DB entries for the DMGA analysis
   protected function HPCJobParameters( $HPCAnalysisRequestID, $job_parameters )
   {
+    global $link;
     $query  = "INSERT INTO DMGA_Settings SET " .
               "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
               "DC_modelID     = {$job_parameters['DC_modelID']},    " .
@@ -299,9 +304,9 @@ class HPC_DMGA extends HPC_analysis
               "migration      = {$job_parameters['migration']},     " .
               "p_grid         = {$job_parameters['p_grid']},        " .
               "seed           = {$job_parameters['seed']}           " ;
-    mysql_query( $query )
-          or die( "Query failed : $query<br />" . mysql_error());
-    $settingsID = mysql_insert_id();
+    mysqli_query( $link, $query )
+          or die( "Query failed : $query<br />" . mysqli_error($link));
+    $settingsID = mysqli_insert_id( $link );
   }
 }
 
@@ -314,6 +319,7 @@ class HPC_PCSA extends HPC_analysis
   // Function to create the HPC Analysis DB entries for the PCSA analysis
   protected function HPCJobParameters( $HPCAnalysisRequestID, $job_parameters )
   {
+    global $link;
     $query  = "INSERT INTO PCSA_Settings SET " .
               "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
               "curve_type           = '{$job_parameters['curve_type']}',     " .
@@ -331,8 +337,8 @@ class HPC_PCSA extends HPC_analysis
               "tinoise_option       = {$job_parameters['tinoise_option']},   " .
               "rinoise_option       = {$job_parameters['rinoise_option']}    ";
 
-    mysql_query( $query )
-          or die( "Query failed : $query<br />" . mysql_error());
+    mysqli_query( $link, $query )
+          or die( "Query failed : $query<br />" . mysqli_error());
   }
 }
 

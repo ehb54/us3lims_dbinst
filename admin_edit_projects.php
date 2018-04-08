@@ -18,29 +18,31 @@ if ( ( $_SESSION['userlevel'] != 3 ) &&
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+// ini_set('display_errors', 'On');
+
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
 {
-  do_prior();
+  do_prior($link);
   exit();
 }
 
 else if (isset($_POST['next']))
 {
-  do_next();
+  do_next($link);
   exit();
 }
 
 else if (isset($_POST['new']))
 {
-  do_new();
+  do_new($link);
   exit();
 }
 
 else if (isset($_POST['update']))
 {
-  do_update();
+  do_update($link);
   exit();
 }
 
@@ -62,24 +64,24 @@ include 'lib/selectboxes.php';
   {
     $_SESSION['currentID'] = $_POST['personID'];
 
-    $text  = person_select( 'personID', $_POST['personID'] );
+    $text  = person_select( $link, 'personID', $_POST['personID'] );
   }
 
   else if ( isset( $_SESSION['currentID'] ) )
-    $text  = person_select( 'personID', $_SESSION['currentID'] );
+    $text  = person_select( $link, 'personID', $_SESSION['currentID'] );
 
   else
-    $text  = person_select( 'personID' );
+    $text  = person_select( $link, 'personID' );
 
   // Display what we have
   echo $text;
 
   // Edit or display a record
   if ( isset($_POST['edit']) || isset($_GET['edit']) )
-    edit_record();
+    edit_record($link);
 
   else if ( isset($_SESSION['currentID']) )   // We need the currentID there
-    display_record();
+    display_record($link);
 
 ?>
 </div>
@@ -89,7 +91,7 @@ include 'footer.php';
 exit();
 
 // Function to redirect to prior record
-function do_prior()
+function do_prior($link)
 {
   $ID = $_SESSION['currentID'];
   $projectID = $_POST['projectID'];
@@ -99,16 +101,16 @@ function do_prior()
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find prior record
   $current = null;
-  list($current) = mysql_fetch_array($result);
+  list($current) = mysqli_fetch_array($result);
   while ($current != null && $projectID != $current)
   {
     $prior = $current;
-    list($current) = mysql_fetch_array($result);
+    list($current) = mysqli_fetch_array($result);
   }
 
   $redirect = ($prior == null) ? "" : "?ID=$prior";
@@ -117,7 +119,7 @@ function do_prior()
 }
 
 // Function to redirect to next record
-function do_next()
+function do_next($link)
 {
   $ID = $_SESSION['currentID'];
   $projectID = $_POST['projectID'];
@@ -127,14 +129,14 @@ function do_next()
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find next record
   $next = null;
   while ($projectID != $next)
-    list($next) = mysql_fetch_array($result);
-  list($next) = mysql_fetch_array($result);
+    list($next) = mysqli_fetch_array($result);
+  list($next) = mysqli_fetch_array($result);
 
   $redirect = ($next == null) ? "?ID=$projectID" : "?ID=$next";
   header("Location: $_SERVER[PHP_SELF]$redirect");
@@ -142,7 +144,7 @@ function do_next()
 }
 
 // Function to create a new record
-function do_new()
+function do_new($link)
 {
   $ID = $_SESSION['currentID'];
   $uuid = uuid();
@@ -150,37 +152,37 @@ function do_new()
   // Insert an ID
   $query = "INSERT INTO project ( projectGUID ) " .
            "VALUES (' $uuid' ) ";
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
-  $new = mysql_insert_id();
+  mysqli_query($link, $query)
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $new = mysqli_insert_id($link);
 
   // Add the ownership record
   $query  = "INSERT INTO projectPerson SET " .
             "projectID = $new, " .
             "personID  = $ID ";
-  mysql_query( $query )
-        or die( "Query failed : $query<br />\n" . mysql_error() );
+  mysqli_query( $link, $query )
+        or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
   header("Location: $_SERVER[PHP_SELF]?edit=$new");
   exit();
 }
 
 // Function to update the current record
-function do_update()
+function do_update($link)
 {
   $projectID = $_POST['projectID'];
 
-  // Since we always send out emails here, and the user could press the 
+  // Since we always send out emails here, and the user could press the
   //  Update button even though nothing has changed, let's check
   $query  = "SELECT goals, molecules, purity, expense, " .
             "bufferComponents, saltInformation, AUC_questions, " .
             "expDesign, notes, description, status " .
             "FROM project " .
             "WHERE projectID = $projectID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row    = mysql_fetch_array($result, MYSQL_ASSOC);
+  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
 
   // Create local variables
   foreach ($row as $key => $value)
@@ -202,6 +204,27 @@ function do_update()
   {
     header("Location: $_SERVER[PHP_SELF]?ID=$projectID");
     exit();
+  }
+
+  // Ok, we're still here, so something has changed. Let's create a diff
+  $diff = '';
+  $diff .= get_xdiff( $goals,            $_POST['goals'],            "Goals"             );
+  $diff .= get_xdiff( $molecules,        $_POST['molecules'],        "Molecules"         );
+  $diff .= get_xdiff( $purity,           $_POST['purity'],           "Purity"            );
+  $diff .= get_xdiff( $expense,          $_POST['expense'],          "Expense"           );
+  $diff .= get_xdiff( $bufferComponents, $_POST['bufferComponents'], "Buffer Components" );
+  $diff .= get_xdiff( $AUC_questions,    $_POST['AUC_questions'],    "AUC Questions"     );
+  $diff .= get_xdiff( $expDesign,        $_POST['expDesign'],        "Experiment Design" );
+  $diff .= get_xdiff( $notes,            $_POST['notes'],            "Notes"             );
+  $diff .= get_xdiff( $description,      $_POST['description'],      "Description"       );
+
+  $diff_text = '';
+  if ( ! empty( $diff ) )
+  {
+     $diff_text = <<<HTML
+ Differences are as follows:
+  $diff
+HTML;
   }
 
   // Now update the database with the new information
@@ -231,8 +254,8 @@ function do_update()
            "status  = '$status' " .
            "WHERE projectID = $projectID ";
 
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
+  mysqli_query($link, $query)
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // The project is new or has changed, so let's mail the user
   global $org_name, $org_site, $dbname, $admin_email;
@@ -243,9 +266,9 @@ function do_update()
             "FROM projectPerson, people " .
             "WHERE projectID = $projectID " .
             "AND projectPerson.personID = people.personID ";
-  $result = mysql_query( $query )
-            or die("Query failed : $query<br />\n" . mysql_error());
-  list($lname, $fname, $email) = mysql_fetch_array($result);
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  list($lname, $fname, $email) = mysqli_fetch_array($result);
   $email   .= ",$admin_email";
 
   $subject = "$lname project ($db_abbrev): {$_POST['description']}";
@@ -254,8 +277,9 @@ function do_update()
            : ( $subject );
   $message = "Dear $fname $lname,
   You have entered/updated a project in your $org_name account at $org_site.
+  $diff_text
 
-  The following updates were made:
+  The complete/new project information is:
 
   Goals:
   {$_POST['goals']}
@@ -315,10 +339,10 @@ function get_xdiff( $old, $new, $label )
 }
 
 // Function to display and navigate records
-function display_record()
+function display_record($link)
 {
   // Find a record to display
-  $projectID = get_id();
+  $projectID = get_id($link);
   if ($projectID === false)
     return;
 
@@ -326,10 +350,10 @@ function display_record()
             "bufferComponents, saltInformation, AUC_questions, expDesign, notes, description, status " .
             "FROM project " .
             "WHERE projectID = $projectID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row    = mysql_fetch_array($result, MYSQL_ASSOC);
+  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
 
   // Create local variables; make sure IE displays empty cells properly
   foreach ($row as $key => $value)
@@ -351,9 +375,9 @@ function display_record()
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  while (list($t_id, $t_description) = mysql_fetch_array($result))
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  while (list($t_id, $t_description) = mysqli_fetch_array($result))
   {
     $selected = ($projectID == $t_id) ? " selected='selected'" : "";
     $nav_listbox .= "  <option$selected value='$t_id'>$t_description</option>\n";
@@ -409,7 +433,7 @@ HTML;
 }
 
 // Function to figure out which record to display
-function get_id()
+function get_id($link)
 {
   // See if we are being directed to a particular record
   if (isset($_GET['ID']))
@@ -424,12 +448,12 @@ function get_id()
             "AND p.projectID = j.projectID " .
             "ORDER BY description " .
             "LIMIT 1 ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  if (mysql_num_rows($result) == 1)
+  if (mysqli_num_rows($result) == 1)
   {
-    list($projectID) = mysql_fetch_array($result);
+    list($projectID) = mysqli_fetch_array($result);
     return( $projectID );
   }
 
@@ -457,7 +481,7 @@ HTML;
 }
 
 // Function to edit a record
-function edit_record()
+function edit_record($link)
 {
   // Get the record we need to edit
   if ( isset( $_POST['edit'] ) )
@@ -477,10 +501,10 @@ function edit_record()
             "saltInformation, AUC_questions, expDesign, notes, description, status, lastUpdated  " .
             "FROM project " .
             "WHERE projectID = $projectID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row = mysql_fetch_array($result);
+  $row = mysqli_fetch_array($result);
 
   $goals               = html_entity_decode( stripslashes( $row['goals'] ) );
   $molecules           = html_entity_decode( stripslashes( $row['molecules'] ) );
@@ -517,61 +541,61 @@ echo<<<HTML
     <tbody>
 
 
-    <tr><th>Please enter a brief title for your project. Later, you will be able to 
+    <tr><th>Please enter a brief title for your project. Later, you will be able to
             retrieve your project by this description:</th></tr>
-    <tr><td><textarea name='description' rows='6' cols='65' 
+    <tr><td><textarea name='description' rows='6' cols='65'
                       wrap='virtual'>$description</textarea></td></tr>
-    <tr><th>Please provide a detailed description of your research. Include an 
-            introduction to your research project and explain the goals of your 
-            research. We will use this information to optimally design your 
-            experiment. Please provide enough background so we can assess the 
+    <tr><th>Please provide a detailed description of your research. Include an
+            introduction to your research project and explain the goals of your
+            research. We will use this information to optimally design your
+            experiment. Please provide enough background so we can assess the
             biological significance of this research:</th></tr>
-    <tr><td><textarea name='goals' rows='6' cols='65' 
+    <tr><td><textarea name='goals' rows='6' cols='65'
                       wrap='virtual'>$goals</textarea></td></tr>
-    <tr><th>What types of molecules are involved in the research and what 
+    <tr><th>What types of molecules are involved in the research and what
 	    are their approximate molecular weights? Please provide the partial specific volume if you
 	    know it or measured it:</th></tr>
-    <tr><td><textarea name='molecules' rows='6' cols='65' 
+    <tr><td><textarea name='molecules' rows='6' cols='65'
                       wrap='virtual'>$molecules</textarea></td></tr>
-    <tr><th>Please indicate the approximate purity of your sample(s). You can 
+    <tr><th>Please indicate the approximate purity of your sample(s). You can
             express it in percent:</th></tr>
     <tr><td><input type='text' name='purity' size='40'
                    maxlength='10' value='$purity' /></td></tr>
-    <tr><th>Would the expense of providing 0.75 ml at 1 OD 280 concentration of 
-	    your sample be acceptable? 
+    <tr><th>Would the expense of providing 0.75 ml at 1 OD 280 concentration of
+	    your sample be acceptable?
             </th></tr>
-    <tr><td><textarea name='expense' rows='6' cols='65' 
+    <tr><td><textarea name='expense' rows='6' cols='65'
                       wrap='virtual'>$expense</textarea></td></tr>
     <tr><th>What buffers do you plan to use? Is phosphate or TRIS buffer an option?<br />
-            To minimize absorbance we prefer to run phosphate or TRIS buffers in 
-            low concentration (~ 5-10 mM). Salts can form density and viscosity gradients and should be kept 
+            To minimize absorbance we prefer to run phosphate or TRIS buffers in
+            low concentration (~ 5-10 mM). Salts can form density and viscosity gradients and should be kept
 	    to a minimum, especially high density salts, and for experiments at speeds > 35,000 rpm.
-	    However, a certain ionic strength (25-50 mM) is desired 
+	    However, a certain ionic strength (25-50 mM) is desired
 	    to prevent hydrodynamic non-ideality, and does not cause any significant gradients
 	    even at maximum speed.<br /><br />
 
-            Do you require addition of small molecules to your sample, such as reductants and 
+            Do you require addition of small molecules to your sample, such as reductants and
             nucleotides?<br />
-            Please list all components in your buffer. For absorbance-intensity experiments and reductants are required 
+            Please list all components in your buffer. For absorbance-intensity experiments and reductants are required
 	    it is essential that you use TCEP, which can be used at wavelengths > 240 nm.
             <br /><br />
 
             Please list all buffer components:</th></tr>
-    <tr><td><textarea name='bufferComponents' rows='6' cols='65' 
+    <tr><td><textarea name='bufferComponents' rows='6' cols='65'
                       wrap='virtual'>$bufferComponents</textarea></td></tr>
-    <tr><th>Is a salt concentration between 20-50 mM for your experiment 
+    <tr><th>Is a salt concentration between 20-50 mM for your experiment
             acceptable? If not, please explain why not.</th></tr>
-    <tr><td><textarea name='saltInformation' rows='6' cols='65' 
+    <tr><td><textarea name='saltInformation' rows='6' cols='65'
                       wrap='virtual'>$saltInformation</textarea></td></tr>
-    <tr><th>What questions are you trying to answer with AUC? How do you propose 
+    <tr><th>What questions are you trying to answer with AUC? How do you propose
             to approach the research with AUC experiments?</th></tr>
-    <tr><td><textarea name='AUC_questions' rows='6' cols='65' 
+    <tr><td><textarea name='AUC_questions' rows='6' cols='65'
                       wrap='virtual'>$AUC_questions</textarea></td></tr>
     <tr><th>The AUC experimental design:</th></tr>
-    <tr><td><textarea name='expDesign' rows='6' cols='65' 
+    <tr><td><textarea name='expDesign' rows='6' cols='65'
                       wrap='virtual'>$expDesign</textarea></td></tr>
     <tr><th>Special instructions, questions, and notes (optional):</th></tr>
-    <tr><td><textarea name='notes' rows='6' cols='65' 
+    <tr><td><textarea name='notes' rows='6' cols='65'
                       wrap='virtual'>$notes</textarea></td></tr>
     <tr><th>Status:</th></tr>
     <tr><td>$status_text &nbsp;&nbsp;&nbsp (last updated: $lastUpdated)</td></tr>

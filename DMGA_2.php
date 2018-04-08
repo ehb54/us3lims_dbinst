@@ -73,7 +73,7 @@ if ( $_SESSION[ 'separate_datasets' ] )
     else
     {
       // Write the xml file content to the db
-      $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ $ii ] ) );
+      $xml_content = mysqli_real_escape_string( $link, file_get_contents( $filenames[ $ii ] ) );
       $edit_filename = $single[ 'dataset' ][ 0 ][ 'edit' ];
       $experimentID  = $_SESSION['request'][$ii]['experimentID'];
 
@@ -83,8 +83,8 @@ if ( $_SESSION[ 'separate_datasets' ] )
                 "editXMLFilename = '$edit_filename' " .
                 "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
       
-      mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
+      mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
     }
   }
 }
@@ -102,7 +102,7 @@ else
   else
   {
     // Write the xml file content to the db
-    $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ 0 ] ) );
+    $xml_content = mysqli_real_escape_string( $link, file_get_contents( $filenames[ 0 ] ) );
     $edit_filename = $globalfit['dataset'][0]['edit'];
 
     $query  = "UPDATE HPCAnalysisRequest " .
@@ -110,8 +110,8 @@ else
               "editXMLFilename = '$edit_filename' " .
               "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
     
-    mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query( $link, $query )
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
     
   }
 }

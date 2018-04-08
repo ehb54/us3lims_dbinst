@@ -47,14 +47,11 @@ echo<<<HTML
           </p>
           <table class='noborder' style='margin:0px auto;'>
             <tr><th>Cluster</th><th>Max cores</th></tr>
-            <tr><td>stampede</td><td style='text-align:center;'>1024</td></tr>
-            <tr><td>lonestar</td><td style='text-align:center;'>1152</td></tr>
+            <tr><td>stampede2</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>lonestar5</td><td style='text-align:center;'>1152</td></tr>
             <tr><td>comet</td><td style='text-align:center;'>1152</td></tr>
-            <tr><td>gordon</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>jureca</td><td style='text-align:center;'>1152</td></tr>
             <tr><td>alamo</td><td style='text-align:center;'>384</td></tr>
-            <tr><td>jacinto</td><td style='text-align:center;'>64</td></tr>
           </table>
         </div>
 
@@ -289,7 +286,7 @@ HTML;
 }
 
 // Function to display a custom grid model dropdown
-function CG_select_setup()
+function CG_select_setup( $link )
 {
   $personID = $_SESSION['id'];
   $query  = "SELECT model.modelID, description, lastUpdated " .
@@ -298,10 +295,10 @@ function CG_select_setup()
             "AND modelPerson.modelID = model.modelID " .
             "AND description LIKE '%CustomGrid%' " .
             "ORDER BY lastUpdated DESC ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) == 0 )
+  if ( mysqli_num_rows( $result ) == 0 )
   {
     echo <<<HTML
       <fieldset class='option_value'>
@@ -314,7 +311,7 @@ HTML;
   }
 
   $models = '';
-  while ( list( $modelID, $description, $lastUpdated ) = mysql_fetch_array( $result ) )
+  while ( list( $modelID, $description, $lastUpdated ) = mysqli_fetch_array( $result ) )
   {
     $descr = explode( ".", $description );
     array_pop( $descr );                  // pop off the .model part
@@ -333,7 +330,7 @@ HTML;
 }
 
 // Function to display a discrete GA model dropdown
-function DMGA_select_setup()
+function DMGA_select_setup( $link )
 {
   $personID = $_SESSION['id'];
   $query  = "SELECT model.modelID, description, lastUpdated " .
@@ -343,10 +340,10 @@ function DMGA_select_setup()
             "AND description LIKE '%DMGA_Constr%' " .
             "ORDER BY lastUpdated DESC ";
             //"AND description LIKE '%CustomGrid%' " .
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) == 0 )
+  if ( mysqli_num_rows( $result ) == 0 )
   {
     echo <<<HTML
       <fieldset class='option_value'>
@@ -359,7 +356,7 @@ HTML;
   }
 
   $models = '';
-  while ( list( $modelID, $description, $lastUpdated ) = mysql_fetch_array( $result ) )
+  while ( list( $modelID, $description, $lastUpdated ) = mysqli_fetch_array( $result ) )
   {
     $descr = explode( ".", $description );
     array_pop( $descr );                  // pop off the .model part
@@ -529,14 +526,11 @@ echo<<<HTML
           to the capacity of the system. Currently, the maximum demes values are as follows:
           <table class='noborder' style='margin:0px auto;'>
             <tr><th>Cluster</th><th>Max demes</th></tr>
-            <tr><td>stampede</td><td style='text-align:center;'>63</td></tr>
-            <tr><td>lonestar</td><td style='text-align:center;'>71</td></tr>
+            <tr><td>stampede2</td><td style='text-align:center;'>63</td></tr>
             <tr><td>lonestar5</td><td style='text-align:center;'>47</td></tr>
-            <tr><td>gordon</td><td style='text-align:center;'>63</td></tr>
             <tr><td>comet</td><td style='text-align:center;'>47</td></tr>
             <tr><td>jureca</td><td style='text-align:center;'>47</td></tr>
             <tr><td>alamo</td><td style='text-align:center;'>47</td></tr>
-            <tr><td>jacinto</td><td style='text-align:center;'>31</td></tr>
           </table>
         </p>
         </div>

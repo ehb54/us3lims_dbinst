@@ -80,7 +80,7 @@ function enter_record( $message = '' )
 
   echo<<<HTML
 
-    <p>Please enter your contact information. All fields 
+    <p>Please enter your contact information. All fields
        are required.</p>
 
     <p class='message'>When entering your address, PLEASE MAKE SURE
@@ -95,7 +95,7 @@ function enter_record( $message = '' )
       </thead>
 
       <tfoot>
-        <tr><td colspan='2'><input type='submit' name='create' 
+        <tr><td colspan='2'><input type='submit' name='create'
                              value='Create New Account' /></td></tr>
       </tfoot>
 
@@ -143,9 +143,9 @@ HTML;
 function do_captcha( $msg = "" )
 {
   $message = ( empty( $msg ) ) ? "" : "<p style='color:red;'>$msg</p>";
-
+  $act     = htmlentities($_SERVER['PHP_SELF']);
   // Let's just use the random password function we already have
-  $pw = makeRandomPassword();
+  $pw      = makeRandomPassword();
   $_SESSION['captcha'] = $pw;
 
 echo<<<HTML
@@ -155,7 +155,7 @@ echo<<<HTML
 
   <img src='create_captcha.php' alt='Captcha image' />
 
-  <form action="{$_SERVER['PHP_SELF']}" method="post">
+  <form action="$act" method="post">
     <h3>Please enter the code above to proceed to new account request</h3>
 
     <p><input type='text' name='captcha' size='40' maxlength='10' /></p>

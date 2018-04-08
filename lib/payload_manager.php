@@ -114,6 +114,7 @@ abstract class Payload_manager
     // Function to look up certain info from the db
     function getDBParams( $dataset_id, &$params )
     {
+      global $link;
       $timelast  = 0;
       $rawDataID = $_SESSION['request'][$dataset_id]['rawDataID'];
       
@@ -127,11 +128,11 @@ abstract class Payload_manager
                 "WHERE rawData.rawDataID = $rawDataID " .
                 "AND rawData.experimentID = experiment.experimentID " .
                 "AND experiment.rotorCalibrationID = rotorCalibration.rotorCalibrationID ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
-      if ( mysql_num_rows( $result ) > 0 )
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
+      if ( mysqli_num_rows( $result ) > 0 )
       {
-        list( $coeff1, $coeff2, $filename, $experID ) = mysql_fetch_array( $result );   // should be 1
+        list( $coeff1, $coeff2, $filename, $experID ) = mysqli_fetch_array( $result );   // should be 1
         $rotor_stretch = "$coeff1 $coeff2";
         list( $run, $dtype, $cellname, $channel, $waveln, $ftype ) = explode( ".", $filename );
         $chanindex = strpos( "ABCDEFGH", $channel ) / 2;
@@ -145,10 +146,10 @@ abstract class Payload_manager
                 "FROM rawData, speedstep " .
                 "WHERE rawData.rawDataID = $rawDataID " .
                 "AND rawData.experimentID = speedstep.experimentID ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
       while ( list( $stepID, $expID, $scans, $durhrs, $durmins, $dlyhrs, $dlymins,
-                    $speed, $accel, $accflag, $w2tf, $w2tl, $timef, $timel ) = mysql_fetch_array( $result ) )
+                    $speed, $accel, $accflag, $w2tf, $w2tl, $timef, $timel ) = mysqli_fetch_array( $result ) )
       {
         $speedstep['stepID']  = $stepID;
         $speedstep['expID']   = $expID;
@@ -183,11 +184,11 @@ abstract class Payload_manager
                 "AND rawData.experimentID = cell.experimentID " .
                 "AND cell.name = $cellname " .
                 "AND cell.abstractCenterpieceID = abstractCenterpiece.abstractCenterpieceID ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
-      if ( mysql_num_rows ( $result ) > 0 )
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
+      if ( mysqli_num_rows ( $result ) > 0 )
         list( $centerpiece_shape, $centerpiece_bottom, $centerpiece_angle, $centerpiece_pathlength, $centerpiece_width )
-          = mysql_fetch_array( $result );      // should be 1
+          = mysqli_fetch_array( $result );      // should be 1
        if ( strpos( $centerpiece_bottom, ":" ) !== false )
        { // Parse multiple bottoms and get the one for the channel set
           $bottoms            = explode( ":", $centerpiece_bottom );
@@ -201,9 +202,9 @@ abstract class Payload_manager
                 "WHERE rawData.rawDataID = $rawDataID " .
                 "AND rawData.solutionID = solutionAnalyte.solutionID " .
                 "AND solutionAnalyte.analyteID = analyte.analyteID ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
-      while ( list( $type, $vbar, $mw, $amount ) = mysql_fetch_array( $result ) )
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
+      while ( list( $type, $vbar, $mw, $amount ) = mysqli_fetch_array( $result ) )
       {
         $analyte['type']   = $type;
         $analyte['vbar']   = $vbar;
@@ -226,10 +227,10 @@ abstract class Payload_manager
                 "WHERE rawData.rawDataID = $rawDataID " .
                 "AND rawData.solutionID = solutionBuffer.solutionID " .
                 "AND solutionBuffer.bufferID = buffer.bufferID ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
-      if ( mysql_num_rows ( $result ) > 0 )
-        list( $viscosity, $density, $description, $compress, $manual ) = mysql_fetch_array( $result ); // should be 1
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
+      if ( mysqli_num_rows ( $result ) > 0 )
+        list( $viscosity, $density, $description, $compress, $manual ) = mysqli_fetch_array( $result ); // should be 1
 
       // Turn on 'manual' flag where '  [M]' is present in buffer description
       str_replace( '  [M]', '', $description, $smanual );
@@ -330,6 +331,7 @@ abstract class Payload_manager
     //   and return the model's total concentration
     function model_concentration( $editedDataID )
     {
+      global $link;
       $tot_conc = 0.0;
       $modelXML = "";
       $query    = "SELECT xml FROM model " .
@@ -337,12 +339,12 @@ abstract class Payload_manager
                   "AND description LIKE '%2DSA%IT%' " .
                   "AND description NOT LIKE '%-GL-%' " .
                   "ORDER BY modelID DESC";
-      $result   = mysql_query( $query )
-            or die( "Query failed : $query<br/>\n" . mysql_error() );
+      $result   = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br/>\n" . mysqli_error($link) );
 
-      if ( mysql_num_rows( $result ) > 0 )
+      if ( mysqli_num_rows( $result ) > 0 )
       {
-        list( $modelXML ) = mysql_fetch_array( $result );
+        list( $modelXML ) = mysqli_fetch_array( $result );
 
         if ( $modelXML != "" )
         {
@@ -377,6 +379,7 @@ class Payload_2DSA extends Payload_manager
     // From config.php
     global $dbname, $dbhost;
     global $udpport, $ipaddr, $ipa_ext;
+    global $ipad_a, $ipae_a;
 
     // These will be done every time
     $parameters                 = array();
@@ -389,6 +392,14 @@ class Payload_2DSA extends Payload_manager
 
       $udp                  = array();
       $udp['udpport']       = $udpport;
+      $clusname             = $_SESSION['cluster']['shortname'];
+      $gwhostid             = $_SESSION['gwhostid'];
+      if ( preg_match( '/alamo/', $clusname )  &&
+           preg_match( '/alamo/', $gwhostid ) )
+      {  // Use alternate IP addresses for UDP if host,cluster both 'alamo'
+         $ipaddr   = $ipad_a;
+         $ipa_ext  = $ipae_a;
+      }
       $udp['ip']            = $ipaddr;
       $udp['ip_ext']        = $ipa_ext;
       $this->add( 'server', $udp );
@@ -560,6 +571,7 @@ class Payload_2DSA_CG extends Payload_manager
     // From config.php
     global $dbname, $dbhost;
     global $udpport, $ipaddr, $ipa_ext;
+    global $ipad_a, $ipae_a;
 
     // These will be done every time
     $parameters                 = array();
@@ -572,6 +584,14 @@ class Payload_2DSA_CG extends Payload_manager
 
       $udp                  = array();
       $udp['udpport']       = $udpport;
+      $clusname             = $_SESSION['cluster']['shortname'];
+      $gwhostid             = $_SESSION['gwhostid'];
+      if ( preg_match( '/alamo/', $clusname )  &&
+           preg_match( '/alamo/', $gwhostid ) )
+      {  // Use alternate IP addresses for UDP if host,cluster both 'alamo'
+         $ipaddr   = $ipad_a;
+         $ipa_ext  = $ipae_a;
+      }
       $udp['ip']            = $ipaddr;
       $udp['ip_ext']        = $ipa_ext;
       $this->add( 'server', $udp );
@@ -678,6 +698,7 @@ class Payload_GA extends Payload_manager
     // From config.php
     global $dbname, $dbhost;
     global $udpport, $ipaddr, $ipa_ext;
+    global $ipad_a, $ipae_a;
 
     // These will be done every time
     $parameters                 = array();
@@ -690,6 +711,14 @@ class Payload_GA extends Payload_manager
 
       $udp                  = array();
       $udp['udpport']       = $udpport;
+      $clusname             = $_SESSION['cluster']['shortname'];
+      $gwhostid             = $_SESSION['gwhostid'];
+      if ( preg_match( '/alamo/', $clusname )  &&
+           preg_match( '/alamo/', $gwhostid ) )
+      {  // Use alternate IP addresses for UDP if host,cluster both 'alamo'
+         $ipaddr   = $ipad_a;
+         $ipa_ext  = $ipae_a;
+      }
       $udp['ip']            = $ipaddr;
       $udp['ip_ext']        = $ipa_ext;
       $this->add( 'server', $udp );
@@ -840,6 +869,7 @@ class Payload_DMGA extends Payload_manager
     // From config.php
     global $dbname, $dbhost;
     global $udpport, $ipaddr, $ipa_ext;
+    global $ipad_a, $ipae_a;
 
     // These will be done every time
     $parameters                 = array();
@@ -852,6 +882,14 @@ class Payload_DMGA extends Payload_manager
 
       $udp                  = array();
       $udp['udpport']       = $udpport;
+      $clusname             = $_SESSION['cluster']['shortname'];
+      $gwhostid             = $_SESSION['gwhostid'];
+      if ( preg_match( '/alamo/', $clusname )  &&
+           preg_match( '/alamo/', $gwhostid ) )
+      {  // Use alternate IP addresses for UDP if host,cluster both 'alamo'
+         $ipaddr   = $ipad_a;
+         $ipa_ext  = $ipae_a;
+      }
       $udp['ip']            = $ipaddr;
       $udp['ip_ext']        = $ipa_ext;
       $this->add( 'server', $udp );
@@ -964,6 +1002,7 @@ class Payload_PCSA extends Payload_manager
     // From config.php
     global $dbname, $dbhost;
     global $udpport, $ipaddr, $ipa_ext;
+    global $ipad_a, $ipae_a;
 
     // These will be done every time
     $parameters                 = array();
@@ -976,6 +1015,14 @@ class Payload_PCSA extends Payload_manager
 
       $udp                  = array();
       $udp['udpport']       = $udpport;
+      $clusname             = $_SESSION['cluster']['shortname'];
+      $gwhostid             = $_SESSION['gwhostid'];
+      if ( preg_match( '/alamo/', $clusname )  &&
+           preg_match( '/alamo/', $gwhostid ) )
+      {  // Use alternate IP addresses for UDP if host,cluster both 'alamo'
+         $ipaddr   = $ipad_a;
+         $ipa_ext  = $ipae_a;
+      }
       $udp['ip']            = $ipaddr;
       $udp['ip_ext']        = $ipa_ext;
       $this->add( 'server', $udp );

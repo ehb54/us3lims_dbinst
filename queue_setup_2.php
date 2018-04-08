@@ -35,7 +35,7 @@ $data_missing = false;
 if ( isset( $_POST['save'] ) )
 {
   // Verify we have all the info
-  get_setup_2();
+  get_setup_2( $link );
 
   // Now translate into a data structure more useful for sequencing datasets
   $_SESSION['request'] = array();
@@ -70,13 +70,13 @@ if ( isset( $_POST['save'] ) )
 
 else if ( isset( $_SESSION['new_submitter'] ) )   // Are we gathering info from previous screen?
 {
-  get_setup_1();
+  get_setup_1( $link );
   unset( $_SESSION['anchor_count'] );
 }
 
 else   // no, gathering info from here
 {
-  get_setup_2();
+  get_setup_2( $link );
 }
 
 // Start displaying page
@@ -96,9 +96,9 @@ $out_text = "";
 $count_anchors = 0;        // just for creating some named anchors
 foreach ( $_SESSION['cells'] as $rawDataID => $cell )
 {
-  $editedData_text  = get_editedData( $rawDataID, $cell['editedDataID'] );
+  $editedData_text  = get_editedData( $link, $rawDataID, $cell['editedDataID'] );
 
-  $noise_text       = get_noise( $rawDataID, $cell['editedDataID'], 
+  $noise_text       = get_noise( $link, $rawDataID, $cell['editedDataID'], 
                                  $cell['noiseIDs'] );
 
   $missing1 = "";
@@ -268,7 +268,7 @@ include 'footer.php';
 exit();
 
 // Get information from queue_setup_1.php
-function get_setup_1()
+function get_setup_1( $link )
 {
   if ( isset( $_SESSION['new_submitter'] ) )
   {
@@ -294,9 +294,9 @@ function get_setup_1()
   {
     $query  = "SELECT email FROM people " .
               "WHERE personID = {$_SESSION['id']} ";
-    $result = mysql_query($query)
-              or die("Query failed : $query<br />" . mysql_error());
-    list($owner_email) = mysql_fetch_array($result);
+    $result = mysqli_query( $link, $query )
+              or die("Query failed : $query<br />" . mysqli_error($link));
+    list($owner_email) = mysqli_fetch_array($result);
 
     // Let's double check that the owner email isn't already there
     $pos = strpos($new_submitter, $owner_email);
@@ -364,7 +364,7 @@ function get_setup_1()
 }
 
 // Build information from current page
-function get_setup_2()
+function get_setup_2( $link )
 {
   $no_posts=true;
 
@@ -378,9 +378,9 @@ function get_setup_2()
       // Get other things we need too
       $query  = "SELECT filename, data FROM editedData " .
                 "WHERE editedDataID = $editedDataID ";
-      $result = mysql_query( $query )
-              or die("Query failed : $query<br />\n" . mysql_error());
-      list( $editFilename, $editXML ) = mysql_fetch_array( $result );
+      $result = mysqli_query( $link, $query )
+              or die("Query failed : $query<br />\n" . mysqli_error($link));
+      list( $editFilename, $editXML ) = mysqli_fetch_array( $result );
       $_SESSION['cells'][$rawDataID]['editFilename'] = $editFilename;
       getOtherEditInfo( $rawDataID, $editXML );
     }
@@ -404,25 +404,25 @@ function get_setup_2()
     {
       if ( $_SESSION['edit_select_type'] == 0 )
       { // Auto-Edit-Select:  get latest edits and noises
-        get_latest_edits( );
+        get_latest_edits( $link );
       }
     }
   }
 }
 
 // Get edit profiles
-function get_editedData( $rawDataID, $editedDataID = 0 )
+function get_editedData( $link, $rawDataID, $editedDataID = 0 )
 {
   $query  = "SELECT editedDataID, label, filename " .
             "FROM editedData " .
             "WHERE rawDataID = $rawDataID ";
-  $result = mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   $profile    = "<select name='editedDataID[$rawDataID]'" .
                 "  onchange='this.form.submit();' size='3'>\n" .
                 "  <option value='null'>Select edit profile...</option>\n";
-  while ( list( $eID, $label, $fn ) = mysql_fetch_array( $result ) )
+  while ( list( $eID, $label, $fn ) = mysqli_fetch_array( $result ) )
   {
     $parts    = explode( ".", $fn ); // runID, editID, runType, c,c,w, xml
     $edit_txt  = $parts[1];
@@ -436,7 +436,7 @@ function get_editedData( $rawDataID, $editedDataID = 0 )
 }
 
 // Get the noise files
-function get_noise( $rawDataID, $editedDataID, $noiseIDs )
+function get_noise( $link, $rawDataID, $editedDataID, $noiseIDs )
 {
   $noise  = "<select name='noiseIDs[$rawDataID][]' multiple='multiple'" .
             "  onchange='this.form.submit();' size='8'>\n" .
@@ -447,10 +447,10 @@ function get_noise( $rawDataID, $editedDataID, $noiseIDs )
             "WHERE editedDataID = $editedDataID " .
             "ORDER BY timeEntered DESC ";
 
-  $result = mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  while ( list( $nID, $modelID, $noiseType, $time ) = mysql_fetch_array( $result ) )
+  while ( list( $nID, $modelID, $noiseType, $time ) = mysqli_fetch_array( $result ) )
   {
     $selected = ( in_array( $nID, $noiseIDs ) ) ? " selected='selected'" : "";
     $noise .= "  <option value='$nID'$selected>[$nID] $noiseType - $time</option>\n";
@@ -496,7 +496,7 @@ function getOtherEditInfo( $rawDataID, $xml )
 }
 
 // Get latest edit and noises information for all cells
-function get_latest_edits( )
+function get_latest_edits( $link )
 {
   $_SESSION['request'] = array();
   $count = 0;
@@ -507,10 +507,10 @@ function get_latest_edits( )
               "FROM editedData " .
               "WHERE rawDataID = $rawDataID " .
               "ORDER BY label, lastUpdated DESC";
-    $result = mysql_query( $query )
-            or die("Query failed : $query<br />\n" . mysql_error());
+    $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-    list( $editedDataID, $label, $filename, $editXML ) = mysql_fetch_array( $result );
+    list( $editedDataID, $label, $filename, $editXML ) = mysqli_fetch_array( $result );
     getOtherEditInfo( $rawDataID, $editXML );
 
     $noiseIDs = array();
@@ -519,13 +519,13 @@ function get_latest_edits( )
               "WHERE editedDataID = $editedDataID " .
               "ORDER BY timeEntered DESC ";
 
-    $result = mysql_query( $query )
-            or die("Query failed : $query<br />\n" . mysql_error());
+    $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     $knoise = 0;
     $prtype = "";
     $prtime = 0;
-    while ( list( $noiseID, $noiseType, $time ) = mysql_fetch_array( $result ) )
+    while ( list( $noiseID, $noiseType, $time ) = mysqli_fetch_array( $result ) )
     {
       if ( $knoise == 0 )
       {

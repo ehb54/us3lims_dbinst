@@ -71,7 +71,6 @@ class cluster_info
 
 $clusters = array( 
   new cluster_info( "ls5.tacc.utexas.edu",      "lonestar5",     "normal"  ), 
-  new cluster_info( "stampede.tacc.xsede.org",  "stampede",      "normal"  ), 
   new cluster_info( "stampede2.tacc.xsede.org", "stampede2",     "normal"  ), 
   new cluster_info( "comet.sdsc.xsede.org",     "comet",         "compute" ), 
   new cluster_info( "alamo.uthscsa.edu",        "alamo",         "batch"   ),
@@ -94,13 +93,13 @@ global $globaldbname;
 
 include '../down_clusters.php';
 
-$gfac_link = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
-$result    = mysql_select_db( $globaldbname, $gfac_link );
+$gfac_link = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+$result    = mysqli_select_db( $globaldbname, $gfac_link );
 
 $query     = "SELECT cluster, running, queued, status FROM cluster_status";
-$result    = mysql_query( $query, $gfac_link );
+$result    = mysqli_query( $gfac_link, $query );
 
-while ( list( $cluster, $running, $queued, $status ) = mysql_fetch_row( $result ) )
+while ( list( $cluster, $running, $queued, $status ) = mysqli_fetch_row( $result ) )
 {
    if ( in_array( $cluster, $down_clusters ) )
      $status = 'down';
@@ -125,7 +124,7 @@ while ( list( $cluster, $running, $queued, $status ) = mysql_fetch_row( $result 
    }
 }
 
-mysql_close( $gfac_link );
+mysqli_close( $gfac_link );
 
 // Reset default db
 include "db.php";
