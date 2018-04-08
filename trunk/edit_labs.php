@@ -18,41 +18,43 @@ if ( ( $_SESSION['userlevel'] != 3 ) &&
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+// ini_set('display_errors', 'On');
+
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
 {
-  do_prior();
+  do_prior($link);
   exit();
 }
 
 else if (isset($_POST['next']))
 {
-  do_next();
+  do_next($link);
   exit();
 }
 
 else if (isset($_POST['delete']))
 {
-  do_delete();
+  do_delete($link);
   exit();
 }
 
 else if (isset($_POST['update']))
 {
-  do_update();
+  do_update($link);
   exit();
 }
 
 else if (isset($_POST['create']))
 {
-  do_create();
+  do_create($link);
   exit();
 }
 
 else if (isset($_POST['create']))
 {
-  do_create();
+  do_create($link);
   exit();
 }
 
@@ -76,13 +78,13 @@ include 'header.php';
 <?php
 // Edit or display a record
 if ( isset($_POST['edit']) )
-  edit_record();
+  edit_record($link);
 
 else if ( isset($_POST['new']) )
-  do_new();
+  do_new($link);
 
 else
-  display_record();
+  display_record($link);
 
 ?>
 </div>
@@ -92,22 +94,22 @@ include 'footer.php';
 exit();
 
 // Function to redirect to prior record
-function do_prior()
+function do_prior($link)
 {
   $labID = $_POST['labID'];
 
   $query  = "SELECT labID FROM lab " .
             "ORDER BY name ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find prior record
   $current = null;
-  list($current) = mysql_fetch_array($result);
+  list($current) = mysqli_fetch_array($result);
   while ($current != null && $labID != $current)
   {
     $prior = $current;
-    list($current) = mysql_fetch_array($result);
+    list($current) = mysqli_fetch_array($result);
   }
 
   $redirect = ($prior == null) ? "" : "?ID=$prior";
@@ -116,20 +118,20 @@ function do_prior()
 }
 
 // Function to redirect to next record
-function do_next()
+function do_next($link)
 {
   $labID = $_POST['labID'];
 
   $query  = "SELECT labID FROM lab " .
             "ORDER BY name ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find next record
   $next = null;
   while ($labID != $next)
-    list($next) = mysql_fetch_array($result);
-  list($next) = mysql_fetch_array($result);
+    list($next) = mysqli_fetch_array($result);
+  list($next) = mysqli_fetch_array($result);
 
   $redirect = ($next == null) ? "?ID=$labID" : "?ID=$next";
   header("Location: $_SERVER[PHP_SELF]$redirect");
@@ -137,7 +139,7 @@ function do_next()
 }
 
 // Function to delete the current record
-function do_delete()
+function do_delete($link)
 {
   $labID = $_POST['labID'];
 
@@ -145,31 +147,31 @@ function do_delete()
   $found  = false;
   $query  = "SELECT COUNT(*) FROM instrument " .
             "WHERE labID = $labID ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  list( $count ) = mysql_fetch_array( $result );
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  list( $count ) = mysqli_fetch_array( $result );
   if ( $count > 0 ) $found = true;
 
   $query  = "SELECT COUNT(*) FROM experiment " .
             "WHERE labID = $labID ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  list( $count ) = mysql_fetch_array( $result );
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  list( $count ) = mysqli_fetch_array( $result );
   if ( $count > 0 ) $found = true;
 
   $query  = "SELECT COUNT(*) FROM rotor " .
             "WHERE labID = $labID ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  list( $count ) = mysql_fetch_array( $result );
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  list( $count ) = mysqli_fetch_array( $result );
   if ( $count > 0 ) $found = true;
 
   if ( ! $found )
   {
     $query  = "DELETE FROM lab " .
               "WHERE labID = $labID ";
-    mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
   }
 
   else
@@ -180,7 +182,7 @@ function do_delete()
 }
 
 // Function to update the current record
-function do_update()
+function do_update($link)
 {
   $labID       =                         $_POST['labID'];
   $name        = addslashes(htmlentities($_POST['name']));
@@ -191,15 +193,15 @@ function do_update()
            "dateUpdated  = NOW() " .
            "WHERE labID = $labID ";
 
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
+  mysqli_query($link, $query)
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   header("Location: $_SERVER[PHP_SELF]?ID=$labID");
   exit();
 }
 
 // Function to create a new record
-function do_create()
+function do_create($link)
 {
   $guid = uuid();
 
@@ -211,43 +213,63 @@ function do_create()
            "building  = '$contact', " .
            "dateUpdated  = NOW() ";
 
-  mysql_query($query)
-        or die("Query failed : $query<br />\n" . mysql_error());
-  $new = mysql_insert_id();
+  mysqli_query($link, $query)
+        or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $new = mysqli_insert_id($link);
 
   header("Location: {$_SERVER['PHP_SELF']}?ID=$new");
 }
 
 // Function to display and navigate records
-function display_record()
+function display_record($link)
 {
   // Find a record to display
-  $labID = get_id();
+  $labID = htmlentities(get_id($link));
   if ($labID === false)
+    return;
+
+  // Anything other than a number here is a security risk
+  if (!(is_numeric($labID)))
     return;
 
   $query  = "SELECT name, building AS contact " .
             "FROM lab " .
-            "WHERE labID = $labID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+            "WHERE labID = ? ";
 
-  $row    = mysql_fetch_array($result, MYSQL_ASSOC);
+  // Prepared statement
+  if ($stmt = mysqli_prepare($link, $query)) {
+   $stmt->bind_param('i', $labID);
+   $stmt->execute();
+   $stmt->store_result();
+   $num_of_rows = $stmt->num_rows;
+   $stmt->bind_result($name, $contact);
+   $stmt->fetch();
+
+   $stmt->free_result();
+   $stmt->close();
+  }
+
+  /* This code was replace by the prepared statement above
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+
+  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
 
   // Create local variables; make sure IE displays empty cells properly
   foreach ($row as $key => $value)
   {
     $$key = (empty($value)) ? "&nbsp;" : html_entity_decode( stripslashes( nl2br($value) ) );
   }
+  */
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
                   "        onchange='get_lab(this);' >" .
                   "  <option value='null'>None selected...</option>\n";
   $query  = "SELECT labID, name FROM lab ORDER BY name";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  while (list($t_id, $t_name) = mysql_fetch_array($result))
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  while (list($t_id, $t_name) = mysqli_fetch_array($result))
   {
     $selected = ($labID == $t_id) ? " selected='selected'" : "";
     $nav_listbox .= "  <option$selected value='$t_id'>$t_name</option>\n";
@@ -283,7 +305,7 @@ HTML;
 }
 
 // Function to figure out which record to display
-function get_id()
+function get_id($link)
 {
   // See if we are being directed to a particular record
   if (isset($_GET['ID']))
@@ -293,12 +315,12 @@ function get_id()
   $query  = "SELECT labID FROM lab " .
             "ORDER BY name " .
             "LIMIT 1 ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  if (mysql_num_rows($result) == 1)
+  if (mysqli_num_rows($result) == 1)
   {
-    list($labID) = mysql_fetch_array($result);
+    list($labID) = mysqli_fetch_array($result);
     return( $labID );
   }
 
@@ -326,7 +348,7 @@ HTML;
 }
 
 // Function to edit a record
-function edit_record()
+function edit_record($link)
 {
   // Get the record we need to edit
   if ( isset( $_POST['edit'] ) )
@@ -345,10 +367,10 @@ function edit_record()
   $query  = "SELECT name, building AS contact " .
             "FROM lab " .
             "WHERE labID = $labID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row = mysql_fetch_array($result);
+  $row = mysqli_fetch_array($result);
 
 
   $name    = html_entity_decode( stripslashes( $row['name'] ) );
@@ -369,10 +391,10 @@ echo<<<HTML
 
 
     <tr><th>Facility Name:</th>
-        <td><input type='text' name='name' size='40' 
+        <td><input type='text' name='name' size='40'
                    maxlength='255' value='$name' /></td></tr>
     <tr><th>Contact Information:</th>
-        <td><textarea name='contact' rows='6' cols='65' 
+        <td><textarea name='contact' rows='6' cols='65'
                       wrap='virtual'>$contact</textarea></td></tr>
 
     </tbody>
@@ -383,7 +405,7 @@ HTML;
 }
 
 // Function to create a new record
-function do_new()
+function do_new($link)
 {
 
 echo<<<HTML
@@ -400,10 +422,10 @@ echo<<<HTML
 
 
     <tr><th>Name:</th>
-        <td><input type='text' name='name' size='40' 
+        <td><input type='text' name='name' size='40'
                    maxlength='256' /></td></tr>
     <tr><th>Contact Information:</th>
-        <td><textarea name='contact' rows='6' cols='65' 
+        <td><textarea name='contact' rows='6' cols='65'
                       wrap='virtual'></textarea></td></tr>
 
 

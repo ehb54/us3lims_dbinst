@@ -17,35 +17,38 @@ if ( ( $_SESSION['userlevel'] != 3 ) &&
 
 include 'config.php';
 include 'db.php';
+// ini_set('display_errors', 'On');
+
+
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
 {
-  do_prior();
+  do_prior($link);
   exit();
 }
 
 else if (isset($_POST['next']))
 {
-  do_next();
+  do_next($link);
   exit();
 }
 
 else if (isset($_POST['delete']))
 {
-  do_delete();
+  do_delete($link);
   exit();
 }
 
 else if (isset($_POST['update']))
 {
-  do_update();
+  do_update($link);
   exit();
 }
 
 else if (isset($_POST['create']))
 {
-  do_create();
+  do_create($link);
   exit();
 }
 
@@ -54,6 +57,7 @@ $page_title = 'Edit Instruments';
 $js = 'js/edit_instruments.js';
 include 'header.php';
 include 'lib/selectboxes.php';
+
 
 ?>
 <!-- Begin page content -->
@@ -70,13 +74,13 @@ include 'lib/selectboxes.php';
 <?php
 // Edit or display a record
 if ( isset($_POST['edit']) )
-  edit_record();
+  edit_record($link);
 
 else if ( isset($_POST['new']) )
-  do_new();
+  do_new($link);
 
 else
-  display_record();
+  display_record($link);
 
 ?>
 </div>
@@ -86,22 +90,22 @@ include 'footer.php';
 exit();
 
 // Function to redirect to prior record
-function do_prior()
+function do_prior($link)
 {
   $instrumentID = $_POST['instrumentID'];
 
   $query  = "SELECT instrumentID FROM instrument " .
             "ORDER BY name ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find prior record
   $current = null;
-  list($current) = mysql_fetch_array($result);
+  list($current) = mysqli_fetch_array($result);
   while ($current != null && $instrumentID != $current)
   {
     $prior = $current;
-    list($current) = mysql_fetch_array($result);
+    list($current) = mysqli_fetch_array($result);
   }
 
   $redirect = ($prior == null) ? "" : "?ID=$prior";
@@ -110,20 +114,20 @@ function do_prior()
 }
 
 // Function to redirect to next record
-function do_next()
+function do_next($link)
 {
   $instrumentID = $_POST['instrumentID'];
 
   $query  = "SELECT instrumentID FROM instrument " .
             "ORDER BY name ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find next record
   $next = null;
   while ($instrumentID != $next)
-    list($next) = mysql_fetch_array($result);
-  list($next) = mysql_fetch_array($result);
+    list($next) = mysqli_fetch_array($result);
+  list($next) = mysqli_fetch_array($result);
 
   $redirect = ($next == null) ? "?ID=$instrumentID" : "?ID=$next";
   header("Location: $_SERVER[PHP_SELF]$redirect");
@@ -131,12 +135,12 @@ function do_next()
 }
 
 // Function to delete the current record
-function do_delete()
+function do_delete($link)
 {
   $query  = "SELECT COUNT(*) FROM instrument";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  list( $count ) = mysql_fetch_array( $result );
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  list( $count ) = mysqli_fetch_array( $result );
   if ( $count < 2 )
   {  // Skip deleting if no or only 1 instrument row exists
     echo "<p>Cannot delete the last remaining instrument record.</p>\n";
@@ -151,28 +155,28 @@ function do_delete()
 
   $query  = "SELECT COUNT(*) FROM experiment " .
             "WHERE instrumentID = $instrumentID ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  list( $count ) = mysql_fetch_array( $result );
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  list( $count ) = mysqli_fetch_array( $result );
   if ( $count == 0 )
   {
     // Ok to delete
     $query  = "DELETE FROM permits " .
               "WHERE instrumentID = $instrumentID ";
-    mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     $query = "DELETE FROM instrument " .
              "WHERE instrumentID = $instrumentID ";
-    mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
   }
 
   header("Location: $_SERVER[PHP_SELF]");
 }
 
 // Function to update the current record
-function do_update()
+function do_update($link)
 {
   $ID = $_SESSION['id'];
 
@@ -187,15 +191,15 @@ function do_update()
            "dateUpdated  = NOW() " .
            "WHERE instrumentID = $instrumentID ";
 
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
+  mysqli_query($link, $query)
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   header("Location: $_SERVER[PHP_SELF]?ID=$instrumentID");
   exit();
 }
 
 // Function to create a new record
-function do_create()
+function do_create($link)
 {
 
   $labID               =                                $_POST['labID'];
@@ -207,45 +211,64 @@ function do_create()
            "serialNumber  = '$serialNumber', " .
            "dateUpdated  = NOW() ";
 
-  mysql_query($query)
-        or die("Query failed : $query<br />\n" . mysql_error());
-  $new = mysql_insert_id();
+  mysqli_query($link, $query)
+        or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $new = mysqli_insert_id($link);
 
   header("Location: {$_SERVER['PHP_SELF']}?ID=$new");
 }
 
 // Function to display and navigate records
-function display_record()
+function display_record($link)
 {
   // Find a record to display
-  $instrumentID = get_id();
+  $instrumentID = htmlentities(get_id($link));
   if ($instrumentID === false)
     return;
 
-  $query  = "SELECT i.labID, i.name AS name, serialNumber, " .
-            "lab.name AS labName " .
-            "FROM instrument i, lab " .
-            "WHERE instrumentID = $instrumentID " .
-            "AND i.labID = lab.labID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  // Anything other than a number here is a security risk
+  if (!(is_numeric($instrumentID)))
+    return;
 
-  $row    = mysql_fetch_array($result, MYSQL_ASSOC);
+  $query  = "SELECT i.labID, i.name, lab.name " .
+            "FROM instrument i, lab " .
+            "WHERE instrumentID = ? " .
+            "AND i.labID = lab.labID ";
+
+  // Prepared statement
+  if ($stmt = mysqli_prepare($link, $query)) {
+   $stmt->bind_param('i', $instrumentID);
+   $stmt->execute();
+   $stmt->store_result();
+   $num_of_rows = $stmt->num_rows;
+   $stmt->bind_result($i_labID, $i_name, $lab_name);
+   $stmt->fetch();
+
+   $stmt->free_result();
+   $stmt->close();
+  }
+
+  /* This code was replace by the prepared statement above
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+
+  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
 
   // Create local variables; make sure IE displays empty cells properly
   foreach ($row as $key => $value)
   {
     $$key = (empty($value)) ? "&nbsp;" : html_entity_decode( stripslashes( nl2br($value) ) );
   }
+  */
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
                   "        onchange='get_lab(this);' >" .
                   "  <option value='null'>None selected...</option>\n";
   $query  = "SELECT instrumentID, name FROM instrument ORDER BY name";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  while (list($t_id, $t_name) = mysql_fetch_array($result))
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  while (list($t_id, $t_name) = mysqli_fetch_array($result))
   {
     $selected = ($instrumentID == $t_id) ? " selected='selected'" : "";
     $nav_listbox .= "  <option$selected value='$t_id'>$t_name</option>\n";
@@ -270,11 +293,11 @@ echo<<<HTML
     </tfoot>
     <tbody>
       <tr><th>Lab:</th>
-          <td>$labName</td></tr>
+          <td>$lab_name</td></tr>
       <tr><th>Instrument Name:</th>
-          <td>$name</td></tr>
+          <td>$i_name</td></tr>
       <tr><th>Serial Number:</th>
-          <td>$serialNumber</td></tr>
+          <td>$i_labID</td></tr>
     </tbody>
   </table>
   </form>
@@ -283,7 +306,7 @@ HTML;
 }
 
 // Function to figure out which record to display
-function get_id()
+function get_id($link)
 {
   // See if we are being directed to a particular record
   if (isset($_GET['ID']))
@@ -293,12 +316,12 @@ function get_id()
   $query  = "SELECT instrumentID FROM instrument " .
             "ORDER BY name " .
             "LIMIT 1 ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  if (mysql_num_rows($result) == 1)
+  if (mysqli_num_rows($result) == 1)
   {
-    list($instrumentID) = mysql_fetch_array($result);
+    list($instrumentID) = mysqli_fetch_array($result);
     return( $instrumentID );
   }
 
@@ -326,7 +349,7 @@ HTML;
 }
 
 // Function to edit a record
-function edit_record()
+function edit_record($link)
 {
   // Get the record we need to edit
   if ( isset( $_POST['edit'] ) )
@@ -345,16 +368,16 @@ function edit_record()
   $query  = "SELECT labID, name, serialNumber  " .
             "FROM instrument " .
             "WHERE instrumentID = $instrumentID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row = mysql_fetch_array($result);
+  $row = mysqli_fetch_array($result);
 
   $labID               =                                   $row['labID'];
   $name                = html_entity_decode( stripslashes( $row['name'] ) );
   $serialNumber        = html_entity_decode( stripslashes( $row['serialNumber'] ) );
 
-  $lab_text = lab_select( "labID", $labID );
+  $lab_text = lab_select( $link, "labID", $labID );
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post">
@@ -373,10 +396,10 @@ echo<<<HTML
     <tr><th>Lab:</th>
         <td>$lab_text</td></tr>
     <tr><th>Instrument Name:</th>
-        <td><textarea name='name' rows='6' cols='65' 
+        <td><textarea name='name' rows='6' cols='65'
                       wrap='virtual'>$name</textarea></td></tr>
     <tr><th>Serial Number:</th>
-        <td><textarea name='serialNumber' rows='6' cols='65' 
+        <td><textarea name='serialNumber' rows='6' cols='65'
                       wrap='virtual'>$serialNumber</textarea></td></tr>
 
     </tbody>
@@ -387,10 +410,10 @@ HTML;
 }
 
 // Function to create a new record
-function do_new()
+function do_new($link)
 {
 
-  $lab_text = lab_select( "labID" );
+  $lab_text = lab_select( $link, "labID" );
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post">
@@ -408,10 +431,10 @@ echo<<<HTML
     <tr><th>Lab:</th>
         <td>$lab_text</td></tr>
     <tr><th>Instrument Name:</th>
-        <td><textarea name='name' rows='6' cols='65' 
+        <td><textarea name='name' rows='6' cols='65'
                       wrap='virtual'></textarea></td></tr>
     <tr><th>Serial Number:</th>
-        <td><textarea name='serialNumber' rows='6' cols='65' 
+        <td><textarea name='serialNumber' rows='6' cols='65'
                       wrap='virtual'></textarea></td></tr>
 
     </tbody>

@@ -184,8 +184,8 @@ if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] > 0 ) )
   $out_text = "";
   foreach ( $_SESSION['request'] as $removeID => $cellinfo )
   {
-    $editedData_text  = get_editedData( $cellinfo['editedDataID'] );
-    $noise_text       = get_noise( $cellinfo['noiseIDs'] );
+    $editedData_text  = get_editedData( $link, $cellinfo['editedDataID'] );
+    $noise_text       = get_noise( $link, $cellinfo['noiseIDs'] );
 
     $out_text .= <<<HTML
     <fieldset>
@@ -374,15 +374,15 @@ include 'footer.php';
 exit();
 
 // Get edit profiles
-function get_editedData( $editedDataID )
+function get_editedData( $link, $editedDataID )
 {
   $query  = "SELECT label, filename " .
             "FROM editedData " .
             "WHERE editedDataID = $editedDataID ";
-  $result = mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  list( $label, $fn ) = mysql_fetch_array( $result );
+  list( $label, $fn ) = mysqli_fetch_array( $result );
   $parts    = explode( ".", $fn ); // runID, editID, runType, c,c,w, xml
   $edit_txt  = $parts[1];
   $profile = "<span>$label [$edit_txt]</span>";
@@ -392,16 +392,16 @@ function get_editedData( $editedDataID )
 
 /*
 // Get the models
-function get_model( $modelID )
+function get_model( $link, $modelID )
 {
   $query  = "SELECT description " .
             "FROM model " .
             "WHERE modelID = $modelID ";
 
-  $result = mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  list( $descr ) = mysql_fetch_array( $result );
+  list( $descr ) = mysqli_fetch_array( $result );
   $model = "<span>[$modelID] $descr</span>";
 
   return( $model );
@@ -409,7 +409,7 @@ function get_model( $modelID )
 */
 
 // Get the noise files
-function get_noise( $noiseIDs )
+function get_noise( $link, $noiseIDs )
 {
   if ( empty( $noiseIDs ) )
     return( "" );
@@ -419,11 +419,11 @@ function get_noise( $noiseIDs )
             "FROM noise " .
             "WHERE noiseID IN ( $commaIDs ) ";
 
-  $result = mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query( $link, $query )
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   $noise = "";
-  while ( list( $nID, $modelID, $noiseType ) = mysql_fetch_array( $result ) )
+  while ( list( $nID, $modelID, $noiseType ) = mysqli_fetch_array( $result ) )
     $noise .= "<span>[$nID] $noiseType</span><br />\n";
 
   return( $noise );

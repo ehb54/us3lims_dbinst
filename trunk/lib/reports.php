@@ -8,7 +8,7 @@
  */
 
 // Function to create a dropdown for people who have given us permission
-function people_select( $select_name, $personID = NULL )
+function people_select( $link, $select_name, $personID = NULL )
 {
   // Caller can pass a selected personID, but we need to check permissions
   $myID = $_SESSION['id'];
@@ -33,15 +33,15 @@ function people_select( $select_name, $personID = NULL )
                "ORDER BY lname, fname ";
   }
 
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />" . mysqli_error($link) );
 
   // Create the list box
   $myName = "{$_SESSION['lastname']}, {$_SESSION['firstname']}";
   $text  = "<h3>Investigator:</h3>\n";
   $text .= "<select name='$select_name' id='$select_name' size='1'>\n" .
            "    <option value='$myID'>$myName</option>\n";
-  while ( list( $ID, $lname, $fname ) = mysql_fetch_array( $result ) )
+  while ( list( $ID, $lname, $fname ) = mysqli_fetch_array( $result ) )
   {
     $selected = ( $ID == $personID ) ? " selected='selected'" : "";
     $text .= "    <option value='$ID'$selected>$lname, $fname</option>\n";
@@ -53,7 +53,7 @@ function people_select( $select_name, $personID = NULL )
 }
 
 // Function to create a dropdown for available runIDs
-function run_select( $select_name, $current_ID = NULL, $personID = NULL )
+function run_select( $link, $select_name, $current_ID = NULL, $personID = NULL )
 {
   // Caller can pass a personID to get anybody's report, but we default
   //   to user's own
@@ -66,9 +66,9 @@ function run_select( $select_name, $current_ID = NULL, $personID = NULL )
      $query  = "SELECT COUNT(*) FROM permits " .
                "WHERE personID = $personID " .
                "AND collaboratorID = $myID ";
-     $result = mysql_query( $query )
-               or die( "Query failed : $query<br />" . mysql_error() );
-     list( $count ) = mysql_fetch_array( $result );
+     $result = mysqli_query( $link, $query )
+               or die( "Query failed : $query<br />" . mysqli_error($link) );
+     list( $count ) = mysqli_fetch_array( $result );
 
      if ( $count == 0 )
      {
@@ -85,15 +85,15 @@ function run_select( $select_name, $current_ID = NULL, $personID = NULL )
             "WHERE reportPerson.personID = $personID " .
             "AND reportPerson.reportID = report.reportID " .
             "ORDER BY runID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) == 0 ) return "";
+  if ( mysqli_num_rows( $result ) == 0 ) return "";
 
   $text  = "<h3>Run ID:</h3>\n";
   $text .= "<select name='$select_name' id='$select_name' size='1'>\n" .
            "    <option value='-1'>Please select...</option>\n";
-  while ( list( $reportID, $runID ) = mysql_fetch_array( $result ) )
+  while ( list( $reportID, $runID ) = mysqli_fetch_array( $result ) )
   {
     $selected = ( $current_ID == $reportID ) ? " selected='selected'" : "";
     $text .= "    <option value='$reportID'$selected>$runID</option>\n";
@@ -105,7 +105,7 @@ function run_select( $select_name, $current_ID = NULL, $personID = NULL )
 }
 
 // Function to return a list of triples, if we know the reportID
-function tripleList( $current_ID = NULL )
+function tripleList( $link, $current_ID = NULL )
 {
   // Account for user selecting the Please select... choice
   $current_ID = ( $current_ID == -1 ) ? NULL : $current_ID;
@@ -125,11 +125,11 @@ function tripleList( $current_ID = NULL )
               "AND reportTriple.reportID = report.reportID " .
               "AND report.experimentID = experiment.experimentID " .
               "ORDER BY triple ";
-    $result = mysql_query( $query )
-              or die("Query failed : $query<br />\n" . mysql_error());
+    $result = mysqli_query( $link, $query )
+              or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     $text .= "<ul>\n";
-    while ( list( $tripleID, $tripleDesc, $dataDesc, $runType ) = mysql_fetch_array( $result ) )
+    while ( list( $tripleID, $tripleDesc, $dataDesc, $runType ) = mysqli_fetch_array( $result ) )
     {
       list( $cell, $channel, $wl ) = explode( "/", $tripleDesc );
       $description = ( empty($dataDesc) ) ? "" : "; Descr: $dataDesc";
@@ -142,12 +142,12 @@ function tripleList( $current_ID = NULL )
 
     $text .= "</ul>\n";
   }
-  
+
   return $text;
 }
 
 // Function to return a link to the combo reports, if there are any
-function combo_info( $current_ID )
+function combo_info( $link, $current_ID )
 {
   // Account for user selecting the Please select... choice
   $current_ID = ( $current_ID == -1 ) ? NULL : $current_ID;
@@ -163,30 +163,30 @@ function combo_info( $current_ID )
               "WHERE reportID = $current_ID " .
               "AND triple LIKE '0%' " .               // Combined triples look like 0/Z/9999
               "ORDER BY triple ";
-    $result = mysql_query( $query )
-              or die("Query failed : $query<br />\n" . mysql_error());
+    $result = mysqli_query( $link, $query )
+              or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     // In this case we might not have any
-    if ( mysql_num_rows( $result ) > 0 )
+    if ( mysqli_num_rows( $result ) > 0 )
     {
       $text .= "<h3>Combination Plots:</h3>\n";
 
       $text .= "<ul>\n";
-      while ( list( $tripleID, $dataDesc ) = mysql_fetch_array( $result ) )
+      while ( list( $tripleID, $dataDesc ) = mysqli_fetch_array( $result ) )
       {
         $description = ( empty($dataDesc) ) ? "" : "$dataDesc";
         $text .= "  <li><a href='view_reports.php?combo=$tripleID'>$description</a></li>\n";
       }
-      
+
       $text .= "</ul><br /><br />\n";
     }
   }
-  
+
   return $text;
 }
 
 // A function to retrieve the reportTriple detail
-function tripleDetail( $tripleID, $selected_docTypes = array() )
+function tripleDetail( $link, $tripleID, $selected_docTypes = array() )
 {
   // Let's start with header information
   $query  = "SELECT personID, report.reportID, report.runID, " .
@@ -196,10 +196,10 @@ function tripleDetail( $tripleID, $selected_docTypes = array() )
             "AND reportTriple.reportID = report.reportID " .
             "AND report.reportID = reportPerson.reportID " .
             "AND report.experimentID = experiment.experimentID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  list ( $personID, $reportID, $runID, $tripleDesc, $dataDesc, $runType ) 
-       = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  list ( $personID, $reportID, $runID, $tripleDesc, $dataDesc, $runType )
+       = mysqli_fetch_array( $result );
   list ( $cell, $channel, $wl ) = explode( "/", $tripleDesc );
   $radius      = $wl / 1000.0;    // If WA data
   $description = ( empty($dataDesc) ) ? "" : "; Descr: $dataDesc";
@@ -214,9 +214,9 @@ function tripleDetail( $tripleID, $selected_docTypes = array() )
   $docTypes2 = array();
   $query  = "SELECT DISTINCT documentType FROM reportDocument " .
             "ORDER BY documentType ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  while ( list( $docType ) = mysql_fetch_array( $result ) )
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  while ( list( $docType ) = mysqli_fetch_array( $result ) )
   {
     // all checkboxes should be checked initially, except svg/svgz
     if ( empty( $selected_docTypes ) && $docType != 'svg' && $docType != 'svgz' )
@@ -246,7 +246,7 @@ function tripleDetail( $tripleID, $selected_docTypes = array() )
     $checked = ( $active ) ? " checked='checked'" : "";
     $checkboxes .= "      <input type='checkbox' id='image_{$tripleID}_$docType'$checked /> $docType<br />\n";
   }
-      
+
   $text .= <<<HTML
     <div>
       <p>Include the following report document types:</p>
@@ -266,9 +266,9 @@ HTML;
             "WHERE documentLink.reportTripleID = $tripleID " .
             "AND documentLink.reportDocumentID = reportDocument.reportDocumentID " .
             "ORDER BY analysis ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  while ( list( $atype, $label ) = mysql_fetch_array( $result ) )
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  while ( list( $atype, $label ) = mysqli_fetch_array( $result ) )
   {
     $parts = explode( ":", $label );
     $atypes[$atype] = $parts[0];      // The analysis part of the label
@@ -294,14 +294,14 @@ HTML;
               "AND analysis = '$atype' " .
               $select_docs .
               "ORDER BY subAnalysis ";
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />\n" . mysql_error() );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-    if ( mysql_num_rows( $result ) < 1 ) continue;
+    if ( mysqli_num_rows( $result ) < 1 ) continue;
 
     $text .= "<p class='reporthead'><a name='$atype'></a>$alabel</p>\n" .
              "<ul>\n";
-    while ( list( $docID, $label, $doctype ) = mysql_fetch_array( $result ) )
+    while ( list( $docID, $label, $doctype ) = mysqli_fetch_array( $result ) )
     {
       list( $anal, $subanal, $doctype_text ) = explode( ":", $label );
 
@@ -369,20 +369,20 @@ HTML;
             "FROM report, reportTriple " .
             "WHERE reportTripleID = $tripleID " .
             "AND report.reportID = reportTriple.reportID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  list ( $experimentID, $triple_desc ) = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  list ( $experimentID, $triple_desc ) = mysqli_fetch_array( $result );
 
   $text .= <<<HTML
     <p class='reporthead'><a name='solution'></a>Solution Data</p>
     <ul>
-        <li><a href='#solution' 
+        <li><a href='#solution'
                onclick="show_solution_detail( 'solution', $experimentID, '$triple_desc' );">
                Solution Information</a></li>
-        <li><a href='#solution' 
+        <li><a href='#solution'
                onclick="show_solution_detail( 'analyte', $experimentID, '$triple_desc' );">
                Analyte Information</a></li>
-        <li><a href='#solution' 
+        <li><a href='#solution'
                onclick="show_solution_detail( 'buffer', $experimentID, '$triple_desc' );">
                Buffer Information</a></li>
 
@@ -404,7 +404,7 @@ HTML;
 }
 
 // A function to retrieve the reportTriple detail for combinations
-function comboDetail( $tripleID )
+function comboDetail( $link, $tripleID )
 {
   // Let's start with header information
   $query  = "SELECT personID, report.reportID, dataDescription " .
@@ -412,10 +412,10 @@ function comboDetail( $tripleID )
             "WHERE reportTripleID = $tripleID " .
             "AND reportTriple.reportID = report.reportID " .
             "AND report.reportID = reportPerson.reportID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  list ( $personID, $reportID, $dataDesc ) 
-       = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  list ( $personID, $reportID, $dataDesc )
+       = mysqli_fetch_array( $result );
   $text = "<h3>Combinations:</h3>\n" .
           "<h4>$dataDesc</h4>\n";
 
@@ -425,9 +425,9 @@ function comboDetail( $tripleID )
             "FROM documentLink, reportDocument " .
             "WHERE documentLink.reportTripleID = $tripleID " .
             "AND documentLink.reportDocumentID = reportDocument.reportDocumentID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  while ( list( $atype, $label ) = mysql_fetch_array( $result ) )
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  while ( list( $atype, $label ) = mysqli_fetch_array( $result ) )
   {
     $parts = explode( ":", $label );
     $atypes[$atype] = $parts[0];      // The analysis part of the label
@@ -441,12 +441,12 @@ function comboDetail( $tripleID )
               "AND documentLink.reportDocumentID = reportDocument.reportDocumentID " .
               "AND analysis = '$atype' " .
               "ORDER BY subAnalysis ";
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />\n" . mysql_error() );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
     $text .= "<p class='reporthead'><a name='$atype'></a>$alabel</p>\n" .
              "<ul>\n";
-    while ( list( $docID, $label ) = mysql_fetch_array( $result ) )
+    while ( list( $docID, $label ) = mysqli_fetch_array( $result ) )
     {
       list( $anal, $subanal, $doctype ) = explode( ":", $label );
       $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>$subanal ($doctype)</a></li>\n";

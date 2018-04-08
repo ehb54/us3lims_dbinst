@@ -62,7 +62,14 @@ if ( isset($_POST['TIGRE']) )
   // Save cluster information
   if ( isset($_POST['cluster']) )
   {
+    $gwhostid   = 'uslims3';
+    if ( isset( $_SESSION[ 'gwhostid' ] ) )
+      $gwhostid   = $_SESSION[ 'gwhostid' ];
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
+    if ( preg_match( "/alamo/", $gwhostid )  &&  $cluster_shortname == 'alamo' )
+    {  // alamo-to-alamo uses alamo-local as cluster
+      $cluster_shortname = 'alamo-local';
+    }
     $_SESSION['cluster']              = array();
     $_SESSION['cluster']['name']      = $cluster_name;
     $_SESSION['cluster']['shortname'] = $cluster_shortname;
@@ -151,7 +158,7 @@ $new_noise = '';
 if ( isset($_SESSION['edit_select_type'])  &&
      $_SESSION['edit_select_type'] == 0 )
 {  // If latest edits and noise, reset the noises
-  set_latest_noises();
+  set_latest_noises( $link );
   $new_noise = $_SESSION['new_noise'];
 }
 

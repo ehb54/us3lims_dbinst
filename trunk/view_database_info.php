@@ -19,6 +19,8 @@ include 'db.php';
 $hostaddr = $dbhost;
 if ( $hostaddr == 'localhost' )
    $hostaddr = gethostname();
+if ( preg_match( "/scyld/", $hostaddr ) )
+   $hostaddr = "alamo.uthscsa.edu";
 
 // Start displaying page
 $page_title = "Database Login Info";

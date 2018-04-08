@@ -44,7 +44,7 @@ function userlevel_select( $userlevel = 0 )
   $myUserlevel = $_SESSION['userlevel'];
   $ulimit = ( $myUserlevel >= 3 ) ? $myUserlevel : 0;
 
-  if ( $userlevel > $myUserlevel ) 
+  if ( $userlevel > $myUserlevel )
   {
      $text = "<input type='hidden' name='userlevel' value='$userlevel' /> " .
              "<input type='text' value='$userlevel' disabled='disabled' />\n";
@@ -77,18 +77,18 @@ function advancelevel_select( $level = 0 )
 }
 
 // Function to create a dropdown for available labs
-function lab_select( $select_name, $current_lab = NULL )
+function lab_select( $link, $select_name, $current_lab = NULL )
 {
   $query  = "SELECT labID, name " .
             "FROM lab " .
             "ORDER BY name ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) == 0 ) return "";
+  if ( mysqli_num_rows( $result ) == 0 ) return "";
 
   $text = "<select name='$select_name' size='1'>\n";
-  while ( list( $labID, $name ) = mysql_fetch_array( $result ) )
+  while ( list( $labID, $name ) = mysqli_fetch_array( $result ) )
   {
     $selected = ( $current_lab == $labID ) ? " selected='selected'" : "";
     $text .= "  <option value='$labID'$selected>$name</option>\n";
@@ -100,19 +100,19 @@ function lab_select( $select_name, $current_lab = NULL )
 }
 
 // Function to create a dropdown for available personIDs
-function person_select( $select_name, $current_ID = NULL )
+function person_select( $link, $select_name, $current_ID = NULL )
 {
   $query  = "SELECT personID, lname, fname " .
             "FROM people " .
             "ORDER BY lname, fname ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) == 0 ) return "";
+  if ( mysqli_num_rows( $result ) == 0 ) return "";
 
   $text = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n" .
           "  <select name='$select_name' size='1' onchange='form.submit();'>\n";
-  while ( list( $personID, $lname, $fname ) = mysql_fetch_array( $result ) )
+  while ( list( $personID, $lname, $fname ) = mysqli_fetch_array( $result ) )
   {
     $t_last  = html_entity_decode( stripslashes( $lname ) );
     $t_first = html_entity_decode( stripslashes( $fname ) );

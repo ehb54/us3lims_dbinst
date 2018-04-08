@@ -13,41 +13,43 @@ if ( ($_SESSION['userlevel'] != 3) &&
 {
   header('Location: index.php');
   exit();
-} 
+}
 
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include 'lib/selectboxes.php';
+// ini_set('display_errors', 'On');
+
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
 {
-  do_prior();
+  do_prior($link);
   exit();
 }
 
 else if (isset($_POST['next']))
 {
-  do_next();
+  do_next($link);
   exit();
 }
 
 else if (isset($_POST['delete']))
 {
-  do_delete();
+  do_delete($link);
   exit();
 }
 
 else if (isset($_POST['update']))
 {
-  do_update();
+  do_update($link);
   exit();
 }
 
 else if (isset($_POST['create']))
 {
-  do_create();
+  do_create($link);
   exit();
 }
 
@@ -68,13 +70,13 @@ include 'header.php';
 <?php
 // Edit or display a record
 if (isset($_POST['edit']))
-  edit_record();
+  edit_record($link);
 
 else if (isset($_POST['new']))
-  do_new();
+  do_new($link);
 
 else
-  display_record();
+  display_record($link);
 
 ?>
 
@@ -85,22 +87,22 @@ include 'footer.php';
 exit();
 
 // Function to redirect to prior record
-function do_prior()
+function do_prior($link)
 {
   $personID = $_POST['personID'];
 
   $query  = "SELECT personID FROM people " .
             "ORDER BY lname, fname ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find prior record
-  list($current) = mysql_fetch_array($result);
+  list($current) = mysqli_fetch_array($result);
   $prior = null;
   while ($current != NULL && $personID != $current)
   {
     $prior = $current;
-    list($current) = mysql_fetch_array($result);
+    list($current) = mysqli_fetch_array($result);
   }
 
   $redirect = ($prior == null) ? "" : "?personID=$prior";
@@ -108,27 +110,27 @@ function do_prior()
 }
 
 // Function to redirect to next record
-function do_next()
+function do_next($link)
 {
   $personID = $_POST['personID'];
 
   $query  = "SELECT personID FROM people " .
             "ORDER BY lname, fname ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // Find next record
   $current = null;
   while ($personID != $current)
-    list($current) = mysql_fetch_array($result);
-  list($next) = mysql_fetch_array($result);
+    list($current) = mysqli_fetch_array($result);
+  list($next) = mysqli_fetch_array($result);
 
   $redirect = ($next == null) ? "?personID=$personID" : "?personID=$next";
   header("Location: {$_SERVER['PHP_SELF']}$redirect");
 }
 
 // Function to delete the current record
-function do_delete()
+function do_delete($link)
 {
   global $admin_list;      // To protect our admin entries
   $admins = implode( "','", $admin_list );
@@ -138,14 +140,14 @@ function do_delete()
   $query = "DELETE FROM people " .
            "WHERE personID = $personID " .
            "AND email NOT IN ( '$admins' ) ";
-  mysql_query($query)
-    or die("Query failed : $query<br />\n" . mysql_error());
+  mysqli_query($link, $query)
+    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   header("Location: {$_SERVER['PHP_SELF']}");
 }
 
 // Function to update the current record
-function do_update()
+function do_update($link)
 {
   include 'get_user_info.php';
   $personID     = $_POST['personID'];
@@ -193,15 +195,15 @@ function do_update()
              "clusterAuthorizations = '$clusterAuth'    " .
              "WHERE personID =  $personID         ";
 
-    mysql_query($query)
-          or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query($link, $query)
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     // Now delete operator permissions, because we're going to redo it
     $query  = "DELETE FROM permits " .
               "WHERE personID = $personID ";
 
-    mysql_query($query)
-          or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query($link, $query)
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     // Now add the new ones
     foreach ( $instrumentIDs as $instrumentID )
@@ -210,8 +212,8 @@ function do_update()
                 "SET instrumentID = $instrumentID, " .
                 "personID         = $personID ";
 
-      mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
+      mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     }
 
@@ -226,7 +228,7 @@ function do_update()
 }
 
 // Function to create a new record
-function do_create()
+function do_create($link)
 {
   include 'get_user_info.php';
 
@@ -252,9 +254,9 @@ function do_create()
              "activated      = 1,                 " .
              "signup         = NOW()              ";    // use the default cluster auths
 
-    mysql_query($query)
-          or die("Query failed : $query<br />\n" . mysql_error());
-    $new = mysql_insert_id();
+    mysqli_query($link, $query)
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
+    $new = mysqli_insert_id($link);
 
     header("Location: {$_SERVER['PHP_SELF']}?personID=$new");
     return;
@@ -269,10 +271,10 @@ function do_create()
 }
 
 // Function to display and navigate records
-function display_record()
+function display_record($link)
 {
   // Find a record to display
-  $personID = get_id();
+  $personID = get_id($link);
   if ($personID === false)
     return;
 
@@ -281,10 +283,10 @@ function display_record()
             "activated, userlevel, advancelevel, clusterAuthorizations " .
             "FROM people " .
             "WHERE personID = $personID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row    = mysql_fetch_array($result, MYSQL_ASSOC);
+  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
 
   foreach ($row as $key => $value)
   {
@@ -302,11 +304,11 @@ function display_record()
             "FROM permits, instrument " .
             "WHERE permits.personID = $personID " .
             "AND permits.instrumentID = instrument.instrumentID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   $instruments = array();
-  while ( list( $instName ) = mysql_fetch_array( $result ) )
+  while ( list( $instName ) = mysqli_fetch_array( $result ) )
     $instruments[] = $instName;
   $instruments_text = implode( ", ", $instruments );
 
@@ -316,9 +318,9 @@ function display_record()
                   "  <option value='null'>None selected...</option>\n";
   $query  = "SELECT personID, lname, fname FROM people " .
             "ORDER BY lname, fname ";
-  $result = mysql_query($query)
-            or die("Query failed : $query<br />\n" . mysql_error());
-  while (list($t_id, $t_last, $t_first) = mysql_fetch_array($result))
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  while (list($t_id, $t_last, $t_first) = mysqli_fetch_array($result))
   {
     $t_last   = html_entity_decode( stripslashes($t_last)  );
     $t_first  = html_entity_decode( stripslashes($t_first) );
@@ -382,7 +384,7 @@ HTML;
 }
 
 // Function to figure out which record to display
-function get_id()
+function get_id($link)
 {
   // See if we are being directed to a particular record
   if (isset($_GET['personID']))
@@ -396,12 +398,12 @@ function get_id()
   $query  = "SELECT personID FROM people " .
             "ORDER BY lname, fname " .
             "LIMIT 1 ";
-  $result = mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  if (mysql_num_rows($result) == 1)
+  if (mysqli_num_rows($result) == 1)
   {
-    list($personID) = mysql_fetch_array($result);
+    list($personID) = mysqli_fetch_array($result);
     return( $personID );
   }
 
@@ -425,11 +427,11 @@ echo<<<HTML
 
 HTML;
 
-  return( false ); 
+  return( false );
 }
 
 // Function to edit a record
-function edit_record()
+function edit_record($link)
 {
   // Get the record we need to edit
   $personID = $_POST['personID'];
@@ -439,10 +441,10 @@ function edit_record()
             "activated, userlevel, advancelevel, clusterAuthorizations " .
             "FROM people " .
             "WHERE personID = $personID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row = mysql_fetch_array($result);
+  $row = mysqli_fetch_array($result);
 
   $lname           = html_entity_decode(stripslashes($row['lname']));
   $fname           = html_entity_decode(stripslashes($row['fname']));
@@ -463,7 +465,7 @@ function edit_record()
   $advancelevel_text = advancelevel_select( $advancelevel );
   $activated_chk     = ( $row['activated'] == 1 ) ? " checked='checked'" : "";
   $activated_text    = "<input type='checkbox'name='activated'$activated_chk />";
-    
+
   // Figure out checks for cluster authorizations
   global $clusters;
   foreach ( $clusters as $cluster )
@@ -487,20 +489,20 @@ function edit_record()
   // A list of all the instruments
   $query  = "SELECT instrumentID, name " .
             "FROM instrument ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
   $instruments = array();
-  while ( list( $instrumentID, $instName ) = mysql_fetch_array( $result ) )
+  while ( list( $instrumentID, $instName ) = mysqli_fetch_array( $result ) )
     $instruments[ $instrumentID ] = $instName;
 
   // A list of current user operator permissions
   $query  = "SELECT instrumentID " .
             "FROM permits " .
             "WHERE personID = $personID " ;
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
   $instrAuth = array();
-  while ( list( $instrumentID ) = mysql_fetch_array( $result ) )
+  while ( list( $instrumentID ) = mysqli_fetch_array( $result ) )
     $instrAuth[] = $instrumentID;
   $instrAuth_text = implode( ":", $instrAuth );
 
@@ -585,7 +587,7 @@ HTML;
 }
 
 // Function to create a new record
-function do_new()
+function do_new($link)
 {
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"

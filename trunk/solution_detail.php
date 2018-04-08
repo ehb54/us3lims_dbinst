@@ -20,7 +20,7 @@ if ( isset( $_GET['type']   ) &&
     case 'solution' :
     case 'analyte'  :
     case 'buffer'   :
-      do_getInfo( $_GET['type'], $_GET['expID'], $_GET['triple'] );
+      do_getInfo( $link, $_GET['type'], $_GET['expID'], $_GET['triple'] );
       break;
 
     default :
@@ -53,14 +53,14 @@ HTML;
 }
 
 // Function to display info about a solution, analyte, or buffer
-function do_getInfo( $type, $experimentID, $triple )
+function do_getInfo( $link, $type, $experimentID, $triple )
 {
   // Let's start with header information
-  $header  = get_header_info( $type, $experimentID, $triple );
+  $header  = get_header_info( $link, $type, $experimentID, $triple );
   $ptype   = ucwords( $type );
 
   // Now the content
-  $content = get_document_content( $type, $experimentID, $triple );
+  $content = get_document_content( $link, $type, $experimentID, $triple );
 
   echo <<<HTML
 <html>
@@ -83,15 +83,15 @@ HTML;
 }
 
 // Function to get document header content
-function get_header_info( $type, $experimentID, $triple )
+function get_header_info( $link, $type, $experimentID, $triple )
 {
   // Let's start with header information
   $query  = "SELECT runID, runType " .
             "FROM experiment " .
             "WHERE experimentID = $experimentID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  list ( $runID, $runType ) = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  list ( $runID, $runType ) = mysqli_fetch_array( $result );
   list ( $cell, $channel, $wl ) = explode( "/", $triple );
   $radius      = $wl / 1000.0;    // If WA data
 
@@ -111,17 +111,17 @@ function get_header_info( $type, $experimentID, $triple )
 }
 
 // Function to get the solution information. Method varies depending on the type
-function get_document_content( $type, $experimentID, $triple )
+function get_document_content( $link, $type, $experimentID, $triple )
 {
   // First we want to find the solutionID based on the experiment and triple
   $query  = "SELECT filename, solutionID AS sID " .
             "FROM rawData " .
             "WHERE experimentID = $experimentID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
   $solutionID = -1;
-  while ( list( $filename, $sID ) = mysql_fetch_array( $result ) )
+  while ( list( $filename, $sID ) = mysqli_fetch_array( $result ) )
   {
     $parts = explode( '.', $filename );
     $t     = $parts[2] . '/' . $parts[3] . '/' . $parts[4];
@@ -137,26 +137,26 @@ function get_document_content( $type, $experimentID, $triple )
     $text = "<p>The solution associated with this experiment/triple could not be found</p>\n";
 
   else if ( $type == 'solution' )
-    $text = get_solutionInfo( $solutionID );
+    $text = get_solutionInfo( $link, $solutionID );
 
   else if ( $type == 'analyte' )
-    $text = get_analyteInfo( $solutionID );
+    $text = get_analyteInfo( $link, $solutionID );
 
   else if ( $type == 'buffer' )
-    $text = get_bufferInfo( $solutionID );
+    $text = get_bufferInfo( $link, $solutionID );
 
   return $text;
 }
 
 // Function to get some information about the solution
-function get_solutionInfo( $solutionID )
+function get_solutionInfo( $link, $solutionID )
 {
   $query  = "SELECT solutionGUID, description, commonVbar20, storageTemp, notes " .
             "FROM solution " .
             "WHERE solutionID = $solutionID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  list( $guid, $desc, $vbar, $temp, $notes ) = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  list( $guid, $desc, $vbar, $temp, $notes ) = mysqli_fetch_array( $result );
 
   $analyte_list = array();
   $query  = "SELECT description, amount " .
@@ -164,9 +164,9 @@ function get_solutionInfo( $solutionID )
             "WHERE solutionAnalyte.solutionID = $solutionID " .
             "AND solutionAnalyte.analyteID = analyte.analyteID " .
             "ORDER BY description ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  while ( list( $analyte_desc, $am ) = mysql_fetch_array( $result ) )
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  while ( list( $analyte_desc, $am ) = mysqli_fetch_array( $result ) )
     $analyte_list[$analyte_desc] = $am;
 
   $analyte_text = "<table cellspacing='0' cellpadding='3px'>\n" .
@@ -181,9 +181,9 @@ function get_solutionInfo( $solutionID )
             "FROM solutionBuffer, buffer " .
             "WHERE solutionBuffer.solutionID = $solutionID " .
             "AND solutionBuffer.bufferID = buffer.bufferID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  list( $buffer_desc ) = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  list( $buffer_desc ) = mysqli_fetch_array( $result );
 
   // Now display it
   $text = <<<HTML
@@ -203,7 +203,7 @@ HTML;
 }
 
 // Function to get some information about the analyte
-function get_analyteInfo( $solutionID )
+function get_analyteInfo( $link, $solutionID )
 {
   // First get a list of the analytes in the solution
   $analyte_list = array();
@@ -212,9 +212,9 @@ function get_analyteInfo( $solutionID )
             "WHERE solutionID = $solutionID " .
             "AND sa.analyteID = analyte.analyteID " .
             "ORDER BY description ";
-  $result = mysql_query( $query )
-           or die( "Query failed : $query<br />\n" . mysql_error() );
-  while ( list( $analyteID ) = mysql_fetch_array( $result ) )
+  $result = mysqli_query( $link, $query )
+           or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  while ( list( $analyteID ) = mysqli_fetch_array( $result ) )
     $analyte_list[] = $analyteID;
 
   // Initialize some stuff
@@ -234,9 +234,9 @@ function get_analyteInfo( $solutionID )
               "WHERE a.analyteID = $ID " .
               "AND a.analyteID = ap.analyteID " .
               "AND ap.personID = p.personID ";
-    $result = mysql_query( $query )
-             or die( "Query failed : $query<br />\n" . mysql_error() );
-    $row    = mysql_fetch_array( $result );
+    $result = mysqli_query( $link, $query )
+             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+    $row    = mysqli_fetch_array( $result );
 
     foreach ( $row as $key => $value )
       $$key = $value;
@@ -289,15 +289,15 @@ HTML;
 }
 
 // Function to get some information about the buffer
-function get_bufferInfo( $solutionID )
+function get_bufferInfo( $link, $solutionID )
 {
   // First get the buffer in the solution
   $query  = "SELECT bufferID " .
             "FROM solutionBuffer " .
             "WHERE solutionID = $solutionID ";
-  $result = mysql_query( $query )
-           or die( "Query failed : $query<br />\n" . mysql_error() );
-  list( $bufferID ) = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+           or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  list( $bufferID ) = mysqli_fetch_array( $result );
 
   // Initialize some stuff
   $text = '';
@@ -307,9 +307,9 @@ function get_bufferInfo( $solutionID )
             "pH, viscosity, density " .
             "FROM buffer " .
             "WHERE bufferID = $bufferID ";
-  $result = mysql_query( $query )
-           or die( "Query failed : $query<br />\n" . mysql_error() );
-  $row    = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+           or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $row    = mysqli_fetch_array( $result );
 
   foreach ( $row as $key => $value )
     $$key = $value;
@@ -334,10 +334,10 @@ HTML;
             "WHERE bufferID = $bufferID " .
             "AND bufferLink.bufferComponentID = bufferComponent.bufferComponentID " .
             "ORDER BY description ";
-  $result = mysql_query( $query )
-           or die( "Query failed : $query<br />\n" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+           or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
-  while ( $row = mysql_fetch_array( $result ) )
+  while ( $row = mysqli_fetch_array( $result ) )
   {
     foreach ( $row as $key => $value )
       $$key = $value;

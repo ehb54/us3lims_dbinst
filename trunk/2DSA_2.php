@@ -71,6 +71,7 @@ if ( $separate_datasets > 0 )
   $ds_remain     = $dataset_count;  // Remaining datasets
   $index         = 0;               // Input datasets index
   $kr            = 0;               // Output request index
+$missit_msg = "<br/>ds_remain=" . $ds_remain;
 
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
@@ -83,11 +84,16 @@ if ( $separate_datasets > 0 )
     $HPCAnalysisRequestID = $HPC->writeDB( $composite );
     $filenames[ $kr ] = $file->write( $composite, $HPCAnalysisRequestID );
     if ( $filenames[ $kr ] === false )
+    {
+$missit_msg .= "<br/>composite=" . $composite;
+$missit_msg .= "<br/> kr=" . $kr;
+$missit_msg .= "<br/> fnkr=" . $filenames[kr];
       $files_ok = false;
+    }
 
     else
     { // Write the xml file content to the db
-      $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ $kr ] ) );
+      $xml_content = mysqli_real_escape_string( $link, file_get_contents( $filenames[ $kr ] ) );
       $edit_filename = $composite['dataset'][0]['edit'];
       $experimentID  = $_SESSION['request'][$index]['experimentID'];
 
@@ -96,8 +102,8 @@ if ( $separate_datasets > 0 )
                 "experimentID = '$experimentID', " .
                 "editXMLFilename = '$edit_filename' " .
                 "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-      mysql_query( $query )
-            or die("Query failed : $query<br />\n" . mysql_error());
+      mysqli_query( $link, $query )
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
     }
 
     $index        += $reqds_count;
@@ -113,7 +119,10 @@ else
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
   $missit_msg = '';
   if ( $filenames[ 0 ] === false )
+  {
+$missit_msg = "<br/>filenames[0]=" . $filenames[0];
     $files_ok = false;
+  }
 
   else if ( $filenames[ 0 ] === '2DSA-IT-MISSING' )
   {
@@ -124,15 +133,15 @@ else
   else
   {
     // Write the xml file content to the db
-    $xml_content = mysql_real_escape_string( file_get_contents( $filenames[ 0 ] ) );
+    $xml_content = mysqli_real_escape_string( $link, file_get_contents( $filenames[ 0 ] ) );
     $edit_filename = $globalfit['dataset'][0]['edit'];
 
     $query  = "UPDATE HPCAnalysisRequest " .
               "SET requestXMLfile = '$xml_content', " .
               "editXMLFilename = '$edit_filename' " .
               "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-    mysql_query( $query )
-          or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query( $link, $query )
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
   }
 }
 

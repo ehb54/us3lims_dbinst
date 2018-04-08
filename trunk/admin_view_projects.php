@@ -18,16 +18,18 @@ if ( ( $_SESSION['userlevel'] != 3 ) &&
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+// ini_set('display_errors', 'On');
+
 
 // Are we being directed here from a push button?
 if (isset($_POST['new']))
 {
-  do_new();
+  do_new($link);
   exit();
 }
 
 // Start displaying page
-$page_title = 'View User Projects';
+$page_title = 'View User projects';
 $js  = 'js/export.js,js/sorttable.js';
 include 'header.php';
 
@@ -43,18 +45,18 @@ include 'header.php';
   {
     $_SESSION['currentID'] = $_POST['personID'];
 
-    $text  = person_project_select( 'personID', $_POST['personID'] );
-    $text .= project_info( $_POST['personID'] );
+    $text  = person_project_select( $link, 'personID', $_POST['personID'] );
+    $text .= project_info( $link, $_POST['personID'] );
   }
 
   else if ( isset( $_SESSION['currentID'] ) )
   {
-    $text  = person_project_select( 'personID', $_SESSION['currentID'] );
-    $text .= project_info( $_SESSION['currentID'] );
+    $text  = person_project_select( $link, 'personID', $_SESSION['currentID'] );
+    $text .= project_info( $link, $_SESSION['currentID'] );
   }
 
   else
-    $text  = person_project_select( 'personID' );
+    $text  = person_project_select( $link, 'personID' );
 
 
   // Display what we have
@@ -70,8 +72,8 @@ include 'header.php';
 include 'footer.php';
 exit();
 
-// Function to create a new record 
-function do_new()
+// Function to create a new record
+function do_new($link)
 {
   $ID   = $_SESSION['currentID'];
   $uuid = uuid();
@@ -79,16 +81,16 @@ function do_new()
   // Insert an ID
   $query  = "INSERT INTO project ( projectGUID ) " .
             "VALUES ( '$uuid' ) ";
-  mysql_query( $query )
-        or die( "Query failed : $query<br />\n" . mysql_error() );
-  $new = mysql_insert_id();
+  mysqli_query( $link, $query )
+        or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $new = mysqli_insert_id($link);
 
   // Add the ownership record
   $query  = "INSERT INTO projectPerson SET " .
             "projectID = $new, " .
             "personID  = $ID ";
-  mysql_query( $query )
-        or die( "Query failed : $query<br />\n" . mysql_error() );
+  mysqli_query( $link, $query )
+        or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
   header( "Location: admin_edit_projects.php?edit=$new" );
   exit();
@@ -96,7 +98,7 @@ function do_new()
 
 // Function to create a dropdown for available people
 // Only people with projects should show up
-function person_project_select( $select_name, $current_ID = NULL )
+function person_project_select( $link, $select_name, $current_ID = NULL )
 {
   // Account for people selecting the "Please select" choice
   $current_ID = ( $current_ID == -1 ) ? NULL : $current_ID;
@@ -105,15 +107,15 @@ function person_project_select( $select_name, $current_ID = NULL )
             "FROM projectPerson, people " .
             "WHERE projectPerson.personID = people.personID " .
             "ORDER BY lname, fname ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />" . mysql_error() );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />" . mysqli_error($link) );
 
-  if ( mysql_num_rows( $result ) == 0 ) return "";
+  if ( mysqli_num_rows( $result ) == 0 ) return "";
 
   $text = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n" .
           "  <select name='$select_name' size='1' onchange='form.submit();'>\n" .
           "    <option value='-1'>Please select...</option>\n";
-  while ( list( $personID, $lname, $fname ) = mysql_fetch_array( $result ) )
+  while ( list( $personID, $lname, $fname ) = mysqli_fetch_array( $result ) )
   {
     $selected = ( $current_ID == $personID ) ? " selected='selected'" : "";
     $text .= "    <option value='$personID'$selected>$lname, $fname</option>\n";
@@ -126,62 +128,83 @@ function person_project_select( $select_name, $current_ID = NULL )
 }
 
 // Function to display a table of all records
-function project_info( $personID )
+function project_info( $link, $personID )
 {
+  $query  = "SELECT p.projectID, description, goals, status, lastUpdated " .
+            "FROM projectPerson p, project j " .
+            "WHERE p.personID = ? " .
+            "AND p.projectID = j.projectID " .
+            "ORDER BY description ";
+
+  /* This code was replaced by the prepared statement
   $query  = "SELECT p.projectID, description, goals, status, lastUpdated " .
             "FROM projectPerson p, project j " .
             "WHERE p.personID = $personID " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  */
 
   $table = <<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post" >
   <table cellspacing='0' cellpadding='7' class='style1 sortable' id='fixed' style='width:95%;'>
     <thead>
       <tr>
-          <th style="width: 14%;">Description</th>
+          <th style="width: 15%;">Description</th>
           <th style="width: 70%;">Goals</th>
           <th style="width: 11%;">Status</th>
-          <th style="width: 11%;">Last Updated</th>
+          <th style="width: 12%;">Last Updated</th>
       </tr>
     </thead>
 
     <tfoot>
       <tr><td colspan='5'><input type='submit' name='new' value = 'New' />
-                          <input type='button' value='Print Version' 
+                          <input type='button' value='Print Version'
                                  onclick='print_version();' /></td></tr>
     </tfoot>
 
     <tbody>
 HTML;
 
-  while ( $row = mysql_fetch_array($result) )
+  /* This code was replaced by the prepared statement
+  while ( $row = mysqli_fetch_array($result) )
   {
     foreach ($row as $key => $value)
     {
       $$key = (empty($value)) ? "&nbsp;" : stripslashes( nl2br($value) );
-    }
+    }}
+  */
 
-    $description = ( $description == "&nbsp;" ) ? "Unnamed Project" : $description;
+  // Prepared statement
+  if ($stmt = mysqli_prepare($link, $query)) {
+   $stmt->bind_param('i',$personID);
+   $stmt->execute();
+   $stmt->store_result();
+   $num_of_rows = $stmt->num_rows;
 
-$table .= <<<HTML
-      <tr>
-          <td><a href='admin_edit_projects.php?ID=$projectID'>$description</a></td>
-          <td>$goals</td>
-          <td>$status</td>
-          <td>$lastUpdated</td>
-      </tr>
+   $stmt->bind_result($p_projectID, $description, $goals, $status, $lastUpdated);
+
+   while($stmt->fetch()){
+    $description = empty($description) ? "Unnamed Project" : $description;
+    $table .= <<<HTML
+          <tr>
+              <td><a href='admin_edit_projects.php?ID=$p_projectID'>$description</a></td>
+              <td>$goals</td>
+              <td>$status</td>
+              <td>$lastUpdated</td>
+          </tr>
 HTML;
+   }
 
-  }
+   $stmt->free_result();
+   $stmt->close();
+ }
 
   $table .= <<<HTML
     </tbody>
   </table>
   </form>
-
 HTML;
 
   return $table;

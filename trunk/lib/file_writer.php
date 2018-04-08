@@ -1,4 +1,4 @@
-<?php
+/<?php
 /*
  * file_writer.php
  *
@@ -18,21 +18,24 @@ abstract class File_writer
   // Takes a structured array of data created by the payload manager
   function write( $job, $HPCAnalysisRequestID )
   {
+    global $link;
     // Get the rest of the information we need
     $query  = "SELECT HPCAnalysisRequestGUID FROM HPCAnalysisRequest " .
               "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />" . mysql_error());
-    list( $HPCAnalysisRequestGUID ) = mysql_fetch_array( $result );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />" . mysqli_error($link));
+    list( $HPCAnalysisRequestGUID ) = mysqli_fetch_array( $result );
 
     // First create a directory with a unique name
     if ( ! ( $current_dir = $this->create_dir( $HPCAnalysisRequestGUID ) ) )
       return false;
+//return "CANNOT CREATE DIR $HPCAnalysisRequestGUID";
 
     // Write the auc, edit profile, model and noise files
     // Returns all the filenames used
     if ( ! ( $filenames = $this->write_support_files( $job, $current_dir ) ) )
       return false;
+//return "CANNOT WRITE SUPPORT FILES";
 
     // Determine if this is a global fit
     $global_fit = 0;
@@ -307,6 +310,7 @@ abstract class File_writer
   // If successful, returns a data structure with all the filenames in it
   function write_support_files( $job, $dir )
   {
+    global $link;
     $experID   = 0;
     $filenames = array();
     $expIDs    = array();
@@ -315,9 +319,9 @@ abstract class File_writer
       // auc files
       $query  = "SELECT data, experimentID FROM rawData " .
                 "WHERE rawDataID = {$dataset['rawDataID']} ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
-      list( $aucdata, $expID ) = mysql_fetch_array( $result );
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
+      list( $aucdata, $expID ) = mysqli_fetch_array( $result );
       if ( $expID != $experID )
       {
         $expIDs[$dataset_id] = $expID;
@@ -330,9 +334,9 @@ abstract class File_writer
       // edit profile
       $query  = "SELECT data FROM editedData " .
                 "WHERE editedDataID = {$dataset['editedDataID']} ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
-      list( $edit_profile ) = mysql_fetch_array( $result );
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
+      list( $edit_profile ) = mysqli_fetch_array( $result );
       if ( ! $this->create_file( $dataset['edit'], $dir, $edit_profile ) )
         return false;
       $filenames[$dataset_id]['edit'] = $dataset['edit'];
@@ -341,9 +345,9 @@ abstract class File_writer
       // model
       $query  = "SELECT xml FROM model " .
                 "WHERE modelID = {$dataset['modelID']} ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
-      list( $model_contents ) = mysql_fetch_array( $result );
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
+      list( $model_contents ) = mysqli_fetch_array( $result );
       if ( ! ( $model_file = $this->my_tmpname( '.model', '', $dir ) ) )
         return false;
       $model_file = basename( $model_file );
@@ -357,9 +361,9 @@ abstract class File_writer
       {
         $query  = "SELECT noiseType, xml FROM noise " .
                   "WHERE noiseID = $noiseID ";
-        $result = mysql_query( $query )
-                  or die( "Query failed : $query<br />" . mysql_error());
-        list( $type, $vector ) = mysql_fetch_array( $result );
+        $result = mysqli_query( $link, $query )
+                  or die( "Query failed : $query<br />" . mysqli_error($link));
+        list( $type, $vector ) = mysqli_fetch_array( $result );
         if ( ! ($noise_file = $this->my_tmpname( ".$type", '', $dir ) ) )
           return false;
         $noise_file = basename( $noise_file );
@@ -375,11 +379,11 @@ abstract class File_writer
         $query   = "SELECT filename, definitions, data, length(data) " .
                    "FROM timestate " .
                    "WHERE experimentID = $expID ";
-        $result  = mysql_query( $query )
-                   or die( "Query failed : $query<br />" . mysql_error());
-        if ( mysql_num_rows( $result ) > 0 )
+        $result  = mysqli_query( $link, $query )
+                   or die( "Query failed : $query<br />" . mysqli_error($link));
+        if ( mysqli_num_rows( $result ) > 0 )
         { // TimeState DB record exists:  write the tmst,def files
-          list( $tmst_fn, $def, $data ) = mysql_fetch_array( $result );
+          list( $tmst_fn, $def, $data ) = mysqli_fetch_array( $result );
 
           if ( $this->create_file( $tmst_fn, $dir, $data ) )
           { // TMST file successfully created:  create def (xml) file
@@ -400,9 +404,9 @@ abstract class File_writer
       $query  = "SELECT description, xml " .
                 "FROM model " .
                 "WHERE modelID = $CG_modelID ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
-      list( $fn, $contents ) = mysql_fetch_array( $result );
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
+      list( $fn, $contents ) = mysqli_fetch_array( $result );
       if ( ! $this->create_file( $fn, $dir, $contents ) )
         return false;
       $filenames[0]['CG_model'] = $fn;  // put it in with other dataset[0] files so
@@ -417,9 +421,9 @@ abstract class File_writer
       $query  = "SELECT description, xml " .
                 "FROM model " .
                 "WHERE modelID = $DC_modelID ";
-      $result = mysql_query( $query )
-                or die( "Query failed : $query<br />" . mysql_error());
-      list( $fn, $contents ) = mysql_fetch_array( $result );
+      $result = mysqli_query( $link, $query )
+                or die( "Query failed : $query<br />" . mysqli_error($link));
+      list( $fn, $contents ) = mysqli_fetch_array( $result );
       if ( ! $this->create_file( $fn, $dir, $contents ) )
         return false;
       $filenames[0]['DC_model'] = $fn;  // put it in with other dataset[0] files so
@@ -438,7 +442,7 @@ abstract class File_writer
     $dirPath = $submit_dir . $dir_name;
     if ( ! mkdir( $dirPath, 0770 ) )
     {
-      echo "\nmkdir failed\n";
+      echo "\nmkdir failed:  $dirPath\n";
       return false;
     }
 
@@ -652,13 +656,14 @@ class File_2DSA_CG extends File_writer
   // Function to write the XML job parameters for the 2DSA_CG analysis
   function writeJobParameters( $xml, $parameters )
   {
+    global $link;
     $CG_modelID = $parameters['CG_modelID'];
 
     $query  = "SELECT description FROM model " .
               "WHERE  modelID = $CG_modelID ";
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />" . mysql_error());
-    list( $fn ) = mysql_fetch_array( $result );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />" . mysqli_error($link));
+    list( $fn ) = mysqli_fetch_array( $result );
 
     $xml->startElement( 'jobParameters' );
       $xml->startElement( 'CG_model' );
@@ -816,13 +821,14 @@ class File_DMGA extends File_writer
   // Function to write the XML job parameters for the GA analysis
   function writeJobParameters( $xml, $parameters )
   {
+    global $link;
     $DC_modelID = $parameters['DC_modelID'];
 
     $query  = "SELECT description FROM model " .
               "WHERE  modelID = $DC_modelID ";
-    $result = mysql_query( $query )
-              or die( "Query failed : $query<br />" . mysql_error());
-    list( $fn ) = mysql_fetch_array( $result );
+    $result = mysqli_query( $link, $query )
+              or die( "Query failed : $query<br />" . mysqli_error($link));
+    list( $fn ) = mysqli_fetch_array( $result );
 
     $xml->startElement( 'jobParameters' );
       $xml->startElement( 'DC_model' );

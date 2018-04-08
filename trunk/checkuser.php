@@ -9,7 +9,7 @@ include 'checkinstance.php';
 include 'db.php';
 include 'lib/utility.php';
 
-$email  = trim($_POST['email']);
+$email  = htmlentities(trim($_POST['email']));
 $passwd = trim($_POST['password']);
 
 if (  ! $email || ! $passwd )
@@ -34,10 +34,10 @@ $md5pass = md5($passwd);
 // Find the id of the record with the same e-mail address:
 
 $query  = "SELECT * FROM people WHERE email='$email'";
-$result = mysql_query($query)
-          or die( "Query failed : $query<br />\n" . mysql_error() );
-$row    = mysql_fetch_assoc($result);
-$count  = mysql_num_rows($result);
+$result = mysqli_query($link, $query)
+          or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+$row    = mysqli_fetch_assoc($result);
+$count  = mysqli_num_rows($result);
 
 // Register the variables:
 
@@ -67,17 +67,21 @@ if ( $count == 1 )
 
   // Set GateWay host ID
   $gwhostids = array();
-  $gwhostids[ 'uslims3.uthscsa.edu' ]       = 'uslims3.uthscsa.edu_917092f2-7ca3-4bad-8b99-aa83d951bfca'; 
-  $gwhostids[ 'uslims3.fz-juelich.de' ]     = 'uslims3.fz-juelich.de_ae70148f-3909-419f-b016-68ab3ff86dc9';
-  $gwhostids[ 'uslims3.latrobe.edu.au' ]    = 'uslims3.latrobe.edu.au_ddf7fd58-845d-4408-bcfc-80dba25440c9';
-  $gwhostids[ 'uslims3.mbu.iisc.ernet.in' ] = 'uslims3.mbu.iisc.ernet.in_612ab140-978a-4313-bc31-5cea75c5a4fe';
-  $gwhostids[ 'gw143.iu.xsede.org'        ] = 'gw143.iu.xsede.org_3bce3fc7-25ed-41eb-97fb-c0930569ceeb';
+  $gwhostids[ 'uslims3.uthscsa.edu' ]       = 'uslims3.uthscsa.edu_e47e8a2d-9cb7-4489-a84d-38636fb3ed01';
+  $gwhostids[ 'uslims3.fz-juelich.de' ]     = 'uslims3.fz-juelich.de_283650c2-8815-43b2-8150-907feb6935bb';
+  $gwhostids[ 'uslims3.latrobe.edu.au' ]    = 'uslims3.latrobe.edu.au_dea05b5c-5596-49b9-bd10-b0c593713be1';
+  $gwhostids[ 'uslims3.mbu.iisc.ernet.in' ] = 'uslims3.mbu.iisc.ernet.in_0ef689dc-5b41-438a-b06d-e2c19b74a920';
+  $gwhostids[ 'alamo.uthscsa.edu' ]         = 'alamo.uthscsa.edu_eda275b3-1521-4016-9229-064bcc87e220';
+  $gwhostids[ 'gw143.iu.xsede.org']         = 'gw143.iu.xsede.org_3bce3fc7-25ed-41eb-97fb-c0930569ceeb';
   $gwhost    = dirname( $org_site );
+  if ( preg_match( "/\/uslims3/", $gwhost ) )
+     $gwhost    = dirname( $gwhost );
 
-  if ( !isset( $gwhostids[ $gwhost ] ) )
-    $gwhost    = 'uslims3.uthscsa.edu';
+  $gwhostid  = $gwhost;
+  if ( isset( $gwhostids[ $gwhost ] ) )
+     $gwhostid  = $gwhostids[ $gwhost ];
 
-  $_SESSION[ 'gwhostid' ] = $gwhostids[ $gwhost ];
+  $_SESSION[ 'gwhostid' ] = $gwhostid;
 
 }
 
@@ -92,7 +96,7 @@ else if ( $count > 1 )
   exit();
 }
 
-// There better be one row 
+// There better be one row
 
 if ( $count < 1 )
 {
@@ -125,16 +129,16 @@ if ( $row["activated"] != 1 )
 // Update last login time
 
 $query = "UPDATE people SET lastLogin=now() WHERE personID=$personID";
-mysql_query($query);
+mysqli_query($link, $query);
 
-header("Location: http://$org_site/index.php");
+header("Location: https://$org_site/index.php");
 exit();
 
 function remove_session()
 {
   $_SESSION = array();
-  if ( isset($_COOKIE[session_name()]) ) 
+  if ( isset($_COOKIE[session_name()]) )
       setcookie(session_name(), '', time()-42000, '/');
-  session_destroy();            
+  session_destroy();
 }
 ?>

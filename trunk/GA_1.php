@@ -125,7 +125,7 @@ $new_noise = '';
 if ( isset($_SESSION['edit_select_type'])  &&
      $_SESSION['edit_select_type'] == 0 )
 {  // If latest edits and noise, reset the noises
-  set_latest_noises();
+  set_latest_noises( $link );
   $new_noise = $_SESSION['new_noise'];
 }
 

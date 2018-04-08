@@ -15,7 +15,7 @@ if ( isset( $_GET['ID'] ) )
 {
   $documentID = $_GET['ID'];
 
-  do_getDoc( $documentID );
+  do_getDoc( $link, $documentID );
   exit();
 }
 
@@ -43,13 +43,13 @@ HTML;
 }
 
 // Function to display a file
-function do_getDoc( $documentID )
+function do_getDoc( $link, $documentID )
 {
   // Let's start with header information
-  $header  = get_header_info( $documentID );
+  $header  = get_header_info( $link, $documentID );
 
   // Now the content
-  $content = get_document_content( $documentID );
+  $content = get_document_content( $link, $documentID );
 
   if ( empty( $content ) )    // Then we must be echoing something directly
     return;
@@ -73,7 +73,7 @@ HTML;
 }
 
 // Function to get document header content
-function get_header_info( $documentID )
+function get_header_info( $link, $documentID )
 {
   // Let's start with header information
   $query  = "SELECT report.runID, triple, runType " .
@@ -82,9 +82,9 @@ function get_header_info( $documentID )
             "AND documentLink.reportTripleID = reportTriple.reportTripleID " .
             "AND reportTriple.reportID = report.reportID " .
             "AND report.experimentID = experiment.experimentID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  list ( $runID, $tripleDesc, $runType ) = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  list ( $runID, $tripleDesc, $runType ) = mysqli_fetch_array( $result );
   list ( $cell, $channel, $wl ) = explode( "/", $tripleDesc );
   $radius      = $wl / 1000.0;    // If WA data
 
@@ -94,9 +94,9 @@ function get_header_info( $documentID )
             "FROM reportDocument, editedData " .
             "WHERE reportDocumentID = $documentID " .
             "AND reportDocument.editedDataID = editedData.editedDataID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  list( $label, $rfilename, $efilename, $doctype ) = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  list( $label, $rfilename, $efilename, $doctype ) = mysqli_fetch_array( $result );
   list( $anal, $subanal, $doctype_text ) = explode( ":", $label );
   $parts = explode( ".", $efilename );
   $edit_profile = $parts[1];
@@ -122,7 +122,7 @@ function get_header_info( $documentID )
 }
 
 // Function to get the document content. Method varies depending on the type
-function get_document_content( $documentID )
+function get_document_content( $link, $documentID )
 {
   global $full_path, $data_dir;
 
@@ -130,9 +130,9 @@ function get_document_content( $documentID )
   $query  = "SELECT documentType, filename, contents " .
             "FROM reportDocument " .
             "WHERE reportDocumentID = $documentID ";
-  $result = mysql_query( $query )
-            or die( "Query failed : $query<br />\n" . mysql_error() );
-  $row = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query )
+            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $row = mysqli_fetch_array( $result );
   $doctype  = $row['documentType'];
   $filename = $row['filename'];
   $contents = $row['contents'];

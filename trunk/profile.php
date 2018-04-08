@@ -9,11 +9,13 @@ include_once 'checkinstance.php';
 
 include 'db.php';
 include 'lib/utility.php';
+// ini_set('display_errors', 'On');
+
 
 // Are we being directed here from a push button?
 if (isset($_POST['update']))
 {
-  do_update();
+  do_update($link);
   exit();
 }
 
@@ -35,10 +37,10 @@ include 'header.php';
 <?php
 // Edit or display a record
 if ( isset($_POST['edit']) || isset($_GET['edit']) )
-  edit_record();
+  edit_record($link);
 
 else
-  display_record();
+  display_record($link);
 
 ?>
 
@@ -49,7 +51,7 @@ include 'footer.php';
 exit();
 
 // Function to update the current record
-function do_update()
+function do_update($link)
 {
   $ID  = $_SESSION['id'];
   include 'get_user_info.php';
@@ -82,10 +84,10 @@ function do_update()
 
     $query .= "WHERE personID = $ID ";
 
-    mysql_query($query)
-      or die("Query failed : $query<br />\n" . mysql_error());
+    mysqli_query($link, $query)
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-    // Now update the session variables 
+    // Now update the session variables
     $_SESSION['firstname']    = $fname;
     $_SESSION['lastname']     = $lname;
     $_SESSION['phone']        = $phone;
@@ -104,7 +106,7 @@ function do_update()
 }
 
 // Function to display record
-function display_record()
+function display_record($link)
 {
   $ID = $_SESSION['id'];
 
@@ -112,10 +114,10 @@ function display_record()
             "address, city, state, zip, country, phone, email " .
             "FROM people " .
             "WHERE personID = $ID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row    = mysql_fetch_array($result, MYSQL_ASSOC);
+  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
 
   foreach ($row as $key => $value)
   {
@@ -163,7 +165,7 @@ HTML;
 }
 
 // Function to edit a record
-function edit_record()
+function edit_record($link)
 {
   $ID = $_SESSION['id'];
 
@@ -171,10 +173,10 @@ function edit_record()
             "address, city, state, zip, country, phone, email " .
             "FROM people " .
             "WHERE personID = $ID ";
-  $result = mysql_query($query) 
-            or die("Query failed : $query<br />\n" . mysql_error());
+  $result = mysqli_query($link, $query)
+            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row = mysql_fetch_array($result);
+  $row = mysqli_fetch_array($result);
 
   $lname           = html_entity_decode(stripslashes($row['lname']));
   $fname           = html_entity_decode(stripslashes($row['fname']));
