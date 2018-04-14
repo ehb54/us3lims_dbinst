@@ -222,6 +222,7 @@ function do_update($link)
   if ( ! empty( $diff ) )
   {
      $diff_text = <<<HTML
+ 
  Differences are as follows:
   $diff
 HTML;
@@ -326,14 +327,15 @@ HTML;
 // Function to make getting xdiff information a little easier
 function get_xdiff( $old, $new, $label )
 {
-  $diff = xdiff_string_diff( $old, $new, 1 );
-
-  if ( $diff === FALSE || empty( $diff ) )
+  $a1      = array();
+  $a2      = array();
+  $a1[ 0 ] = $old;
+  $a2[ 0 ] = $new;
+  $sdiff   = array_diff( $a1, $a2 );
+  if ( empty( $sdiff ) )
      return '';
 
-  // Take out all the '\ No newline at end of file', including \n at the end
-  while ( ($pos = strpos($diff, '\ No newline at end of file') ) !== FALSE )
-    $diff = substr( $diff, 0, $pos ) . substr( $diff, $pos+28 );
+  $diff    = "- " . $old . "\n+ " . $new . "\n";
 
   return "$label:\n$diff";
 }
