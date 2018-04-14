@@ -207,6 +207,7 @@ function do_update( $link )
   if ( ! empty( $diff ) )
   {
      $diff_text = <<<HTML
+ 
  Differences are as follows:
   $diff
 HTML;
@@ -240,61 +241,61 @@ HTML;
   mysqli_query( $link, $query )
     or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  // // The project is new or has changed, so let's mail the user
-  // global $org_name, $org_site, $dbname, $admin_email;
-  // $db_abbrev = substr( $dbname, strrpos( $dbname, "uslims3_" ) + 8 );
-  //
-  // $fname   = $_SESSION['firstname'];
-  // $lname   = $_SESSION['lastname'];
-  // $email   = $_SESSION['email'] . ",$admin_email";
-  //
-  // $subject = "$lname project ($db_abbrev): {$_POST['description']}";
-  // $subject = ( strlen( $subject ) > 50 )
-  //          ? ( substr( $subject, 0, 50 ) . '...' )
-  //          : ( $subject );
-  // $message = "Dear $fname $lname,
-  // You have entered a new project in your $org_name account at $org_site.
-  // $diff_text
-  //
-  // The complete/new project information is:
-  //
-  // Goals:
-  // {$_POST['goals']}
-  //
-  // Molecules:
-  // {$_POST['molecules']}
-  //
-  // Purity
-  // {$_POST['purity']}
-  //
-  // Expense:
-  // {$_POST['expense']}
-  //
-  // Buffer Components:
-  // {$_POST['bufferComponents']}
-  //
-  // Salt Information:
-  // {$_POST['saltInformation']}
-  //
-  // AUC Questions:
-  // {$_POST['AUC_questions']}
-  //
-  // Experiment Design:
-  // {$_POST['expDesign']}
-  //
-  // Notes:
-  // {$_POST['notes']}
-  //
-  // Description:
-  // {$_POST['description']}
-  //
-  // Please save this message for your reference.
-  // Thanks!
-  // The $org_name Admins.
-  //
-  // This is an automated response, do not reply!";
-  //
-  // LIMS_mailer($email, $subject, $message);
+  // The project is new or has changed, so let's mail the user
+  global $org_name, $org_site, $dbname, $admin_email;
+  $db_abbrev = substr( $dbname, strrpos( $dbname, "uslims3_" ) + 8 );
+ 
+  $fname   = $_SESSION['firstname'];
+  $lname   = $_SESSION['lastname'];
+  $email   = $_SESSION['email'] . ",$admin_email";
+
+  $subject = "$lname project ($db_abbrev): {$_POST['description']}";
+  $subject = ( strlen( $subject ) > 50 )
+           ? ( substr( $subject, 0, 50 ) . '...' )
+           : ( $subject );
+  $message = "Dear $fname $lname,
+  You have entered a new project in your $org_name account at $org_site.
+  $diff_text
+ 
+  The complete/new project information is:
+ 
+  Goals:
+  {$_POST['goals']}
+ 
+  Molecules:
+  {$_POST['molecules']}
+ 
+  Purity
+  {$_POST['purity']}
+ 
+  Expense:
+  {$_POST['expense']}
+ 
+  Buffer Components:
+  {$_POST['bufferComponents']}
+
+  Salt Information:
+  {$_POST['saltInformation']}
+
+  AUC Questions:
+  {$_POST['AUC_questions']}
+
+  Experiment Design:
+  {$_POST['expDesign']}
+
+  Notes:
+  {$_POST['notes']}
+
+  Description:
+  {$_POST['description']}
+
+  Please save this message for your reference.
+  Thanks!
+  The $org_name Admins.
+
+  This is an automated response, do not reply!";
+
+  LIMS_mailer($email, $subject, $message);
 
   header("Location: $_SERVER[PHP_SELF]?ID=$projectID");
   exit();
@@ -303,14 +304,15 @@ HTML;
 // Function to make getting xdiff information a little easier
 function get_xdiff( $old, $new, $label )
 {
-  $diff = xdiff_string_diff( $old, $new, 1 );
-
-  if ( $diff === FALSE || empty( $diff ) )
+  $a1      = array();
+  $a2      = array();
+  $a1[ 0 ] = $old;
+  $a2[ 0 ] = $new;
+  $sdiff   = array_diff( $a1, $a2 );
+  if ( empty( $sdiff ) )
      return '';
 
-  // Take out all the '\ No newline at end of file', including \n at the end
-  while ( ($pos = strpos($diff, '\ No newline at end of file') ) !== FALSE )
-    $diff = substr( $diff, 0, $pos ) . substr( $diff, $pos+28 );
+  $diff    = "- " . $old . "\n+ " . $new . "\n";
 
   return "$label:\n$diff";
 }
