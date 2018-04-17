@@ -24,15 +24,15 @@ $code   = $_GET['code'];
 
 $query = "UPDATE people SET activated = 1 " .
          "WHERE personID=$userid AND password='$code'";
-mysql_query($query) 
-      or die ("Query failed : $query<br/>" . mysql_error());
+mysqli_query( $link, $query )
+      or die ("Query failed : $query<br/>" . mysqli_error($link));
 
 $query = "SELECT count(*) FROM people " .
          "WHERE personID='$userid' "    .
          "AND password='$code' AND activated = 1";
-$result = mysql_query( $query ) 
-          or die ( "Query failed : $query<br />" . mysql_error() );
-list( $doublecheck ) = mysql_fetch_row( $result );
+$result = mysqli_query( $link, $query ) 
+          or die ( "Query failed : $query<br />" . mysqli_error($link) );
+list( $doublecheck ) = mysqli_fetch_row( $result );
 
 if ( $doublecheck == 0 )
 {

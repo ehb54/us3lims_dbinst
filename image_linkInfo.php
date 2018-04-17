@@ -20,19 +20,19 @@ include 'db.php';
 
 if ( $imageType == 'buffer' )
 {
-  do_getBuffer();
+  do_getBuffer( $link );
   exit();
 }
 
 else if ( $imageType == 'analyte' )
 {
-  do_getAnalyte();
+  do_getAnalyte( $link );
   exit();
 }
 
 else if ( $imageType == 'solution' )
 {
-  do_getSolution();
+  do_getSolution( $link );
   exit();
 }
 
@@ -60,7 +60,7 @@ HTML;
 }
 
 // Function to return some dynamic text to jQuery about buffers
-function do_getBuffer()
+function do_getBuffer( $link )
 {
   $ID = $_SESSION['id'];
 
@@ -69,10 +69,10 @@ function do_getBuffer()
             "WHERE p.personID = $ID " .
             "AND b.bufferID = p.bufferID " .
             "ORDER BY description ";
-  $result = mysql_query( $query )
-            or die("Query failed : $query<br />" . mysql_error());
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />" . mysqli_error($link));
 
-  if ( mysql_num_rows($result) == 0 )
+  if ( mysqli_num_rows($result) == 0 )
   {
     // Nothing to link to
     echo "There are no buffers to link to.";
@@ -80,7 +80,7 @@ function do_getBuffer()
   }
 
   $text = "<select name='bufferID' size='1'>\n";
-  while ( list( $bufferID, $description ) = mysql_fetch_array( $result ) )
+  while ( list( $bufferID, $description ) = mysqli_fetch_array( $result ) )
     $text .= "  <option value='$bufferID'>$description</option>\n";
 
   $text .= "</select>\n";
@@ -90,7 +90,7 @@ function do_getBuffer()
 }
 
 // Function to return some dynamic text to jQuery about analytes
-function do_getAnalyte()
+function do_getAnalyte( $link )
 {
   $ID = $_SESSION['id'];
 
@@ -99,10 +99,10 @@ function do_getAnalyte()
             "WHERE p.personID = $ID " .
             "AND a.analyteID = p.analyteID " .
             "ORDER BY description ";
-  $result = mysql_query( $query )
-            or die("Query failed : $query<br />" . mysql_error());
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />" . mysqli_error($link));
 
-  if ( mysql_num_rows($result) == 0 )
+  if ( mysqli_num_rows($result) == 0 )
   {
     // Nothing to link to
     echo "There are no analytes to link to.";
@@ -110,7 +110,7 @@ function do_getAnalyte()
   }
 
   $text = "<select name='analyteID' size='1'>\n";
-  while ( list( $analyteID, $description ) = mysql_fetch_array( $result ) )
+  while ( list( $analyteID, $description ) = mysqli_fetch_array( $result ) )
     $text .= "  <option value='$analyteID'>$description</option>\n";
 
   $text .= "</select>\n";
@@ -120,7 +120,7 @@ function do_getAnalyte()
 }
 
 // Function to return some dynamic text to jQuery about solutions
-function do_getSolution()
+function do_getSolution( $link )
 {
   $ID = $_SESSION['id'];
 
@@ -129,10 +129,10 @@ function do_getSolution()
             "WHERE p.personID = $ID " .
             "AND s.solutionID = p.solutionID " .
             "ORDER BY description ";
-  $result = mysql_query( $query )
-            or die("Query failed : $query<br />" . mysql_error());
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />" . mysqli_error($link));
 
-  if ( mysql_num_rows($result) == 0 )
+  if ( mysqli_num_rows($result) == 0 )
   {
     // Nothing to link to
     echo "There are no solutions to link to.";
@@ -140,7 +140,7 @@ function do_getSolution()
   }
 
   $text = "<select name='solutionID' size='1'>\n";
-  while ( list( $solutionID, $description ) = mysql_fetch_array( $result ) )
+  while ( list( $solutionID, $description ) = mysqli_fetch_array( $result ) )
     $text .= "  <option value='$solutionID'>$description</option>\n";
 
   $text .= "</select>\n";
