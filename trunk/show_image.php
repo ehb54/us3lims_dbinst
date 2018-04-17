@@ -14,7 +14,7 @@ if ( isset( $_GET['ID'] ) )
 {
   $imageID = $_GET['ID'];
 
-  do_getImage( $imageID );
+  do_getImage( $link, $imageID );
   exit();
 }
 
@@ -42,17 +42,17 @@ HTML;
 }
 
 // Function to display a file
-function do_getImage( $imageID )
+function do_getImage( $link, $imageID )
 {
 
   $query  = "SELECT filename, gelPicture " .
             "FROM image " .
             "WHERE imageID = '$imageID' ";
-  $result = mysql_query( $query )
-            or die("Query failed : $query<br />" . mysql_error());
+  $result = mysqli_query( $link, $query )
+            or die("Query failed : $query<br />" . mysqli_error($link));
 
   // Get the image
-  $row      = mysql_fetch_array( $result );
+  $row      = mysqli_fetch_array( $result );
   $data     = $row['gelPicture'];
   $filename = $row['filename'];
   $csize    = mb_strlen( $data, '8bit' );
