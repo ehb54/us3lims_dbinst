@@ -1,4 +1,4 @@
-/<?php
+<?php
 /*
  * file_writer.php
  *
