@@ -230,7 +230,7 @@ function display_record($link)
   if (!(is_numeric($instrumentID)))
     return;
 
-  $query  = "SELECT i.labID, i.name, lab.name " .
+  $query  = "SELECT i.labID, i.name, lab.name, i.serialNumber " .
             "FROM instrument i, lab " .
             "WHERE instrumentID = ? " .
             "AND i.labID = lab.labID ";
@@ -241,7 +241,7 @@ function display_record($link)
    $stmt->execute();
    $stmt->store_result();
    $num_of_rows = $stmt->num_rows;
-   $stmt->bind_result($i_labID, $i_name, $lab_name);
+   $stmt->bind_result( $i_labID, $i_name, $lab_name, $i_serial );
    $stmt->fetch();
 
    $stmt->free_result();
@@ -297,7 +297,7 @@ echo<<<HTML
       <tr><th>Instrument Name:</th>
           <td>$i_name</td></tr>
       <tr><th>Serial Number:</th>
-          <td>$i_labID</td></tr>
+          <td>$i_serial</td></tr>
     </tbody>
   </table>
   </form>

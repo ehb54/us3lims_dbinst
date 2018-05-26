@@ -80,6 +80,14 @@ abstract class File_writer
     if ( preg_match( "/-local/", $snamclus )  &&
          isset( $job['server']['ip_ext'] ) )
       $ipadserv = $job['server']['ip_ext'];
+    if ( preg_match( "/GA/", $job['method'] ) )
+    { // For "GA" have to do additional check
+      if ( preg_match( "/alamo/", $snamclus )  &&
+           preg_match( "/alamo/", $job['database']['gwhostid'] ) )
+      { // Use special external alamo-to-alamo UDP server IP
+        $ipadserv = $job['server']['ip_ext_aa'];
+      }
+    }
 
     $xml = new XMLWriter();
     $xml->openMemory();
