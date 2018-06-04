@@ -368,30 +368,31 @@ function updateLimsStatus( $gfacID, $status, $message )
   global $globaldbname;
 
   // Connect to the global GFAC database
-  $gLink = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
-  if ( ! mysql_select_db( $globaldbname, $gLink ) )
+  $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+  if ( ! $gLink )
     return;
 
   // Get database name
   $query  = "SELECT us3_db FROM analysis " .
             "WHERE gfacID = '$gfacID'";
-  $result = mysql_query( $query, $gLink );
+  $result = mysqli_query( $gLink, $query );
   if ( ! $result ) return;
-  if ( mysql_num_rows( $result ) == 0 ) return;
-  list( $db ) = mysql_fetch_array( $result );
-  mysql_close( $gLink );
+  if ( mysqli_num_rows( $result ) == 0 ) return;
+  list( $db ) = mysqli_fetch_array( $result );
+  mysqli_close( $gLink );
 
   // Using credentials that will work for all databases
-  $us3link = mysql_connect( 'localhost', 'us3php', 'us3' );
-  if ( ! mysql_select_db($db, $us3link) ) return false;
+//  $us3link = mysqli_connect( 'localhost', 'us3php', 'us3', $db );
+  $us3link = mysqli_connect( '127.0.0.1', 'us3php', 'us3', $db );
+  if ( ! $us3link ) return false;
 
   $query  = "UPDATE HPCAnalysisResult SET " .
             "queueStatus = '$status', " .
-            "lastMessage = '" . mysql_real_escape_string( $message ) . "' " .
+            "lastMessage = '" . mysqli_real_escape_string($us3link,$message) . "' " .
             "WHERE gfacID = '$gfacID' ";
-  mysql_query( $query, $us3link );
+  mysqli_query( $us3link, $query );
 
-  mysql_close( $us3link );
+  mysqli_close( $us3link );
 }
 
 // Function to update the GFAC status, mostly because job is canceled
@@ -403,8 +404,8 @@ function updateGFACStatus( $gfacID, $status, $message )
   global $globaldbname;
 
   // Connect to the global GFAC database
-  $gLink = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
-  if ( ! mysql_select_db( $globaldbname, $gLink ) )
+  $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+  if ( ! $gLink )
     return;
 
   $status = strtoupper( $status );
@@ -414,8 +415,8 @@ function updateGFACStatus( $gfacID, $status, $message )
             "SET status = '$status', " .
             "queue_msg = '$message' " .
             "WHERE gfacID = '$gfacID' ";
-  mysql_query( $query, $gLink );
-  mysql_close( $gLink );
+  mysqli_query( $gLink, $query );
+  mysqli_close( $gLink );
 }
 
 // A function to generate page content using lims2 methods

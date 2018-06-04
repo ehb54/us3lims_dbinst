@@ -16,17 +16,12 @@ if ( $_SESSION['userlevel'] < 2 )
 include_once 'config.php';
 
 // Start by getting info from global db
-$globaldb = mysql_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
+$globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname )
+    or die( "Connect failed :  $globaldbhost  $globaldbuser $globaldbpasswd  $globaldbname " );
 
 if ( ! $globaldb )
 {
-  echo "<p>Cannot open global database on $globaldbhost</p>\n";
-  return;
-}
-
-if ( ! mysql_select_db( $globaldbname, $globaldb ) )
-{
-  echo "<p>Cannot change to global database $globaldbname</p>\n";
+  echo "<p>Cannot open global database on $globaldbhost  mysqli_error($globaldb)</p>\n";
   return;
 }
 
@@ -36,9 +31,9 @@ $query  = "SELECT gfacID, us3_db FROM analysis ";
 if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
   $query .= "WHERE us3_db = '$dbname' ";
 $query .= "ORDER BY time ";
-$result = mysql_query( $query )
-          or die( "Query failed : $query<br />" . mysql_error());
-if ( mysql_num_rows( $result ) == 0 )
+$result = mysqli_query( $globaldb, $query )
+          or die( "Query failed : $query<br />" . mysqli_error($globaldb));
+if ( mysqli_num_rows( $result ) == 0 )
 {
   if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
     echo "<p>No <b>$dbname</b> jobs are currently queued, running, or completing.</p>\n";
@@ -49,7 +44,7 @@ if ( mysql_num_rows( $result ) == 0 )
 
 // Get all the info from the global db at once to avoid switching more than necessary
 $global_info = array();
-while ( list( $gfacID, $us3_db ) = mysql_fetch_array( $result ) )
+while ( list( $gfacID, $us3_db ) = mysqli_fetch_array( $result ) )
   $global_info[ $gfacID ] = $us3_db;
 
 // Now get the info we need from each of the local databases
@@ -138,11 +133,8 @@ exit();
 function get_status( $gfacID, $us3_db )
 {
   // Using credentials that will work for all databases
-  $link = mysql_connect( 'localhost', 'us3php', 'us3' );
-  if ( ! $link ) return false;
-
-  $result = mysql_select_db($us3_db, $link);
-  if ( ! $result ) return false;
+//  $link = mysqli_connect( 'localhost', 'us3php', 'us3', $us3_db );
+  $link = mysqli_connect( '127.0.0.1', 'us3php', 'us3', $us3_db );
 
   // Ok, now get what we can from the HPC tables
   $query  = "SELECT r.HPCAnalysisRequestID, queueStatus, lastMessage, updateTime, editXMLFilename, " .
@@ -151,11 +143,11 @@ function get_status( $gfacID, $us3_db )
             "WHERE r.gfacID = '$gfacID' " .                                 // limit to 1 record right off
             "AND r.HPCAnalysisRequestID = q.HPCAnalysisRequestID " .
             "AND q.experimentID = experiment.experimentID ";
-  $result = mysql_query( $query, $link );
-  if ( ! $result || mysql_num_rows( $result ) == 0 )
+  $result = mysqli_query( $link, $query );
+  if ( ! $result || mysqli_num_rows( $result ) == 0 )
     return false;
 
-  $status = mysql_fetch_array( $result, MYSQL_ASSOC );
+  $status = mysqli_fetch_array( $result, MYSQL_ASSOC );
 
   // Make a few helpful changes
   $triple = '';
@@ -174,18 +166,18 @@ function get_status( $gfacID, $us3_db )
   $email = '';
   $query  = "SELECT email FROM people " .
             "WHERE personGUID = '{$status['investigatorGUID']}' ";
-  $result = mysql_query( $query, $link );
-  if ( $result && mysql_num_rows( $result ) == 1 )
-    list( $jobEmail ) = mysql_fetch_array( $result );
+  $result = mysqli_query( $link, $query );
+  if ( $result && mysqli_num_rows( $result ) == 1 )
+    list( $jobEmail ) = mysqli_fetch_array( $result );
 
   if ( $status['investigatorGUID'] != $status['submitterGUID'] )
   {
     $query  = "SELECT email FROM people " .
               "WHERE personGUID = '{$status['submitterGUID']}' ";
-    $result = mysql_query( $query );
-    if ( $result && mysql_num_rows( $result ) == 1 )
+    $result = mysqli_query( $link, $query );
+    if ( $result && mysqli_num_rows( $result ) == 1 )
     {
-      list( $submitterEmail ) = mysql_fetch_array( $result );
+      list( $submitterEmail ) = mysqli_fetch_array( $result );
       $jobEmail .= " ($submitterEmail)";
     }
   }
@@ -194,7 +186,7 @@ function get_status( $gfacID, $us3_db )
   $status['database'] = $us3_db;
   $status['gfacID']   = $gfacID;
 
-  mysql_close( $link );
+  mysqli_close( $link );
   return $status;
 }
 

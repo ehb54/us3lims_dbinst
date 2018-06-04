@@ -893,6 +893,7 @@ class Payload_DMGA extends Payload_manager
       }
       $udp['ip']            = $ipaddr;
       $udp['ip_ext']        = $ipa_ext;
+      $udp['ip_ext_aa']     = $ipae_a;
       $this->add( 'server', $udp );
 
       $this->add( 'directory', $_SESSION['request'][$dataset_id]['path'] );
