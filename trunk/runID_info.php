@@ -679,7 +679,7 @@ HTML;
 
   if ( ! $globaldb )
   {
-    $text .= "<p>Cannot open global database on $globaldbhost</p>\n";
+    $text .= "<p>Cannot open global database on $globaldbhost  mysqli_error($globaldb) </p>\n";
     return $text;
   }
 

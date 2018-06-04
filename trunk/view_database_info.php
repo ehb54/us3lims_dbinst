@@ -17,7 +17,8 @@ include 'config.php';
 include 'db.php';
 
 $hostaddr = $dbhost;
-if ( $hostaddr == 'localhost' )
+if ( $hostaddr == 'localhost'  ||
+     $hostaddr = '127.0.0.1' )
    $hostaddr = gethostname();
 if ( preg_match( "/scyld/", $hostaddr ) )
    $hostaddr = "alamo.uthscsa.edu";

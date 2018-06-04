@@ -71,7 +71,7 @@ abstract class HPC_analysis
               "clusterName = '{$job['cluster']['name']}', " .
               "method = '{$job['method']}' " ;
     mysqli_query( $link, $query )
-          or die( "Query failed : $query<br />" . mysqli_error());
+          or die( "Query failed : $query<br />" . mysqli_error($link));
 
     // Return the generated ID
     return ( mysqli_insert_id( $link ) );
@@ -338,7 +338,7 @@ class HPC_PCSA extends HPC_analysis
               "rinoise_option       = {$job_parameters['rinoise_option']}    ";
 
     mysqli_query( $link, $query )
-          or die( "Query failed : $query<br />" . mysqli_error());
+          or die( "Query failed : $query<br />" . mysqli_error($link));
   }
 }
 
