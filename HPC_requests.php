@@ -213,9 +213,13 @@ else
 
       if ( $clus_thrift )
       {
-         echo getExperimentStatus( $gfacID );
-         echo " -- ";
-         echo getExperimentErrors( $gfacID );
+         $expstat = getExperimentStatus( $gfacID );
+         echo $expstat . "\n";
+         if ( ! preg_match( "/COMPLETED/", $expstat ) )
+         {
+            echo " -- \n";
+            echo getExperimentErrors( $gfacID );
+         }
       }
       else
       {

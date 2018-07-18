@@ -73,15 +73,13 @@ $clusters = array(
   new cluster_info( "ls5.tacc.utexas.edu",      "lonestar5",     "normal"  ), 
   new cluster_info( "stampede2.tacc.xsede.org", "stampede2",     "normal"  ), 
   new cluster_info( "comet.sdsc.xsede.org",     "comet",         "compute" ), 
-  new cluster_info( "alamo.uthscsa.edu",        "alamo",         "batch"   ),
-  new cluster_info( "alamo.uthscsa.edu",        "alamo-local",   "batch"   ),
-  new cluster_info( "jacinto.uthscsa.edu",      "jacinto",       "default" ),
-  new cluster_info( "jacinto.uthscsa.edu",      "jacinto-local", "default" ),
+//  new cluster_info( "alamo.uthscsa.edu",        "alamo",         "batch"   ),
+//  new cluster_info( "alamo.uthscsa.edu",        "alamo-local",   "batch"   ),
   new cluster_info( "jureca.fz-juelich.de",     "jureca",        "batch"   ),
   new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" ),
   new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" ),
-  new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",  "normal"  ),
-  new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",  "normal"  ),
+//  new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",  "normal"  ),
+//  new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",  "normal"  ),
   new cluster_info( "dev1-linux",               "us3iab-devel",  "normal"  )
   );
 
@@ -89,7 +87,8 @@ global $svcport;
 $gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:" . $svcport . "/ogce-rest/job";
 
 // Change for sandbox testing
-global $globaldbname;
+//global $globaldbname;
+global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
 
 include '../down_clusters.php';
 
@@ -207,11 +206,15 @@ HTML;
           $clname = preg_replace( '/uslims3/', $cluster->short_name, $lohost );
         }
 
+        $clsnam = $cluster->short_name;
+        if ( preg_match( '/stream-local/', $clsnam ) )
+           $clsnam = "jetstream-lcl";
+
         $value = "$clname:$cluster->short_name:$cluster->queue";
         $text .= "     <tr><td class='cluster' width=115 >" .
                  "<input type='radio' name='cluster' " .
                  "value='$value'$checked$disabled />" .
-                 "$cluster->short_name</td>\n" .
+                 "$clsnam</td>\n" .
                  "$clstat " .
                  "<td>$cluster->queue</td>"   .
                  "<td>$cluster->running / $cluster->queued</td> " .
@@ -353,6 +356,12 @@ function LIMS_mailer( $email, $subject, $message )
   global $org_name, $admin_email;     // From config.php
 
   $now = time();
+  $servname = $_SERVER['SERVER_NAME'];
+  if ( preg_match( "/novalo/", $servname ) )
+     $servname = "uslims3.aucsolutions.com";
+  else if ( preg_match( "/scyld/", $servname ) )
+     $servname = "alamo.uthscsa.edu";
+
   $headers = "From: $org_name Admin<$admin_email>"     . "\n";
 
   // Set the reply address
@@ -360,7 +369,7 @@ function LIMS_mailer( $email, $subject, $message )
   $headers .= "Return-Path: $org_name<$admin_email>"   . "\n";
 
   // Try to avoid spam filters
-  $headers .= "Message-ID: <" . $now . "info@" . $_SERVER['SERVER_NAME'] . ">\n";
+  $headers .= "Message-ID: <" . $now . "info@" . $servname . ">\n";
   $headers .= "X-Mailer: PHP v" . phpversion()         . "\n";
   $headers .= "MIME-Version: 1.0"                      . "\n";
   $headers .= "Content-Transfer-Encoding: 8bit"        . "\n";
