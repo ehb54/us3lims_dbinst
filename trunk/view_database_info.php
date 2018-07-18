@@ -18,9 +18,11 @@ include 'db.php';
 
 $hostaddr = $dbhost;
 if ( $hostaddr == 'localhost'  ||
-     $hostaddr = '127.0.0.1' )
+     $hostaddr == '127.0.0.1' )
    $hostaddr = gethostname();
-if ( preg_match( "/scyld/", $hostaddr ) )
+if ( preg_match( "/novalocal/", $hostaddr ) )
+   $hostaddr = "uslims3.aucsolutions.com";
+else if ( preg_match( "/scyld/", $hostaddr ) )
    $hostaddr = "alamo.uthscsa.edu";
 
 // Start displaying page
