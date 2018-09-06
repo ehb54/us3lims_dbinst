@@ -362,7 +362,10 @@ function LIMS_mailer( $email, $subject, $message )
   else if ( preg_match( "/scyld/", $servname ) )
      $servname = "alamo.uthscsa.edu";
 
-  $headers = "From: $org_name Admin<$admin_email>"     . "\n";
+  //$headers = "From: $org_name Admin<$admin_email>"     . "\n";
+  //$headers = "From: us3@uslims3.aucsolutions.com"     . "\n";       
+   $headers = "From: us3@" . $servname . "\n";       
+  
 
   // Set the reply address
   $headers .= "Reply-To: $org_name<$admin_email>"      . "\n";
