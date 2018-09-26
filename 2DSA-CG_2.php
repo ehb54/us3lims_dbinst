@@ -160,10 +160,8 @@ HTML;
     // Currently we are supporting two submission methods.
     switch ( $cluster )
     {
-      case 'alamo-local'     :
       case 'jetstream-local' :
-      case 'jacinto-local'   :
-      case 'bcf-local'       :
+      case 'taito-local'     :
       case 'us3iab-node0'    :
       case 'us3iab-node1'    :
       case 'us3iab-devel'    :

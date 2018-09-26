@@ -161,10 +161,8 @@ HTML;
     //  Local, Airavata, GFAC(deprecated).
     switch ( $cluster )
     {
-      case 'alamo-local'     :
       case 'jetstream-local' :
-      case 'bcf-local'       :
-      case 'jacinto-local'   :
+      case 'taito-local'     :
       case 'us3iab-node0'    :
       case 'us3iab-node1'    :
       case 'us3iab-devel'    :
