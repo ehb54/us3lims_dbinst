@@ -141,28 +141,22 @@ function do_delete()
  
   switch ( $shortname )
   {
-    case 'alamo-local'   :
-    case 'jacinto-local' :
+    case 'jetstream-local' :
+    case 'taito-local'   :
     case 'us3iab-node0'  :
     case 'us3iab-node1'  :
     case 'us3iab-devel'  :
     case 'dev1-linux'    :
     case 'localhost'     :
-    case 'jetstream-local' :
       $status = cancelLocalJob( $shortname, $gfacID );
       break;
 	
-    case 'stampede'  :
     case 'stampede2' :
-    case 'lonestar'  :
     case 'lonestar5' :
-    case 'trestles'  :
     case 'comet'     :
     case 'jetstream' :
     case 'jureca'    :
-    case 'alamo'     :
-    case 'gordon'    :
-    case 'jacinto'   :
+    case 'juwell'    :
       if ( $clus_thrift === true )
       {
         $status = cancelAiravataJob( $gfacID );
