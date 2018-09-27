@@ -70,17 +70,17 @@ class cluster_info
 }
 
 $clusters = array( 
+  new cluster_info( "dev1-linux",               "us3iab-devel",  "normal"  ),
   new cluster_info( "ls5.tacc.utexas.edu",      "lonestar5",     "normal"  ), 
   new cluster_info( "stampede2.tacc.xsede.org", "stampede2",     "normal"  ), 
   new cluster_info( "comet.sdsc.xsede.org",     "comet",         "compute" ), 
   new cluster_info( "jureca.fz-juelich.de",     "jureca",        "batch"   ),
+  new cluster_info( "juwell.fz-juelich.de",     "juwell",        "batch"   ),
   new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" ),
-  new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" ),
   new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" ),
   new cluster_info( "taito.csc.fi",             "taito-local",   "serial"  ),
 //  new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",  "normal"  ),
-//  new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",  "normal"  ),
-  new cluster_info( "dev1-linux",               "us3iab-devel",  "normal"  )
+  new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",  "normal"  )
   );
 
 global $svcport;
