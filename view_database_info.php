@@ -21,9 +21,12 @@ if ( $hostaddr == 'localhost'  ||
      $hostaddr == '127.0.0.1' )
    $hostaddr = gethostname();
 if ( preg_match( "/novalocal/", $hostaddr ) )
-   $hostaddr = "uslims3.aucsolutions.com";
-else if ( preg_match( "/scyld/", $hostaddr ) )
-   $hostaddr = "alamo.uthscsa.edu";
+{
+  $hostaddr    = dirname( $org_site );
+  if ( preg_match( "/\/uslims3/", $hostaddr ) )
+     $hostaddr    = dirname( $hostaddr );
+}
+
 
 // Start displaying page
 $page_title = "Database Login Info";
