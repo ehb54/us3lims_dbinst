@@ -57,7 +57,7 @@ HTML;
 
 $hardware_menu = <<<HTML
       <li><a href='https://$org_site/edit_labs.php'>Edit Labs</a></li>
-      <li><a href='https://$org_site/edit_instruments.php'>Edit Instruments</a></li>
+     <!-- <li><a href='https://$org_site/edit_instruments.php'>Edit Instruments</a></li> -->
 
 HTML;
 
