@@ -50,8 +50,7 @@ echo<<<HTML
             <tr><td>stampede2</td><td style='text-align:center;'>1024</td></tr>
             <tr><td>lonestar5</td><td style='text-align:center;'>1152</td></tr>
             <tr><td>comet</td><td style='text-align:center;'>1152</td></tr>
-            <tr><td>jureca</td><td style='text-align:center;'>1152</td></tr>
-            <tr><td>alamo</td><td style='text-align:center;'>384</td></tr>
+            <tr><td>juwels</td><td style='text-align:center;'>1152</td></tr>
           </table>
         </div>
 
@@ -529,7 +528,7 @@ echo<<<HTML
             <tr><td>stampede2</td><td style='text-align:center;'>63</td></tr>
             <tr><td>lonestar5</td><td style='text-align:center;'>47</td></tr>
             <tr><td>comet</td><td style='text-align:center;'>47</td></tr>
-            <tr><td>jureca</td><td style='text-align:center;'>47</td></tr>
+            <tr><td>juwels</td><td style='text-align:center;'>47</td></tr>
             <tr><td>alamo</td><td style='text-align:center;'>47</td></tr>
           </table>
         </p>

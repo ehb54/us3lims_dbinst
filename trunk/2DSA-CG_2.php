@@ -168,13 +168,11 @@ HTML;
         $job = new submit_local();
         break;
 
-      case 'stampede'  :
       case 'stampede2' :
       case 'lonestar5' :
       case 'comet'     :
-      case 'alamo'     :
-      case 'jacinto'   :
       case 'jureca'    :
+      case 'juwels'    :
       case 'jetstream' :
         if ( $clus_thrift === true )
           $job = new submit_airavata();
