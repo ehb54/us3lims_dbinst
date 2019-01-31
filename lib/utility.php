@@ -75,7 +75,7 @@ $clusters = array(
   new cluster_info( "stampede2.tacc.xsede.org", "stampede2",     "skx-normal"  ), 
   new cluster_info( "comet.sdsc.xsede.org",     "comet",         "compute" ), 
   new cluster_info( "jureca.fz-juelich.de",     "jureca",        "batch"   ),
-  new cluster_info( "juwell.fz-juelich.de",     "juwell",        "batch"   ),
+  new cluster_info( "juwels.fz-juelich.de",     "juwels",        "batch"   ),
   new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" ),
   new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" ),
   new cluster_info( "taito.csc.fi",             "taito-local",   "serial"  ),
