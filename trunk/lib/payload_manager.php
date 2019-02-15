@@ -388,7 +388,14 @@ class Payload_2DSA extends Payload_manager
     // A lot of this only gets posted the first time through
     if ( $dataset_id == 0 )
     {
-      $this->add( 'method', $this->analysisType() );
+      $method               = $this->analysisType();
+      $udp['ip']            = $ipaddr;
+      $this->add( 'method', $method );
+      $analType             = $method;
+      if ( $num_datasets > 1  &&
+           $_SESSION['separate_datasets'] == 0 )
+         $analType            .= '-GL';
+
 
       $udp                  = array();
       $udp['udpport']       = $udpport;
@@ -514,6 +521,13 @@ class Payload_2DSA extends Payload_manager
       $job_parameters['experimentID']     = $parameters['experimentID'];
       $job_parameters['timelast']         = $parameters['timelast'];
       $this->add( 'job_parameters', $job_parameters );
+      if ( $job_parameters['meniscus_points'] > 1 )
+         $analType            .= '-FM';
+      if ( $job_parameters['max_iterations' ] > 1 )
+         $analType            .= '-IT';
+      if ( $job_parameters['mc_iterations'  ] > 1 )
+         $analType            .= '-MC';
+      $this->add( 'analType', $analType );
 
       $dataset = array();
         $dataset[ 0 ]['files']      = array();   // This will be done later
@@ -580,7 +594,12 @@ class Payload_2DSA_CG extends Payload_manager
     // A lot of this only gets posted the first time through
     if ( $dataset_id == 0 )
     {
-      $this->add( 'method', $this->analysisType() );
+      $method               = $this->analysisType();
+      $this->add( 'method', $method );
+      $analType             = $method;
+      if ( $num_datasets > 1  &&
+           $_SESSION['separate_datasets'] == 0 )
+         $analType            .= '-GL';
 
       $udp                  = array();
       $udp['udpport']       = $udpport;
@@ -645,6 +664,13 @@ class Payload_2DSA_CG extends Payload_manager
       $dataset = array();
         $dataset[ 0 ]['files']      = array();   // This will be done later
         $dataset[ 0 ]['parameters'] = array();
+      if ( $job_parameters['meniscus_points'] > 1 )
+         $analType            .= '-FM';
+      if ( $job_parameters['max_iterations' ] > 1 )
+         $analType            .= '-IT';
+      if ( $job_parameters['mc_iterations'  ] > 1 )
+         $analType            .= '-MC';
+      $this->add( 'analType', $analType );
     }
 
     // These will be done every time
@@ -707,7 +733,14 @@ class Payload_GA extends Payload_manager
     // These items only get posted the first time
     if ( $dataset_id == 0 )
     {
-      $this->add( 'method', $this->analysisType() );
+      $method               = $this->analysisType();
+      $udp['ip']            = $ipaddr;
+      $this->add( 'method', $method );
+      $analType             = $method;
+      $analType             = $method;
+      if ( $num_datasets > 1  &&
+           $_SESSION['separate_datasets'] == 0 )
+         $analType            .= '-GL';
 
       $udp                  = array();
       $udp['udpport']       = $udpport;
@@ -792,6 +825,9 @@ class Payload_GA extends Payload_manager
       $dataset = array();
         $dataset[ 0 ]['files']      = array();   // This will be done later
         $dataset[ 0 ]['parameters'] = array();
+      if ( $job_parameters['mc_iterations'  ] > 1 )
+         $analType            .= '-MC';
+      $this->add( 'analType', $analType );
     }
 
     // These will be done every time
@@ -879,7 +915,9 @@ class Payload_DMGA extends Payload_manager
     // These items only get posted the first time
     if ( $dataset_id == 0 )
     {
-      $this->add( 'method', $this->analysisType() );
+      $method               = $this->analysisType();
+      $this->add( 'method', $method );
+      $analType             = $method;
 
       $udp                  = array();
       $udp['udpport']       = $udpport;
@@ -953,6 +991,9 @@ class Payload_DMGA extends Payload_manager
       $dataset = array();
         $dataset[ 0 ]['files']      = array();   // This will be done later
         $dataset[ 0 ]['parameters'] = array();
+      if ( $job_parameters['mc_iterations'  ] > 1 )
+         $analType            .= '-MC';
+      $this->add( 'analType', $analType );
     }
 
     // These will be done every time
@@ -1013,7 +1054,12 @@ class Payload_PCSA extends Payload_manager
     // A lot of this only gets posted the first time through
     if ( $dataset_id == 0 )
     {
-      $this->add( 'method', $this->analysisType() );
+      $method               = $this->analysisType();
+      $this->add( 'method', $method );
+      $analType             = $method;
+      if ( $num_datasets > 1  &&
+           $_SESSION['separate_datasets'] == 0 )
+         $analType            .= '-GL';
 
       $udp                  = array();
       $udp['udpport']       = $udpport;
@@ -1089,6 +1135,17 @@ class Payload_PCSA extends Payload_manager
       $dataset = array();
         $dataset[ 0 ]['files']      = array();   // This will be done later
         $dataset[ 0 ]['parameters'] = array();
+
+      $subType              = '-IS';
+      $curve_type           = $job_parameters['curve_type'];
+      if ( $curve_type != 'all' )
+         $subType              = '-' . $curve_type;
+      $analType            .= $subType;
+      if ( $job_parameters['tikreg_option'  ] > 0 )
+         $analType            .= '-TR';
+      if ( $job_parameters['mc_iterations'  ] > 1 )
+         $analType            .= '-MC';
+      $this->add( 'analType', $analType );
     }
 
     // These will be done every time

@@ -60,6 +60,9 @@ abstract class HPC_analysis
     list( $submitterGUID ) = mysqli_fetch_array( $result );
 
     $guid = uuid();
+    $analType = $job['method'];
+    if ( isset( $job['analType'] ) )
+      $analType = $job['analType'];
     // What about $job['cluster']['shortname'] and $job['cluster']['queue']?
     $query  = "INSERT INTO HPCAnalysisRequest SET " .
               "HPCAnalysisRequestGUID = '$guid', " .
@@ -69,6 +72,7 @@ abstract class HPC_analysis
               "experimentID = '{$job['job_parameters']['experimentID']}', " .
               "submitTime =  now(), " .
               "clusterName = '{$job['cluster']['name']}', " .
+              "analType = '$analType', " .
               "method = '{$job['method']}' " ;
     mysqli_query( $link, $query )
           or die( "Query failed : $query<br />" . mysqli_error($link));
