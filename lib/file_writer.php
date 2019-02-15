@@ -143,6 +143,9 @@ abstract class File_writer
 
         // Now we break out and write the job parameters specific to this method
         $this->writeJobParameters( $xml, $job['job_parameters'] );
+        $xml->startElement( 'analysis_type' );
+          $xml->writeAttribute( 'value', $job['analType'] );
+        $xml->endElement(); // analysis_type
 
       $xml->endElement(); // job
 

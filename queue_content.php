@@ -108,7 +108,7 @@ foreach( $display_info as $display )
   <tr><th>Status:</th>
       <td class='$queueStatus'>$queueStatus</td>
       <th>Analysis Type:</th>
-      <td>$method</td></tr>
+      <td>$analType</td></tr>
 
   <tr><th>Submitted on:</th>
       <td>$submitTime</td>
@@ -138,7 +138,7 @@ function get_status( $gfacID, $us3_db )
 
   // Ok, now get what we can from the HPC tables
   $query  = "SELECT r.HPCAnalysisRequestID, queueStatus, lastMessage, updateTime, editXMLFilename, " .
-            "investigatorGUID, submitterGUID, submitTime, clusterName, method, runID " .
+            "investigatorGUID, submitterGUID, submitTime, clusterName, method, runID, analType " .
             "FROM HPCAnalysisResult r, HPCAnalysisRequest q, experiment " .
             "WHERE r.gfacID = '$gfacID' " .                                 // limit to 1 record right off
             "AND r.HPCAnalysisRequestID = q.HPCAnalysisRequestID " .
