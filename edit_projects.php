@@ -135,7 +135,7 @@ function do_new( $link )
 
   // Insert an ID
   $query = "INSERT INTO project ( projectGUID ) " .
-           "VALUES (' $uuid' ) ";
+           "VALUES ( '$uuid' ) ";
   mysqli_query( $link, $query )
     or die("Query failed : $query<br />\n" . mysqli_error($link));
   $new = mysqli_insert_id( $link );
