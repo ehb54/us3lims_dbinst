@@ -1138,7 +1138,7 @@ class Payload_PCSA extends Payload_manager
 
       $subType              = '-IS';
       $curve_type           = $job_parameters['curve_type'];
-      if ( $curve_type != 'all' )
+      if ( $curve_type != 'All' )
          $subType              = '-' . $curve_type;
       $analType            .= $subType;
       if ( $job_parameters['tikreg_option'  ] > 0 )
