@@ -27,14 +27,14 @@ $(document).ready(function()
 
   // Meniscus Slider setup
   $("#meniscus-min").attr('value', 3  );
-  $("#meniscus-max").attr('value', 30 );
+  $("#meniscus-max").attr('value', 31 );
   $("#meniscus-slider").slider(
   {
     animate: true,
     range:   "min",
-    value:   10,
+    value:   11,
     min:     3,
-    max:     30,
+    max:     31,
     step:    1,
     slide: function( event, ui )
     {
