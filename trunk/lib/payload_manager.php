@@ -506,9 +506,10 @@ class Payload_2DSA extends Payload_manager
          $job_parameters['req_mgroupcount'] = 1;
 
       $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
-      $job_parameters['meniscus_range']   = ( $_POST['meniscus_option'] == 1 )
+      $job_parameters['fit_mb_select']    = $_POST['fit_mb_select'];
+      $job_parameters['meniscus_range']   = ( $_POST['fit_mb_select'] > 0 )
                                           ? $_POST['meniscus_range'] : 0.0;
-      $job_parameters['meniscus_points']  = ( $_POST['meniscus_option'] == 1 )
+      $job_parameters['meniscus_points']  = ( $_POST['fit_mb_select'] > 0 )
                                           ? $_POST['meniscus_points'] : 1;
       $job_parameters['max_iterations']   = ( $_POST['iterations_option'] == 1 )
                                           ? $_POST['max_iterations'] : 1;
@@ -521,8 +522,11 @@ class Payload_2DSA extends Payload_manager
       $job_parameters['experimentID']     = $parameters['experimentID'];
       $job_parameters['timelast']         = $parameters['timelast'];
       $this->add( 'job_parameters', $job_parameters );
-      if ( $job_parameters['meniscus_points'] > 1 )
+      if ( $job_parameters['fit_mb_select'] == 1  ||
+           $job_parameters['fit_mb_select'] == 3 )
          $analType            .= '-FM';
+      if ( $job_parameters['fit_mb_select'] == 2 )
+         $analType            .= '-FB';
       if ( $job_parameters['max_iterations' ] > 1 )
          $analType            .= '-IT';
       if ( $job_parameters['mc_iterations'  ] > 1 )
@@ -646,9 +650,10 @@ class Payload_2DSA_CG extends Payload_manager
          $job_parameters['req_mgroupcount'] = 1;
 
       $job_parameters['tinoise_option']   = $_POST['tinoise_option'];
-      $job_parameters['meniscus_range']   = ( $_POST['meniscus_option'] == 1 )
-                                          ? $_POST['meniscus_range'] : 0.0;
-      $job_parameters['meniscus_points']  = ( $_POST['meniscus_option'] == 1 )
+      $job_parameters['fit_mb_select']    = $_POST['fit_mb_select'];
+      $job_parameters['meniscus_range']   = ( $_POST['fit_mb_select'] > 0 )
+                                           ? $_POST['meniscus_range'] : 0.0;
+      $job_parameters['meniscus_points']  = ( $_POST['fit_mb_select'] > 0 )
                                           ? $_POST['meniscus_points'] : 1;
       $job_parameters['max_iterations']   = ( $_POST['iterations_option'] == 1 )
                                           ? $_POST['max_iterations'] : 1;
@@ -664,8 +669,11 @@ class Payload_2DSA_CG extends Payload_manager
       $dataset = array();
         $dataset[ 0 ]['files']      = array();   // This will be done later
         $dataset[ 0 ]['parameters'] = array();
-      if ( $job_parameters['meniscus_points'] > 1 )
+      if ( $job_parameters['fit_mb_select'] == 1  ||
+           $job_parameters['fit_mb_select'] == 3 )
          $analType            .= '-FM';
+      if ( $job_parameters['fit_mb_select'] == 2 )
+         $analType            .= '-FB';
       if ( $job_parameters['max_iterations' ] > 1 )
          $analType            .= '-IT';
       if ( $job_parameters['mc_iterations'  ] > 1 )

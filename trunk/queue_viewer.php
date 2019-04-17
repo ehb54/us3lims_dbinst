@@ -156,7 +156,7 @@ function do_delete()
     case 'comet'     :
     case 'jetstream' :
     case 'jureca'    :
-    case 'juwell'    :
+    case 'juwels'    :
       if ( $clus_thrift === true )
       {
         $status = cancelAiravataJob( $gfacID );
