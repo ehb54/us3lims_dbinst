@@ -632,6 +632,9 @@ class File_2DSA extends File_writer
       $xml->startElement( 'tinoise_option' );
         $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
       $xml->endElement(); // tinoise_option
+      $xml->startElement( 'fit_mb_select' );
+        $xml->writeAttribute( 'value', $parameters['fit_mb_select'] );
+      $xml->endElement(); // fit_mb_select
       $xml->startElement( 'meniscus_range' );
         $xml->writeAttribute( 'value', $parameters['meniscus_range'] );
       $xml->endElement(); // meniscus_range
@@ -693,6 +696,9 @@ class File_2DSA_CG extends File_writer
       $xml->startElement( 'tinoise_option' );
         $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
       $xml->endElement(); // tinoise_option
+      $xml->startElement( 'fit_mb_select' );
+        $xml->writeAttribute( 'value', $parameters['fit_mb_select'] );
+      $xml->endElement(); // fit_mb_select
       $xml->startElement( 'meniscus_range' );
         $xml->writeAttribute( 'value', $parameters['meniscus_range'] );
       $xml->endElement(); // meniscus_range

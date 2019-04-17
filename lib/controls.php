@@ -462,6 +462,42 @@ echo<<<HTML
 HTML;
 }
  
+// Function to display the fit meniscus/bottom option
+function fit_menibott()
+{
+echo<<<HTML
+      <fieldset class='option_value'>
+        <legend>Fit Meniscus | Bottom</legend>
+          <select name="fit_mb_select">
+            <option value="0" selected="selected" onclick="hide(1);">None</option>
+            <option value="1" onclick="show_ctl(1);">Fit Meniscus</option>
+            <option value="2" onclick="show_ctl(1);">Fit Bottom</option>
+            <option value="3" onclick="show_ctl(1);">Fit Meniscus and Bottom</option>
+          </select>
+        <div style="display:none" id="mag1">
+          <br/>
+          <input type="text" name="meniscus_range" value="0.03"/>Fit Range (cm)<br/>
+          <br/>
+          <fieldset>
+            <legend>Fit Grid Points</legend>
+            <div class='newslider' id='meniscus-slider'></div>
+            <br />
+            Value:   <input name='meniscus_points' 
+                            id='meniscus_points'
+                            size='12'
+                            value='11' />
+            Minimum: <input id="meniscus-min" 
+                            size='12'
+                            disabled="disabled" />
+            Maximum: <input id="meniscus-max" 
+                            size='12'
+                            disabled="disabled" />
+          </fieldset>
+        </div>
+      </fieldset>
+HTML;
+}
+ 
 // Function to display the iterations option
 function iterations_option()
 {
@@ -529,7 +565,6 @@ echo<<<HTML
             <tr><td>lonestar5</td><td style='text-align:center;'>47</td></tr>
             <tr><td>comet</td><td style='text-align:center;'>47</td></tr>
             <tr><td>juwels</td><td style='text-align:center;'>47</td></tr>
-            <tr><td>alamo</td><td style='text-align:center;'>47</td></tr>
           </table>
         </p>
         </div>
