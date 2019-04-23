@@ -428,10 +428,9 @@ class Payload_2DSA extends Payload_manager
       $s_max_in             = $_POST['s_value_max'];
       $k_min_in             = $_POST['ff0_min'];
       $k_max_in             = $_POST['ff0_max'];
-      $s_range              = $s_max_in - $s_min_in;
-      $k_range              = $k_max_in - $k_min_in;
 
       // Compute 'uniform_grid' (grid repetitions)
+
       $gpoints_s            = $_POST['s_grid_points'];
       $gpoints_k            = $_POST['ff0_grid_points'];
       if ( $gpoints_s < 10 )
@@ -442,53 +441,72 @@ class Payload_2DSA extends Payload_manager
          $gpoints_k = 10;
       if ( $gpoints_k > 2100 )
          $gpoints_k = 2100;
-      $gptin_s   = $gpoints_s;
-      $gptin_k   = $gpoints_k;
-      $s_delta   = $s_range / ( $gpoints_s - 1 );
-      $k_delta   = $k_range / ( $gpoints_k - 1 );
-      $gpoints   = $gpoints_s * $gpoints_k;
-      $repsgrid  = pow( $gpoints, 0.25 );
-      $gridreps  = (int)( $repsgrid + 0.5 );
-      $grround   = $gridreps - 1;
-      $subpts_s  = (int)( ( $gpoints_s + $grround ) / $gridreps );
-      $subpts_k  = (int)( ( $gpoints_k + $grround ) / $gridreps );
-      $subpts    = $subpts_s * $subpts_k;
-      while( $subpts > 200  &&  $gridreps < 40 )
+      // Accumulate a list of grid repetition evenly dividing into S points
+      $greps_s   = array();
+      $count_grs = 0;
+      for ( $jreps = 2; $jreps < 41; $jreps++ )
+      {
+         $testp     = (int)( $gpoints_s / $jreps ) * $jreps;
+         if ( $testp == $gpoints_s )
+         {  // Save a repetition that divides evenly into S grid points
+            $greps_s[] = $jreps;
+            $count_grs++;
+         }
+      }
+      // Find the repetitions and K grid points that work best
+      $kdiff     = 99999;
+      $kreps     = $greps_s[ 0 ];
+      $kgridp_k  = $gpoints_k;
+      for ( $jrx = 0; $jrx < $count_grs; $jrx++ )
+      {  // Examine each grid repetition from the S list
+         $jreps     = $greps_s[ $jrx ];
+         $subpts_s  = (int)( $gpoints_s / $jreps );
+         $subpts_k  = (int)( $gpoints_k / $jreps );
+         $jgridp_k  = $subpts_k * $jreps;
+         $nsubgs    = $jreps * $jreps;
+         $subgsz    = $subpts_s * $subpts_k;
+         $jdiff     = $nsubgs - $subgsz;
+         if ( $jdiff < 0 )
+            $jdiff     = 0 - $jdiff;
+         if ( $jdiff < $kdiff )
+         {  // Count and size of subgrid are closely matched
+            $kdiff     = $jdiff;
+            $kgridp_k  = $jgridp_k;
+            $kreps     = $jreps;
+         }
+      }
+
+      $gridreps  = $kreps;
+      $gpoints_k = $kgridp_k;
+      $subpts_s  = (int)( $gpoints_s / $gridreps );
+      $subpts_k  = (int)( $gpoints_k / $gridreps );
+      $gpoints_s = $subpts_s * $gridreps;
+      $gpoints_k = $subpts_k * $gridreps;
+      $subg_size = $subpts_s * $subpts_k;
+      while( $subg_size > 200  ||  $gridreps < 2 )
       {
          $gridreps++;
-         $grround   = $gridreps - 1;
-         $subpts_s  = (int)( ( $gpoints_s + $grround ) / $gridreps );
-         $subpts_k  = (int)( ( $gpoints_k + $grround ) / $gridreps );
-         $subpts    = $subpts_s * $subpts_k;
+         $subpts_s  = (int)( $gpoints_s / $gridreps );
+         $subpts_k  = (int)( $gpoints_k / $gridreps );
+         $subg_size = $subpts_s * $subpts_k;
       }
-      while( $subpts < 40  &&  $gridreps > 1 )
+      while( $subg_size < 40  ||  $gridreps > 160 )
       {
          $gridreps--;
-         $grround   = $gridreps - 1;
-         $subpts_s  = (int)( ( $gpoints_s + $grround ) / $gridreps );
-         $subpts_k  = (int)( ( $gpoints_k + $grround ) / $gridreps );
-         $subpts    = $subpts_s * $subpts_k;
+         $subpts_s  = (int)( $gpoints_s / $gridreps );
+         $subpts_k  = (int)( $gpoints_k / $gridreps );
+         $subg_size = $subpts_s * $subpts_k;
       }
       $gpoints_s = $subpts_s * $gridreps;
       $gpoints_k = $subpts_k * $gridreps;
-      if ( $gpoints_s < $gptin_s )
-         $gpoints_s = $gpoints_s + $gridreps;
-      if ( $gpoints_k < $gptin_k )
-         $gpoints_k = $gpoints_k + $gridreps;
-      $s_range_u = ( $gpoints_s - 1 ) * $s_delta;
-      $k_range_u = ( $gpoints_k - 1 ) * $k_delta;
-      $s_min_use = $s_min_in;
-      $s_max_use = $s_min_use + $s_range_u;
-      $k_min_use = $k_min_in;
-      $k_max_use = $k_min_use + $k_range_u;
 
       $job_parameters['s_grid_points']    = $gpoints_s;
       $job_parameters['ff0_grid_points']  = $gpoints_k;
       $job_parameters['uniform_grid']     = $gridreps;
-      $job_parameters['s_min']            = $s_min_use;
-      $job_parameters['s_max']            = $s_max_use;
-      $job_parameters['ff0_min']          = $k_min_use;
-      $job_parameters['ff0_max']          = $k_max_use;
+      $job_parameters['s_min']            = $s_min_in;
+      $job_parameters['s_max']            = $s_max_in;
+      $job_parameters['ff0_min']          = $k_min_in;
+      $job_parameters['ff0_max']          = $k_max_in;
 
       $job_parameters['mc_iterations']    = $_POST['mc_iterations'];
 
