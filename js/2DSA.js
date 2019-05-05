@@ -320,11 +320,11 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
 
   // What if the user requests meniscus fitting but the fit range extends into 
   // the data?
-  var meniscus_option = 0;
-  if ( valid_field(f.meniscus_option) )
-    meniscus_option = parseInt( get_radio_value(f.meniscus_option) );
+  var fit_mb_select = 0;
+  if ( valid_field(f.fit_mb_select) )
+    fit_mb_select = parseInt(f.fit_mb_select.value);
 
-  if ( meniscus_option == 1 )
+  if ( fit_mb_select == 1  ||  fit_mb_select == 3 )
   {
     var meniscus_range = parseFloat( f.meniscus_range.value );
 
@@ -344,7 +344,7 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
 
   else
   {  // If not fitting meniscus, just be sure meniscus below data range
-    f.meniscus_range.value = 0.001;
+    f.meniscus_range.value = 0.03;
 
     if ( meniscus_radius >= data_left )
     {
@@ -365,7 +365,7 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
 function validate_single( f )
 {    
   var contact_bo = "\nIf you have any questions about this policy, please " +
-                   "contact Borries Demeler (demeler@biochem.uthscsa.edu).";
+                   "contact Borries Demeler (borries.demeler@umontana.edu).";
 
   // Some things should only be done if monte carlo is 1
   var monte_carlo = 1;
@@ -439,7 +439,7 @@ function validate_single( f )
 function validate_multiple( f )
 {
   var contact_bo = "\nIf you have any questions about this policy, please " +
-                   "contact Borries Demeler (demeler@biochem.uthscsa.edu).";
+                   "contact Borries Demeler (borries.demeler@umontana.edu).";
 
   // For global analyses ti and ri noise subtraction should not be checked
   var ti_noise = 0;
@@ -462,13 +462,11 @@ function validate_multiple( f )
   }
 
   // No meniscus fitting in global analyses
-  var meniscus_option = 0;
-  if ( valid_field(f.meniscus_option) )
-    meniscus_option = parseInt( get_radio_value(f.meniscus_option) );
+  var fit_mb_select = 0;
+  if ( valid_field(f.fit_mb_select) )
+    fit_mb_select = parseInt(f.fit_mb_select.value);
 
-  // alert("meniscus_option = " + meniscus_option);
-
-  if ( meniscus_option == 1 )
+  if ( fit_mb_select > 0 )
   {
     alert( "Meniscus fitting is not allowed on multiple datasets.\n" +
            contact_bo);

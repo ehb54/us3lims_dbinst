@@ -637,6 +637,8 @@ class File_2DSA extends File_writer
       $xml->endElement(); // fit_mb_select
       $xml->startElement( 'meniscus_range' );
         $xml->writeAttribute( 'value', $parameters['meniscus_range'] );
+//        $xml->writeAttribute( 'MRposted', $parameters['MR_posted'] );
+//        $xml->writeAttribute( 'MRpostval', $parameters['MR_postval'] );
       $xml->endElement(); // meniscus_range
       $xml->startElement( 'meniscus_points' );
         $xml->writeAttribute( 'value', $parameters['meniscus_points'] );
