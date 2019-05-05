@@ -430,17 +430,18 @@ HTML;
 }
 
 // Function to display the fit meniscus option
+/*
 function fit_meniscus()
 {
 echo<<<HTML
       <fieldset class='option_value'>
         <legend>Fit Meniscus</legend>
-        <input type="radio" name="meniscus_option" value="1" onclick="show_ctl(1);"/> On<br/>
-        <input type="radio" name="meniscus_option" value="0" onclick="hide(1);" 
+        <input type="radio" name="meniscus_option" value="1" onclick="show_ctl(9);"/> On<br/>
+        <input type="radio" name="meniscus_option" value="0" onclick="hide(9);" 
                checked='checked'/> Off<br/>
-        <div style="display:none" id="mag1">
+        <div style="display:none" id="mag9">
           <br/>
-          <input type="text" name="meniscus_range" value="0.03"/>Meniscus Fit Range (cm)<br/>
+          <input type="text" name="meniscus_range_9" value="0.03"/>Meniscus Fit Range (cm)<br/>
           <br/>
           <fieldset>
             <legend>Meniscus Grid Points</legend>
@@ -461,27 +462,29 @@ echo<<<HTML
       </fieldset>
 HTML;
 }
+*/
  
+//          <input type="text" name="meniscus_range" value="0.03"/>Fit Range (cm)<br/>
 // Function to display the fit meniscus/bottom option
 function fit_menibott()
 {
 echo<<<HTML
       <fieldset class='option_value'>
         <legend>Fit Meniscus | Bottom</legend>
-          <select name="fit_mb_select">
-            <option value="0" selected="selected" onclick="hide(1);">None</option>
-            <option value="1" onclick="show_ctl(1);">Fit Meniscus</option>
-            <option value="2" onclick="show_ctl(1);">Fit Bottom</option>
-            <option value="3" onclick="show_ctl(1);">Fit Meniscus and Bottom</option>
+          <select name="fit_mb_select" size="4">
+            <option value="0" selected="selected" onclick="hide(1)">None</option>
+            <option value="1" onclick="show_ctl(1)">Fit Meniscus</option>
+            <option value="2" onclick="show_ctl(1)">Fit Bottom</option>
+            <option value="3" onclick="show_ctl(1)">Fit Meniscus and Bottom</option>
           </select>
         <div style="display:none" id="mag1">
           <br/>
-          <input type="text" name="meniscus_range" value="0.03"/>Fit Range (cm)<br/>
+          <input type="text" value="0.03" name="meniscus_range"/>Fit Range (cm)<br/>
           <br/>
           <fieldset>
             <legend>Fit Grid Points</legend>
             <div class='newslider' id='meniscus-slider'></div>
-            <br />
+            <br/>
             Value:   <input name='meniscus_points' 
                             id='meniscus_points'
                             size='12'

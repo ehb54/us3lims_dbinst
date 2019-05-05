@@ -560,7 +560,7 @@ function validate( f, advanceLevel, count_datasets )
 function validate_single( f )
 {    
   var contact_bo = "\nIf you have any questions about this policy, please " +
-                   "contact Borries Demeler (demeler@biochem.uthscsa.edu).";
+                   "contact Borries Demeler (borries.demeler@umontana.edu).";
 
   return( true );
 }
@@ -571,7 +571,7 @@ function validate_multiple( f )
   if ( advanceLevel > 0 ) return( true );
 
   var contact_bo = "\nIf you have any questions about this policy, please " +
-                   "contact Borries Demeler (demeler@biochem.uthscsa.edu).";
+                   "contact Borries Demeler (borries.demeler@umontana.edu).";
 
   // Let's only produce this message the first time. On subsequent pages
   // most of the controls are absent, so...

@@ -357,41 +357,6 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
     }
   }
 
-  // What if the user requests meniscus fitting but the fit range extends into 
-  // the data?
-  var meniscus_option = 0;
-  if ( valid_field(f.meniscus_option) )
-    meniscus_option = parseInt( get_radio_value(f.meniscus_option) );
-
-  if ( meniscus_option == 1 )
-  {
-    var meniscus_range = parseFloat( f.meniscus_range.value );
-
-    // alert( "meniscus range = " + meniscus_range +
-    //        "\nmeniscus radius = " + meniscus_radius +
-    //        "\nleftmost data point = " + data_left );
-
-    var range_limit = data_left - meniscus_radius - 0.002; // a fudge factor
-    range_limit = Math.round( range_limit * 2000 ) / 1000; // multiply by 2 and round to 3 digits
-    if ( meniscus_range > range_limit )
-    {
-       f.meniscus_range.value = range_limit;
-       alert( "The meniscus fit range extends beyond the left data range limit. " +
-              "The meniscus range has been reduced to " + range_limit );
-    }
-  }
-
-  else
-  {  // If not fitting meniscus, just be sure meniscus below data range
-    f.meniscus_range.value = 0.001;
-
-    if ( meniscus_radius >= data_left )
-    {
-      alert( "The data's meniscus value extends beyond the left data range limit." );
-      return( false );
-    }
-  }
-
   if ( count_datasets == 1 || separate_datasets == 1 )
     return( validate_single(f) );
 
@@ -404,7 +369,7 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
 function validate_single( f )
 {    
   var contact_bo = "\nIf you have any questions about this policy, please " +
-                   "contact Borries Demeler (demeler@biochem.uthscsa.edu).";
+                   "contact Borries Demeler (borries.demeler@umontana.edu).";
 
   // Some things should only be done if monte carlo is 1
   var monte_carlo = 1;
@@ -478,7 +443,7 @@ function validate_single( f )
 function validate_multiple( f )
 {
   var contact_bo = "\nIf you have any questions about this policy, please " +
-                   "contact Borries Demeler (demeler@biochem.uthscsa.edu).";
+                   "contact Borries Demeler (borries.demeler@umontana.edu).";
 
   // For global analyses ti and ri noise subtraction should not be checked
   var ti_noise = 0;
