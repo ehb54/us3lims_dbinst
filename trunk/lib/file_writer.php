@@ -632,6 +632,9 @@ class File_2DSA extends File_writer
       $xml->startElement( 'tinoise_option' );
         $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
       $xml->endElement(); // tinoise_option
+      $xml->startElement( 'rinoise_option' );
+        $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
+      $xml->endElement(); // rinoise_option
       $xml->startElement( 'fit_mb_select' );
         $xml->writeAttribute( 'value', $parameters['fit_mb_select'] );
       $xml->endElement(); // fit_mb_select
@@ -646,9 +649,6 @@ class File_2DSA extends File_writer
       $xml->startElement( 'max_iterations' );
         $xml->writeAttribute( 'value', $parameters['max_iterations'] );
       $xml->endElement(); // max_iterations
-      $xml->startElement( 'rinoise_option' );
-        $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
-      $xml->endElement(); // rinoise_option
       $xml->startElement( 'debug_timings' );
         $xml->writeAttribute( 'value', $parameters['debug_timings'] );
       $xml->endElement(); // debug_timings
@@ -698,6 +698,9 @@ class File_2DSA_CG extends File_writer
       $xml->startElement( 'tinoise_option' );
         $xml->writeAttribute( 'value', $parameters['tinoise_option'] );
       $xml->endElement(); // tinoise_option
+      $xml->startElement( 'rinoise_option' );
+        $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
+      $xml->endElement(); // rinoise_option
       $xml->startElement( 'fit_mb_select' );
         $xml->writeAttribute( 'value', $parameters['fit_mb_select'] );
       $xml->endElement(); // fit_mb_select
@@ -710,9 +713,6 @@ class File_2DSA_CG extends File_writer
       $xml->startElement( 'max_iterations' );
         $xml->writeAttribute( 'value', $parameters['max_iterations'] );
       $xml->endElement(); // max_iterations
-      $xml->startElement( 'rinoise_option' );
-        $xml->writeAttribute( 'value', $parameters['rinoise_option'] );
-      $xml->endElement(); // rinoise_option
       $xml->startElement( 'debug_timings' );
         $xml->writeAttribute( 'value', $parameters['debug_timings'] );
       $xml->endElement(); // debug_timings
