@@ -143,6 +143,7 @@ function do_delete()
   {
     case 'jetstream-local' :
     case 'taito-local'   :
+    case 'demeler3-local':	 
     case 'us3iab-node0'  :
     case 'us3iab-node1'  :
     case 'us3iab-devel'  :
