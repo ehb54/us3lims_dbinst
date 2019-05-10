@@ -78,7 +78,8 @@ $clusters = array(
   new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" ),
   new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" ),
   new cluster_info( "taito.csc.fi",             "taito-local",   "serial"  ),
-  new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",  "normal"  )
+  new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",  "normal"  ),
+  new cluster_info( "demeler3.uleth.ca",        "demeler3-local", "batch"  )
   );
 
 global $svcport;
