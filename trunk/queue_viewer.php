@@ -100,6 +100,7 @@ function order_select( $current_order = NULL )
 // A function to delete the selected job
 function do_delete()
 {
+  
   global $clusters, $uses_thrift;               // From utility.php
   global $info;
 //  var_dump($uses_thrift);
@@ -110,15 +111,16 @@ function do_delete()
   $found = false;
   foreach ( $clusters as $info )
   {
-    if ( $cluster == $info->name )
+    if ( $cluster == $info->name )		// $info->name = demeler3.uleth.ca - IS THIS $_POST['cluster'] ?? 
     {
-      $shortname = $info->short_name;
-      $found     = true;
+      $shortname = $info->short_name;		// $info->short_name = demeler3-local
+      $found     = true; 
       break;
     }
   }
 
   if ( ! $found ) return;
+
 
   // We need to find out if it's a GFAC or local job
   if ( preg_match( "/us3iab/", $shortname ) )
@@ -139,11 +141,14 @@ function do_delete()
        $clus_thrift   = true;
   }
  
+  //$shortname    = preg_replace( "/\-local/", "", $shortname );
+  //exec("/usr/bin/ssh -x us3@$shortname.uleth.ca qdel $gfacID 2>&1");  
+
   switch ( $shortname )
   {
     case 'jetstream-local' :
-    case 'taito-local'   :
-    case 'demeler3-local':	 
+    case 'taito-local-local'   :  // Easy solution: Need this because of the above "Not a GFAC ID" logic above  
+    case 'demeler3-local-local':  // Easy solution: Need this because of the above "Not a GFAC ID" logic above  
     case 'us3iab-node0'  :
     case 'us3iab-node1'  :
     case 'us3iab-devel'  :
@@ -172,8 +177,10 @@ function do_delete()
         $status = cancelJob( $gfacID );
       break;
 
-    default          :
+    default:
+      //exec("/usr/bin/ssh -x us3@demeler3.uleth.ca qdel $gfacID 2>&1");
       break;
+
   }
 }
 
@@ -181,8 +188,17 @@ function do_delete()
 function cancelLocalJob( $cluster, $gfacID )
 {
    $system    = "$cluster.uthscsa.edu";
+
    $is_jetstr = preg_match( "/jetstream/", $cluster );
    $is_local  = preg_match( "/-local/", $cluster );
+   $is_demeler3 = preg_match( "/demeler3/", $cluster ); 	      
+     
+   
+   if ( $is_demeler3 )
+   {   
+      $system    = "$cluster.uleth.ca";	     
+   }
+   
    if ( $is_jetstr )
    {
       $system    = "js-169-137.jetstream-cloud.org";
@@ -191,8 +207,9 @@ function cancelLocalJob( $cluster, $gfacID )
    else
    {
       $cmd       = "qstat -a $gfacID 2>&1|tail -n 1";
+      
       if ( $is_local )
-      {
+      {  
          $system    = preg_replace( "/\-local/", "", $system );
          $cmd       = "/usr/bin/ssh -x us3@$system $cmd";
       }
@@ -245,11 +262,18 @@ function cancelLocalJob( $cluster, $gfacID )
            $cmd    = "qdel $jobID 2>&1";
            if ( $is_local )
            {
-              $cmd    = "/usr/bin/ssh -x us3@$system $cmd";
+	      $cmd    = "/usr/bin/ssh -x us3@$system $cmd";
+	      
+	      if ( $is_demeler3 )
+	      	{ 
+	           $cmd    = "/usr/bin/ssh -x us3@demeler3.uleth.ca qdel $gfacID 2>&1"; 
+	      	} 
+              
            }
         }
         $result = exec( $cmd );
 
+	 
         $lastMessage = "This job has been canceled";
         break;
    }
@@ -357,6 +381,8 @@ function parse_response( $xml, &$msg )
 // Function to update the status on an arbitrary lims database
 function updateLimsStatus( $gfacID, $status, $message )
 {
+
+  //include 'config.php';	
   global $globaldbhost;
   global $globaldbuser;
   global $globaldbpasswd;
