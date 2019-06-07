@@ -77,6 +77,8 @@ if ( $count == 1 )
   $gwhostids[ 'uslims.uleth.ca' ]           = 'uslims.uleth.ca_82aea4e7-f4a4-4deb-93ac-47e3ad32c868';
   $gwhostids[ 'demeler6.uleth.ca' ]         = 'demeler6.uleth.ca_7b30612e-ab07-4729-81f7-75af7f674e1f';
   $gwhost    = dirname( $org_site );
+  if ( preg_match( "/\/uslims3/", $gwhost ) )
+     $gwhost    = dirname( $gwhost );
   $gwhostid  = $gwhost;
   if ( isset( $gwhostids[ $gwhost ] ) )
      $gwhostid  = $gwhostids[ $gwhost ];
