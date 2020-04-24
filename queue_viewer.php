@@ -187,7 +187,7 @@ function do_delete()
 // Function to cancel a local job
 function cancelLocalJob( $cluster, $gfacID )
 {
-   $system    = "$cluster.uthscsa.edu";
+   $system    = "$cluster.hs.umt.edu";
 
    $is_jetstr = preg_match( "/jetstream/", $cluster );
    $is_local  = preg_match( "/-local/", $cluster );
@@ -389,6 +389,7 @@ function updateLimsStatus( $gfacID, $status, $message )
   global $globaldbname;
 
   // Connect to the global GFAC database
+  $globaldbpasswd  = password_field( $globaldbpasswd, "PW" );
   $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
   if ( ! $gLink )
     return;
@@ -425,6 +426,7 @@ function updateGFACStatus( $gfacID, $status, $message )
   global $globaldbname;
 
   // Connect to the global GFAC database
+  $globaldbpasswd  = password_field( $globaldbpasswd, "PW" );
   $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
   if ( ! $gLink )
     return;

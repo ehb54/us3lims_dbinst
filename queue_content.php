@@ -14,8 +14,10 @@ if ( $_SESSION['userlevel'] < 2 )
 }
 
 include_once 'config.php';
+include_once 'lib/utility.php';
 
 // Start by getting info from global db
+$globaldbpasswd  = password_field( $globaldbpasswd, "PW" );
 $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname )
     or die( "Connect failed :  $globaldbhost  $globaldbuser $globaldbpasswd  $globaldbname " );
 
@@ -147,7 +149,7 @@ function get_status( $gfacID, $us3_db )
   if ( ! $result || mysqli_num_rows( $result ) == 0 )
     return false;
 
-  $status = mysqli_fetch_array( $result, MYSQL_ASSOC );
+  $status = mysqli_fetch_array( $result, MYSQLI_ASSOC );
 
   // Make a few helpful changes
   $triple = '';

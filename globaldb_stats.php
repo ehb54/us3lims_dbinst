@@ -16,13 +16,20 @@ if ( ( $_SESSION['userlevel'] != 4 ) &&
 
 include 'config.php';
 include 'current_db_list.php';
+include 'lib/utility.php';
+
+$v1user    = "us3php";
+$v2user    = "lims3_admin";
+$v1pass    = password_field( "PASSW_PH", "PW" );
+$v2pass    = password_field( "PASSW_AD", "PW" );
+$global_db = 'uslims3_global';
 
 // Specific DB setup for functions in this file
-$conn1   = mysql_connect($v1_host, $v1_user, $v1_pass)
-           or die("Could not connect to $v1_host\n");
+$conn1   = mysqli_connect( $dbhost, $v1user, $v1pass, $dbname )
+           or die("Could not connect to $dbhost, $dbname \n");
 
-$conn2   = mysql_connect($v2_host, $v2_user, $v2_pass)
-           or die("Could not connect to $v2_host\n");
+$conn2   = mysqli_connect( $dbhost, $v2user, $v2pass, $global_db )
+           or die("Could not connect to $dbhost, $global_db\n");
 
 // Make sure output buffering is off and cleared for this page
 while (ob_get_level())
@@ -33,14 +40,10 @@ if (ob_get_length() === false)
 
 $cluster_list = array(
                 'ls5.tacc.utexas.edu'             => 'lonestar5',
-                'lonestar.tacc.teragrid.org'      => 'lonestar.tacc',
-                'stampede.tacc.xsede.org'         => 'stampede',
+                'stampede2.tacc.xsede.org'        => 'stampede2',
                 'comet.sdsc.edu'                  => 'comet',
-                'gordon.sdsc.edu'                 => 'gordon',
-                'alamo.uthscsa.edu'               => 'alamo',
-                'jureca.fz-juelich.de'            => 'jureca',
-                'jacinto.uthscsa.edu'             => 'jacinto',
-                'bcf.uthscsa.edu'                 => 'bcf'
+                'juwels.fz-juelich.de'            => 'juwels',
+                'uslims.uleth.ca'                 => 'demeler3'
                 );
 
 // Figure out which clusters were selected
@@ -159,7 +162,7 @@ function generate()
 {
   global $dblist;
   global $conn1, $conn2;
-  global $v1_host, $v2_host;
+  global $dbhost;
 
   // We probably need more time for this one
   set_time_limit(600);
@@ -167,16 +170,14 @@ function generate()
   $global_db =    'uslims3_global';
 
   // Delete existing records from global DB
-  mysql_select_db($global_db, $conn2)
-            or die("Could not select database $global_db on $v2_host.");
 
   $query  = "DELETE FROM submissions ";
-  mysql_query($query)
-        or die("Query failed : $query\n" . mysql_error());
+  mysqli_query( $conn2, $query )
+        or die("Query failed : $query\n" . mysqli_error($conn2));
 
   $query  = "DELETE FROM investigators ";
-  mysql_query($query)
-        or die("Query failed : $query\n" . mysql_error());
+  mysqli_query( $conn2, $query )
+        or die("Query failed : $query\n" . mysqli_error($conn2));
 
   echo "<pre>\n";
 
@@ -196,18 +197,16 @@ function generate()
               "AND investigatorGUID = i.personGUID " .
               "AND submitterGUID = s.personGUID " .
               "AND clusterName IS NOT NULL ";          // These are canceled jobs
-    mysql_select_db($db, $conn1)
-              or die("Could not select database $db on $v1_host.");
-    $result = mysql_query($query, $conn1)
-              or die("Query failed : $query\n" . mysql_error());
+    mysqli_select_db( $conn1, $db )
+              or die("Could not select database $db on $dbhost.");
+    $result = mysqli_query( $conn1, $query )
+              or die("Query failed : $query\n" . mysqli_error($conn1));
     echo ".";
     ob_flush();
     flush();
 
     // Now update the global database
-    mysql_select_db($global_db, $conn2)
-              or die("Could not select database $global_db on $v2_host.");
-    while ( $row = mysql_fetch_array($result) )
+    while ( $row = mysqli_fetch_array($result) )
     {
       // Make variables
       foreach ($row as $key => $value )
@@ -227,8 +226,8 @@ function generate()
                 "Investigator_Name = '$investigatorName', " .
                 "SubmitterID = $submitterID, " .
                 "Submitter_Name = '$submitterName' ";
-      mysql_query($query)
-            or die("Query failed : $query\n" . mysql_error());
+      mysqli_query( $conn2, $query )
+            or die("Query failed : $query\n" . mysqli_error($conn2));
     }
     echo ".";
     ob_flush();
@@ -240,18 +239,16 @@ function generate()
               "email, signup, lastLogin, userlevel " .
               "FROM people " .
               "ORDER BY lname, fname ";
-    mysql_select_db($db, $conn1)
-              or die("Could not select database $db on $v1_host.");
-    $result = mysql_query($query, $conn1)
-              or die("Query failed : $query\n" . mysql_error());
+    mysqli_select_db( $conn1, $db )
+              or die("Could not select database $db on $dbhost, $db.");
+    $result = mysqli_query( $conn1, $query )
+              or die("Query failed : $query\n" . mysqli_error($conn1));
     echo ".";
     ob_flush();
     flush();
 
     // Now the global database
-    mysql_select_db($global_db, $conn2)
-              or die("Could not select database $global_db on $v2_host.");
-    while ( $row = mysql_fetch_array($result) )
+    while ( $row = mysqli_fetch_array($result) )
     {
       // Make variables
       foreach ($row as $key => $value )
@@ -267,8 +264,8 @@ function generate()
                 "Signup = '$signup', " .
                 "LastLogin = '$lastLogin', " .
                 "Userlevel = '$userlevel' ";
-      mysql_query($query)
-            or die("Query failed : $query\n" . mysql_error());
+      mysqli_query( $conn1, $query )
+            or die("Query failed : $query\n" . mysqli_error($conn2));
 
       echo ".";
       ob_flush();
@@ -291,7 +288,7 @@ function generate()
  */
 function by_quarter()
 {
-  global $conn2, $v2_host;
+  global $conn2, $dbhost;
   global $page_title;
   global $selected_clusters;
 
@@ -390,11 +387,6 @@ HTML;
       }
 
       // Start a row
-      $global_shortname =    'uslims3_global';
-
-      mysql_select_db($global_shortname, $conn2)
-                or die("Could not select database $global_shortname on $v2_host.");
-      
       $quarter_sum = 0;
       echo "  <tr><th>{$quarters[$quarter]}</th>\n";
       $export[$counter]['Quarter'] = $quarters[$quarter];
@@ -406,10 +398,10 @@ HTML;
                   "WHERE Cluster_Name = '$cluster' " .
                   "AND DateTime >= '$start 00:00:00' " .
                   "AND DateTime <= '$end 23:59:59' ";
-        $result = mysql_query($query)
-                  or die("Query failed : $query\n" . mysql_error());
+        $result = mysqli_query( $conn2, $query )
+                  or die("Query failed : $query\n" . mysqli_error($conn2));
    
-        list($time) = mysql_fetch_array($result);
+        list($time) = mysqli_fetch_array($result);
         $time = ( $time == NULL ) ? 0 : $time;
         $quarter_sum += $time;
 
@@ -425,13 +417,13 @@ HTML;
                 "WHERE Cluster_Name IN ( $cluster_comma_list ) " .
                 "AND DateTime >= '$start 00:00:00' " .
                 "AND DateTime <= '$end 23:59:59' ";
-      $result = mysql_query($query)
-                or die("Query failed : $query\n" . mysql_error());
+      $result = mysqli_query( $conn2, $query )
+                or die("Query failed : $query\n" . mysqli_error($conn2));
    
       $grand_tot += $quarter_sum;
       $quarter_sum_rounded = round( $quarter_sum, 1 );
    
-      list($inv_count, $sub_count, $job_count) = mysql_fetch_array($result);
+      list($inv_count, $sub_count, $job_count) = mysqli_fetch_array($result);
       echo <<<HTML
       <td>$quarter_sum_rounded</td>
       <td>$inv_count</td>
@@ -462,10 +454,10 @@ HTML;
                 "WHERE Cluster_Name = '$cluster' " .
                 "AND DateTime >= '$start 00:00:00' " .
                 "AND DateTime <= '$end 23:59:59' ";
-      $result = mysql_query($query)
-                or die("Query failed : $query\n" . mysql_error());
+      $result = mysqli_query( $conn2, $query )
+                or die("Query failed : $query\n" . mysqli_error($conn2));
    
-      list($time) = mysql_fetch_array($result);
+      list($time) = mysqli_fetch_array($result);
       $time = ( $time == NULL ) ? 0 : $time;
       echo "      <th>" . round($time, 1) . "</th>\n";
       $export[$counter][$shortname] = round($time, 1);
@@ -479,10 +471,10 @@ HTML;
               "WHERE Cluster_Name IN ( $cluster_comma_list ) " .
               "AND DateTime >= '$start 00:00:00' " .
               "AND DateTime <= '$end 23:59:59' ";
-    $result = mysql_query($query)
-              or die("Query failed : $query\n" . mysql_error());
+    $result = mysqli_query( $conn2, $query )
+              or die("Query failed : $query\n" . mysqli_error($conn2));
 
-    list($inv_count, $sub_count, $job_count) = mysql_fetch_array($result);
+    list($inv_count, $sub_count, $job_count) = mysqli_fetch_array($result);
     $grand_tot_rounded = round( $grand_tot, 1 );
     echo <<<HTML
       <th>$grand_tot_rounded</th>
@@ -518,10 +510,10 @@ HTML;
               "WHERE Cluster_Name = '$cluster' " .
               "AND DateTime >= '$start 00:00:00' " .
               "AND DateTime <= '$end 23:59:59' ";
-    $result = mysql_query($query)
-              or die("Query failed : $query\n" . mysql_error());
+    $result = mysqli_query( $conn2, $query )
+              or die("Query failed : $query\n" . mysqli_error($conn2));
 
-    list($time) = mysql_fetch_array($result);
+    list($time) = mysqli_fetch_array($result);
     $time = ( $time == NULL ) ? 0 : $time;
     echo "      <th>" . round($time, 1) . "</th>\n";
     $export[$counter][$shortname] = round($time, 1);
@@ -535,10 +527,10 @@ HTML;
             "WHERE Cluster_Name IN ( $cluster_comma_list ) " .
             "AND DateTime >= '$start 00:00:00' " .
             "AND DateTime <= '$end 23:59:59' ";
-  $result = mysql_query($query)
-            or die("Query failed : $query\n" . mysql_error());
+  $result = mysqli_query( $conn2, $query )
+            or die("Query failed : $query\n" . mysqli_error($conn2));
 
-  list($inv_count, $sub_count, $job_count) = mysql_fetch_array($result);
+  list($inv_count, $sub_count, $job_count) = mysqli_fetch_array($result);
   $super_tot_rounded = round( $super_tot, 1 );
   echo <<<HTML
       <th>$super_tot_rounded</th>

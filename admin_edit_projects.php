@@ -182,7 +182,7 @@ function do_update($link)
   $result = mysqli_query($link, $query)
             or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
+  $row    = mysqli_fetch_array($result, MYSQLI_ASSOC);
 
   // Create local variables
   foreach ($row as $key => $value)
@@ -297,7 +297,7 @@ HTML;
   Buffer Components:
   {$_POST['bufferComponents']}
 
-  Salt Information:
+  Sample Handling:
   {$_POST['saltInformation']}
 
   AUC Questions:
@@ -355,7 +355,7 @@ function display_record($link)
   $result = mysqli_query($link, $query)
             or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
+  $row    = mysqli_fetch_array($result, MYSQLI_ASSOC);
 
   // Create local variables; make sure IE displays empty cells properly
   foreach ($row as $key => $value)
@@ -417,7 +417,7 @@ echo<<<HTML
           <td>$expense</td></tr>
       <tr><th>Buffer Components:</th>
           <td>$bufferComponents</td></tr>
-      <tr><th>Salt Information:</th>
+      <tr><th>Sample Handling:</th>
           <td>$saltInformation</td></tr>
       <tr><th>AUC Questions:</th>
           <td>$AUC_questions</td></tr>
@@ -543,50 +543,52 @@ echo<<<HTML
     <tbody>
 
 
-    <tr><th>Please enter a brief title for your project. Later, you will be able to
-            retrieve your project by this description:</th></tr>
+    <tr><th>Please enter a brief title for your project. Later, you will be
+            able to retrieve your project by this description:</th></tr>
     <tr><td><textarea name='description' rows='6' cols='65'
                       wrap='virtual'>$description</textarea></td></tr>
     <tr><th>Please provide a detailed description of your research. Include an
-            introduction to your research project and explain the goals of your
-            research. We will use this information to optimally design your
-            experiment. Please provide enough background so we can assess the
-            biological significance of this research:</th></tr>
+            abstract and explain the goals of your research. We will use this
+            this information to optimally design your experiment: </th></tr>
     <tr><td><textarea name='goals' rows='6' cols='65'
                       wrap='virtual'>$goals</textarea></td></tr>
-    <tr><th>What types of molecules are involved in the research and what
-	    are their approximate molecular weights? Please provide the partial specific volume if you
-	    know it or measured it:</th></tr>
+    <tr><th>For each analyte to be measured, please provide a name, appropriate
+            molar mass, partial specific volume (if it was measured), and,
+            for proteins, the sequence in single-letter code. For each submitted
+            sample, please enter a detailed sample description key for the label
+            used on each tube: </th></tr>
     <tr><td><textarea name='molecules' rows='6' cols='65'
                       wrap='virtual'>$molecules</textarea></td></tr>
-    <tr><th>Please indicate the approximate purity of your sample(s). You can
-            express it in percent:</th></tr>
+    <tr><th>Please indicate the approximate purity of your sample(s).
+            You can express it in percent:</th></tr>
     <tr><td><input type='text' name='purity' size='40'
                    maxlength='10' value='$purity' /></td></tr>
-    <tr><th>Would the expense of providing 0.75 ml at 1 OD 280 concentration of
-	    your sample be acceptable?
-            </th></tr>
+    <tr><th>How much material (volume, concentration) is available for your
+            research? Please identify concentration in absorbance units,
+            wavelength, or type of fluorescense label and its molar
+            concentration. For samples to be measured with UV/visible absorbance
+            optics, provide an absorbance scan against buffer from 215-700 nm
+            for each sample: </th></tr>
     <tr><td><textarea name='expense' rows='6' cols='65'
                       wrap='virtual'>$expense</textarea></td></tr>
-    <tr><th>What buffers do you plan to use? Is phosphate or TRIS buffer an option?<br />
-            To minimize absorbance we prefer to run phosphate or TRIS buffers in
-            low concentration (~ 5-10 mM). Salts can form density and viscosity gradients and should be kept
-	    to a minimum, especially high density salts, and for experiments at speeds > 35,000 rpm.
-	    However, a certain ionic strength (25-50 mM) is desired
-	    to prevent hydrodynamic non-ideality, and does not cause any significant gradients
-	    even at maximum speed.<br /><br />
-
-            Do you require addition of small molecules to your sample, such as reductants and
-            nucleotides?<br />
-            Please list all components in your buffer. For absorbance-intensity experiments and reductants are required
-	    it is essential that you use TCEP, which can be used at wavelengths > 240 nm.
-            <br /><br />
-
-            Please list all buffer components:</th></tr>
+    <tr><th>Please list the molar concentrations of each component in your
+            buffer, including reductants and nucleotides. Provide a buffer scan
+            against ddH2O from 215-700 nm. To minimize absorbance, we prefer to
+            use phosphate or optically pure TRIS. To avoid hydrodynamic
+            non-ideality, a minimum salt concentration of 20 mM is desired.
+            Please explain if this is not possible. If reductants are required,
+            please use TCEP which can be measured at wavelengths > 260 nm:
+           </th></tr>
     <tr><td><textarea name='bufferComponents' rows='6' cols='65'
                       wrap='virtual'>$bufferComponents</textarea></td></tr>
-    <tr><th>Is a salt concentration between 20-50 mM for your experiment
-            acceptable? If not, please explain why not.</th></tr>
+    <tr><th>Please indicate the ideal storage conditions (room temperature, 4,
+            -20, and/or -80 degrees Celcius), the shelf life of your sample,
+            any health/safety concerns (is it toxic if ingested or injected,
+            etc.) and, if so, proper care to be taken when working with and
+            disposing of sample. State if you would like to have the remaining
+            used or unused sample returned to you (you will need to pay for
+            return shipment) and indicate how to properly dispose of the sample:
+            </th></tr>
     <tr><td><textarea name='saltInformation' rows='6' cols='65'
                       wrap='virtual'>$saltInformation</textarea></td></tr>
     <tr><th>What questions are you trying to answer with AUC? How do you propose

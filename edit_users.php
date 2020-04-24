@@ -286,7 +286,7 @@ function display_record($link)
   $result = mysqli_query($link, $query)
             or die("Query failed : $query<br />\n" . mysqli_error($link));
 
-  $row    = mysqli_fetch_array($result, MYSQL_ASSOC);
+  $row    = mysqli_fetch_array($result, MYSQLI_ASSOC);
 
   foreach ($row as $key => $value)
   {

@@ -205,15 +205,11 @@ HTML;
           $clname = preg_replace( '/uslims3/', $cluster->short_name, $lohost );
         }
 
-        $clsnam = $cluster->short_name;
-        if ( preg_match( '/stream-local/', $clsnam ) )
-           $clsnam = "jetstream-lcl";
-
         $value = "$clname:$cluster->short_name:$cluster->queue";
-        $text .= "     <tr><td class='cluster' width=115 >" .
+        $text .= "     <tr><td class='cluster' width=150 >" .
                  "<input type='radio' name='cluster' " .
                  "value='$value'$checked$disabled />" .
-                 "$clsnam</td>\n" .
+                 "$cluster->short_name</td>\n" .
                  "$clstat " .
                  "<td>$cluster->queue</td>"   .
                  "<td>$cluster->running / $cluster->queued</td> " .
@@ -377,6 +373,19 @@ function LIMS_mailer( $email, $subject, $message )
   $headers .= "Content-Transfer-Encoding: 8bit"        . "\n";
 
   mail($email, "$subject - $now", $message, $headers);
+}
+
+// Function to set a password value from a key and field
+function password_field( $pwkey, $pwfield )
+{
+   $pwvalue  = $pwkey;
+   if ( preg_match( "/PASSW_/", $pwkey ) )
+   {
+      $mp_cmd   = exec( "ls ~us3/scripts/map_password" );
+      $pwvalue  = exec( "$mp_cmd $pwkey $pwfield" );
+   }
+
+   return $pwvalue;
 }
 
 ?>

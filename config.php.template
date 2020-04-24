@@ -5,15 +5,15 @@
 */
 
 $org_name           = 'UltraScan3 LIMS portal';
-$org_site           = 'uslims3.uthscsa.edu/uslims3_instance';
-$site_author        = 'Borries Demeler, University of Texas Health Science Center';
+$org_site           = 'uslims.uleth.ca/uslims3_instance';
+$site_author        = 'Borries Demeler, University of Lethbridge';
 $site_keywords      = 'ultrascan analytical ultracentrifugation lims';
                       # The website keywords (meta tag)
 $site_desc          = 'Website for the UltraScan3 LIMS portal'; # Site description
 
-$admin              = 'Dan Zollars';
+$admin              = 'Borries Demeler';
 $admin_phone        = 'Office: <br />Fax: ';
-$admin_email        = 'zollarsd@biochem.uthscsa.edu';
+$admin_email        = 'cch-admin@biophysics.uleth.ca';
 
 $dbusername         = '';  # the name of the MySQL user
 $dbpasswd           = '';  # the password for the MySQL user
@@ -26,17 +26,8 @@ $globaldbpasswd     = '';  # the password for the MySQL user
 $globaldbname       = '';  # the name of the database
 $globaldbhost       = 'localhost'; # the host on which MySQL runs, generally localhost
 
-// Admin function
-$v1_host            = "";
-$v1_user            = "";
-$v1_pass            = "";
-                    
-$v2_host            = "";
-$v2_user            = "";
-$v2_pass            = "";
-
-$ipaddr             = '129.111.140.156'; # the primary IP address of the host for udp
-$ipa_ext            = '129.111.140.156'; # the external IP address of the host for udp
+$ipaddr             = '146.66.17.7'; # the primary IP address of the host for udp
+$ipa_ext            = '146.66.17.7'; # the external IP address of the host for udp
 $udpport            = 12233; # the port to send udp messages to
 $svcport            = 8080;  # the port for GFAC services
 $uses_thrift        = true;  # flags use of Thrift rather than Gfac
@@ -51,12 +42,13 @@ $data_dir           = '/srv/www/htdocs/uslims3/uslims3_instance/data/'; # Full p
 $submit_dir         = '/srv/www/htdocs/uslims3/uslims3_data/'; # Full path
 $class_dir          = '/srv/www/htdocs/common/class/';       # Production class path
 //$class_dir          = '/srv/www/htdocs/common/class_devel/'; # Development class path
+//$class_dir          = '/srv/www/htdocs/common/class_local/'; # Local class path
 $disclaimer_file    = ''; # the name of a text file with disclaimer info
 
 // Dates
 date_default_timezone_set( 'America/Chicago' );
-$last_update        = '2015/06/08'; # the date the website was last updated
-$copyright_date     = '2015'; # copyright date
+$last_update        = '2020/05/01'; # the date the website was last updated
+$copyright_date     = '2020'; # copyright date
 $current_year       = date( 'Y' );
 
 //////////// End of user specific configuration

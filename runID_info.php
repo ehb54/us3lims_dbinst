@@ -674,18 +674,13 @@ HTML;
 
   // Now switch over to the global db
   global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
+  $globaldbpasswd  = password_field( $globaldbpasswd, "PW" );
 
-  $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd );
+  $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
 
   if ( ! $globaldb )
   {
-    $text .= "<p>Cannot open global database on $globaldbhost  mysqli_error($globaldb) </p>\n";
-    return $text;
-  }
-
-  if ( ! mysqli_select_db( $globaldbname, $globaldb ) ) 
-  {
-    $text .= "<p>Cannot change to global database $globaldbname</p>\n";
+    $text .= "<p>Cannot open global database on $globaldbhost $globaldbname mysqli_error($globaldb) </p>\n";
     return $text;
   }
 
