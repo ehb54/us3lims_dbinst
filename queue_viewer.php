@@ -389,7 +389,6 @@ function updateLimsStatus( $gfacID, $status, $message )
   global $globaldbname;
 
   // Connect to the global GFAC database
-  $globaldbpasswd  = password_field( $globaldbpasswd, "PW" );
   $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
   if ( ! $gLink )
     return;
@@ -426,7 +425,6 @@ function updateGFACStatus( $gfacID, $status, $message )
   global $globaldbname;
 
   // Connect to the global GFAC database
-  $globaldbpasswd  = password_field( $globaldbpasswd, "PW" );
   $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
   if ( ! $gLink )
     return;

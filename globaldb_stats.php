@@ -20,8 +20,8 @@ include 'lib/utility.php';
 
 $v1user    = "us3php";
 $v2user    = "lims3_admin";
-$v1pass    = password_field( "PASSW_PH", "PW" );
-$v2pass    = password_field( "PASSW_AD", "PW" );
+$v1pass    = $configs[ 'us3php' ][ 'password' ];
+$v2pass    = $configs[ 'limsadmin' ][ 'password' ];
 $global_db = 'uslims3_global';
 
 // Specific DB setup for functions in this file

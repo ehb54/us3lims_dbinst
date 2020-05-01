@@ -92,7 +92,6 @@ global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
 include '../down_clusters.php';
 
 $gfac_link = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
-$result    = mysqli_select_db( $globaldbname, $gfac_link );
 
 $query     = "SELECT cluster, running, queued, status FROM cluster_status";
 $result    = mysqli_query( $gfac_link, $query );
@@ -373,19 +372,6 @@ function LIMS_mailer( $email, $subject, $message )
   $headers .= "Content-Transfer-Encoding: 8bit"        . "\n";
 
   mail($email, "$subject - $now", $message, $headers);
-}
-
-// Function to set a password value from a key and field
-function password_field( $pwkey, $pwfield )
-{
-   $pwvalue  = $pwkey;
-   if ( preg_match( "/PASSW_/", $pwkey ) )
-   {
-      $mp_cmd   = exec( "ls ~us3/scripts/map_password" );
-      $pwvalue  = exec( "$mp_cmd $pwkey $pwfield" );
-   }
-
-   return $pwvalue;
 }
 
 ?>

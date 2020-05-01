@@ -17,7 +17,6 @@ include_once 'config.php';
 include_once 'lib/utility.php';
 
 // Start by getting info from global db
-$globaldbpasswd  = password_field( $globaldbpasswd, "PW" );
 $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname )
     or die( "Connect failed :  $globaldbhost  $globaldbuser $globaldbpasswd  $globaldbname " );
 

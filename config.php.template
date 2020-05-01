@@ -4,6 +4,8 @@
 
 */
 
+$cfgfile            = exec( "ls ~us3/lims/.us3lims.ini" );
+$configs            = parse_ini_file( $cfgfile, true );
 $org_name           = 'UltraScan3 LIMS portal';
 $org_site           = 'uslims.uleth.ca/uslims3_instance';
 $site_author        = 'Borries Demeler, University of Lethbridge';
@@ -20,14 +22,18 @@ $dbpasswd           = '';  # the password for the MySQL user
 $dbname             = '';  # the name of the database
 $dbhost             = 'localhost'; # the host on which MySQL runs, generally localhost
 
+// Secure user credentials
+$secure_user        = '';  # the secure remote username that UltraScan3 uses
+$secure_pw          = '';  # the secure remote password that UltraScan3 uses
+
 // Global DB
-$globaldbuser       = '';  # the name of the MySQL user
-$globaldbpasswd     = '';  # the password for the MySQL user
-$globaldbname       = '';  # the name of the database
+$globaldbuser       = 'gfac';      # the name of the MySQL user
+$globaldbpasswd     = $configs[ 'gfac' ][ 'password' ]; # the password for the MySQL user
+$globaldbname       = 'gfac';      # the name of the database
 $globaldbhost       = 'localhost'; # the host on which MySQL runs, generally localhost
 
-$ipaddr             = '146.66.17.7'; # the primary IP address of the host for udp
-$ipa_ext            = '146.66.17.7'; # the external IP address of the host for udp
+$ipaddr             = '127.0.0.1';      # the internal IP address of the host machine
+$ipa_ext            = '108.92.244.217'; # the external IP address of the host machine
 $udpport            = 12233; # the port to send udp messages to
 $svcport            = 8080;  # the port for GFAC services
 $uses_thrift        = true;  # flags use of Thrift rather than Gfac
@@ -75,3 +81,4 @@ if ( ! defined('DEBUG') )
 }
 
 ?>
+
