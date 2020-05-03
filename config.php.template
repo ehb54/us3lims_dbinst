@@ -4,7 +4,7 @@
 
 */
 
-$cfgfile            = exec( "ls ~us3/lims/.us3lims.ini" );
+$cfgfile            = '/home/us3/lims/.us3lims.ini';
 $configs            = parse_ini_file( $cfgfile, true );
 $org_name           = 'UltraScan3 LIMS portal';
 $org_site           = 'uslims.uleth.ca/uslims3_instance';
