@@ -133,9 +133,10 @@ exit();
 // Function to get the information we need from an individual database
 function get_status( $gfacID, $us3_db )
 {
-  global $globaldbhost;
+  global $globaldbhost, $configs;
   // Using credentials that will work for all databases
-  $link = mysqli_connect( $globaldbhost, 'us3php', 'us3', $us3_db );
+  $upasswd = $configs[ 'us3php' ][ 'password' ];
+  $link = mysqli_connect( $globaldbhost, 'us3php', $upasswd, $us3_db );
 
   // Ok, now get what we can from the HPC tables
   $query  = "SELECT r.HPCAnalysisRequestID, queueStatus, lastMessage, updateTime, editXMLFilename, " .

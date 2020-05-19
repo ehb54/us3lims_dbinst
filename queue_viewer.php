@@ -387,6 +387,7 @@ function updateLimsStatus( $gfacID, $status, $message )
   global $globaldbuser;
   global $globaldbpasswd;
   global $globaldbname;
+  global $configs;
 
   // Connect to the global GFAC database
   $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
@@ -404,7 +405,8 @@ function updateLimsStatus( $gfacID, $status, $message )
 
   // Using credentials that will work for all databases
 //  $us3link = mysqli_connect( 'localhost', 'us3php', 'us3', $db );
-  $us3link = mysqli_connect( '127.0.0.1', 'us3php', 'us3', $db );
+  $upasswd = configs[ 'us3php' ][ 'password' ];
+  $us3link = mysqli_connect( '127.0.0.1', 'us3php', $upasswd, $db );
   if ( ! $us3link ) return false;
 
   $query  = "UPDATE HPCAnalysisResult SET " .
