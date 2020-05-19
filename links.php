@@ -33,7 +33,6 @@ HTML;
 $monitor_menu = <<<HTML
   <h4>Status Monitor</h4>
   <a href='https://$org_site/queue_viewer.php'>Queue Status</a>
-  <a href='http://grid.uthscsa.edu'>Cluster Status</a>
 
 HTML;
 

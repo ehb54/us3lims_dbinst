@@ -706,8 +706,8 @@ HTML;
     $query  = "SELECT cluster, us3_db, status, queue_msg, time " .
               "FROM analysis " .
               "WHERE gfacID = '$gfacID' ";
-    $result = mysqli_query( $link, $query )
-              or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+    $result = mysqli_query( $globaldb, $query )
+              or die( "Query failed : $query<br />\n" . mysqli_error($globaldb) );
   
     if ( mysqli_num_rows( $result ) == 1 )
     {

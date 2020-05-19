@@ -41,7 +41,6 @@ $monitor_menu = <<<HTML
             <li class='submenu'><a href='#'>Status Monitor</a>
               <ul class='level2'>
                 <li><a href='queue_viewer.php'>Queue Status</a></li>
-                <li><a href='http://grid.uthscsa.edu'>Cluster Status</a></li>
               </ul></li>
 
 HTML;
