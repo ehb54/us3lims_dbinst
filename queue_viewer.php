@@ -404,8 +404,7 @@ function updateLimsStatus( $gfacID, $status, $message )
   mysqli_close( $gLink );
 
   // Using credentials that will work for all databases
-//  $us3link = mysqli_connect( 'localhost', 'us3php', 'us3', $db );
-  $upasswd = configs[ 'us3php' ][ 'password' ];
+  $upasswd = $configs[ 'us3php' ][ 'password' ];
   $us3link = mysqli_connect( '127.0.0.1', 'us3php', $upasswd, $db );
   if ( ! $us3link ) return false;
 
