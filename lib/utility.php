@@ -78,7 +78,10 @@ $clusters = array(
   new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" ),
   new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" ),
   new cluster_info( "taito.csc.fi",             "taito-local",   "serial"  ),
+  new cluster_info( "puhti.csc.fi",             "puhti-local",   "serial"  ),
   new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",  "normal"  ),
+  new cluster_info( "chinook.hs.umt.edu",       "chinook-local",  "batch"  ),
+  new cluster_info( "login.gscc.umt.edu",       "umontana-local", "griz_partition" ),
   new cluster_info( "demeler3.uleth.ca",        "demeler3-local", "batch"  )
   );
 

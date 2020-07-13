@@ -377,7 +377,7 @@ function display_record( $link )
             "FROM project j, projectPerson p " .
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
-            "ORDER BY description ";
+            "ORDER BY lastUpdated DESC ";
   $result = mysqli_query( $link, $query )
             or die("Query failed : $query<br />\n" . mysqli_error($link));
   while ( list($t_id, $t_description) = mysqli_fetch_array( $result ) )

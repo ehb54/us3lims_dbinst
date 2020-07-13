@@ -144,7 +144,8 @@ function get_status( $gfacID, $us3_db )
             "FROM HPCAnalysisResult r, HPCAnalysisRequest q, experiment " .
             "WHERE r.gfacID = '$gfacID' " .                                 // limit to 1 record right off
             "AND r.HPCAnalysisRequestID = q.HPCAnalysisRequestID " .
-            "AND q.experimentID = experiment.experimentID ";
+            "AND q.experimentID = experiment.experimentID " .
+            "ORDER BY HPCAnalysisResultID DESC LIMIT 1";
   $result = mysqli_query( $link, $query );
   if ( ! $result || mysqli_num_rows( $result ) == 0 )
     return false;

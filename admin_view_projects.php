@@ -134,7 +134,7 @@ function project_info( $link, $personID )
             "FROM projectPerson p, project j " .
             "WHERE p.personID = ? " .
             "AND p.projectID = j.projectID " .
-            "ORDER BY description ";
+            "ORDER BY lastUpdated DESC ";
 
   /* This code was replaced by the prepared statement
   $query  = "SELECT p.projectID, description, goals, status, lastUpdated " .

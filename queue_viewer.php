@@ -132,7 +132,8 @@ function do_delete()
     $hex = "[0-9a-fA-F]";
     if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
          ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) &&
-         ! preg_match( "/^US3-A/", $gfacID ) )
+         ! preg_match( "/^US3-A/", $gfacID ) &&
+         ! preg_match( "/-local/", $shortname ) )
        $shortname .= '-local';   // Not a GFAC ID
     $clus_thrift = $uses_thrift;
     if ( in_array( $shortname, $thr_clust_excls ) )
@@ -147,13 +148,16 @@ function do_delete()
   switch ( $shortname )
   {
     case 'jetstream-local' :
-    case 'taito-local-local'   :  // Easy solution: Need this because of the above "Not a GFAC ID" logic above  
-    case 'demeler3-local-local':  // Easy solution: Need this because of the above "Not a GFAC ID" logic above  
-    case 'us3iab-node0'  :
-    case 'us3iab-node1'  :
-    case 'us3iab-devel'  :
-    case 'dev1-linux'    :
-    case 'localhost'     :
+    case 'taito-local'     :
+    case 'puhti-local'     :
+    case 'demeler3-local'  :
+    case 'chinook-local'   :
+    case 'umontana-local'  :
+    case 'us3iab-node0' :
+    case 'us3iab-node1' :
+    case 'us3iab-devel' :
+    case 'dev1-linux'   :
+    case 'localhost'    :
       $status = cancelLocalJob( $shortname, $gfacID );
       break;
 	

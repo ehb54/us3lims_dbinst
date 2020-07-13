@@ -92,7 +92,7 @@ function create_table( $mysqli_con )
             "FROM projectPerson p, project j " .
             "WHERE p.personID = $ID " .
             "AND p.projectID = j.projectID " .
-            "ORDER BY description ";
+            "ORDER BY lastUpdated DESC ";
   $result = mysqli_query( $mysqli_con, $query )
         or die( "Query failed : $query<br />\n" . mysqli_error( $mysqli_con ));
 

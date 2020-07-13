@@ -213,6 +213,8 @@ function generate()
       {
         $$key = $value;
       }
+      $investigatorName = preg_replace( "/D\'/", "D", $investigatorName );
+      $submitterName    = preg_replace( "/D\'/", "D", $submitterName );
 
       $query  = "INSERT INTO submissions " .
                 "SET HPCAnalysis_ID = $HPCAnalysisRequestID, " .
@@ -255,6 +257,7 @@ function generate()
       {
         $$key = $value;
       }
+      $investigatorName = preg_replace( "/D\'/", "D", $investigatorName );
 
       $query  = "INSERT INTO investigators " .
                 "SET InvestigatorID = $personID, " .
