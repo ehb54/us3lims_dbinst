@@ -6,7 +6,7 @@
  *
  */
 
-include 'checkinstance.php';
+session_start();
 
 include_once 'config.php';
 include_once 'db.php';
@@ -30,7 +30,7 @@ if ( isset( $_POST['enter_request'] ) )
     enter_record();
 
   else
-    do_captcha( "Entered text doesn&rsquo;t match." );
+    do_captcha( "Entered text does not match." );
 }
 
 else if ( isset( $_SESSION['message'] ) )
