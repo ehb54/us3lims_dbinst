@@ -15,8 +15,29 @@ if ( ! isset( $_SESSION['captcha'] ) )
 }
 
 $captcha = $_SESSION['captcha'];
-//$font    = '/usr/share/fonts/TTF/AppleGaramond-BoldItalic.ttf';
-$font    = '/usr/share/fonts/liberation/LiberationSans-BoldItalic.ttf';
+//$font    = '/usr/share/fonts/liberation/LiberationSans-BoldItalic.ttf';
+
+// add any number of paths here
+// alternatively we could use fontconfig to look it up - but this way seems simple enough
+
+$font_check = array(
+    '/usr/share/fonts/liberation/LiberationSans-BoldItalic.ttf',
+    '/usr/share/fonts/liberation-sans/LiberationSans-BoldItalic.ttf',
+    '/usr/share/fonts/truetype/liberation/LiberationSans-BoldItalic.ttf'
+    );
+
+$font = "font_missing";
+
+foreach ( $font_check as $v ) {
+    if ( file_exists( $v ) ) {
+        $font = $v;
+        break;
+    }
+}
+
+if ( $font === "font_missing" ) {
+    error_log( "could not find a font for captcha" );
+}
 
 $size      = 60;
 
