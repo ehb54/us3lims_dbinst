@@ -6,6 +6,8 @@
  *
  */
 include_once 'checkinstance.php';
+elogrs( __FILE__ );
+
 // ini_set('display_errors', 'On');
 
 
