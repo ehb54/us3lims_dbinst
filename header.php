@@ -118,5 +118,5 @@ echo<<<HTML
 HTML;
 
 if ( ! isset( $nolinks ) )
-  include 'links.php';
+  include_once 'links.php';
 ?>

@@ -18,7 +18,7 @@ if ( ($_SESSION['userlevel'] != 2) &&
 } 
 
 // Verify that job submission is ok now
-include 'lib/motd.php';
+include_once 'lib/motd.php';
 if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
   header("Location: index.php");
@@ -180,13 +180,13 @@ include 'header.php';
 
 <?php
 
-if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] > 0 ) )
+if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] ) > 0 )
 {
   $out_text = "";
   foreach ( $_SESSION['request'] as $removeID => $cellinfo )
   {
-    $editedData_text  = get_editedData( $link, $cellinfo['editedDataID'] );
-    $noise_text       = get_noise( $link, $cellinfo['noiseIDs'] );
+    $editedData_text  = get_editedData_qs3( $link, $cellinfo['editedDataID'] );
+    $noise_text       = get_noise_qs3( $link, $cellinfo['noiseIDs'] );
 
     $out_text .= <<<HTML
     <fieldset>
@@ -375,7 +375,7 @@ include 'footer.php';
 exit();
 
 // Get edit profiles
-function get_editedData( $link, $editedDataID )
+function get_editedData_qs3( $link, $editedDataID )
 {
   $query  = "SELECT label, filename " .
             "FROM editedData " .
@@ -410,7 +410,7 @@ function get_model( $link, $modelID )
 */
 
 // Get the noise files
-function get_noise( $link, $noiseIDs )
+function get_noise_qs3( $link, $noiseIDs )
 {
   if ( empty( $noiseIDs ) )
     return( "" );
