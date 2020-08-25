@@ -179,7 +179,7 @@ include 'header.php';
 
 <?php
 
-if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] > 0 ) )
+if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] ) > 0 )
 {
   $out_text = "";
   foreach ( $_SESSION['request'] as $removeID => $cellinfo )
