@@ -93,7 +93,7 @@ $gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:" . $svcport . "/ogce-res
 //global $globaldbname;
 global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
 
-include '../down_clusters.php';
+if ( file_exists('../down_clusters.php') ) include '../down_clusters.php';
 
 $gfac_link = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
 
@@ -102,7 +102,7 @@ $result    = mysqli_query( $gfac_link, $query );
 
 while ( list( $cluster, $running, $queued, $status ) = mysqli_fetch_row( $result ) )
 {
-   if ( in_array( $cluster, $down_clusters ) )
+   if ( isset( $down_clusters ) && in_array( $cluster, $down_clusters ) )
      $status = 'down';
 //if($cluster == 'jureca')
 // $status = 'up';
@@ -111,7 +111,7 @@ while ( list( $cluster, $running, $queued, $status ) = mysqli_fetch_row( $result
 //if($cluster == 'lonestar5')
 // $status = 'up';
 
-   if ( in_array( $cluster, $draining_clusters ) )
+   if ( isset( $draining_clusters ) && in_array( $cluster, $draining_clusters ) )
      $status = 'draining';
 
    for ( $ii = 0; $ii < count( $clusters ); $ii++ )

@@ -14,35 +14,41 @@ if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 5) )    // only data analyst and up
 {
   header('Location: index.php');
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 1\n";
+  }
   exit();
 } 
 
 // Verify that job submission is ok now
-include 'lib/motd.php';
+include_once 'lib/motd.php';
 if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
   header("Location: index.php");
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 2\n";
+  }
   exit();
 }
 
 // define( 'DEBUG', true );
 
-include 'config.php';
-include 'db.php';
-include 'lib/utility.php';
-include 'lib/payload_manager.php';
-include 'lib/HPC_analysis.php';
-include 'lib/file_writer.php';
-include $class_dir . 'submit_local.php';
-include $class_dir . 'submit_gfac.php';
-include $class_dir . 'submit_airavata.php';
+include_once 'config.php';
+include_once 'db.php';
+include_once 'lib/utility.php';
+include_once 'lib/payload_manager.php';
+include_once 'lib/HPC_analysis.php';
+include_once 'lib/file_writer.php';
+include_once $class_dir . 'submit_local.php';
+include_once $class_dir . 'submit_gfac.php';
+include_once $class_dir . 'submit_airavata.php';
 
 global $uses_thrift;
 
 // Create the payload manager and restore the data
 $payload = new Payload_2DSA( $_SESSION );
 $payload->restore();
-
+elogrs( __FILE__ . " after payload_restore" );
 // Create the HPC analysis agent and file writer
 $HPC       = new HPC_2DSA();
 $file      = new File_2DSA();
@@ -229,6 +235,9 @@ echo <<<HTML
  <p>$output_msg</p>
 </div>
 HTML;
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 3\n";
+  }
 exit(0);
 }
     }
@@ -277,6 +286,9 @@ echo <<<HTML
 HTML;
 
 include 'footer.php';
+if ( $is_cli ) {
+  return;
+}
 exit();
 
 ?>
