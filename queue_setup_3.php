@@ -14,6 +14,9 @@ if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 5) )    // only data analyst and up
 {
   header('Location: index.php');
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 1\n";
+  }
   exit();
 } 
 
@@ -22,6 +25,9 @@ include_once 'lib/motd.php';
 if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
   header("Location: index.php");
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 2\n";
+  }
   exit();
 }
 
@@ -46,6 +52,9 @@ if ( isset($_GET['removeID']) )
   // Has to be redirected to avoid another removal from the queue just by
   //  refreshing the screen
   header("Location: {$_SERVER['PHP_SELF']}");
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 3\n";
+  }
   exit();
 }
 
@@ -55,6 +64,9 @@ if ( isset($_GET['clear']) )
   unset( $_SESSION['request'] );
 
   header("Location: {$_SERVER['PHP_SELF']}");
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 4\n";
+  }
   exit();
 }
 
@@ -372,6 +384,9 @@ HTML;
 <?php
 
 include 'footer.php';
+if ( $is_cli ) {
+   return;
+}
 exit();
 
 // Get edit profiles
