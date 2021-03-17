@@ -6,6 +6,7 @@
  *
  */
 include_once 'checkinstance.php';
+elogrs( __FILE__ );
 
 if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 3) &&
@@ -13,14 +14,20 @@ if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 5) )    // only data analyst and up
 {
   header('Location: index.php');
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 1\n";
+  }
   exit();
 } 
 
 // Verify that job submission is ok now
-include 'lib/motd.php';
+include_once 'lib/motd.php';
 if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
   header("Location: index.php");
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 2\n";
+  }
   exit();
 }
 
@@ -45,6 +52,9 @@ if ( isset($_GET['removeID']) )
   // Has to be redirected to avoid another removal from the queue just by
   //  refreshing the screen
   header("Location: {$_SERVER['PHP_SELF']}");
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 3\n";
+  }
   exit();
 }
 
@@ -54,6 +64,9 @@ if ( isset($_GET['clear']) )
   unset( $_SESSION['request'] );
 
   header("Location: {$_SERVER['PHP_SELF']}");
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 4\n";
+  }
   exit();
 }
 
@@ -179,13 +192,13 @@ include 'header.php';
 
 <?php
 
-if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] > 0 ) )
+if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] ) > 0 )
 {
   $out_text = "";
   foreach ( $_SESSION['request'] as $removeID => $cellinfo )
   {
-    $editedData_text  = get_editedData( $link, $cellinfo['editedDataID'] );
-    $noise_text       = get_noise( $link, $cellinfo['noiseIDs'] );
+    $editedData_text  = get_editedData_qs3( $link, $cellinfo['editedDataID'] );
+    $noise_text       = get_noise_qs3( $link, $cellinfo['noiseIDs'] );
 
     $out_text .= <<<HTML
     <fieldset>
@@ -371,10 +384,13 @@ HTML;
 <?php
 
 include 'footer.php';
+if ( $is_cli ) {
+   return;
+}
 exit();
 
 // Get edit profiles
-function get_editedData( $link, $editedDataID )
+function get_editedData_qs3( $link, $editedDataID )
 {
   $query  = "SELECT label, filename " .
             "FROM editedData " .
@@ -409,7 +425,7 @@ function get_model( $link, $modelID )
 */
 
 // Get the noise files
-function get_noise( $link, $noiseIDs )
+function get_noise_qs3( $link, $noiseIDs )
 {
   if ( empty( $noiseIDs ) )
     return( "" );

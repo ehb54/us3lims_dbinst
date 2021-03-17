@@ -6,6 +6,7 @@
  *
  */
 include_once 'checkinstance.php';
+elogrs( __FILE__ );
 
 if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 3) &&

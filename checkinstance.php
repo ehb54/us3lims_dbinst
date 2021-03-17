@@ -7,7 +7,9 @@
  */
 include 'config.php';
 
-$sess_name = "PHPSESS_" . $dbname;
-session_name( $sess_name );
-session_start();
+if ( !$is_cli ) {
+    $sess_name = "PHPSESS_" . $dbname;
+    session_name( $sess_name );
+    session_start();
+}
 

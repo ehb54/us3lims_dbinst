@@ -6,8 +6,9 @@
  *
  */
 include_once 'checkinstance.php';
-// ini_set('display_errors', 'On');
+elogrsp( __FILE__ );
 
+// ini_set('display_errors', 'On');
 
 //$time0=microtime(true);
 if ( ($_SESSION['userlevel'] != 2) &&
@@ -15,7 +16,12 @@ if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 4) &&
      ($_SESSION['userlevel'] != 5) )    // only data analyst and up
 {
-  header('Location: index.php');
+  if ( $is_cli ) {
+    echo "user level is insufficient\n";
+    echo __FILE__ . " exiting 1\n";
+  } else {
+    header('Location: index.php');
+  }
   exit();
 }
 
@@ -27,6 +33,9 @@ if ( isset( $_GET['reset'] ) )
   unset( $_SESSION['new_cells'] );
 
   header( "Location: {$_SERVER['PHP_SELF']}" );
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 2\n";
+  }
   exit();
 }
 
@@ -89,8 +98,15 @@ if ( isset( $_POST['next'] ) )
     }
   }
 
-  header( "Location: queue_setup_2.php" );
-  exit();
+  if ( $is_cli ) {
+    $_REQUEST=[];
+    $_POST   =[];
+    include "queue_setup_2.php";
+    return;
+  } else {
+    header( "Location: queue_setup_2.php" );
+    exit();
+  }
 }
 
 // Start displaying page
@@ -199,6 +215,9 @@ echo "</table>\n";
 
 <?php
 include 'footer.php';
+if ( $is_cli ) {
+  echo __FILE__ . " exiting 4\n";
+}
 exit();
 
 function get_email_text($link)
