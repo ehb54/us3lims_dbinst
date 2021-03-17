@@ -1,7 +1,8 @@
 <?php
 
 function elog( $msg ) {
-    $elogfile = "/home/us3/lims/etc/elog.txt";
+    $us3home  = exec( "ls -d ~us3" );
+    $elogfile = "$us3home/lims/etc/elog.txt";
     $msg = "[" .  date('m/d/Y H:i:s', time()) . "] $msg\n";
     error_log( "$msg\n", 3, $elogfile );
 }
