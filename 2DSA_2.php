@@ -181,6 +181,7 @@ HTML;
        case 'puhti-local'     :
        case 'demeler3-local'  :
        case 'chinook-local'   :
+       case 'demeler9-local'  :
        case 'umontana-local'  :
        case 'us3iab-node0'    :
        case 'us3iab-node1'    :
@@ -190,9 +191,11 @@ HTML;
        case 'stampede2' :
        case 'lonestar5' :
        case 'comet'     :
-       case 'jureca'    : 
        case 'juwels'    : 
        case 'jetstream' :
+       case 'bridges'   :
+       case 'expanse'   :
+       case 'expanse-gamc' :
           if ( $clus_thrift === true )
              $job = new submit_airavata();
           else

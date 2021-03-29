@@ -33,6 +33,7 @@ HTML;
 $monitor_menu = <<<HTML
   <h4>Status Monitor</h4>
   <a href='https://$org_site/queue_viewer.php'>Queue Status</a>
+  <a href='https://$org_site/show_clusters.php'>Cluster Status</a>
 
 HTML;
 
@@ -193,13 +194,14 @@ function set_latest_noises( $link )
       { // First encountered noise is the latest
         $noiseIDs[$knoise] = $noiseID;
         $prtype = $noiseType;
-        $prtime = $time;
+        $prtime = (int)$time;
         $knoise++;
       }
       else if ( $knoise == 1 )
       { // If second is different type, same time; it is latest
         if ( $prtype == $noiseType )    break;
-        if ( ( $time - $prtime ) > 2 )  break;
+        $tdiff = (int)$time - $prtime;
+        if ( $tdiff > 2 ) break;
         $noiseIDs[$knoise] = $noiseID;
         $knoise++;
         break;

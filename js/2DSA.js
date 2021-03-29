@@ -229,19 +229,19 @@ function validate( f, advanceLevel, dataset_num, count_datasets, separate_datase
     s_value_min         = parseFloat(f.s_value_min.value);  // These might have changed
     s_value_max         = parseFloat(f.s_value_max.value);
 
-    // What if the s_values are entirely inside the -0.1 ~ +0.1 range?
-    if ( (s_value_min >= -0.1) && (s_value_max <=  0.1) )
+    // What if the s_values are entirely inside the -0.05 ~ +0.05 range?
+    if ( (s_value_min >= -0.05) && (s_value_max <=  0.05) )
     {
-      alert( "Your s-value range is entirely within the -0.1 ~ 0.1 range. " +
+      alert( "Your s-value range is entirely within the -0.05 ~ 0.05 range. " +
              "This range is not allowed." );
       return( false );
     }
 
-    // Some of the s_value range should be outside the - 0.1 ~ + 0.1 range
-    if ( (s_value_min <= -0.1) && (s_value_max >= -0.1) ||
-         (s_value_min <=  0.1) && (s_value_max >=  0.1) )
+    // Some of the s_value range should be outside the - 0.05 ~ + 0.05 range
+    if ( (s_value_min <= -0.05) && (s_value_max >= -0.05) ||
+         (s_value_min <=  0.05) && (s_value_max >=  0.05) )
     {
-      var answer = confirm( "Your s-value range overlaps the -0.1 ~ 0.1 range. " +
+      var answer = confirm( "Your s-value range overlaps the -0.05 ~ 0.05 range. " +
                             "This range will be excluded from the 2DSA analysis." +
                             "Please click OK to continue, or click cancel to " +
                             "return to the submission form." );

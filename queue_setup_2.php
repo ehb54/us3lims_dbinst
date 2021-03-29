@@ -81,6 +81,7 @@ if ( isset( $_POST['save'] ) )
       return;
     } else {
       header( "Location: queue_setup_3.php" );
+      echo __FILE__ . " exiting 3\n";
       exit();
     }
   } else {

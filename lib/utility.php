@@ -7,8 +7,9 @@
  */
 
 $admin_list = array( 'gegorbet@gmail.com',
-                     'demeler@biochem.uthscsa.edu',
-                     'dzollars@gmail.com' );
+                     'demeler@umontana.edu',
+                     'alexsav.science@gmail.com',
+                     'emre.brookes@umontana.edu' );
 
 function emailsyntax_is_valid($email)
 {
@@ -70,20 +71,23 @@ class cluster_info
 }
 
 $clusters = array( 
-  new cluster_info( "dev1-linux",               "us3iab-devel",  "normal"  ),
-  new cluster_info( "ls5.tacc.utexas.edu",      "lonestar5",     "normal"  ), 
-  new cluster_info( "stampede2.tacc.xsede.org", "stampede2",     "skx-normal" ), 
-  new cluster_info( "comet.sdsc.xsede.org",     "comet",         "compute" ), 
-  new cluster_info( "juwels.fz-juelich.de",     "juwels",        "batch"   ),
-  new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" ),
-  new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" ),
-  new cluster_info( "taito.csc.fi",             "taito-local",   "serial"  ),
-  new cluster_info( "puhti.csc.fi",             "puhti-local",   "serial"  ),
-  new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",  "normal"  ),
-  new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",  "normal"  ),
-  new cluster_info( "chinook.hs.umt.edu",       "chinook-local",  "batch"  ),
-  new cluster_info( "login.gscc.umt.edu",       "umontana-local", "griz_partition" ),
-  new cluster_info( "demeler3.uleth.ca",        "demeler3-local", "batch"  )
+  new cluster_info( "dev1-linux",               "us3iab-devel",   "normal"  )
+ ,new cluster_info( "ls5.tacc.utexas.edu",      "lonestar5",      "normal"  )
+ ,new cluster_info( "stampede2.tacc.xsede.org", "stampede2",      "skx-normal" )
+ ,new cluster_info( "comet.sdsc.xsede.org",     "comet",          "compute" )
+ ,new cluster_info( "bridges2.psc.edu",         "bridges2",       "RM-shared"  )
+ ,new cluster_info( "expanse.sdsc.edu",         "expanse",        "shared"  )
+ ,new cluster_info( "expanse.sdsc.edu",         "expanse-gamc",   "compute" )
+ ,new cluster_info( "juwels.fz-juelich.de",     "juwels",         "batch"   )
+ ,new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" )
+ ,new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" )
+ ,new cluster_info( "taito.csc.fi",             "taito-local",    "serial"  )
+ ,new cluster_info( "puhti.csc.fi",             "puhti-local",    "serial"  )
+ ,new cluster_info( "chinook.hs.umt.edu",       "chinook-local",  "batch"   )
+ ,new cluster_info( "login.gscc.umt.edu",       "umontana-local", "griz_partition" )
+ ,new cluster_info( "demeler9.uleth.ca",        "demeler9-local", "batch"   )
+ ,new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",   "batch"   )
+ ,new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",   "normal"  )
   );
 
 global $svcport;
@@ -96,6 +100,7 @@ global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
 if ( file_exists('../down_clusters.php') ) include '../down_clusters.php';
 
 $gfac_link = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+$result    = mysqli_select_db( $gfac_link, $globaldbname );
 
 $query     = "SELECT cluster, running, queued, status FROM cluster_status";
 $result    = mysqli_query( $gfac_link, $query );
@@ -130,8 +135,8 @@ mysqli_close( $gfac_link );
 // Reset default db
 include "db.php";
 
-// Function to return appropriate clusters
-function tigre()
+// Function to show appropriate clusters
+function showClusters()
 {
   global $clusters;
   global $org_site;
@@ -140,7 +145,7 @@ function tigre()
     return( "" );
 
   $text = "    <fieldset style='margin-top:1em' id='clusters'>\n" .
-          "      <legend>Select Cluster</legend>\n";
+          "      <legend>Available Clusters:</legend>\n";
 
   // Double check cluster authorizations
   if ( $_SESSION['userlevel'] >= 4         ||
@@ -154,6 +159,8 @@ function tigre()
 HTML;
 
     $checked  = " checked='checked'";      // check the first one
+    $gamcnms  = "";
+    $ngamc    = 0;
   
     foreach ( $clusters as $cluster )
     {
@@ -207,6 +214,147 @@ HTML;
           $lohost = $parts[ 0 ];
           $clname = preg_replace( '/uslims3/', $cluster->short_name, $lohost );
         }
+        if ( preg_match( '/-gamc/', $cluster->short_name ) )
+        {  // Keep track of "-gamc" type names
+           if ( $ngamc == 0 )
+              $gamcnms  = $cluster->short_name;
+           else
+              $gamcnms .= "|$cluster->short_name";
+           $ngamc++;
+        }
+
+        $value = "$clname:$cluster->short_name:$cluster->queue";
+        $text .= "     <tr><td class='cluster' width=150 >" .
+                 "$cluster->short_name</td>\n" .
+                 "$clstat " .
+                 "<td>$cluster->queue</td>"   .
+                 "<td>$cluster->running / $cluster->queued</td> " .
+                 "$clload</tr>\n";
+
+        if ( $disabled == "" )
+           $checked = "";
+      }
+    }
+    $mctext = "";
+    if ( $ngamc > 0 )
+    {  // Add note about choosing "-gamc" cluster
+       $mctext .= <<<HTML
+       </table>
+       <table>
+HTML;
+    }
+    $text .= <<<HTML
+    $mctext
+    </table>
+
+HTML;
+  }
+
+  else
+  {
+    $text .= <<<HTML
+    <p class='message'>Cluster authorizations cannot be found. Try 
+       logging in again, and if that doesn&rsquo;t work contact 
+       the system administrator.</p>
+    <p><a href='login_form.php'>Login form</a></p>
+
+HTML;
+
+  }
+
+
+  $text .= "     </fieldset>\n";
+
+  return( $text );
+}
+
+// Function to return appropriate clusters
+function tigre()
+{
+  global $clusters;
+  global $org_site;
+
+  if ( $_SESSION['userlevel'] < 2 )
+    return( "" );
+
+  $text = "    <fieldset style='margin-top:1em' id='clusters'>\n" .
+          "      <legend>Select Cluster</legend>\n";
+
+  // Double check cluster authorizations
+  if ( $_SESSION['userlevel'] >= 4         ||
+       ( isset($_SESSION['clusterAuth'])   &&
+         count($_SESSION['clusterAuth']) > 0) )
+  {
+    $text .= <<<HTML
+    <table>
+    <tr><th>Cluster</th><th>Status</th><th>Queue Name</th> <th>Running / Queued</th> <th>Likely Run Wait</th></tr>
+
+HTML;
+
+    $checked  = " checked='checked'";      // check the first one
+    $gamcnms  = "";
+    $ngamc    = 0;
+  
+    foreach ( $clusters as $cluster )
+    {
+      // Only list clusters that are authorized for the user
+      if (  in_array( $cluster->short_name, $_SESSION['clusterAuth'] ) )
+      {
+        $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
+        $disabled = ( $cluster->status == 'draining' ) ? " disabled='disabled'" : $disabled;
+        $clload   = "<td>n/a</td>";
+        $clstat   = "<td>$cluster->status</td>";
+
+        // Color-code entry based on status and queue counts
+        if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
+        {
+          $clstat   = "<td STYLE='color: green'>$cluster->status</td>";
+          $cque     = $cluster->queued;
+          $crun     = $cluster->running;
+  
+          if ( $cque != 0  &&   $crun != 0 )
+          {
+            $qrrat     = (int)( ( $crun * 100 ) / $cque );
+            if ( $qrrat < 80 )
+              $clload     = "<td width=70 BGCOLOR='red'>long</td>";
+            else if ( $qrrat > 120 )
+              $clload     = "<td width=70 BGCOLOR='green'>short</td>";
+            else
+              $clload     = "<td width=70 BGCOLOR='yellow'>medium</td>";
+          }
+  
+          else if ( $cque == 0 )
+            $clload     = "<td BGCOLOR='green'>short</td>";
+  
+          else
+            $clload     = "<td BGCOLOR='red'>long</td>";
+        }
+  
+        else if ( $cluster->status == 'down' )
+        {
+          $clstat   = "<td STYLE='color: red'>$cluster->status</td>";
+        }
+  
+        else if ( $cluster->status == 'draining' )
+        {
+          $clstat   = "<td STYLE='color: DarkViolet'>$cluster->status</td>";
+        }
+
+        $clname = $cluster->name;
+        if ( preg_match( '/localhost/', $clname ) )
+        {  // Form local cluster name
+          $parts  = explode( "/", $org_site );
+          $lohost = $parts[ 0 ];
+          $clname = preg_replace( '/uslims3/', $cluster->short_name, $lohost );
+        }
+        if ( preg_match( '/-gamc/', $cluster->short_name ) )
+        {  // Keep track of "-gamc" type names
+           if ( $ngamc == 0 )
+              $gamcnms  = $cluster->short_name;
+           else
+              $gamcnms .= "|$cluster->short_name";
+           $ngamc++;
+        }
 
         $value = "$clname:$cluster->short_name:$cluster->queue";
         $text .= "     <tr><td class='cluster' width=150 >" .
@@ -222,7 +370,16 @@ HTML;
            $checked = "";
       }
     }
+    $mctext = "";
+    if ( $ngamc > 0 )
+    {  // Add note about choosing "-gamc" cluster
+       $mctext .= <<<HTML
+       </table><table><tr><td STYLE='color: DarkViolet'>
+<b>N.B.</b> For GA-MC jobs, select any existing "-gamc" variation of a chosen cluster.</td></tr>
+HTML;
+    }
     $text .= <<<HTML
+    $mctext
     </table>
     <p><input class='submit' type='submit' name='TIGRE' value='Submit'/></p>
 

@@ -91,6 +91,7 @@ function get_setup_1( $link )
 //    $cells[$rawDataID]['modelID']      = 0;
     $cells[$rawDataID]['noiseIDs']     = array();
   }
+  $cell['experimentID'] = $new_experimentID;
 
   $_SESSION['cells'] = $cells;
 }
@@ -263,13 +264,13 @@ function get_latest_edits( $link )
       {
         $noiseIDs[$knoise] = $noiseID;
         $prtype = $noiseType;
-        $prtime = $time;
+        $prtime = (int)$time;
         $knoise++;
       }
       else if ( $knoise == 1 )
       {
         if ( $prtype == $noiseType )    break;
-        if ( ( $time - $prtime ) > 2 )  break;
+        if ( ( (int)$time - $prtime ) > 2 )  break;
         $noiseIDs[$knoise] = $noiseID;
         $knoise++;
         break;

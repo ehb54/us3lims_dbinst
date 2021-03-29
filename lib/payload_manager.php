@@ -551,11 +551,12 @@ class Payload_2DSA extends Payload_manager
       $job_parameters['experimentID']     = $parameters['experimentID'];
       $job_parameters['timelast']         = $parameters['timelast'];
       $this->add( 'job_parameters', $job_parameters );
-      if ( $fit_mb_select == 1  ||
-           $fit_mb_select == 3 )
+      if ( $fit_mb_select == 1 )
          $analType            .= '-FM';
-      if ( $fit_mb_select == 2 )
+      else if ( $fit_mb_select == 2 )
          $analType            .= '-FB';
+      else if ( $fit_mb_select == 3 )
+         $analType            .= '-FMB';
       if ( $job_parameters['max_iterations' ] > 1 )
          $analType            .= '-IT';
       if ( $job_parameters['mc_iterations'  ] > 1 )

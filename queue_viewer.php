@@ -165,7 +165,9 @@ function do_delete()
     case 'lonestar5' :
     case 'comet'     :
     case 'jetstream' :
-    case 'jureca'    :
+    case 'bridges2'  :
+    case 'expanse'   :
+    case 'expanse-gamc' :
     case 'juwels'    :
       if ( $clus_thrift === true )
       {
@@ -177,8 +179,6 @@ function do_delete()
           updateGFACStatus( $gfacID, 'CANCELED', $lastMessage );
         }
       }
-      else
-        $status = cancelJob( $gfacID );
       break;
 
     default:
@@ -289,97 +289,6 @@ function cancelLocalJob( $cluster, $gfacID )
 
    return;
 
-}
-
-// Function to cancel a job
-function cancelJob( $gfacID )
-{
-  global $gfac_serviceURL;
-
-  $hex = "[0-9a-fA-F]";
-  if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
-       ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) )
-     return "Not a GFAC ID";
-
-  $url = "$gfac_serviceURL/canceljob/$gfacID";
-
-  $r = new HttpRequest( $url, HttpRequest::METH_GET );
-
-  $time   = date( "F d, Y H:i:s", time() );
-
-  try
-  {
-     $result = $r->send();
-     $xml    = $result->getBody();
-  }
-  catch ( HttpException $e )
-  {
-    // Let's try to update the lastMessage field so the user sees
-    updateLimsStatus( $gfacID, 'aborted', "Error ($e) attempting to delete job" );
-    updateGFACStatus( $gfacID, 'CANCELED', "Error ($e) attempting to delete job" );
-    return;
-
-  }
-
-  $status = parse_response( $xml, $message );
-  $updateok = true;
-
-  switch ( $status )
-  {
-    case 'CANCELED':
-    case 'CANCELLED':
-    case 'Success':
-      $lastMessage = 'This job has been canceled.';
-      break;
-
-    case 'NOTALLOWED':
-      $lastMessage = 'This job has been canceled already, or has completed.';
-      break;
-
-    case 'UNKNOWN':
-    case 'ERROR':
-      $lastMessage = 'GFAC cannot find this job.';
-      break;
-
-    default :
-      $updateok = false;
-      break;
-  }
-
-  if ( $updateok )
-  {
-    // Let's update what user sees until canceled
-    updateLimsStatus( $gfacID, 'aborted', $lastMessage );
-    updateGFACStatus( $gfacID, 'CANCELED', $lastMessage );
-  }
-}
-
-function parse_response( $xml, &$msg )
-{
-   $status  = "";
-   $msg = "";
-
-   $parser = new XMLReader();
-   $parser->xml( $xml );
-
-   while( $parser->read() )
-   {
-      $type = $parser->nodeType;
-
-      if ( $type == XMLReader::ELEMENT )
-         $name = $parser->name;
-
-      else if ( $type == XMLReader::TEXT )
-      {
-         if ( $name == "status" )
-            $status  = $parser->value;
-         else
-            $msg = $parser->value;
-      }
-   }
-
-   $parser->close();
-   return $status;
 }
 
 // Function to update the status on an arbitrary lims database
