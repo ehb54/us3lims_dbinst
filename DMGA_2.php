@@ -37,8 +37,6 @@ include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
 include $class_dir . 'submit_airavata.php';
 
-global $uses_thrift;
-
 // Make sure the advancement level is set
 $advanceLevel = ( isset($_SESSION['advancelevel']) )
               ? $_SESSION['advancelevel'] : 0;
@@ -132,11 +130,6 @@ HTML;
   {
     $cluster     = $_SESSION[ 'cluster' ][ 'shortname' ];
     unset( $_SESSION[ 'cluster' ] );
-    $clus_thrift = $uses_thrift;
-    if ( in_array( $cluster, $thr_clust_excls ) )
-      $clus_thrift   = false;
-    if ( in_array( $cluster, $thr_clust_incls ) )
-      $clus_thrift   = true;
 
     // Currently we are supporting two submission methods.
     switch ( $cluster )
@@ -145,6 +138,7 @@ HTML;
        case 'taito-local'     :
        case 'puhti-local'     :
        case 'demeler3-local'  :
+       case 'demeler9-local'  :
        case 'chinook-local'   :
        case 'umontana-local'  :
        case 'us3iab-node0'    :
@@ -159,10 +153,10 @@ HTML;
        case 'jureca'    : 
        case 'juwels'    : 
        case 'jetstream' :
-          if ( $clus_thrift === true )
-             $job = new submit_airavata();
-          else
-             $job = new submit_gfac();
+       case 'bridges2'  :
+       case 'expanse'   :
+       case 'expanse-gamc' :
+          $job = new submit_airavata();
           break;
 
        default           :

@@ -37,8 +37,6 @@ include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
 include $class_dir . 'submit_airavata.php';
 
-global $uses_thrift;
-
 // Create the payload manager and restore the data
 $payload = new Payload_PCSA( $_SESSION );
 $payload->restore();
@@ -152,14 +150,9 @@ HTML;
   {
     $cluster     = $_SESSION['cluster']['shortname'];
     unset( $_SESSION['cluster'] );
-    $clus_thrift = $uses_thrift;
-    if ( in_array( $cluster, $thr_clust_excls ) )
-      $clus_thrift   = false;
-    if ( in_array( $cluster, $thr_clust_incls ) )
-      $clus_thrift   = true;
 
-    // Currently we are supporting three submission methods:
-    //  Local, Airavata, GFAC(deprecated).
+    // Currently we are supporting 2 submission methods:
+    //  Local, Airavata
     switch ( $cluster )
     {
       case 'jetstream-local' :
@@ -173,7 +166,6 @@ HTML;
       case 'us3iab-node1'    :
       case 'us3iab-devel'    :
         $job = new submit_local();
-        $clus_thrift   = false;
         break;
 
       case 'stampede2' :
@@ -181,10 +173,10 @@ HTML;
       case 'comet'     :
       case 'juwels'    : 
       case 'jetstream' :
-        if ( $clus_thrift === true )
-          $job = new submit_airavata();
-        else
-          $job = new submit_gfac();
+      case 'bridges2'  :
+      case 'expanse'   :
+      case 'expanse-gamc' :
+        $job = new submit_airavata();
         break;
 
       default         :
@@ -212,8 +204,7 @@ HTML;
       }
     }
 
-    if ( $clus_thrift === true )
-      $job->close_transport();
+    $job->close_transport();
     chdir( $save_cwd );
   }
   $output_msg .= "</pre>\n";

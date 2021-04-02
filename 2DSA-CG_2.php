@@ -37,8 +37,6 @@ include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
 include $class_dir . 'submit_airavata.php';
 
-global $uses_thrift;
-
 // Create the payload manager and restore the data
 $payload = new Payload_2DSA_CG( $_SESSION );
 $payload->restore();
@@ -152,11 +150,6 @@ HTML;
   {
     $cluster = $_SESSION['cluster']['shortname'];
     unset( $_SESSION['cluster'] );
-    $clus_thrift = $uses_thrift;
-    if ( in_array( $cluster, $thr_clust_excls ) )
-      $clus_thrift   = false;
-    if ( in_array( $cluster, $thr_clust_incls ) )
-      $clus_thrift   = true;
 
     // Currently we are supporting two submission methods.
     switch ( $cluster )
@@ -180,10 +173,10 @@ HTML;
       case 'jureca'    :
       case 'juwels'    :
       case 'jetstream' :
-        if ( $clus_thrift === true )
-          $job = new submit_airavata();
-        else
-          $job = new submit_gfac();
+      case 'bridges2'  :
+      case 'expanse'   :
+      case 'expanse-gamc' :
+        $job = new submit_airavata();
         break;
 
       default         :
@@ -211,8 +204,7 @@ HTML;
       }
     }
 
-    if ( $clus_thrift === true )
-      $job->close_transport();
+    $job->close_transport();
     chdir( $save_cwd );
   }
   $output_msg .= "</pre>\n";
