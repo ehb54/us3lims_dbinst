@@ -15,7 +15,10 @@ if ( ($_SESSION['userlevel'] != 2) &&
 {
   header('Location: index.php');
   if ( $is_cli ) {
-    echo __FILE__ . " exiting 1\n";
+    $errstr = "ERROR: " . __FILE__ . " user level is insufficient";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
   }
   exit();
 } 
@@ -24,10 +27,13 @@ if ( ($_SESSION['userlevel'] != 2) &&
 include_once 'lib/motd.php';
 if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
-  header("Location: index.php");
   if ( $is_cli ) {
-    echo __FILE__ . " exiting 2\n";
+    $errstr =  "ERROR: " . __FILE__ . " Job submission is blocked";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
   }
+  header("Location: index.php");
   exit();
 }
 
@@ -51,6 +57,9 @@ if ( isset( $_POST['save'] ) )
   // Now translate into a data structure more useful for sequencing datasets
   $_SESSION['request'] = array();
   $count = 0;
+  if ( $is_cli ) {
+     echo "count session cells " . count( $_SESSION['cells'] ) . "\n";
+  }
   foreach( $_SESSION['cells'] as $rawDataID => $cell )
   {
     // Check to see if we have all the editedDataID's
@@ -86,7 +95,9 @@ if ( isset( $_POST['save'] ) )
     }
   } else {
      if ( $is_cli ) {
-        echo __FILE__ . " data missing!\n";
+        $errstr = "ERROR: " . __FILE__ . " data missing\n";
+        echo "$errstr\n";
+        $cli_errors[] = $errstr;
         return;
      }
   }

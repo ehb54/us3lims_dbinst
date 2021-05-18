@@ -17,8 +17,10 @@ if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 5) )    // only data analyst and up
 {
   if ( $is_cli ) {
-    echo "user level is insufficient\n";
-    echo __FILE__ . " exiting 1\n";
+    $errstr = "ERROR: " . __FILE__ . " user level is insufficient";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
   } else {
     header('Location: index.php');
   }

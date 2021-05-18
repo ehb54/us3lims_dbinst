@@ -15,7 +15,10 @@ if ( ($_SESSION['userlevel'] != 2) &&
 {
   header('Location: index.php');
   if ( $is_cli ) {
-    echo __FILE__ . " exiting 1\n";
+    $errstr = "ERROR: " . __FILE__ . " user level is insufficient";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
   }
   exit();
 } 
@@ -26,7 +29,10 @@ if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
   header("Location: index.php");
   if ( $is_cli ) {
-    echo __FILE__ . " exiting 2\n";
+    $errstr =  "ERROR: " . __FILE__ . " Job submission is blocked";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
   }
   exit();
 }
@@ -36,7 +42,10 @@ if ( ! isset( $_SESSION['request'] ) || sizeof( $_SESSION['request'] ) < 1 )
 {
   header("Location: queue_setup_1.php");
   if ( $is_cli ) {
-    echo __FILE__ . " exiting 3\n";
+    $errstr = "ERROR: " . __FILE__ . " empty queue";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
   }
   exit();
 }
