@@ -48,18 +48,15 @@ $advancelevel   = ( isset($_SESSION['advancelevel']) )
 $data_missing = false;
 if ( isset( $_POST['save'] ) )
 {
-  if ( $is_cli ) {
-    echo __FILE__ . " post save set\n";
-  }
   // Verify we have all the info
   get_setup_2( $link );
+  if ( $is_cli && count( $cli_errors ) ) {
+     return;
+  }
 
   // Now translate into a data structure more useful for sequencing datasets
   $_SESSION['request'] = array();
   $count = 0;
-  if ( $is_cli ) {
-     echo "count session cells " . count( $_SESSION['cells'] ) . "\n";
-  }
   foreach( $_SESSION['cells'] as $rawDataID => $cell )
   {
     // Check to see if we have all the editedDataID's

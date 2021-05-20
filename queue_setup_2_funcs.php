@@ -231,6 +231,9 @@ function getOtherEditInfo( $rawDataID, $xml )
 // Get latest edit and noises information for all cells
 function get_latest_edits( $link )
 {
+  global $is_cli;
+  global $cli_errors;
+
   $_SESSION['request'] = array();
   $count = 0;
   foreach( $_SESSION['cells'] as $rawDataID => $cell )
@@ -245,6 +248,14 @@ function get_latest_edits( $link )
 
     list( $editedDataID, $label, $filename, $editXML ) = mysqli_fetch_array( $result );
     getOtherEditInfo( $rawDataID, $editXML );
+    if ( isset( $is_cli ) && $is_cli ) {
+        if ( !strlen( $editedDataID ) ) {
+            $errstr = "ERROR: " . __FILE__ . " edited data missing\n";
+            echo "$errstr\n";
+            $cli_errors[] = $errstr;
+            return;
+        }
+    }
 
     $noiseIDs = array();
     $query  = "SELECT noiseID, noiseType, timeEntered " .
