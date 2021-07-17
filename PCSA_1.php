@@ -6,21 +6,33 @@
  *
  */
 include_once 'checkinstance.php';
-elogrs( __FILE__ );
+elogrsp( __FILE__ );
 
 if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 3) &&
      ($_SESSION['userlevel'] != 4) &&
      ($_SESSION['userlevel'] != 5) )    // only data analyst and up
 {
+  if ( $is_cli ) {
+    $errstr = "ERROR: " . __FILE__ . " user level is insufficient";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
+  }
   header('Location: index.php');
   exit();
 } 
 
 // Verify that job submission is ok now
-include 'lib/motd.php';
+include_once 'lib/motd.php';
 if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
+  if ( $is_cli ) {
+    $errstr =  "ERROR: " . __FILE__ . " Job submission is blocked";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
+  }
   header("Location: index.php");
   exit();
 }
@@ -28,17 +40,23 @@ if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 // Verify that there is something in the queue
 if ( ! isset( $_SESSION['request'] ) || sizeof( $_SESSION['request'] ) < 1 )
 {
+  if ( $is_cli ) {
+    $errstr = "ERROR: " . __FILE__ . " empty queue";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
+  }
   header("Location: queue_setup_1.php");
   exit();
 }
 
 // define( 'DEBUG', true );
 
-include 'config.php';
-include 'db.php';
-include 'lib/utility.php';
-include 'lib/payload_manager.php';
-include 'lib/controls.php';
+include_once 'config.php';
+include_once 'db.php';
+include_once 'lib/utility.php';
+include_once 'lib/payload_manager.php';
+include_once 'lib/controls.php';
 
 // Make sure the advancement level is set
 $advanceLevel = ( isset($_SESSION['advancelevel']) )
@@ -54,6 +72,7 @@ $num_datasets = sizeof( $_SESSION['request'] );
 
 // Create the payload manager
 $payload  = new Payload_PCSA( $_SESSION );
+elogrsp( __FILE__ . " after new payload" );
 
 // First, let's see if the "TIGRE" button has been pressed
 if ( isset($_POST['TIGRE']) )
@@ -99,6 +118,7 @@ if ( isset($_POST['TIGRE']) )
       $payload->acquirePostedData( $jdataset_id, $num_datasets );
     }
     $payload->save();
+    elogrsp( __FILE__ . "after payload->save() 1" );
   }
 
   // get previous payload data and add this session to it
@@ -106,14 +126,22 @@ if ( isset($_POST['TIGRE']) )
   $payload->add( 'cluster', $_SESSION['cluster'] );
   $payload->acquirePostedData( $dataset_id, $num_datasets );
   $payload->save();
+  elogrsp( __FILE__ . "after payload->save() 2" );
 
   // Check to see if the file is too big
   if ( $advanceLevel == 0 )
     ; //    check_filesize();
 
 //  $payload->show();
-  header("Location: PCSA_2.php");
-  exit();
+  if ( $is_cli ) {
+    $_REQUEST = [];
+    $_POST    = [];
+    include "PCSA_2.php";
+    return;
+  } else {
+    header("Location: PCSA_2.php");
+    exit();
+  }
 }
 
 // Now let's see if the "next" button has been pressed
@@ -126,6 +154,7 @@ else if ( isset($_POST['next']) )
   $payload->restore();
   $payload->acquirePostedData( $dataset_id, $num_datasets );
   $payload->save();
+  elogrsp( __FILE__ . "after payload->save() 3" );
 
   $dataset_id++;
 }
@@ -139,6 +168,7 @@ else
   $payload->clear();
 
   $payload->save();
+  elogrsp( __FILE__ . "after payload->save() 4" );
 
   // If multi-data and no advanced review, point to last dataset
   if ( $advanced_review == 0  &&
@@ -226,6 +256,9 @@ if ( isset($_SESSION['edit_select_type'])  &&
 
 <?php
 include 'footer.php';
+if ( $is_cli ) {
+  echo __FILE__ . " exiting 4\n";
+}
 exit();
 
 // A function to display controls for one dataset
