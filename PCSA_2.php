@@ -48,6 +48,7 @@ include_once 'lib/file_writer.php';
 include_once $class_dir . 'submit_local.php';
 include_once $class_dir . 'submit_gfac.php';
 include_once $class_dir . 'submit_airavata.php';
+include_once $class_dir . 'progress.php';
 
 // Create the payload manager and restore the data
 $payload = new Payload_PCSA( $_SESSION );
@@ -84,8 +85,12 @@ if ( $separate_datasets > 0 )
   $index         = 0;               // Input datasets index
   $kr            = 0;               // Output request index
 
+  echo "<script>us_submit_prog.show();</script>";
+
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
+    echo "<script>us_submit_prog.msg.prep('$ds_remain');</script>";
+
     if ( ( $ds_remain - $reqds_count ) < $mgroup_count )
       $reqds_count   = $ds_remain;
     else
@@ -151,6 +156,7 @@ else
 if ( $files_ok )
 {
   $output_msg = <<<HTML
+  <script>us_submit_prog.hide()</script>
   <pre>
   Thank you, your job was accepted and is currently processing. An
   email will be sent to {$_SESSION['submitter_email']} when the job is
@@ -203,6 +209,8 @@ HTML;
 
     foreach ( $filenames as $filename )
     {
+      echo "<script>us_submit_prog.msg.submit('" . basename( $filename ) . "');</script>";
+
       chdir( dirname( $filename ) );
 
       $job-> clear();

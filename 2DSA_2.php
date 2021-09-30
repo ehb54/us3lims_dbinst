@@ -86,10 +86,10 @@ if ( $separate_datasets > 0 )
 $missit_msg = "<br/>ds_remain=" . $ds_remain;
 
   echo "<script>us_submit_prog.show();</script>";
+
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
-  echo "<script>us_submit_prog.msg.prep('$ds_remain');</script>";
-  
+    echo "<script>us_submit_prog.msg.prep('$ds_remain');</script>";
 
     if ( ( $ds_remain - $reqds_count ) < $mgroup_count )
       $reqds_count   = $ds_remain;
