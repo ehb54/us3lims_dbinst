@@ -171,9 +171,9 @@ HTML;
       case 'jetstream-local' :
       case 'taito-local'     :
       case 'puhti-local'     :
-      case 'demeler3-local'  :
-      case 'chinook-local'   :
+      case 'demeler1-local'  :
       case 'demeler9-local'  :
+      case 'chinook-local'   :
       case 'umontana-local'  :
       case 'us3iab-node0'    :
       case 'us3iab-node1'    :

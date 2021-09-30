@@ -150,7 +150,7 @@ function do_delete()
     case 'jetstream-local' :
     case 'taito-local'     :
     case 'puhti-local'     :
-    case 'demeler3-local'  :
+    case 'demeler1-local'  :
     case 'chinook-local'   :
     case 'umontana-local'  :
     case 'us3iab-node0' :

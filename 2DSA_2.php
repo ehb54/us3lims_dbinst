@@ -88,8 +88,8 @@ $missit_msg = "<br/>ds_remain=" . $ds_remain;
   echo "<script>us_submit_prog.show();</script>";
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
-  echo "<script>us_submit_prog.update('separate datasets $separate_datasets remaining $ds_remain');</script>";
-
+  echo "<script>us_submit_prog.msg.prep('$ds_remain');</script>";
+  
 
     if ( ( $ds_remain - $reqds_count ) < $mgroup_count )
       $reqds_count   = $ds_remain;
@@ -184,7 +184,7 @@ HTML;
        case 'jetstream-local' :
        case 'taito-local'     :
        case 'puhti-local'     :
-       case 'demeler3-local'  :
+       case 'demeler1-local'  :
        case 'chinook-local'   :
        case 'demeler9-local'  :
        case 'umontana-local'  :
@@ -215,7 +215,7 @@ HTML;
 
     foreach ( $filenames as $filename )
     {
-      echo "<script>us_submit_prog.update('submitting " . basename( $filename ) . "');</script>";
+      echo "<script>us_submit_prog.msg.submit('" . basename( $filename ) . "');</script>";
 
       chdir( dirname( $filename ) );
 

@@ -140,7 +140,7 @@ HTML;
       case 'jetstream-local' :
       case 'taito-local'     :
       case 'puhti-local'     :
-      case 'demeler3-local'  :
+      case 'demeler1-local'  :
       case 'chinook-local'   :
       case 'demeler9-local'  :
       case 'umontana-local'  :

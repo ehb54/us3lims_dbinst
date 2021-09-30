@@ -86,6 +86,7 @@ $clusters = array(
  ,new cluster_info( "chinook.hs.umt.edu",       "chinook-local",  "batch"   )
  ,new cluster_info( "login.gscc.umt.edu",       "umontana-local", "griz_partition" )
  ,new cluster_info( "demeler9.uleth.ca",        "demeler9-local", "batch"   )
+ ,new cluster_info( "demeler1.uleth.ca",        "demeler1-local", "batch"   )
  ,new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",   "batch"   )
  ,new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",   "normal"  )
   );
@@ -161,7 +162,6 @@ HTML;
     $checked  = " checked='checked'";      // check the first one
     $gamcnms  = "";
     $ngamc    = 0;
-  
     foreach ( $clusters as $cluster )
     {
       // Only list clusters that are authorized for the user
@@ -170,7 +170,7 @@ HTML;
         $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
         $disabled = ( $cluster->status == 'draining' ) ? " disabled='disabled'" : $disabled;
         $clload   = "<td>n/a</td>";
-        $clstat   = "<td>$cluster->status</td>";
+	$clstat   = "<td>$cluster->status</td>";
 
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
@@ -243,6 +243,7 @@ HTML;
        <table>
 HTML;
     }
+
     $text .= <<<HTML
     $mctext
     </table>
