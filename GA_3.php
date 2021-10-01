@@ -36,6 +36,7 @@ include 'lib/file_writer.php';
 include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
 include $class_dir . 'submit_airavata.php';
+include_once $class_dir . 'priority.php';
 
 // Create the payload manager and restore the data
 $payload = new Payload_GA( $_SESSION );
@@ -55,6 +56,7 @@ if ( $_SESSION[ 'separate_datasets' ] )
 //print_r( $payload->get() );
 
   $dataset_count = $payload->get( 'datasetCount' );
+  priority( "GA", $dataset_count, $payload->get( 'job_parameters' ) );
 
   for ( $ii = 0; $ii < $dataset_count; $ii++ )
   {

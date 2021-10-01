@@ -37,6 +37,7 @@ include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
 include $class_dir . 'submit_airavata.php';
 include_once $class_dir . 'progress.php';
+include_once $class_dir . 'priority.php';
 
 // Create the payload manager and restore the data
 $payload = new Payload_2DSA_CG( $_SESSION );
@@ -73,6 +74,8 @@ if ( $separate_datasets > 0 )
   $kr            = 0;               // Output request index
 
   echo "<script>us_submit_prog.show();</script>";
+  priority( "2DSA-CG", $dataset_count, $job_params );
+
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
     echo "<script>us_submit_prog.msg.prep('$ds_remain');</script>";

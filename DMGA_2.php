@@ -36,6 +36,7 @@ include 'lib/file_writer.php';
 include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
 include $class_dir . 'submit_airavata.php';
+include_once $class_dir . 'priority.php';
 
 // Make sure the advancement level is set
 $advanceLevel = ( isset($_SESSION['advancelevel']) )
@@ -59,6 +60,7 @@ if ( $_SESSION[ 'separate_datasets' ] )
 //print_r( $payload->get() );
 
   $dataset_count = $payload->get( 'datasetCount' );
+  priority( "DMGA", $dataset_count, $payload->get( 'job_parameters' ) );
 
   for ( $ii = 0; $ii < $dataset_count; $ii++ )
   {
