@@ -133,6 +133,7 @@ $missit_msg .= "<br/> fnkr=" . $filenames[kr];
 else
 { // Multiple datasets and global
   $globalfit = $payload->get();
+  priority( "2DSA-GF", $payload->get( 'datasetCount' ), $payload->get( 'job_parameters' ) );
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
   $missit_msg = '';

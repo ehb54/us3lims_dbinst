@@ -117,6 +117,7 @@ else
 { // Multiple datasets and global
   $missit_msg = '';
   $globalfit = $payload->get();
+  priority( "2DSA-CG-GF", $payload->get( 'datasetCount' ), $payload->get( 'job_parameters' ) );
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
   if ( $filenames[ 0 ] === false )

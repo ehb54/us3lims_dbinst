@@ -91,6 +91,7 @@ else
 //echo "not separate\n"; exit();
   $missit_msg = '';
   $globalfit = $payload->get();
+  priority( "GA-GF", $payload->get( 'datasetCount' ), $payload->get( 'job_parameters' ) );
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
   
