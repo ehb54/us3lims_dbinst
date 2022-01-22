@@ -1,9 +1,20 @@
 <?php
 
+function dt_duration_seconds ( $datetime_start, $datetime_end ) {
+    return ($datetime_end->getTimestamp() - $datetime_start->getTimestamp());
+}
+
+function dt_now () {
+    return new DateTime( "now" );
+}
+
 function elog( $msg ) {
+    if ( !( strpos($msg, 'queue_content') !== false) ) {
+        return;
+    }
     $us3home  = exec( "ls -d ~us3" );
     $elogfile = "$us3home/lims/etc/elog.txt";
-    $msg = "[" .  date('m/d/Y H:i:s', time()) . "] $msg\n";
+    $msg = "[" .  date('m/d/Y H:i:s', time()) . "] [" .  $_SERVER['REMOTE_ADDR'] . "] $msg";
     error_log( "$msg\n", 3, $elogfile );
 }
 
