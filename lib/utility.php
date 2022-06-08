@@ -6,10 +6,160 @@
  *
  */
 
-$admin_list = array( 'gegorbet@gmail.com',
-                     'demeler@umontana.edu',
-                     'alexsav.science@gmail.com',
-                     'emre.brookes@umontana.edu' );
+## collect config info
+
+function collect_config_info() {
+    global $class_dir;
+    global $admin_list;  ##  can be set in global or dbinst specific config
+    global $clusters;
+    global $global_cluster_details;
+
+    $debug = false;
+    
+    ## anonymous error message function - local in scope
+    $error_msg = function( $msg ) {
+        $emsg = "ERROR: lib/utility.php : $msg";
+        echo "$emsg<br>";
+        error_log( $emsg );
+    };
+
+    ## anonymous info message function - local in scope
+
+    $debug_msg = function( $msg, $debug ) {
+        if ( $debug ) {
+            $emsg = "info: lib/utility.php : $msg";
+            echo "$emsg<br>";
+        }
+    };
+    
+    if ( !isset( $class_dir ) ) {
+        $error_msg( "\$class_dir is not set" );
+        return;
+    }
+
+    if ( !is_dir( $class_dir ) ) {
+        $error_msg( "\$class_dir [$class_dir] is not a directory" );
+        return;
+    }
+
+    ## dbinst specific configs
+
+    $dbinst_config_file = '../cluster_config.php';
+
+    if ( !file_exists( $dbinst_config_file ) ) {
+        $dbinst_config_file = '../uslims3_newlims/cluster_config.php';
+        if ( !file_exists( $dbinst_config_file ) ) {
+            $error_msg( "no cluster_config.php file found" );
+            return;
+        }
+    }
+
+    ## global configs
+
+    $global_config_file = "$class_dir/../global_config.php";
+
+    if ( !file_exists( $global_config_file ) ) {
+        $error_msg("\$global_config_file_dir [$global_config_file] does not exist");
+        return;
+    }
+        
+    ## read global config first, so dbinst overrides
+
+    try {
+        include( $global_config_file );
+    } catch ( Exception $e ) {
+        $error_msg( "including $global_config_file " . $e->getMessage() );
+        return;
+    }
+
+    try {
+        include( $dbinst_config_file );
+    } catch ( Exception $e ) {
+        $error_msg ( "including $dbinst_config_file " . $e->getMessage() );
+        return;
+    }
+        
+    if ( !isset( $cluster_configuration ) || !is_array( $cluster_configuration ) ) {
+        $error_msg( "\$cluster_configuration not set or is not an array" );
+        return;
+    }
+
+    if ( !isset( $cluster_details ) || !is_array( $cluster_details ) ) {
+        $error_msg( "\$cluster_details not set or is not an array" );
+        return;
+    }
+
+    ## if inactive or corrupt in $cluster_configuration remove from $cluster_details
+
+    foreach ( $cluster_details as $k => $v ) {
+        ## echo json_encode( $v, JSON_PRETTY_PRINT ) . "<br>";
+        if ( !array_key_exists( $k, $cluster_configuration ) ) {
+            ## disable cluster not present in $cluster_configuration
+            unset( $cluster_details[$k] );
+            continue;
+        }
+        if ( !is_array( $cluster_configuration[$k] ) ) {
+            $error_msg( "cluster configuratin for cluster $k is not an array" );
+            ## disable cluster corrupt in $cluster_configuration
+            unset( $cluster_details[$k] );
+            continue;
+        }
+        if ( !array_key_exists( 'active', $cluster_configuration[$k] ) ||
+             $cluster_configuration[$k]['active'] == false
+            ) {
+            ## disable active==false cluster in $cluster_configuration
+            unset( $cluster_details[$k] );
+            continue;
+        }
+    }
+
+    $global_cluster_details = $cluster_details;
+
+    $clusters = [];
+    foreach ( $cluster_details as $k => $v ) {
+        ## echo json_encode( $v, JSON_PRETTY_PRINT ) . "<br>";
+        if ( !array_key_exists( 'active', $v ) ) {
+            $error_msg( "cluster details missing 'active' flag for cluster $k" );
+            continue;
+        }
+        if ( !$v['active'] ) {
+            $debug_msg( "cluster $k not active", $debug );
+            continue;
+        }
+        if ( !array_key_exists( $k, $cluster_configuration ) ) {
+            $debug_msg( "cluster $k would be active, but not present in \$cluster_configuration", $debug );
+            continue;
+        }
+        if ( !array_key_exists( 'active', $cluster_configuration[$k] ) ) {
+            $debug_msg( "cluster $k missing 'active' in \$cluster_configuration", $debug );
+            continue;
+        }
+        if ( !$cluster_configuration[$k]['active'] ) {
+            $debug_msg( "cluster $k would be active, but inactive in \$cluster_configuration", $debug );
+            continue;
+        }
+        if ( !array_key_exists( 'name', $v ) ) {
+            $error_msg( " cluster details missing 'name' for cluster $k" );
+            continue;
+        }
+        if ( !array_key_exists( 'queue', $v ) ) {
+            $error_msg( "cluster details missing 'queue' for cluster $k" );
+            continue;
+        }
+        $debug_msg( "cluster $k adding", $debug );
+        $clusters[] = new cluster_info( $v['name'], $k, $v['queue'] );
+    }
+}
+
+collect_config_info();
+
+if ( !isset( $admin_list ) || count( $admin_list ) == 0 ) {
+    ## revert to hard coded defaults
+    $admin_list = array( 'gegorbet@gmail.com',
+                         'demeler@umontana.edu',
+                         'alexsav.science@gmail.com',
+                         'emre.brookes@umontana.edu' );
+}
 
 function emailsyntax_is_valid($email)
 {
@@ -70,25 +220,29 @@ class cluster_info
    }
 }
 
-$clusters = array( 
-  new cluster_info( "dev1-linux",               "us3iab-devel",   "normal"  )
- ,new cluster_info( "ls5.tacc.utexas.edu",      "lonestar5",      "normal"  )
- ,new cluster_info( "stampede2.tacc.xsede.org", "stampede2",      "skx-normal" )
- ,new cluster_info( "comet.sdsc.xsede.org",     "comet",          "compute" )
- ,new cluster_info( "bridges2.psc.edu",         "bridges2",       "RM-shared"  )
- ,new cluster_info( "expanse.sdsc.edu",         "expanse",        "shared"  )
- ,new cluster_info( "expanse.sdsc.edu",         "expanse-gamc",   "compute" )
- ,new cluster_info( "juwels.fz-juelich.de",     "juwels",         "batch"   )
- ,new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" )
- ,new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" )
- ,new cluster_info( "taito.csc.fi",             "taito-local",    "serial"  )
- ,new cluster_info( "puhti.csc.fi",             "puhti-local",    "serial"  )
- ,new cluster_info( "chinook.hs.umt.edu",       "chinook-local",  "batch"   )
- ,new cluster_info( "login.gscc.umt.edu",       "umontana-local", "griz_partition" )
- ,new cluster_info( "demeler9.uleth.ca",        "demeler9-local", "batch"   )
- ,new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",   "batch"   )
- ,new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",   "normal"  )
-  );
+if ( !isset( $clusters ) || count( $clusters ) == 0 ) {
+    ## fall back to hard coded defaults
+    $clusters = array( 
+        new cluster_info( "dev1-linux",               "us3iab-devel",   "normal"  )
+        ,new cluster_info( "ls5.tacc.utexas.edu",      "lonestar5",      "normal"  )
+        ,new cluster_info( "stampede2.tacc.xsede.org", "stampede2",      "skx-normal" )
+        ,new cluster_info( "comet.sdsc.xsede.org",     "comet",          "compute" )
+        ,new cluster_info( "bridges2.psc.edu",         "bridges2",       "RM-shared"  )
+        ,new cluster_info( "expanse.sdsc.edu",         "expanse",        "shared"  )
+        ,new cluster_info( "expanse.sdsc.edu",         "expanse-gamc",   "compute" )
+        ,new cluster_info( "juwels.fz-juelich.de",     "juwels",         "batch"   )
+        ,new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" )
+        ,new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" )
+        ,new cluster_info( "taito.csc.fi",             "taito-local",    "serial"  )
+        ,new cluster_info( "puhti.csc.fi",             "puhti-local",    "serial"  )
+        ,new cluster_info( "chinook.hs.umt.edu",       "chinook-local",  "batch"   )
+        ,new cluster_info( "login.gscc.umt.edu",       "umontana-local", "griz_partition" )
+        ,new cluster_info( "demeler9.uleth.ca",        "demeler9-local", "batch"   )
+        ,new cluster_info( "demeler1.uleth.ca",        "demeler1-local", "batch"   )
+        ,new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",   "batch"   )
+        ,new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",   "normal"  )
+        );
+}
 
 global $svcport;
 $gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:" . $svcport . "/ogce-rest/job";
@@ -161,7 +315,6 @@ HTML;
     $checked  = " checked='checked'";      // check the first one
     $gamcnms  = "";
     $ngamc    = 0;
-  
     foreach ( $clusters as $cluster )
     {
       // Only list clusters that are authorized for the user
@@ -170,7 +323,7 @@ HTML;
         $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
         $disabled = ( $cluster->status == 'draining' ) ? " disabled='disabled'" : $disabled;
         $clload   = "<td>n/a</td>";
-        $clstat   = "<td>$cluster->status</td>";
+	$clstat   = "<td>$cluster->status</td>";
 
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
@@ -243,6 +396,7 @@ HTML;
        <table>
 HTML;
     }
+
     $text .= <<<HTML
     $mctext
     </table>
@@ -273,12 +427,23 @@ function tigre()
 {
   global $clusters;
   global $org_site;
+  global $global_cluster_details;
 
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
 
   $text = "    <fieldset style='margin-top:1em' id='clusters'>\n" .
           "      <legend>Select Cluster</legend>\n";
+
+  ## do we have mgroupcount && mc_iterations > 1?
+  $pmg_job =
+      array_key_exists( 'payload_mgr', $_SESSION )
+      && array_key_exists( 'job_parameters',  $_SESSION[ 'payload_mgr' ] )
+      && array_key_exists( 'req_mgroupcount', $_SESSION[ 'payload_mgr' ][ 'job_parameters' ] )
+      && $_SESSION[ 'payload_mgr' ][ 'job_parameters' ][ 'req_mgroupcount' ] > 1
+      && array_key_exists( 'mc_iterations', $_SESSION[ 'payload_mgr' ][ 'job_parameters' ] )
+      && $_SESSION[ 'payload_mgr' ][ 'job_parameters' ][ 'mc_iterations' ] > 1
+      ;
 
   // Double check cluster authorizations
   if ( $_SESSION['userlevel'] >= 4         ||
@@ -297,9 +462,29 @@ HTML;
   
     foreach ( $clusters as $cluster )
     {
-      // Only list clusters that are authorized for the user
-      if (  in_array( $cluster->short_name, $_SESSION['clusterAuth'] ) )
-      {
+        ## Only list clusters that are authorized for the user
+        if (
+            in_array( $cluster->short_name, $_SESSION['clusterAuth'] )
+            && array_key_exists( $cluster->short_name, $global_cluster_details )
+            && (
+                (
+                 ## pmg job and pmj true
+                 $pmg_job
+                 && array_key_exists( 'pmg', $global_cluster_details[$cluster->short_name] )
+                 && $global_cluster_details[$cluster->short_name]['pmg'] == true
+                )
+                ||
+                (
+                 ## !pmg job and pmjonly not set or false
+                 !$pmg_job
+                 && (
+                      !array_key_exists( 'pmgonly', $global_cluster_details[$cluster->short_name] )
+                      || $global_cluster_details[$cluster->short_name]['pmgonly'] == false
+                 )
+                )
+            )
+            )
+        {
         $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
         $disabled = ( $cluster->status == 'draining' ) ? " disabled='disabled'" : $disabled;
         $clload   = "<td>n/a</td>";
@@ -371,13 +556,13 @@ HTML;
       }
     }
     $mctext = "";
-    if ( $ngamc > 0 )
-    {  // Add note about choosing "-gamc" cluster
-       $mctext .= <<<HTML
-       </table><table><tr><td STYLE='color: DarkViolet'>
-<b>N.B.</b> For GA-MC jobs, select any existing "-gamc" variation of a chosen cluster.</td></tr>
-HTML;
-    }
+##    if ( $ngamc > 0 )
+##    {  // Add note about choosing "-gamc" cluster
+##       $mctext .= <<<HTML
+##       </table><table><tr><td STYLE='color: DarkViolet'>
+##<b>N.B.</b> For GA-MC jobs, select any existing "-gamc" variation of a chosen cluster.</td></tr>
+## HTML;
+##    }
     $text .= <<<HTML
     $mctext
     </table>
@@ -398,8 +583,11 @@ HTML;
 
   }
 
-
   $text .= "     </fieldset>\n";
+
+  ## debugging
+  ## file_put_contents( "/tmp/debug2", json_encode( $_SESSION[ 'payload_mgr' ], JSON_PRETTY_PRINT ) );
+  ## $text .= $pmg_job ? "is pmg_job" : "not pmg_job";
 
   return( $text );
 }
@@ -534,5 +722,3 @@ function LIMS_mailer( $email, $subject, $message )
 
   mail($email, "$subject - $now", $message, $headers);
 }
-
-?>

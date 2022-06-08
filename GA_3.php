@@ -36,6 +36,7 @@ include 'lib/file_writer.php';
 include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
 include $class_dir . 'submit_airavata.php';
+include_once $class_dir . 'priority.php';
 
 // Create the payload manager and restore the data
 $payload = new Payload_GA( $_SESSION );
@@ -55,6 +56,7 @@ if ( $_SESSION[ 'separate_datasets' ] )
 //print_r( $payload->get() );
 
   $dataset_count = $payload->get( 'datasetCount' );
+  priority( "GA", $dataset_count, $payload->get( 'job_parameters' ) );
 
   for ( $ii = 0; $ii < $dataset_count; $ii++ )
   {
@@ -89,6 +91,7 @@ else
 //echo "not separate\n"; exit();
   $missit_msg = '';
   $globalfit = $payload->get();
+  priority( "GA-GF", $payload->get( 'datasetCount' ), $payload->get( 'job_parameters' ) );
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
   
@@ -134,41 +137,22 @@ HTML;
     $cluster     = $_SESSION[ 'cluster' ][ 'shortname' ];
     unset( $_SESSION[ 'cluster' ] );
 
-    // Currently we are supporting two submission methods.
-    switch ( $cluster )
-    {
-      case 'jetstream-local' :
-      case 'taito-local'     :
-      case 'puhti-local'     :
-      case 'demeler3-local'  :
-      case 'chinook-local'   :
-      case 'demeler9-local'  :
-      case 'umontana-local'  :
-      case 'us3iab-node0'    :
-      case 'us3iab-node1'    :
-      case 'us3iab-devel'    :
-      case 'dev1-linux'    :
-        $job = new submit_local();
-        break;
-
-      case 'stampede2'  :
-      case 'lonestar5'  :
-      case 'comet'      :
-      case 'jureca'     :
-      case 'juwels'     :
-      case 'jetstream'  :
-      case 'bridges2'   :
-      case 'expanse'    :
-      case 'expanse-gamc'  :
-        $job = new submit_airavata();
-        break;
-
-      default           :
-        $output_msg .= "<br /><span class='message'>Unsupported cluster $cluster!</span><br />\n";
-        $filenames = array();
-        break;
+    if ( isset( $global_cluster_details )
+         && is_array( $global_cluster_details )
+         && array_key_exists( $cluster, $global_cluster_details ) 
+         && array_key_exists( 'airavata', $global_cluster_details[$cluster] ) ) {
+           if ( $global_cluster_details[$cluster]['airavata' ] ) {
+               $job = new submit_airavata();
+           } else {
+               $job = new submit_local();
+           }
+    } else {
+        error_log( "$cluster not properly setup\n" );
+        $msg = "<br /><span class='message'>Configuration error: Unsupported cluster $cluster</span><br />\n";
+        echo $msg;
+        exit;
     }
-   
+
     $save_cwd = getcwd();         // So we can come back to the current 
                                   // working directory later
 

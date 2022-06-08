@@ -13,6 +13,8 @@ if ( $_SESSION['userlevel'] < 2 )
   exit();
 }
 
+$start_time = dt_now();
+
 include_once 'config.php';
 include_once 'lib/utility.php';
 
@@ -127,6 +129,7 @@ $content .= "</table>\n";
 
 $content .= "</div>\n";
 
+elog( sprintf( "queue_content run time %.2fs", dt_duration_seconds( $start_time, dt_now() ) ) );
 echo $content;
 exit();
 

@@ -48,6 +48,8 @@ include_once 'lib/file_writer.php';
 include_once $class_dir . 'submit_local.php';
 include_once $class_dir . 'submit_gfac.php';
 include_once $class_dir . 'submit_airavata.php';
+include_once $class_dir . 'progress.php';
+include_once $class_dir . 'priority.php';
 
 // Create the payload manager and restore the data
 $payload = new Payload_2DSA( $_SESSION );
@@ -84,8 +86,13 @@ if ( $separate_datasets > 0 )
   $kr            = 0;               // Output request index
 $missit_msg = "<br/>ds_remain=" . $ds_remain;
 
+  echo "<script>us_submit_prog.show();</script>";
+  priority( "2DSA", $dataset_count, $job_params );
+
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
+    echo "<script>us_submit_prog.msg.prep('$ds_remain');</script>";
+
     if ( ( $ds_remain - $reqds_count ) < $mgroup_count )
       $reqds_count   = $ds_remain;
     else
@@ -126,6 +133,7 @@ $missit_msg .= "<br/> fnkr=" . $filenames[kr];
 else
 { // Multiple datasets and global
   $globalfit = $payload->get();
+  priority( "2DSA-GF", $payload->get( 'datasetCount' ), $payload->get( 'job_parameters' ) );
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
   $missit_msg = '';
@@ -159,6 +167,7 @@ $missit_msg = "<br/>filenames[0]=" . $filenames[0];
 if ( $files_ok )
 {
   $output_msg = <<<HTML
+  <script>us_submit_prog.hide()</script>
   <pre>
   Thank you, your job was accepted and is currently processing. An
   email will be sent to {$_SESSION['submitter_email']} when the job is
@@ -172,43 +181,29 @@ HTML;
     $cluster     = $_SESSION['cluster']['shortname'];
     unset( $_SESSION['cluster'] );
 
-    // Currently we are supporting two submission methods.
-    switch ( $cluster )
-    {
-       case 'jetstream-local' :
-       case 'taito-local'     :
-       case 'puhti-local'     :
-       case 'demeler3-local'  :
-       case 'chinook-local'   :
-       case 'demeler9-local'  :
-       case 'umontana-local'  :
-       case 'us3iab-node0'    :
-       case 'us3iab-node1'    :
-       case 'us3iab-devel'    :
-          $job = new submit_local();
-          break;
-       case 'stampede2' :
-       case 'lonestar5' :
-       case 'comet'     :
-       case 'juwels'    : 
-       case 'jetstream' :
-       case 'bridges2'  :
-       case 'expanse'   :
-       case 'expanse-gamc' :
-          $job = new submit_airavata();
-          break;
-
-       default         :
-          $output_msg .= "<br /><span class='message'>Unsupported cluster $cluster!</span><br />\n";
-          $filenames = array();
-          break;
+    if ( isset( $global_cluster_details )
+         && is_array( $global_cluster_details )
+         && array_key_exists( $cluster, $global_cluster_details ) 
+         && array_key_exists( 'airavata', $global_cluster_details[$cluster] ) ) {
+           if ( $global_cluster_details[$cluster]['airavata' ] ) {
+               $job = new submit_airavata();
+           } else {
+               $job = new submit_local();
+           }
+    } else {
+        error_log( "$cluster not properly setup\n" );
+        $msg = "<br /><span class='message'>Configuration error: Unsupported cluster $cluster</span><br />\n";
+        echo $msg;
+        exit;
     }
-   
+
     $save_cwd = getcwd();         // So we can come back to the current 
                                   // working directory later
 
     foreach ( $filenames as $filename )
     {
+      echo "<script>us_submit_prog.msg.submit('" . basename( $filename ) . "');</script>";
+
       chdir( dirname( $filename ) );
 
       $job-> clear();

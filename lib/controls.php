@@ -33,24 +33,60 @@ HTML;
 // Function to display PMGC options
 function PMGC_option()
 {
-echo<<<HTML
+    global $global_cluster_details;
+
+    $cluster_msg = "<tr><th>Cluster</th><th style='text-align:center;'>Time limit</th></tr>";
+
+##          <p>
+##          Note: The actual group count number is dependent on the capacity and the 
+##          architecture of the selected back end system. Generally, the group count number
+##          will be adjusted downward to 1-7/8/16/32 depending on the number of demes or
+##
+##          datasets requested and the capacity of the system. Currently, the maximum number of
+##          cores that can be requested ( that is, #cores_per_group x #groups ) are as follows:
+##          </p>
+
+
+    foreach ( $global_cluster_details as $k => $v ) {
+        if ( !is_array( $v )
+             || !array_key_exists( 'active', $v )
+             || $v['active'] == false
+             || !array_key_exists( 'pmg', $v )
+             || $v['pmg'] == false
+             || !array_key_exists( 'clusterAuth', $_SESSION )
+             || !in_array( $k, $_SESSION[ 'clusterAuth' ] )
+            ) {
+            continue;
+        }
+        $cluster_msg .=
+            "<tr><td>$k</td>"
+            . "<td style='text-align:center;'>"
+            . sprintf( "%d h", $v['maxtime'] / 60 )
+            . "</td></tr>"
+            ;
+    }
+
+    echo<<<HTML
       <fieldset>
-        <legend>Parallel Masters Group Option</legend>
+        <legend>Parallel Threads Option</legend>
 
         <div>
-          <p>
-          Note: The actual group count number is dependent on the capacity and the 
-          architecture of the selected back end system. Generally, the group count number
-          will be adjusted downward to 1-7/8/16/32 depending on the number of demes or
-          datasets requested and the capacity of the system. Currently, the maximum number of
-          cores that can be requested ( that is, #cores_per_group x #groups ) are as follows:
-          </p>
+          <p>                              
+          Genetic Algorithm - Monte Carlo jobs can be performed in parallel threads
+          (checkbox below) to speed up the calculation. You can request parallel
+          threads in increments of 4, running multiples of 4 parallel genetic
+          algorithm processes at a time. For example, if you select 4 threads, a
+          64-iteration Monte Carlo job will run 16 Monte Carlo iterations in each
+          thread, or if you select 8 threads, you can run the same job with 8
+          iterations per threads. The larger the number of threads is, the faster the
+          job will complete, however, the waiting time until the job starts might
+          increase significantly before you get a sufficient amount of free compute
+          resources.
+
+          <br><br><span style="color:darkRed">N.B. Monte Carlo iterations should be a multiple of the number of threads. e.g. if you select 32 threads, iterations should be 64 or 96.</span>
+          </p>                                        
           <table class='noborder' style='margin:0px auto;'>
-            <tr><th>Cluster</th><th>Max cores</th></tr>
-            <tr><td>stampede2</td><td style='text-align:center;'>1024</td></tr>
-            <tr><td>lonestar5</td><td style='text-align:center;'>1152</td></tr>
-            <tr><td>comet</td><td style='text-align:center;'>1152</td></tr>
-            <tr><td>juwels</td><td style='text-align:center;'>1152</td></tr>
+            $cluster_msg                                        
           </table>
         </div>
 
@@ -58,20 +94,21 @@ echo<<<HTML
         <tr><td>
 
         <input type='checkbox' name='PMGC_enable' id='PMGC_enable' /> 
-          Use Parallel Processing
+          Use Parallel Threads
         <br/>
         <fieldset name='PMGC_count' id='PMGC_count' style='display:none;'>
-          <legend>Group Count</legend>
+          <legend>Threads</legend>
             <select name="req_mgroupcount" id='req_mgroupcount'>
               <option value='1' selected='selected'>1</option>
               <option value='2'>2</option>
               <option value='3'>3</option>
               <option value='4'>4</option>
-              <option value='5'>5</option>
-              <option value='6'>6</option>
-              <option value='7'>7</option>
               <option value='8'>8</option>
+              <option value='12'>12</option>
               <option value='16'>16</option>
+              <option value='20'>20</option>
+              <option value='24'>24</option>
+              <option value='28'>28</option>
               <option value='32'>32</option>
             </select>
         </fieldset>
@@ -538,8 +575,30 @@ HTML;
 // Function to display the demes input
 function demes_setup()
 {
+    global $global_cluster_details;
+
+    $demes_msg = '<tr><th>Cluster</th><th>Max demes</th></tr>';
+
+    foreach ( $global_cluster_details as $k => $v ) {
+        if ( !is_array( $v )
+             || !array_key_exists( 'active', $v )
+             || $v['active'] == false
+             || !array_key_exists( 'pmg', $v )
+             || $v['pmg'] == false
+             || !array_key_exists( 'clusterAuth', $_SESSION )
+             || !in_array( $k, $_SESSION[ 'clusterAuth' ] )
+            ) {
+            continue;
+        }
+        $demes_msg .=
+            "<tr><td>$k</td><td style='text-align:center;'>"
+            . sprintf( "%d", ( $v['maxproc'] / $v['ppbj'] ) - 1 )
+            . "</td></tr>"
+            ;
+    }
+
 echo<<<HTML
-      <fieldset class='option_value'>
+      <fieldset class='option_value' style="display:none">
         <legend>Demes</legend>
 
         <div class='newslider' id='demes-slider'></div>
@@ -563,11 +622,7 @@ echo<<<HTML
           Generally, demes + 1 will be adjusted upward in units of 8, 12, or 16, but limited
           to the capacity of the system. Currently, the maximum demes values are as follows:
           <table class='noborder' style='margin:0px auto;'>
-            <tr><th>Cluster</th><th>Max demes</th></tr>
-            <tr><td>stampede2</td><td style='text-align:center;'>63</td></tr>
-            <tr><td>lonestar5</td><td style='text-align:center;'>47</td></tr>
-            <tr><td>comet</td><td style='text-align:center;'>47</td></tr>
-            <tr><td>juwels</td><td style='text-align:center;'>47</td></tr>
+            $demes_msg
           </table>
         </p>
         </div>
