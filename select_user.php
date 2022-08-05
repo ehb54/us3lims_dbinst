@@ -57,9 +57,19 @@ include 'header.php';
 include 'footer.php';
 exit();
 
+// Function to clear the queue to prevent modelPerson corruption
+
+function clear_queue() {
+  unset( $_SESSION['request'] );
+  unset( $_SESSION['cells'] );
+  unset( $_SESSION['experimentID'] );
+  unset( $_SESSION['new_noise'] );
+}    
+
 // Function to update user session variables and display info
 function change_person_info( $link, $personID )
 {
+  clear_queue();
   $query  = "SELECT fname, lname, phone, clusterAuthorizations " .
             "FROM people " .
             "WHERE personID = ? ";
@@ -131,6 +141,8 @@ HTML;
 // Function to restore user session variables and display info to login values
 function restore_info($link)
 {
+  clear_queue();
+
   $personID = $_SESSION['loginID'];
 
   $query  = "SELECT fname, lname, phone, clusterAuthorizations " .
