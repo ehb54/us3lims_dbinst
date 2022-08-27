@@ -299,12 +299,16 @@ $(document).ready(function()
     {
        $("#PMGC_count").show();
        $("#req_mgroupcount").attr( 'value', 8 );
+       $("#clusters-nopmg").hide();
+       $("#clusters-pmg").show();
     }
 
     else
     {
        $("#PMGC_count").hide();
        $("#req_mgroupcount").attr( 'value', 1 );
+       $("#clusters-nopmg").show();
+       $("#clusters-pmg").hide();
     }
 
   });

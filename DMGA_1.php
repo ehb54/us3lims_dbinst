@@ -213,9 +213,9 @@ if ( isset($_SESSION['edit_select_type'])  &&
   // Add controls to save the last or only dataset
   if ( $dataset_id == $max_dset_id )
   {
-    echo tigre();
+    echo '<div id="clusters-nopmg">' . tigre() . '</div>';
+    echo '<div id="clusters-pmg" style="display:none">' . tigre( true ) . '</div>';
   }
-
 ?>
 
 </form>

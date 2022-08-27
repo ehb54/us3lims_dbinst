@@ -419,11 +419,13 @@ HTML;
 
   $text .= "     </fieldset>\n";
 
+  $text .= "\nSession:\n" . json_encode( $_SESSION, JSON_PRETTY_PRINT ) . "\n";
+  
   return( $text );
 }
 
 // Function to return appropriate clusters
-function tigre()
+function tigre( $force_pmg = false )
 {
   global $clusters;
   global $org_site;
@@ -437,12 +439,15 @@ function tigre()
 
   ## do we have mgroupcount && mc_iterations > 1?
   $pmg_job =
-      array_key_exists( 'payload_mgr', $_SESSION )
-      && array_key_exists( 'job_parameters',  $_SESSION[ 'payload_mgr' ] )
-      && array_key_exists( 'req_mgroupcount', $_SESSION[ 'payload_mgr' ][ 'job_parameters' ] )
-      && $_SESSION[ 'payload_mgr' ][ 'job_parameters' ][ 'req_mgroupcount' ] > 1
-      && array_key_exists( 'mc_iterations', $_SESSION[ 'payload_mgr' ][ 'job_parameters' ] )
-      && $_SESSION[ 'payload_mgr' ][ 'job_parameters' ][ 'mc_iterations' ] > 1
+      $force_pmg
+      || (
+          array_key_exists( 'payload_mgr', $_SESSION )
+          && array_key_exists( 'job_parameters',  $_SESSION[ 'payload_mgr' ] )
+          && array_key_exists( 'req_mgroupcount', $_SESSION[ 'payload_mgr' ][ 'job_parameters' ] )
+          && $_SESSION[ 'payload_mgr' ][ 'job_parameters' ][ 'req_mgroupcount' ] > 1
+          && array_key_exists( 'mc_iterations', $_SESSION[ 'payload_mgr' ][ 'job_parameters' ] )
+          && $_SESSION[ 'payload_mgr' ][ 'job_parameters' ][ 'mc_iterations' ] > 1
+      )
       ;
 
   // Double check cluster authorizations
