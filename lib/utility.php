@@ -416,11 +416,8 @@ HTML;
 
   }
 
-
   $text .= "     </fieldset>\n";
 
-  $text .= "\nSession:\n" . json_encode( $_SESSION, JSON_PRETTY_PRINT ) . "\n";
-  
   return( $text );
 }
 
