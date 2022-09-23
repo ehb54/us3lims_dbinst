@@ -100,195 +100,84 @@ function order_select( $current_order = NULL )
 // A function to delete the selected job
 function do_delete()
 {
-  
+  global $global_cluster_details;
   global $clusters, $uses_thrift;               // From utility.php
   global $info;
 //  var_dump($uses_thrift);
   $cluster  = $_POST['cluster'];
   $gfacID   = $_POST['gfacID'];
   $jobEmail = $_POST['jobEmail'];
-  // Find out which cluster we're deleting from
-  $found = false;
-  foreach ( $clusters as $info )
-  {
-    if ( $cluster == $info->name )		// $info->name = demeler3.uleth.ca - IS THIS $_POST['cluster'] ?? 
-    {
-      $shortname = $info->short_name;		// $info->short_name = demeler3-local
-      $found     = true; 
-      break;
+
+    if ( !array_key_exists( $cluster, $global_cluster_details )
+         || !array_key_exists( 'airavata',  $global_cluster_details[ $cluster ] )
+         ) {
+             ## should message somehow
+             elog( "do_delete cluster $cluster not in \$global_config:\$cluster_details or missing keys" );
+             return;
     }
-  }
+    
+    if( $global_cluster_details[ $cluster ][ 'airavata' ] ?
+        cancelAiravataJob( $gfacID ) :
+        cancelLocalJob( $gfacID, $cluster ) ) {
+            ## Let's update what user sees until canceled
+            updateLimsStatus( $gfacID, 'aborted',  "Job has been canceled"  );
+            updateGFACStatus( $gfacID, 'CANCELED', "Job has been canceled"  );
+    }
 
-  if ( ! $found ) return;
-
-
-  // We need to find out if it's a GFAC or local job
-  if ( preg_match( "/us3iab/", $shortname ) )
-  {
-     $clus_thrift   = false;
-  }
-  else
-  {
-    $hex = "[0-9a-fA-F]";
-    if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
-         ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) &&
-         ! preg_match( "/^US3-A/", $gfacID ) &&
-         ! preg_match( "/-local/", $shortname ) )
-       $shortname .= '-local';   // Not a GFAC ID
-    $clus_thrift = $uses_thrift;
-    if ( in_array( $shortname, $thr_clust_excls ) )
-       $clus_thrift   = false;
-    if ( in_array( $shortname, $thr_clust_incls ) )
-       $clus_thrift   = true;
-  }
- 
-  //$shortname    = preg_replace( "/\-local/", "", $shortname );
-  //exec("/usr/bin/ssh -x us3@$shortname.uleth.ca qdel $gfacID 2>&1");  
-
-  switch ( $shortname )
-  {
-    case 'jetstream-local' :
-    case 'taito-local'     :
-    case 'puhti-local'     :
-    case 'demeler1-local'  :
-    case 'chinook-local'   :
-    case 'umontana-local'  :
-    case 'us3iab-node0' :
-    case 'us3iab-node1' :
-    case 'us3iab-devel' :
-    case 'dev1-linux'   :
-    case 'localhost'    :
-      $status = cancelLocalJob( $shortname, $gfacID );
-      break;
-	
-    case 'stampede2' :
-    case 'lonestar5' :
-    case 'comet'     :
-    case 'jetstream' :
-    case 'bridges2'  :
-    case 'expanse'   :
-    case 'expanse-gamc' :
-    case 'juwels'    :
-      if ( $clus_thrift === true )
-      {
-        $status = cancelAiravataJob( $gfacID );
-        if ( $status )
-        {
-          // Let's update what user sees until canceled
-          updateLimsStatus( $gfacID, 'aborted',  $lastMessage );
-          updateGFACStatus( $gfacID, 'CANCELED', $lastMessage );
-        }
-      }
-      break;
-
-    default:
-      //exec("/usr/bin/ssh -x us3@demeler3.uleth.ca qdel $gfacID 2>&1");
-      break;
-
-  }
 }
 
 // Function to cancel a local job
-function cancelLocalJob( $cluster, $gfacID )
+function cancelLocalJob( $gfacID, $cluster )
 {
-   $system    = "$cluster.hs.umt.edu";
+   # elog( "cancel_local_job( $gfacID )" );
+   global $global_cluster_details;
 
-   $is_jetstr = preg_match( "/jetstream/", $cluster );
-   $is_local  = preg_match( "/-local/", $cluster );
-   $is_demeler3 = preg_match( "/demeler3/", $cluster ); 	      
-     
-   
-   if ( $is_demeler3 )
-   {   
-      $system    = "$cluster.uleth.ca";	     
+   $self = "queue_viewer.php::cancelLocalJob";
+   $ruser     = "us3"; 
+
+   if ( !array_key_exists( $cluster, $global_cluster_details ) ) {
+       elog( "$self cluster $cluster missing from global_config.php \$global_cluster_details" );
+       return false;
    }
-   
-   if ( $is_jetstr )
-   {
-      $system    = "js-169-137.jetstream-cloud.org";
-      $cmd       = "/usr/bin/ssh -x us3@$system squeue $gfacID 2>&1|tail -n 1";
+       
+   if ( !array_key_exists( 'name', $global_cluster_details[$cluster] ) ) {
+       elog( "$self 'name' key missing from global_config.php \$global_cluster_details[$cluster]" );
+       return false;
    }
-   else
-   {
-      $cmd       = "qstat -a $gfacID 2>&1|tail -n 1";
-      
-      if ( $is_local )
-      {  
-         $system    = preg_replace( "/\-local/", "", $system );
-         $cmd       = "/usr/bin/ssh -x us3@$system $cmd";
-      }
+
+   $login = $global_cluster_details[$cluster]['name'];
+
+   if ( array_key_exists( 'login', $global_cluster_details[$cluster] ) ) {
+       $login = $global_cluster_details[$cluster]['login'];
    }
+
+   $cmd_prefix = "ssh -x $login ";
+
+   if ( array_key_exists( 'localhost', $global_cluster_details[$cluster] ) 
+        && $global_cluster_details[$cluster]['localhost'] ) {
+       $cmd_prefix = "";
+   }
+
+   $cmd    = "$cmd_prefix scancel $gfacID 2>&1";
+
+   elog( "$self gfacID $gfacID cluster $cluster" );
 
    $result = exec( $cmd );
+   elog( "$self locstat: cmd=$cmd  result=$result" );
 
-   if ( $result == ""  ||  preg_match( "/^qstat: Unknown/", $result ) )
+   $secwait    = 2;
+   $num_try    = 0;
+   ## Sleep and retry up to 3 times if ssh has "ssh_exchange_identification" error
+   while ( preg_match( "/ssh_exchange_id/", $result )  &&  $num_try < 3 )
    {
-     // Let's try to update the lastMessage field so the user sees
-     updateLimsStatus( $gfacID, 'aborted', "Job was not found in the status queue" );
-     updateGFACStatus( $gfacID, 'CANCELED', "Job was not found in the status queue" );
-     return;
+      sleep( $secwait );
+      $num_try++;
+      $secwait   *= 2;
+      elog( "$self  num_try=$num_try  secwait=$secwait" );
    }
 
-   $values = preg_split( "/\s+/", $result );
-//   switch ( $values[ 9 ] )
-   $jstat  = ( $is_jetstr == 0 ) ? $values[ 9 ] : $values[ 4 ];
-   switch ( $jstat )
-   {
-      case "E" :                      // Job is exiting after having run
-        $lastMessage = "Job is exiting";
-        break;
-
-      case "C" :                      // Job has completed
-        $lastMessage = "Job has already completed";
-        break;
-
-      case "W" :                      // Waiting for execution time to be reached
-      case "R" :                      // Still running
-      case "T" :                      // Job is being moved
-      case "H" :                      // Held
-      case "Q" :                      // Queued
-      default  :                      // This should not occur
-        // If we're here we should delete the job
-        // We could add logic to discover if any of the nodes I'm using are down
-        // 'pbsnodes -l' tells us which nodes are down, if any. If that's empty
-        // we can go ahead. Otherwise we can use qstat -f $gfacID to determine
-        // which nodes are in use for our job. If any of our nodes is down
-        // we should use qdel -r $gfacID instead of the following.
-        $parts = explode( ".", $gfacID );
-        $jobID = $parts[ 0 ];
-        if ( $is_jetstr )
-        {
-           $system = "js-169-137.jetstream-cloud.org";
-           $cmd    = "/usr/bin/ssh -x us3@$system scancel $gfacID 2>&1|tail -n 1";
-        }
-        else
-        {
-           $cmd    = "qdel $jobID 2>&1";
-           if ( $is_local )
-           {
-	      $cmd    = "/usr/bin/ssh -x us3@$system $cmd";
-	      
-	      if ( $is_demeler3 )
-	      	{ 
-	           $cmd    = "/usr/bin/ssh -x us3@demeler3.uleth.ca qdel $gfacID 2>&1"; 
-	      	} 
-              
-           }
-        }
-        $result = exec( $cmd );
-
-	 
-        $lastMessage = "This job has been canceled";
-        break;
-   }
-
-
-   // Let's update what user sees until canceled
-   updateLimsStatus( $gfacID, 'aborted', $lastMessage );
-   updateGFACStatus( $gfacID, 'CANCELED', $lastMessage );
-
-   return;
-
+   ## should likely verify if canceled, perhaps via a call to get_local_status()
+   return true;
 }
 
 // Function to update the status on an arbitrary lims database
@@ -357,6 +246,9 @@ function updateGFACStatus( $gfacID, $status, $message )
 // A function to generate page content using lims2 methods
 function page_content2()
 {
+    ## this should never succeed, probably should be removed
+    ## page content is now ins queue_content.php
+
   if ( ! file_exists( '/share/apps64/ultrascan/bin64/mpi_status' ) )
     return;                                             // no lims2 status available
 
