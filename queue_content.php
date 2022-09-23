@@ -30,7 +30,7 @@ if ( ! $globaldb )
 
 $is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
 
-$query  = "SELECT gfacID, us3_db FROM analysis ";
+$query  = "SELECT gfacID, us3_db, cluster, status FROM analysis ";
 if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
   $query .= "WHERE us3_db = '$dbname' ";
 $query .= "ORDER BY time ";
@@ -47,17 +47,24 @@ if ( mysqli_num_rows( $result ) == 0 )
 
 // Get all the info from the global db at once to avoid switching more than necessary
 $global_info = array();
-while ( list( $gfacID, $us3_db ) = mysqli_fetch_array( $result ) )
-  $global_info[ $gfacID ] = $us3_db;
+$global_clusters = [];
+while ( list( $gfacID, $us3_db, $cluster, $status ) = mysqli_fetch_array( $result ) ) {
+    $global_info[ $gfacID ]        = $us3_db;
+    $global_clusters[ $gfacID ]    = $cluster;
+    $global_gfac_status[ $gfacID ] = $status;
+}
 
 // Now get the info we need from each of the local databases
 $display_info = array();
+
 foreach ( $global_info as $l_gfacID => $db )
 {
   $info = get_status( $l_gfacID, $db );
+  #elog( "info:\n" . json_encode( $info, JSON_PRETTY_PRINT ) );
   if ( $info !== false )
     $display_info[$l_gfacID] = $info;
 }
+mysqli_close( $globaldb );
 
 // Sort $display_info according to preferred sort_order
 $sort_order = 'submitTime';
@@ -98,7 +105,7 @@ foreach( $display_info as $display )
   $content .= "<tr><th>Run ID:</th>\n" .
             "<td colspan='3'>$runID $triple $db_info</td>\n" .
             "<td rowspan='6'>\n" .
-            display_buttons( $database, $clusterName, $gfacID, $jobEmail ) .
+            display_buttons( $database, $cluster, $gfacID, $jobEmail ) .
             "</td></tr>\n";
 
   $content .= <<<HTML
@@ -116,7 +123,7 @@ foreach( $display_info as $display )
   <tr><th>Submitted on:</th>
       <td>$submitTime</td>
       <th rowspan='2'>Running on:</th>
-      <td rowspan='2'>$clusterName</td></tr>
+      <td rowspan='2'>$cluster</td></tr>
 
   <tr><th>Last Status Update:</th>
       <td>$updateTime</td></tr>
@@ -137,19 +144,21 @@ exit();
 function get_status( $gfacID, $us3_db )
 {
   global $globaldbhost, $configs;
+  global $global_clusters;
+  global $global_gfac_status;
+  global $globaldb;
   // Using credentials that will work for all databases
   $upasswd = $configs[ 'us3php' ][ 'password' ];
-  $link = mysqli_connect( $globaldbhost, 'us3php', $upasswd, $us3_db );
 
   // Ok, now get what we can from the HPC tables
   $query  = "SELECT r.HPCAnalysisRequestID, queueStatus, lastMessage, updateTime, editXMLFilename, " .
             "investigatorGUID, submitterGUID, submitTime, clusterName, method, runID, analType " .
-            "FROM HPCAnalysisResult r, HPCAnalysisRequest q, experiment " .
+            "FROM $us3_db.HPCAnalysisResult r, $us3_db.HPCAnalysisRequest q, $us3_db.experiment " .
             "WHERE r.gfacID = '$gfacID' " .                                 // limit to 1 record right off
             "AND r.HPCAnalysisRequestID = q.HPCAnalysisRequestID " .
             "AND q.experimentID = experiment.experimentID " .
             "ORDER BY HPCAnalysisResultID DESC LIMIT 1";
-  $result = mysqli_query( $link, $query );
+  $result = mysqli_query( $globaldb, $query );
   if ( ! $result || mysqli_num_rows( $result ) == 0 )
     return false;
 
@@ -169,18 +178,27 @@ function get_status( $gfacID, $us3_db )
   unset( $status['editXMLFilename'] );
   $status['triple'] = $triple;
 
+  $status['cluster']              = $global_clusters[ $gfacID ];
+  $status['gfac_analysis_status'] = $global_gfac_status[ $gfacID ];
+
+  if ( !strncmp( $global_gfac_status[ $gfacID ], 'CANCEL', 6 ) ) {
+      $status['queueStatus'] = "canceled";
+  }
+
+  #elog( "get_status\n" . json_encode( $status, JSON_PRETTY_PRINT ) );
+
   $email = '';
-  $query  = "SELECT email FROM people " .
+  $query  = "SELECT email FROM $us3_db.people " .
             "WHERE personGUID = '{$status['investigatorGUID']}' ";
-  $result = mysqli_query( $link, $query );
+  $result = mysqli_query( $globaldb, $query );
   if ( $result && mysqli_num_rows( $result ) == 1 )
     list( $jobEmail ) = mysqli_fetch_array( $result );
 
   if ( $status['investigatorGUID'] != $status['submitterGUID'] )
   {
-    $query  = "SELECT email FROM people " .
+    $query  = "SELECT email FROM $us3_db.people " .
               "WHERE personGUID = '{$status['submitterGUID']}' ";
-    $result = mysqli_query( $link, $query );
+    $result = mysqli_query( $globaldb, $query );
     if ( $result && mysqli_num_rows( $result ) == 1 )
     {
       list( $submitterEmail ) = mysqli_fetch_array( $result );
@@ -192,7 +210,6 @@ function get_status( $gfacID, $us3_db )
   $status['database'] = $us3_db;
   $status['gfacID']   = $gfacID;
 
-  mysqli_close( $link );
   return $status;
 }
 
@@ -216,7 +233,8 @@ function display_buttons( $current_db, $cluster, $gfacID, $jobEmail )
   $buttons = "";
 
   // Let's see if the current job has already been deleted
-  if ( $display_info[$gfacID]['queueStatus'] == 'aborted' )
+  if ( $display_info[$gfacID]['queueStatus'] == 'aborted' 
+       || $display_info[$gfacID]['queueStatus'] == 'canceled' )
     return "";
 
   if ( is_authorized( $current_db, $jobEmail ) )
