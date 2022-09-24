@@ -123,7 +123,7 @@ foreach( $display_info as $display )
   <tr><th>Submitted on:</th>
       <td>$submitTime</td>
       <th rowspan='2'>Running on:</th>
-      <td rowspan='2'>$cluster</td></tr>
+      <td rowspan='2'>$cluster<br>($clusterName)</td></tr>
 
   <tr><th>Last Status Update:</th>
       <td>$updateTime</td></tr>
