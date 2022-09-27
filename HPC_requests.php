@@ -196,39 +196,40 @@ else
        echo "$linkmsg1         : $len_msgs\n";
    }
 
-   // If gfacID fits the right format for a GFAC job, a status request link:
-   $link2 = "<a href=\"{$_SERVER['PHP_SELF']}?RequestID=$reqID&jobstatus=t\">Show GFAC Status</a>";
-   $link3 = "<a href=\"{$_SERVER['PHP_SELF']}?RequestID=$reqID\">Hide GFAC Status</a>";
+   if ( isset( $gfacID ) ) {
+       // If gfacID fits the right format for a GFAC job, a status request link:
+       $link2 = "<a href=\"{$_SERVER['PHP_SELF']}?RequestID=$reqID&jobstatus=t\">Show GFAC Status</a>";
+       $link3 = "<a href=\"{$_SERVER['PHP_SELF']}?RequestID=$reqID\">Hide GFAC Status</a>";
 
-   if ( isset( $_GET['jobstatus'] ) )
-   {
-      $clus_thrift    = $uses_thrift;
-      if ( in_array( $cluster, $thr_clust_excls ) )
-         $clus_thrift    = false;
-      if ( in_array( $cluster, $thr_clust_incls ) )
-         $clus_thrift    = true;
+       if ( isset( $_GET['jobstatus'] ) )
+       {
+           $clus_thrift    = $uses_thrift;
+           if ( in_array( $cluster, $thr_clust_excls ) )
+               $clus_thrift    = false;
+           if ( in_array( $cluster, $thr_clust_incls ) )
+               $clus_thrift    = true;
 
-      $gfacID  = $gfacID;
-      echo "$link3\n";
+           $gfacID  = $gfacID;
+           echo "$link3\n";
 
-      if ( $clus_thrift )
-      {
-         $expstat = getExperimentStatus( $gfacID );
-         echo $expstat . "\n";
-         if ( ! preg_match( "/COMPLETED/", $expstat ) )
-         {
-            echo " -- \n";
-            echo getExperimentErrors( $gfacID );
-         }
-      }
-      else
-      {
-         echo getJobstatus( $gfacID );
-      }
+           if ( $clus_thrift )
+           {
+               $expstat = getExperimentStatus( $gfacID );
+               echo $expstat . "\n";
+               if ( ! preg_match( "/COMPLETED/", $expstat ) )
+               {
+                   echo " -- \n";
+                   echo getExperimentErrors( $gfacID );
+               }
+           }
+           else
+           {
+               echo getJobstatus( $gfacID );
+           }
+       } else {
+           echo "$link2\n";
+       }
    }
-
-   else
-      echo "$link2\n";
 }
 
 
