@@ -61,3 +61,7 @@ div.more_info div.moreinfo_hdr
   background-color : #8888ff;
 }
 
+#content table td.canceled
+{
+  background-color : red;
+}
