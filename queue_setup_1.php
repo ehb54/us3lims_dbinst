@@ -99,6 +99,7 @@ if ( isset( $_POST['next'] ) )
       $_SESSION['new_cells'][$rawDataID] = $filename;
     }
   }
+  
 
   if ( $is_cli ) {
     $_REQUEST=[];
@@ -169,6 +170,19 @@ echo <<<HTML
       $email_text
       $experiment_text
       $cell_text
+
+<button  type="button" onclick="SelectAllCells()">Select all cells</button>
+
+        <script>
+            function SelectAllCells(){
+                options = document.getElementById("cells");
+                options[0].selected = false;
+                for (i=1; i < options.length; i++)
+                {
+                    options[i].selected = true;
+                }
+            }
+        </script>
 
     </fieldset>
 
@@ -356,7 +370,7 @@ function get_cell_text($link)
 
     // Now construct the list items of run,filename;
     //  but only where the AUC has at least one Edit child
-    $rawData_list = "<select name='cells[]' multiple='multiple' size='20'>\n" .
+    $rawData_list = "<select id='cells' name='cells[]' multiple='multiple' size='20'>\n" .
                        "  <option value='null'>Select cells...</option>\n";
 
     for ( $kraw = 0; $kraw < count($rrawIDs); $kraw++ )
