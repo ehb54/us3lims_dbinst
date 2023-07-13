@@ -1,6 +1,8 @@
 // JavaScript routines for edit_images.php
 let mode = "";
 let curr_doc_blob = null;
+let projects, solutions, buffers, analytes, images;
+let init_data;
 const image_pdf_ext = [{name: "bmp",  type: "image/bmp"},  {name: "gif" , type: "image/gif"},
                        {name: "jpeg", type: "image/jpeg"}, {name: "jpg", type: "image/jpeg"},
                        {name: "png" , type: "image/png"},  {name: "tiff", type: "image/tiff"},
@@ -65,21 +67,160 @@ function handleMode(item) {
 }
 
 function get_info() {
-  var formData = new FormData();
-  formData.append('image_action', 'GET_INFO');
+  let formData = new FormData();
+  formData.append('image_action', 'GET_INIT_INFO');
 
-  var xhr = new XMLHttpRequest();
+  let xhr = new XMLHttpRequest();
   xhr.open('POST', 'edit_images_proc.php', true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-      document.getElementById("image_status").style.color = "green";
-      document.getElementById("image_status").value = "";
+      let data = JSON.parse(xhr.responseText);
+      init_data = data;
+      parse_init_info(data);
     } else if (xhr.readyState === 4 && xhr.status !== 200) {
       document.getElementById("image_status").style.color = "red";
       document.getElementById("image_status").value = "Error in calling database!";
     }
   };
   xhr.send(formData);
+}
+
+function parse_init_info (data) {
+  if (data.project.data == null){
+    projects = null;
+  } else {
+    let obj = {};
+    for (let ii = 0; ii < data.project.data.length; ii++){
+      let id = data.project.data[ii].projectID;
+      obj["id_" + id] = {"description" : data.project.data[ii].description, "imageIDs" : null};
+    }
+    projects = obj;
+  }
+
+  if (data.solution.data == null){
+    solutions = null;
+  } else {
+    let obj = {};
+    for (let ii = 0; ii < data.solution.data.length; ii++){
+      let id = data.solution.data[ii].solutionID;
+      obj["id_" + id] = data.solution.data[ii].description;
+    }
+    solutions = obj;
+  }
+
+  if (data.buffer.data == null){
+    buffers = null;
+  } else {
+    let obj = {};
+    for (let ii = 0; ii < data.buffer.data.length; ii++){
+      let id = data.buffer.data[ii].bufferID;
+      obj["id_" + id] = data.buffer.data[ii].description;
+    }
+    buffers = obj;
+  }
+
+  if (data.analyte.data == null){
+    analytes = null;
+  } else {
+    let obj = {};
+    for (let ii = 0; ii < data.analyte.data.length; ii++){
+      let id = data.analyte.data[ii].analyteID;
+      obj["id_" + id] = data.analyte.data[ii].description;
+    }
+    analytes = obj;
+  }
+
+  parse_image_info(data.image);
+  fill_select("image_project", projects);
+  fill_select("image_cat", {"solution" : {"description" : "Solution"} ,
+                            "buffer" : {"description" : "Buffer"} ,
+                            "analyte" : {"description" : "Analyte"} ,});
+}
+
+function parse_image_info (image) {
+  if (image.data == null){
+    images = null;
+  } else {
+    let obj = {};
+    for (let ii = 0; ii < image.data.length; ii++){
+      let id = image.data[ii].imageID;
+      obj["id_" + id] = {"description" : image.data[ii].description,
+                        "filename" : image.data[ii].filename,
+                        "projectID" : image.data[ii].projectID,
+                        "solutionID" : image.data[ii].solutionID,
+                        "bufferID" : image.data[ii].bufferID,
+                        "analyteID" : image.data[ii].analyteID,
+                        "blob" : null};
+    }
+    images = obj;
+
+    //
+    if (projects != null){
+      let imageID_list = Object.keys(images);
+      for (let pro_id in projects){
+        let imageIDs = [];
+        for (let i in imageID_list){
+          let image_id = imageID_list[i];
+          let chk = image_id != null && images[image_id].projectID != null;
+          if ( chk && images[image_id].projectID === pro_id){
+            imageIDs.push(image_id);
+            imageID_list[i] = null;
+          }
+        }
+        if (imageIDs.length == 0){
+          projects[pro_id].imageIDs = null;
+        } else {
+          projects[pro_id].imageIDs = imageIDs;
+        }
+      }
+      // check for unk
+      let imageIDs = [];
+      for (let i in imageID_list){
+        if (imageID_list[i] != null){
+          imageIDs.push(imageID_list[i]);
+        }
+      }
+      if (imageIDs.length > 0){
+        let txt = "--- Unknown --- ( " + imageIDs.length.toString() + " )";
+        projects['UNK'] = {"description" : txt, "imageIDs" : imageIDs};
+      }
+    }
+  }
+}
+
+function fill_select(tag_id, options) {
+  let select_element = document.getElementById(tag_id);
+  select_element.innerHTML = "";
+  let option_element = document.createElement('option');
+  option_element.value = "";
+  option_element.text = "--- Select One ---";
+  select_element.appendChild(option_element);
+
+  let unk_val = null;
+  for (id in options){
+    if (id == "UNK") {
+      unk_val = options.UNK;
+      continue;
+    }
+    let option_element = document.createElement('option');
+    option_element.value = id;
+    let txt = options[id].description;
+    if ( Object.keys(options[id]).includes("imageIDs") ){
+      if (options[id].imageIDs == null){
+        txt += "  ( 0 )";
+      }else{
+        txt += "  ( " + options[id].imageIDs.length.toString() + " )";
+      }
+    }
+    option_element.text = txt;
+    select_element.appendChild(option_element);
+  }
+  if (unk_val != null){
+    let option_element = document.createElement('option');
+    option_element.value = "UNK";
+    option_element.text = unk_val.description;
+    select_element.appendChild(option_element);
+  }
 }
 
 
@@ -124,6 +265,14 @@ function choose_document() {
 }
 
 function display_document() {
+  document.getElementById('pdf_viewer').classList.remove('active');
+  document.getElementById('pdf_viewer').data = "";
+  document.getElementById('image_viewer').classList.remove('active');
+  document.getElementById('image_viewer').src = "";
+  if (curr_doc_blob == null){
+    return;
+  }
+
   let state = false;
   let show_pdf = false;
   for (let i = 0; i < image_pdf_ext.length; i++){
@@ -135,10 +284,7 @@ function display_document() {
       break;
     }
   }
-  document.getElementById('pdf_viewer').classList.remove('active');
-  document.getElementById('pdf_viewer').data = "";
-  document.getElementById('image_viewer').classList.remove('active');
-  document.getElementById('image_viewer').src = "";
+  
   if (state) {
     const fileURL = URL.createObjectURL(curr_doc_blob);
     if (show_pdf){
@@ -166,13 +312,13 @@ function upload_document() {
     return;
   }
 
-  var formData = new FormData();
+  let formData = new FormData();
   formData.append('image_blob', blobData);
   formData.append('image_description', description);
   formData.append('image_filename', filename);
   formData.append('image_action', 'NEW');
 
-  var xhr = new XMLHttpRequest();
+  let xhr = new XMLHttpRequest();
   xhr.open('POST', 'edit_images_proc.php', true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {

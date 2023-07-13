@@ -51,8 +51,6 @@
   border: 1px solid white;
 }
 
-
-
 #image_navbar {
     display: flex;
     flex-flow: row nowrap;
@@ -82,6 +80,10 @@
   color: white;
 }
 
+#image_desc, #image_filename, #image_cat_txt, #image_ins_txt {
+  background-color: #F8F8FF;
+}
+
 #image_desc {
   width: 508px;
 }
@@ -89,7 +91,6 @@
 #image_filename {
   width: 300px;
 }
-
 
 #image_desc:hover{
   border-color: gray;

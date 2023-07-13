@@ -7,8 +7,51 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 
+function get_subclass_info($cat_type) {
+    global $link;
+    $PID = $_SESSION['id'];
+    if (strcmp($cat_type, "project") === 0){
+        $table = "imageProject";
+        $column = "projectID";
+    } else if (strcmp($cat_type, "solution") === 0) {
+        $table = "imageSolution";
+        $column = "solutionID";
+    } else if (strcmp($cat_type, "buffer") === 0) {
+        $table = "imageBuffer";
+        $column = "bufferID";
+    } else if (strcmp($cat_type, "analyte") === 0) {
+        $table = "imageAnalyte";
+        $column = "analyteID";
+    } else {
+        return null;
+    }
+    // fetch imageProject
+    $query = "SELECT tab.imageID, tab.$column " . 
+             "FROM ( SELECT i.imageID AS imageID FROM image AS i, imagePerson AS ip " .
+                    "WHERE i.imageID = ip.imageID AND ip.personID = $PID ) AS sel, " .
+             "$table AS tab WHERE sel.imageID = tab.imageID";
+    $sqlret = mysqli_query( $link, $query );
+    $nrows = mysqli_num_rows($sqlret);
+    $result = array("error" => null, "data" => null);
+
+    if ($nrows > 0){
+        $content = array();
+        while($row = mysqli_fetch_assoc($sqlret)){
+            array_push($content, $row);
+        }
+        $result["data"] = $content;
+    } else {
+        $result["error"] = mysqli_error($link);
+    }
+
+    return $result;
+}
+
 function get_image_info () {
-    // // fetch image info
+    global $link;
+    $PID = $_SESSION['id'];
+
+    // fetch image info
     $query = "SELECT i.imageID, i.description, i.filename FROM image as i, imagePerson as ip " . 
              "WHERE i.imageID = ip.imageID AND ip.personID = $PID";
     $sqlret = mysqli_query( $link, $query );
@@ -16,18 +59,65 @@ function get_image_info () {
     $image = array("error" => null, "data" => null);
 
     if ($nrows > 0){
+        $content = array();
         while($row = mysqli_fetch_assoc($sqlret)){
-            array_push($image["data"], $row);
+            array_push($content, $row);
         }
+        $image["data"] = $content;
     } else {
         $image["error"] = mysqli_error($link);
     }
+    if (is_null($image["data"])){
+        return $image;
+    }
 
-    $all_data["image"] = $image;
+    $imageProject = get_subclass_info("project");
+    $imageSolution = get_subclass_info("solution");
+    $imageBuffer = get_subclass_info("buffer");
+    $imageAnalyte = get_subclass_info("analyte");
 
-    
-    echo results;
+    for ($ii = 0; $ii < count($image["data"]); $ii++ ){
+        $row = $image["data"][$ii];
+        // check imageProject
+        $row["projectID"] = null;
+        for ($jj = 0; $jj < count($imageProject["data"]); $jj++){
+            $data = $imageProject["data"][$jj];
+            if (intval($row["imageID"]) == intval($data["imageID"])) {
+                $row["projectID"] = $data["projectID"];
+                break;
+            }
+        }
+        // check imageSolution
+        $row["solutionID"] = null;
+        for ($jj = 0; $jj < count($imageSolution["data"]); $jj++){
+            $data = $imageSolution["data"][$jj];
+            if (intval($row["imageID"]) == intval($data["imageID"])) {
+                $row["solutionID"] = $data["solutionID"];
+                break;
+            }
+        }
+        // check imageBuffer
+        $row["bufferID"] = null;
+        for ($jj = 0; $jj < count($imageBuffer["data"]); $jj++){
+            $data = $imageBuffer["data"][$jj];
+            if (intval($row["imageID"]) == intval($data["imageID"])) {
+                $row["bufferID"] = $data["bufferID"];
+                break;
+            }
+        }
+        // check imageAnalyte
+        $row["analyteID"] = null;
+        for ($jj = 0; $jj < count($imageAnalyte["data"]); $jj++){
+            $data = $imageAnalyte["data"][$jj];
+            if (intval($row["imageID"]) == intval($data["imageID"])) {
+                $row["analyteID"] = $data["analyteID"];
+                break;
+            }
+        }
+        $image["data"][$ii] = $row;
+    } 
 
+    return $image;
 }
 
 if (isset($_POST['image_action'])) {
@@ -63,7 +153,7 @@ if (isset($_POST['image_action'])) {
             }
         }
     // GET project, solution, analyte, buffer information
-    } else if ($image_action === 'GET_INFO'){
+    } else if ($image_action === 'GET_INIT_INFO'){
         $all_data = array();
         $PID = $_SESSION['id'];
 
@@ -75,9 +165,11 @@ if (isset($_POST['image_action'])) {
         $project = array("error" => null, "data" => null);
     
         if ($nrows > 0){
+            $content = array();
             while($row = mysqli_fetch_assoc($sqlret)){
-                array_push($project["data"], $row);
+                array_push($content, $row);
             }
+            $project["data"] = $content;
         } else {
             $project["error"] = mysqli_error($link);
         }
@@ -92,9 +184,11 @@ if (isset($_POST['image_action'])) {
         $solution = array("error" => null, "data" => null);
     
         if ($nrows > 0){
+            $content = array();
             while($row = mysqli_fetch_assoc($sqlret)){
-                array_push($solution["data"], $row);
+                array_push($content, $row);
             }
+            $solution["data"] = $content;
         } else {
             $solution["error"] = mysqli_error($link);
         }
@@ -109,9 +203,11 @@ if (isset($_POST['image_action'])) {
         $buffer = array("error" => null, "data" => null);
     
         if ($nrows > 0){
+            $content = array();
             while($row = mysqli_fetch_assoc($sqlret)){
-                array_push($buffer["data"], $row);
+                array_push($content, $row);
             }
+            $buffer["data"] = $content;
         } else {
             $buffer["error"] = mysqli_error($link);
         }
@@ -126,9 +222,11 @@ if (isset($_POST['image_action'])) {
         $analyte = array("error" => null, "data" => null);
     
         if ($nrows > 0){
+            $content = array();
             while($row = mysqli_fetch_assoc($sqlret)){
-                array_push($analyte["data"], $row);
+                array_push($content, $row);
             }
+            $analyte["data"] = $content;
         } else {
             $analyte["error"] = mysqli_error($link);
         }
@@ -138,7 +236,7 @@ if (isset($_POST['image_action'])) {
         // fetch image info
         $all_data["image"] = get_image_info();
         
-        echo json_encode($all_data);;
+        echo json_encode($all_data);
 
     }
 
