@@ -1,0 +1,187 @@
+
+#sf_content{
+  float: left;
+  border: none;
+  margin: 0px;
+  width: 800px;
+  padding: 0px 10px;
+  box-sizing: border-box;
+  /* text-align: left; */
+}
+
+#sf_content * {
+  box-sizing: border-box;
+}
+
+.sf_item{
+  margin: 2px;
+  padding: 0px;
+  border: none;
+}
+
+.sf_item * {
+  color: black;
+  font-size: 13px;
+  font-weight: normal;
+  padding: 4px;
+  margin: 0px;
+  border-width: 1px;
+}
+
+#sf_content button {
+  width: 100px;
+}
+
+#sf_content select {
+  border: none;
+  padding: 5px;
+  width: 300px;
+}
+
+#sf_content label{
+  display: inline-block;
+  background-color: black;
+  color: white;
+  font-weight: bold;
+  width: 90px;
+  text-align: right;
+}
+
+#sf_edit_label {
+  background-color: white;
+  color: black;
+  font-size: 14px;
+  font-weight: bold;
+  width: 300px;
+  /* text-align: left; */
+}
+
+#sf_content input{
+  border: 1px solid white;
+}
+
+#sf_navbar {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: center;
+  }
+
+.sf_navbar_item {
+    background-color: #D3D3D3;
+    color: black;
+    font-size: 14px;
+    text-align: center;
+    width: 150px;
+    font-weight: bold;
+    margin: 0px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+#sf_view:hover, #sf_new:hover {
+  background-color: green;
+  color: black;
+}
+
+#sf_view.active, #sf_new.active {
+  background-color: black;
+  color: white;
+}
+
+#sf_desc, #sf_filename, #sf_txt_class, #sf_txt_subclass {
+  background-color: #F8F8FF;
+}
+
+#sf_desc {
+  width: 508px;
+}
+
+#sf_filename {
+  width: 300px;
+}
+
+#sf_desc:hover{
+  border-color: gray;
+}
+
+#sf_txt_class, #sf_txt_subclass {
+  width: 300px;
+  padding: 0px;
+}
+
+#sf_filename, #sf_txt_class, #sf_txt_subclass {
+  outline: none;
+}
+
+#sf_browse {
+  width: 93px;
+  overflow: hidden;
+  display: none;
+}
+
+#sf_browse.active {
+  display: inline-block;
+}
+
+#sf_sel_class, #sf_txt_class, #sf_sel_subclass, #sf_txt_subclass, #sf_edit_item {
+  display: none;
+}
+
+#sf_sel_class.active, #sf_txt_class.active, #sf_edit_item.active,
+#sf_sel_subclass.active, #sf_txt_subclass.active {
+  display: block;
+}
+
+#sf_class_item, #sf_subclass_item {
+  display: flex;
+}
+
+#sf_status_button_item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#sf_status {
+  background-color: white;
+  color: black;
+  width: 500px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: left;
+  outline: none;
+  border: none;
+}
+
+#sf_button_item {
+  display: flex;
+  align-items: center;
+  justify-content: right;
+}
+
+#sf_button_item button {
+  margin: 0px 3px;
+  display: none;
+}
+
+#sf_button_item button.active {
+  margin: 0px 3px;
+  display: block;
+}
+
+#image_viewer, #pdf_viewer {
+  display: none;
+  max-height: 600px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#image_viewer.active, #pdf_viewer.active {
+  display: block;
+}
+
+
+
+
