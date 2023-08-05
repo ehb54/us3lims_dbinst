@@ -270,34 +270,67 @@ async function fetch_blob(doc_id, doc_guid) {
   form_get.append('docID', doc_id);
   form_get.append('docGUID', doc_guid);
 
-  let response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_get});
-  if (! response.ok){
+  let res_finfo = await fetch('supporting_files_proc.php', {method: 'POST', body: form_get});
+  if (! res_finfo.ok){
     display_message("Connection Failed: Error in Fetching Document Path Request", "red", timeout);
     throw new Error("FAILED");
   }
-  let file_info = await response.json();
+  let file_info = await res_finfo.json();
   const file_path = file_info.path;
+
   if (file_path == null){
     display_message("Failed: Document is not found on the server", "red", timeout);
     throw new Error("FAILED");
   }
   display_message("Please wait! Downloading ...", "red");
-  response = await fetch(file_path);
-  if (! response.ok){
-    display_message("Connection Failed: Error in Fetching Document File Request", "red", timeout);
-    throw new Error("FAILED");
-  }
-  let blob = await response.blob();
-  // blob.type = file_type;
-  all_blobs["id_" + doc_id]['url'] = URL.createObjectURL(blob);
-  all_blobs["id_" + doc_id]['type'] = blob.type;
-  display_message("Document is successfully received", "green", timeout);
-  display_document(all_blobs["id_" + doc_id]);
 
-  let form_del = new FormData();
-  form_del.append('action', 'DEL_FILE');
-  form_del.append('filepath', file_path);
-  fetch('supporting_files_proc.php', {method: 'POST', body: form_del});
+  fetch(file_path).then(
+    res_blob => res_blob.blob(),
+    () => {
+      delete_local_blob(file_path).catch(
+        () => display_message("Error: Temporary File Wasn't Cleaned From Server")
+      );
+      display_message("Connection Failed: Error in Fetching Document File Request", "red", timeout);
+      throw new Error("FAILED");
+    }
+  ).then(
+    blob => {
+      all_blobs["id_" + doc_id].url = URL.createObjectURL(blob);
+      all_blobs["id_" + doc_id].type = blob.type;
+      display_message("Document is successfully received", "green", timeout);
+      display_document(all_blobs["id_" + doc_id]);
+      delete_local_blob(file_path).catch(
+        () => display_message("Error: Temporary File Wasn't Cleaned From Server")
+      );
+    },
+    () => {
+      display_message("Connection Failed: Error in Fetching Document Blob", "red", timeout);
+      delete_local_blob(file_path).catch(
+        () => display_message("Error: Temporary File Wasn't Cleaned From Server")
+      );
+      throw new Error("FAILED");
+    }
+  )
+}
+
+function delete_local_blob(file_path){
+  return new Promise(function(resolve, reject){
+    let form_del = new FormData();
+    form_del.append('action', 'DEL_FILE');
+    form_del.append('filepath', file_path);
+    fetch('supporting_files_proc.php', {method: 'POST', body: form_del}).then(
+      response => response.text(),
+      () => reject(new Error("FAILED"))
+    ).then(
+      state => {
+        if (state == "OK"){
+          resolve("OK");
+        } else {
+          reject(new Error("FAILED"));
+        }
+      }
+    )
+  })
 }
 
 function init_setup() {

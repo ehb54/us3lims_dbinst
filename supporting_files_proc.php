@@ -533,6 +533,9 @@ if (isset($_POST['action'])) {
         $ff = realpath($filepath);
         if (realpath($filepath)){
             $delete_file = realpath($filepath);
+            echo "OK";
+        } else {
+            echo "Not found";
         }
     }
 
