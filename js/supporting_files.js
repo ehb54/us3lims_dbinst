@@ -281,7 +281,7 @@ async function fetch_blob(doc_id, doc_guid) {
     display_message("Failed: Document is not found on the server", "red", timeout);
     throw new Error("FAILED");
   }
-  display_message("Please wait! Downloading ...", "red", timeout * 100);
+  display_message("Please wait! Downloading ...", "red");
   response = await fetch(file_path);
   if (! response.ok){
     display_message("Connection Failed: Error in Fetching Document File Request", "red", timeout);
