@@ -35,7 +35,7 @@ echo <<< HTML
 
   <div id="sf_edit_item">
     <input type="checkbox" id="sf_edit" onchange="set_edit_mode(this)">
-    <span id="sf_edit_label">Edit Documents </span>
+    <span id="sf_edit_label">Edit Document </span>
   </div>
 
   <fieldset id="sf_sel_proj_item" class="sf_item">
@@ -46,8 +46,8 @@ echo <<< HTML
   </fieldset>
 
   <fieldset id="sf_sel_file_item" class="sf_item">
-    <label for="sf_sel_file">Image:</label>
-    <select id="sf_sel_file" onchange="select_file(this)">
+    <label for="sf_sel_file">Document:</label>
+    <select id="sf_sel_file" onchange="select_document(this)">
       <option value="EMPTY">--- Empty ---</option>
     </select>
     <button id="sf_prev" type="button" onclick=""> Previous </button>
@@ -56,7 +56,7 @@ echo <<< HTML
 
   <div class="sf_item">
     <label for="sf_desc"> Description: </label>
-    <input type="text" name="sf_desc" id="sf_desc" value="">
+    <input type="text" name="sf_desc" id="sf_desc" value="" oninput="filter_text(this)">
   </div>
 
   <div class="sf_item">
@@ -88,7 +88,7 @@ echo <<< HTML
 
     <div id="sf_button_item" class="sf_item">
       <button id="sf_download" type="button" onclick="download_document()"> Download </button>
-      <button id="sf_update" type="button" onclick=""> Update </button>
+      <button id="sf_update" type="button" onclick="update_document()"> Update </button>
       <button id="sf_delete" type="button" onclick="delete_document()"> Delete </button>
       <button id="sf_upload" type="button" onclick="upload_document()"> Upload </button>
     </div>
@@ -100,8 +100,8 @@ echo <<< HTML
 
 </div>
 
-<script>get_init_info(parse_init_info)</script>
-<script>handle_mode(document.getElementById("sf_view"))</script>
+<script>init_setup()</script>
+<script>handle_mode(element_view)</script>
 
 HTML;
 

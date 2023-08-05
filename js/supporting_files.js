@@ -1,12 +1,15 @@
 // JavaScript routines for supporting_files.php
 let mode = null;
-let doc_blob = null;
+let doc_blob = {};
 let projects = {};
 let solutions = {};
 let buffers = {};
 let analytes = {};
 let all_documents = {};
 let all_blobs = {};
+let element_view;
+let element_new;
+const timeout = 15;
 
 const image_pdf_ext = [{name: "bmp",  type: "image/bmp"},  {name: "gif" , type: "image/gif"},
                        {name: "jpeg", type: "image/jpeg"}, {name: "jpg", type: "image/jpeg"},
@@ -42,18 +45,30 @@ function handle_mode(item) {
   document.getElementById('sf_txt_subclass').classList.remove('active');
 
   document.getElementById('sf_download').classList.remove('active');
+  document.getElementById('sf_download').disabled = false;
   document.getElementById('sf_update').classList.remove('active');
+  document.getElementById('sf_update').disabled = false;
   document.getElementById('sf_delete').classList.remove('active');
+  document.getElementById('sf_delete').disabled = false;
   document.getElementById('sf_upload').classList.remove('active');
+  document.getElementById('sf_upload').disabled = false;
 
-  // document.getElementById('sf_browse').disabled = false;
   document.getElementById('sf_browse').classList.remove('active');
-  document.getElementById('sf_sel_file_item').disabled = false;
+  document.getElementById("sf_browse").value = null;
+  document.getElementById('sf_sel_file_item').classList.remove('active');
   document.getElementById('sf_status').value = '';
+  document.getElementById('sf_desc').value = '';
+  document.getElementById('sf_filename').value = '';
+  document.getElementById("sf_edit").checked = false;
+  document.getElementById('sf_txt_class').value = '';
+  document.getElementById('sf_txt_subclass').value = '';
+  doc_blob.url = null;
+  doc_blob.type = null;
+  display_document(null);
 
-  if (item.id === 'sf_view') {
+  if (item === element_view) {
     set_view_mode();
-  } else if (item.id === 'sf_new') {
+  } else if (item === element_new) {
     set_new_mode();
   }
 }
@@ -64,7 +79,8 @@ function set_new_mode() {
   document.getElementById('sf_sel_class').classList.add('active');
   document.getElementById('sf_sel_subclass').classList.add('active');
   document.getElementById('sf_upload').classList.add('active');
-  document.getElementById('sf_sel_file_item').disabled = true;
+  document.getElementById('sf_sel_file_item').classList.remove('active');
+  document.getElementById("sf_browse").value = null;
   document.getElementById('sf_desc').value = '';
   document.getElementById('sf_filename').value = '';
   if (Object.keys(projects).length == 0){
@@ -79,10 +95,6 @@ function set_new_mode() {
   }
   document.getElementById('sf_sel_class').value = 'SELECT';
   fill_sel_class("sf_sel_subclass", null);
-  document.getElementById('sf_txt_class').value = '';
-  document.getElementById('sf_txt_subclass').value = '';
-  doc_blob = null;
-  display_document(doc_blob);
 }
 
 function set_view_mode() {
@@ -92,12 +104,19 @@ function set_view_mode() {
   document.getElementById('sf_txt_subclass').classList.add('active');
   document.getElementById('sf_download').classList.add('active');
   document.getElementById('sf_browse').classList.remove('active');
-  // document.getElementById('sf_browse').disabled = true;
+  document.getElementById("sf_browse").value = null;
   set_edit_mode(document.getElementById("sf_edit"))
 }
 
 function set_edit_mode(input) {
+  document.getElementById('sf_sel_file_item').classList.add('active');
   if (input.checked){
+    if (get_sel_value("sf_sel_file") == null){
+      display_message("Failed: Select a Document", "red", timeout);
+      input.checked = false;
+      return;
+    }
+    display_message("");
     document.getElementById('sf_txt_class').classList.remove('active');
     document.getElementById('sf_txt_subclass').classList.remove('active');
     document.getElementById('sf_sel_class').classList.add('active');
@@ -105,8 +124,8 @@ function set_edit_mode(input) {
     document.getElementById('sf_update').classList.add('active');
     document.getElementById('sf_delete').classList.add('active');
     document.getElementById('sf_download').classList.remove('active');
-    // document.getElementById('sf_browse').disabled = false;
     document.getElementById('sf_browse').classList.add('active');
+    document.getElementById('sf_sel_file_item').disabled = true;
   } else {
     document.getElementById('sf_txt_class').classList.add('active');
     document.getElementById('sf_txt_subclass').classList.add('active');
@@ -115,10 +134,10 @@ function set_edit_mode(input) {
     document.getElementById('sf_update').classList.remove('active');
     document.getElementById('sf_delete').classList.remove('active');
     document.getElementById('sf_download').classList.add('active');
-    // document.getElementById('sf_browse').disabled = true;
     document.getElementById('sf_browse').classList.remove('active');
+    select_project(document.getElementById("sf_sel_proj"));
+    document.getElementById('sf_sel_file_item').disabled = false;
   }
-  
 }
 
 function select_class(input) {
@@ -140,40 +159,49 @@ function select_project(input) {
   if (mode == "sf_new"){
     return;
   }
+  if (document.getElementById("sf_edit").checked){
+    return;
+  }
   let option = input.options[input.selectedIndex];
   let value = option.value;
 
   if (value == "EMPTY" || value == "SELECT"){
-    fill_sel_file("sf_sel_file", null);
+    fill_sel_proj_file("sf_sel_file", null);
   } else {
     let doc_IDs = projects[value].doc_IDs;
     if (doc_IDs == null){
-      fill_sel_file("sf_sel_file", null);
+      fill_sel_proj_file("sf_sel_file", null);
     } else {
       let options = {};
       for (let i in doc_IDs){
         let desc = all_documents[doc_IDs[i]].description;
         options[doc_IDs[i]] = {"description" : desc};
       }
-      fill_sel_file("sf_sel_file", options);
+      fill_sel_proj_file("sf_sel_file", options);
     }
   }
+  document.getElementById("sf_desc").value = "";
+  document.getElementById("sf_filename").value = "";
+  display_document(null);
+  document.getElementById("sf_txt_class").value = "";
+  document.getElementById("sf_txt_subclass").value = "";
 }
 
-function select_file(input) {
+async function select_document(input) {
   if (mode == "sf_new"){
     return;
   }
   let option = input.options[input.selectedIndex];
   let value = option.value;
+  doc_blob.url = null;
+  doc_blob.type = null;
 
   if (value == "EMPTY" || value == "SELECT") {
     document.getElementById("sf_desc").value = "";
     document.getElementById("sf_filename").value = "";
     document.getElementById("sf_txt_class").value = "";
     document.getElementById("sf_txt_subclass").value = "";
-    doc_blob = null;
-    display_document(doc_blob);
+    display_document(null);
   } else {
     let docID = value;
     let guid = all_documents[docID].guid;
@@ -182,7 +210,6 @@ function select_file(input) {
     let solutionID = all_documents[docID].solutionID;
     let bufferID = all_documents[docID].bufferID;
     let analyteID = all_documents[docID].analyteID;
-    let blob = all_blobs[docID];
 
     let class_txt, subclass_txt;
     let class_sel, subclass_sel;
@@ -227,199 +254,166 @@ function select_file(input) {
       document.getElementById("sf_sel_subclass").value = subclass_sel;
     }
 
-    if (blob == null){
-      let ext_chk = check_extension(filename);
-      fetch_doc_data(docID.replace("id_", ""), guid, ext_chk.type, b64toBlob)
+    if (all_blobs[docID] == null || all_blobs[docID].url == null){
+      // let ext_chk = check_extension(filename);
+      // fetch_blob(docID.replace("id_", ""), guid, ext_chk.type, b64toBlob);
+      fetch_blob(docID.replace("id_", ""), guid);
     } else {
-      display_document(blob);
+      display_document(all_blobs[docID]);
     }
   }
 }
 
+async function fetch_blob(doc_id, doc_guid) {
+  let form_get = new FormData();
+  form_get.append('action', 'GIVE_BLOB');
+  form_get.append('docID', doc_id);
+  form_get.append('docGUID', doc_guid);
 
-function fetch_doc_data(doc_id, doc_guid, file_type, b64toBlob) {
-  let xhr = new XMLHttpRequest();
-  // xhr.responseType = 'json';
-  xhr.open('POST', 'supporting_files_proc.php', true);
-  let formData = new FormData();
-  formData.append('action', 'GET_DOC');
-  formData.append('docID', doc_id);
-  formData.append('docGUID', doc_guid);
-  xhr.send(formData);
-  xhr.onload = function() {
-    if (xhr.status != 200) {
-      display_message(`AJAX Error: ${xhr.status}: ${xhr.statusText}`, 'red', 5000);
-    } else {
-      const file_data = JSON.parse(xhr.responseText);
-      if (file_data.data == null){
-        display_message(`DB Error: ${file_data.error}`, 'red', 10000);
-        b64toBlob(null);
+  let response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_get});
+  if (! response.ok){
+    display_message("Connection Failed: Error in Fetching Document Path Request", "red", timeout);
+    throw new Error("FAILED");
+  }
+  let file_info = await response.json();
+  const file_path = file_info.path;
+  if (file_path == null){
+    display_message("Failed: Document is not found on the server", "red", timeout);
+    throw new Error("FAILED");
+  }
+  display_message("Please wait! Downloading ...", "red", timeout * 100);
+  response = await fetch(file_path);
+  if (! response.ok){
+    display_message("Connection Failed: Error in Fetching Document File Request", "red", timeout);
+    throw new Error("FAILED");
+  }
+  let blob = await response.blob();
+  // blob.type = file_type;
+  all_blobs["id_" + doc_id]['url'] = URL.createObjectURL(blob);
+  all_blobs["id_" + doc_id]['type'] = blob.type;
+  display_message("Document is successfully received", "green", timeout);
+  display_document(all_blobs["id_" + doc_id]);
+
+  let form_del = new FormData();
+  form_del.append('action', 'DEL_FILE');
+  form_del.append('filepath', file_path);
+  fetch('supporting_files_proc.php', {method: 'POST', body: form_del});
+}
+
+function init_setup() {
+  element_view = document.getElementById("sf_view");
+  element_new = document.getElementById("sf_new");
+  doc_blob['url'] = null;
+  doc_blob['type'] = null;
+  // Get constant information
+  let form_data = new FormData();
+  form_data.append('action', 'GIVE_INIT_INFO');
+  fetch('supporting_files_proc.php', {method: 'POST', body: form_data}).then(
+    response => response.json(), () => {
+      display_message("Connection Failed: Error in Fetching Initial Information Request", 'red', timeout);
+      throw new Error("FAILED");
+    }
+  ).then(
+    init_info => {
+      // parse constant information
+      if (init_info.project.data == null){
+        projects = null;
       } else {
-        display_message("Successfully fetched document !", 'green', 3000);
-        let blob = b64toBlob(file_data.data, file_type, display_document);
-        all_blobs["id_" + doc_id] = blob;
+        let obj = {};
+        for (let ii = 0; ii < init_info.project.data.length; ii++){
+          let id = init_info.project.data[ii].projectID;
+          obj["id_" + id] = {"description" : init_info.project.data[ii].description, "doc_IDs" : null};
+        }
+        projects = obj;
       }
+
+      if (init_info.solution.data == null){
+        solutions = null;
+      } else {
+        let obj = {};
+        for (let ii = 0; ii < init_info.solution.data.length; ii++){
+          let id = init_info.solution.data[ii].solutionID;
+          obj["id_" + id] = init_info.solution.data[ii].description;
+        }
+        solutions = obj;
+      }
+
+      if (init_info.buffer.data == null){
+        buffers = null;
+      } else {
+        let obj = {};
+        for (let ii = 0; ii < init_info.buffer.data.length; ii++){
+          let id = init_info.buffer.data[ii].bufferID;
+          obj["id_" + id] = init_info.buffer.data[ii].description;
+        }
+        buffers = obj;
+      }
+
+      if (init_info.analyte.data == null){
+        analytes = null;
+      } else {
+        let obj = {};
+        for (let ii = 0; ii < init_info.analyte.data.length; ii++){
+          let id = init_info.analyte.data[ii].analyteID;
+          obj["id_" + id] = init_info.analyte.data[ii].description;
+        }
+        analytes = obj;
+      }
+
+      // parse document information
+      parse_doc_info(init_info.image_info);
+
+      fill_sel_class("sf_sel_class", {"solution" : "Solution" ,
+      "buffer"   : "Buffer" ,
+      "analyte"  : "Analyte"});
     }
-  }
-  xhr.onprogress = function() {
-    display_message("Downloading the document !!!", 'red', 10000);
-  }
-  xhr.onerror = function() {
-    let msg = `Request failed! Check your network please:${xhr.status}: ${xhr.statusText}`;
-    display_message(msg, 'red', 5000);
-  }
+  )  
 }
 
-
-function b64toBlob(b64_date, file_type, display_document, slice_size=512){
-  const byte_chars = atob(b64_date);
-
-  const byte_arrays = [];
-  for (let offset = 0; offset < byte_chars.length; offset += slice_size) {
-    const slice = byte_chars.slice(offset, offset + slice_size);
-
-    const byte_codes = new Array(slice.length);
-    for (let i = 0; i < slice.length; i++) {
-      byte_codes[i] = slice.charCodeAt(i);
-    }
-
-    const byte_array = new Uint8Array(byte_codes);
-    byte_arrays.push(byte_array);
-  }
-
-  doc_blob = new Blob(byte_arrays, {type: file_type});
-  display_document(doc_blob);
-  return doc_blob;
-}
-
-function get_init_info(parse_init_info) {
-  let formData = new FormData();
-  formData.append('action', 'GET_INIT_INFO');
-  let xhr = new XMLHttpRequest();
-  xhr.open('POST', 'supporting_files_proc.php', true);
-  xhr.send(formData);
-  xhr.onload = function() {
-    if (xhr.status != 200) {
-      display_message(`AJAX Error: ${xhr.status}: ${xhr.statusText}`, 'red', 5000);
-    } else {
-      let data = JSON.parse(xhr.responseText);
-      parse_init_info(data, parse_doc_info);
-    }
-  }
-  xhr.onerror = function() {
-    display_message("Request failed! Check your network please!", 'red', 5000);
-  }
-}
-
-function parse_init_info (info, parse_doc_info) {
-  if (info.project.data == null){
-    projects = null;
-  } else {
-    let obj = {};
-    for (let ii = 0; ii < info.project.data.length; ii++){
-      let id = info.project.data[ii].projectID;
-      obj["id_" + id] = {"description" : info.project.data[ii].description, "doc_IDs" : null};
-    }
-    projects = obj;
-  }
-
-  if (info.solution.data == null){
-    solutions = null;
-  } else {
-    let obj = {};
-    for (let ii = 0; ii < info.solution.data.length; ii++){
-      let id = info.solution.data[ii].solutionID;
-      obj["id_" + id] = info.solution.data[ii].description;
-    }
-    solutions = obj;
-  }
-
-  if (info.buffer.data == null){
-    buffers = null;
-  } else {
-    let obj = {};
-    for (let ii = 0; ii < info.buffer.data.length; ii++){
-      let id = info.buffer.data[ii].bufferID;
-      obj["id_" + id] = info.buffer.data[ii].description;
-    }
-    buffers = obj;
-  }
-
-  if (info.analyte.data == null){
-    analytes = null;
-  } else {
-    let obj = {};
-    for (let ii = 0; ii < info.analyte.data.length; ii++){
-      let id = info.analyte.data[ii].analyteID;
-      obj["id_" + id] = info.analyte.data[ii].description;
-    }
-    analytes = obj;
-  }
-
-  parse_doc_info(info.image_info);
-  
-  fill_sel_class("sf_sel_class", {"solution" : "Solution" ,
-                                  "buffer"   : "Buffer" ,
-                                  "analyte"  : "Analyte"});
-}
-
-function get_doc_info(parse_doc_info){
-  let formData = new FormData();
-  formData.append('action', 'GET_DOC_INFO');
-  let xhr = new XMLHttpRequest();
-  xhr.open('POST', 'supporting_files_proc.php', true);
-  xhr.send(formData);
-  xhr.onload = function() {
-    if (xhr.status != 200) {
-      display_message(`AJAX Error: ${xhr.status}: ${xhr.statusText}`, 'red', 5000);
-    } else {
-      let doc_info = JSON.parse(xhr.responseText);
-      parse_doc_info(doc_info);
-    }
-  }
-  xhr.onerror = function() {
-    display_message("Request failed! Check your network please!", 'red', 5000);
-  }  
-}
-
-function clear_documents(){
-  for (const key in all_documents) {
-    delete all_documents[key];
-  }
+function get_doc_info(){
+  return new Promise(function(resolve, reject){
+        // Get document information
+    form = new FormData();
+    form.append('action', 'GIVE_DOC_INFO');
+    fetch('supporting_files_proc.php', {method: 'POST', body: form})
+    .then(response => response.json(), () => reject(new Error("FAILED")))
+    .then(result => resolve(result), () => reject(new Error("FAILED")));
+  }) 
 }
 
 function parse_doc_info (doc_info) {
-  clear_documents();
-  if (doc_info.data == null){
-    return;
+  for (const key in all_documents) {
+    delete all_documents[key];
   }
-  for (let ii = 0; ii < doc_info.data.length; ii++){
-    let id = "id_" + doc_info.data[ii].imageID;
-    let guid = doc_info.data[ii].imageGUID;
-    let description = doc_info.data[ii].description;
-    let filename = doc_info.data[ii].filename;
-    let projectID = doc_info.data[ii].projectID;
-    if (projectID != null){projectID = "id_" + projectID;}
-    let solutionID = doc_info.data[ii].solutionID;
-    if (solutionID != null){solutionID = "id_" + solutionID;}
-    let bufferID = doc_info.data[ii].bufferID;
-    if (bufferID != null){bufferID = "id_" + bufferID;}
-    let analyteID = doc_info.data[ii].analyteID;
-    if (analyteID != null){analyteID = "id_" + analyteID;}
+  if (doc_info.data != null){
+    for (let ii = 0; ii < doc_info.data.length; ii++){
+      let id = "id_" + doc_info.data[ii].imageID;
+      let guid = doc_info.data[ii].imageGUID;
+      let description = doc_info.data[ii].description;
+      let filename = doc_info.data[ii].filename;
+      let projectID = doc_info.data[ii].projectID;
+      if (projectID != null){projectID = "id_" + projectID;}
+      let solutionID = doc_info.data[ii].solutionID;
+      if (solutionID != null){solutionID = "id_" + solutionID;}
+      let bufferID = doc_info.data[ii].bufferID;
+      if (bufferID != null){bufferID = "id_" + bufferID;}
+      let analyteID = doc_info.data[ii].analyteID;
+      if (analyteID != null){analyteID = "id_" + analyteID;}
 
-    if (guid == null){
-      continue;
-    }
-    all_documents[id] = {"guid" : guid,
-                         "description" : description,
-                         "filename" : filename,
-                         "projectID" : projectID,
-                         "solutionID" : solutionID,
-                         "bufferID" : bufferID,
-                         "analyteID" : analyteID
-                        };
-    if (! id in all_blobs){
-      all_blobs[id] = null;
+      if (guid == null){
+        continue;
+      }
+      all_documents[id] = {"guid" : guid,
+                          "description" : description,
+                          "filename" : filename,
+                          "projectID" : projectID,
+                          "solutionID" : solutionID,
+                          "bufferID" : bufferID,
+                          "analyteID" : analyteID
+                          };
+      if (!all_blobs.hasOwnProperty(id)){
+        all_blobs[id] = {"type": null, "url": null};
+      }
     }
   }
 
@@ -453,10 +447,11 @@ function parse_doc_info (doc_info) {
       projects['UNK'] = {"description" : txt, "doc_IDs" : doc_IDs};
     }
   }
-  fill_sel_file("sf_sel_proj", projects);
+  fill_sel_proj_file("sf_sel_proj", projects);
+  fill_sel_proj_file("sf_sel_file", null);
 }
 
-function fill_sel_file(tag_id, options) {
+function fill_sel_proj_file(tag_id, options) {
   let select_element = document.getElementById(tag_id);
   select_element.innerHTML = "";
   let flag = false;
@@ -533,7 +528,6 @@ function fill_sel_class(tag_id, options) {
   }
 }
 
-
 function check_extension(file_name) {
   const ext = file_name.split('.').pop().toLowerCase();
   let state = false;
@@ -559,15 +553,19 @@ function check_extension(file_name) {
   return output;
 }
 
-
 function browse_document(input) {
   let file = input.files[0];
+  const max_size = 52428800;
+  if (file.size > max_size){
+    display_message("Error: Files exceeding 50MB are not allowed to be uploaded to the database", "red", timeout);
+    input.value = null;
+    return;
+  }
   const ext = file.name.split('.').pop().toLowerCase();
-  // alert(ext);
 
   let ext_chk = check_extension(file.name);
   if (! ext_chk.state){
-    display_message("Invalid file type!", "red", 5000);
+    display_message("Error: File type is not supported", "red", timeout);
     return;
   }
 
@@ -577,63 +575,60 @@ function browse_document(input) {
     const fileContent = e.target.result;
     let blob = new Blob([fileContent], { type: file.type });
     document.getElementById('sf_filename').value = file.name;
-    doc_blob = blob;
-    display_document(blob);
-  };
-
+    if (doc_blob.url != null){
+      URL.revokeObjectURL(doc_blob.url);
+    }
+    doc_blob.url = URL.createObjectURL(blob);
+    doc_blob.type = blob.type;
+    display_document(doc_blob);
+  }
 }
 
 function display_document(blob) {
-  document.getElementById('pdf_viewer').classList.remove('active');
-  document.getElementById('pdf_viewer').data = "";
-  document.getElementById('image_viewer').classList.remove('active');
-  document.getElementById('image_viewer').src = "";
+  let pdf_viewer = document.getElementById('pdf_viewer');
+  let img_viewer = document.getElementById('image_viewer');
+  pdf_viewer.classList.remove('active');
+  pdf_viewer.data = '';
+  img_viewer.classList.remove('active');
+  img_viewer.src = '';
   if (blob == null){
     return;
   }
 
-  const fileURL = URL.createObjectURL(blob);
   if (blob.type === "application/pdf"){
-    document.getElementById('pdf_viewer').classList.add('active');
-    document.getElementById('pdf_viewer').data = fileURL;
+    pdf_viewer.classList.add('active');
+    pdf_viewer.data = blob.url;
   } else if (blob.type.split("/")[0] === "image") {
-    document.getElementById('image_viewer').classList.add('active');
-    document.getElementById('image_viewer').src = fileURL;
+    img_viewer.classList.add('active');
+    img_viewer.src = blob.url;
   } else {
-    display_message("Document cannot be shown on the screen!", "red", 5000);
+    display_message("Document is loaded properly but cannot be shown on the screen.", "red", timeout);
   }
-  
 }
 
-function display_message(message, color, timeout=-1) {
+function display_message(message, color="black", timeout=-1) {
   document.getElementById("sf_status").style.color = color;
   document.getElementById("sf_status").value = message;
-  if (timeout > 0){
-    setTimeout(() => {
-      if (document.getElementById("sf_status").value === message){
-        document.getElementById("sf_status").value = '';
-      }}, timeout)
+  if (timeout > 0 && document.getElementById("sf_status").value === message){
+    setTimeout(() => {document.getElementById("sf_status").value = '';}, timeout * 1000)
   }
 }
 
-function upload_document() {
-  const blobData = doc_blob;
+async function upload_document() {
   const description = document.getElementById('sf_desc').value;
   const filename = document.getElementById('sf_filename').value;
   
-  let timeout = 5000;
-
-  if (! filename || blobData == null){
-    display_message("No documents found!", "red", timeout);
+  if (! filename || doc_blob.url == null){
+    display_message("Failed: Choose File", "red", timeout);
     return;
   }
   if (! description){
-    display_message("Description section cannot be empty!", "red", timeout);
+    display_message("Failed: Description line is empty", "red", timeout);
     return;
   }
   let projectID = get_sel_value("sf_sel_proj")
-  if (projectID == null) {
-    display_message("Select the project that the document belongs to!", "red", timeout);
+  if (projectID == null || projectID == "UNK") {
+    display_message("Failed: Select a Project", "red", timeout);
     return;
   } else{
     projectID = projectID.replace("id_", "");
@@ -643,7 +638,7 @@ function upload_document() {
   let subclass_val = get_sel_value("sf_sel_subclass")
   if (class_val != null){
     if (subclass_val == null){
-      display_message("Subcategory not found!", "red", timeout);
+      display_message("Failed: Select a Subcategory", "red", timeout);
       return;
     } else {
       subclass_val = subclass_val.replace("id_", "");
@@ -653,67 +648,69 @@ function upload_document() {
   }
   document.getElementById('sf_upload').disabled = true;
 
-  let formData = new FormData();
-  formData.append('action', 'NEW');
-  formData.append('description', description);
-  formData.append('filename', filename);
-  formData.append('blob', blobData);
-  formData.append('projectID', projectID);
-  formData.append('class', class_val);
-  formData.append('subclassID', subclass_val);
-
-  let xhr = new XMLHttpRequest();
-  xhr.open('POST', 'supporting_files_proc.php', true);
-  xhr.send(formData);
-  xhr.onload = function() {
-    if (xhr.status != 200) {
-      display_message(`AJAX Error: ${xhr.status}: ${xhr.statusText}`, 'red', 5000);
-    } else {
-      let data = JSON.parse(xhr.responseText);
-      let err_msg = null;
-      if (data.image != "OK"){
-        err_msg = data.image;
-      }
-      if (data.imagePerson != "OK"){
-        err_msg += "\n\n" + data.imagePerson;
-      }
-      if (data.imageProject != "OK"){
-        err_msg += "\n\n" + data.imageProject;
-      }if (data.imageClass != "OK"){
-        err_msg += "\n\n" + data.imageClass;
-      }
-      if (err_msg == null){
-        display_message("Document successfully uploaded!", 'green', 5000);
-        get_doc_info(parse_doc_info);
-        document.getElementById('sf_desc').value = '';
-        document.getElementById('sf_filename').value = '';
-        document.getElementById('sf_sel_class').value = 'SELECT';
-        fill_sel_class("sf_sel_subclass", null);
-        display_document(null);
-      } else {
-        alert(err_msg);
-      }
-    }
+  let date = new Date();
+  let yy = date.getFullYear();
+  let mm = date.getMonth();
+  let dd = date.getDay();
+  let h = date.getHours();
+  let m = date.getMinutes();
+  let s = date.getSeconds();
+  let ms = date.getMilliseconds();
+  let rn = Math.floor(Math.random() * 1e6);
+  let up_filename = `${yy}${mm}${dd}${h}${m}${s}${ms}${rn}`;
+  let state = await upload_blob(doc_blob, up_filename);
+  if (state != "OK"){
     document.getElementById('sf_upload').disabled = false;
+    display_message("Connection Failed: Error in Uploading Document File to the Server", "red", timeout);
+    throw new Error("FAILED");
   }
-  xhr.upload.onloadstart = function(){
-    display_message("1- upload started", 'red', 5000);
+
+  let form_data = new FormData();
+  form_data.append('action', 'NEW_DOC');
+  form_data.append('description', description);
+  form_data.append('filename', filename);
+  form_data.append('local_filename', up_filename);
+  form_data.append('projectID', projectID);
+  form_data.append('class', class_val);
+  form_data.append('subclassID', subclass_val);
+
+  let response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_data});
+  if (! response.ok){
+    display_message("Connection Failed: Error in Adding a New Document Request", 'red', timeout);
+    document.getElementById('sf_upload').disabled = false;
+    throw new Error("FAILED");
   }
-  xhr.upload.onprogress = function(){
-    display_message("2- uploading ...", 'red', 5000);
+  res_json = await response.json();
+  document.getElementById('sf_upload').disabled = false;
+  let err_msg = null;
+  if (res_json.blob != "OK"){
+    err_msg = res_json.blob;
   }
-  xhr.upload.onload = function(){
-    display_message("3- upload finished", 'red', 5000);
+  if (res_json.image != "OK"){
+    err_msg += "\n\n" + res_json.image;
   }
-  xhr.upload.onabort = function(){
-    display_message("upload aborted !!!", 'red', 5000);
+  if (res_json.imagePerson != "OK"){
+    err_msg += "\n\n" + res_json.imagePerson;
   }
-  xhr.onprogress = function(){
-    display_message("4- Database processing ...", 'red', 5000);
+  if (res_json.imageProject != "OK"){
+    err_msg += "\n\n" + res_json.imageProject;
   }
-  xhr.onerror = function() {
-    let msg = `Request failed! Check your network please! : ${xhr.status}: ${xhr.statusText}`;
-    display_message(msg, 'red', 5000);
+  if (res_json.imageClass != "OK"){
+    err_msg += "\n\n" + res_json.imageClass;
+  }
+  if (err_msg == null){
+    let doc_info = await get_doc_info();
+    if (doc_info == "FAILED"){
+      display_message("Connection Failed: Error in Fetching Document Information Request", 'red', timeout);
+    } else {
+      parse_doc_info(doc_info);
+      mode = null;
+      handle_mode(element_new);
+      display_message("Document is successfully uploaded to the database", 'green', timeout);
+    }    
+  } else {
+    display_message("Failed: Error in Document Information", 'red', timeout);
+    alert(err_msg);
   }
 }
 
@@ -721,19 +718,17 @@ function delete_document() {
 
   let projectID = get_sel_value("sf_sel_proj")
   if (projectID == null) {
-    display_message("Select the project that the document belongs to!", "red", timeout);
+    display_message("Failed: Select a Project", "red", timeout);
     return;
-  } else{
-    if (projectID == "UNK"){
-      projectID = null;
-    } else {
-      projectID = projectID.replace("id_", "");
-    }
+  } else if (projectID == "UNK"){
+    projectID = null;
+  } else {
+    projectID = projectID.replace("id_", "");
   }
 
   let docID = get_sel_value("sf_sel_file")
   if (docID == null) {
-    display_message("Select the document!", "red", timeout);
+    display_message("Failed: Select a Document", "red", timeout);
     return;
   } else{
     docID = docID.replace("id_", "");
@@ -743,7 +738,7 @@ function delete_document() {
   let subclass_val = get_sel_value("sf_sel_subclass")
   if (class_val != null){
     if (subclass_val == null){
-      display_message("Subcategory not found!", "red", timeout);
+      display_message("Failed: Select a Subcategory", "red", timeout);
       return;
     } else {
       subclass_val = subclass_val.replace("id_", "");
@@ -751,68 +746,220 @@ function delete_document() {
   } else {
     subclass_val = null;
   }
-  document.getElementById('sf_upload').disabled = true;
+  document.getElementById('sf_delete').disabled = true;
 
-  let formData = new FormData();
-  formData.append('action', 'DEL_DOC');
-  formData.append('docID', docID);
-  formData.append('projectID', projectID);
-  formData.append('class', class_val);
-  formData.append('subclassID', subclass_val);
+  let form_data = new FormData();
+  form_data.append('action', 'DEL_DOC');
+  form_data.append('docID', docID);
+  form_data.append('projectID', projectID);
+  form_data.append('class', class_val);
+  form_data.append('subclassID', subclass_val);
 
-  let xhr = new XMLHttpRequest();
-  xhr.open('POST', 'supporting_files_proc.php', true);
-  xhr.send(formData);
-  xhr.onload = function() {
-    if (xhr.status != 200) {
-      display_message(`AJAX Error: ${xhr.status}: ${xhr.statusText}`, 'red', 5000);
-    } else {
-      let data = JSON.parse(xhr.responseText);
-      let err_msg = null;
-      if (data.image != "OK"){
-        err_msg = data.image;
-      }
-      if (data.imagePerson != "OK"){
-        err_msg += "\n\n" + data.imagePerson;
-      }
-      if (data.imageProject != "OK"){
-        err_msg += "\n\n" + data.imageProject;
-      }if (data.imageClass != "OK"){
-        err_msg += "\n\n" + data.imageClass;
-      }
-      if (err_msg == null){
-        display_message("Document successfully uploaded!", 'green', 5000);
-        get_doc_info(parse_doc_info);
-        document.getElementById('sf_desc').value = '';
-        document.getElementById('sf_filename').value = '';
-        document.getElementById('sf_sel_class').value = 'SELECT';
-        fill_sel_class("sf_sel_subclass", null);
-        display_document(null);
-      } else {
-        alert(err_msg);
-      }
+  fetch('supporting_files_proc.php', {method: 'POST', body: form_data})
+  .then(response => response.json(), () => {
+    document.getElementById('sf_delete').disabled = false;
+    display_message("Connection Failed: Error in Deleting Document Request", "red", timeout);})
+  .then(result => {
+    document.getElementById('sf_delete').disabled = false;
+    let err_msg = null;
+    if (result.image != "OK"){
+      err_msg = result.image;
     }
-    document.getElementById('sf_upload').disabled = false;
+    if (result.imagePerson != "OK"){
+      err_msg += "\n\n" + result.imagePerson;
+    }
+    if (result.imageProject != "OK"){
+      err_msg += "\n\n" + result.imageProject;
+    }
+    if (result.imageClass != "OK"){
+      err_msg += "\n\n" + result.imageClass;
+    }
+
+    get_doc_info().then(
+      doc_info => {
+        parse_doc_info(doc_info);
+        URL.revokeObjectURL(all_blobs["id_" + docID].url);
+        delete all_blobs["id_" + docID];
+        mode = null;
+        handle_mode(element_view);
+      }
+    )
+
+    if (err_msg == null){
+      display_message("Document was deleted successfully", 'green', timeout);
+    } else {
+      display_message("Failed: Error in Deleting Document", "red", timeout)
+      alert(err_msg);
+    }
+  })
+}
+
+async function update_document() {
+  let description = document.getElementById('sf_desc').value;
+  let filename = document.getElementById('sf_filename').value;
+  let curr_document;
+
+  let docID = get_sel_value("sf_sel_file")
+  if (docID == null) {
+    display_message("Failed: Select a Document", "red", timeout);
+    return;
+  } else {
+    curr_document = all_documents[docID];
+    docID = docID.replace("id_", "");
   }
-  xhr.upload.onloadstart = function(){
-    display_message("1- upload started", 'red', 5000);
+
+  let projectID = get_sel_value("sf_sel_proj");
+  if (projectID == null) {
+    display_message("Failed: Select a Project", "red", timeout);
+    return;
+  } else if (projectID == "UNK"){
+    display_message("Failed: Select a Project other than ' --- Unknown --- '", "red", timeout);
+    return;
+  } else {
+    let doc_projectID = curr_document.projectID;
+    if (doc_projectID === projectID){
+      projectID = null;
+    } else if (doc_projectID == null){
+      projectID = "null_" + projectID.replace("id_", "");
+    } else {
+      projectID = doc_projectID.replace("id_", "") + "_" + projectID.replace("id_", "");
+    }
   }
-  xhr.upload.onprogress = function(){
-    display_message("2- uploading ...", 'red', 5000);
+
+  if (! description){
+    display_message("Failed: Description line is empty", "red", timeout);
+    return;
   }
-  xhr.upload.onload = function(){
-    display_message("3- upload finished", 'red', 5000);
+  if (description.localeCompare(curr_document.description) == 0){
+    description = null;
   }
-  xhr.upload.onabort = function(){
-    display_message("upload aborted !!!", 'red', 5000);
+
+  if (! filename || doc_blob.url == null){
+    filename = null;
+    doc_blob.url = null;
+    doc_blob.type = null;
   }
-  xhr.onprogress = function(){
-    display_message("4- Database processing ...", 'red', 5000);
+  
+  let class_val = get_sel_value("sf_sel_class")
+  let subclass_val = get_sel_value("sf_sel_subclass")
+  if (class_val != null){
+    if (subclass_val == null){
+      display_message("Failed: Select a Subcategory", "red", timeout);
+      return;
+    } else {
+      subclass_val = subclass_val.replace("id_", "");
+    }
+  } else {
+    subclass_val = null;
   }
-  xhr.onerror = function() {
-    let msg = `Request failed! Check your network please! : ${xhr.status}: ${xhr.statusText}`;
-    display_message(msg, 'red', 5000);
+
+  let prev_class_val, prev_subclass_val;
+  if (curr_document.solutionID != null){
+    prev_class_val = "solution";
+    prev_subclass_val = curr_document.solutionID.replace("id_", "");
+  } else if (curr_document.bufferID != null) {
+    prev_class_val = "buffer";
+    prev_subclass_val = curr_document.bufferID.replace("id_", "");
+  } else if (curr_document.analyteID != null) {
+    prev_class_val = "analyte";
+    prev_subclass_val = curr_document.analyteID.replace("id_", "");
+  } else {
+    prev_class_val = null;
+    prev_subclass_val = null;
   }
+
+  if (class_val === prev_class_val && subclass_val === prev_subclass_val){
+    class_val = null;
+    subclass_val = null;
+  } else if (prev_class_val == null && class_val != null){
+    class_val = "null_" + class_val;
+  } else if (prev_class_val != null && class_val != null){
+    class_val = prev_class_val + "_" + class_val;
+    subclass_val = prev_subclass_val + "_" + subclass_val;
+  } else if (prev_class_val != null && class_val == null){
+    class_val = prev_class_val + "_null";
+    subclass_val = prev_subclass_val;
+  }
+
+  let check = projectID == null && description == null && filename == null && doc_blob == null;
+  check = check && class_val == null && subclass_val == null;
+  if (check) {
+    display_message("Failed: Nothing was found to edit", "red", timeout);
+    return;
+  }
+
+  document.getElementById('sf_update').disabled = true;
+
+  // upload blob
+  let up_filename = null;
+  if (doc_blob.url != null){
+    let date = new Date();
+    let yy = date.getFullYear();
+    let mm = date.getMonth();
+    let dd = date.getDay();
+    let h = date.getHours();
+    let m = date.getMinutes();
+    let s = date.getSeconds();
+    let ms = date.getMilliseconds();
+    let rn = Math.floor(Math.random() * 1e6);
+    up_filename = `${yy}${mm}${dd}${h}${m}${s}${ms}${rn}`;
+    let state = await upload_blob(doc_blob, up_filename);
+    if (state != "OK"){
+      document.getElementById('sf_update').disabled = false;
+      display_message("Connection Failed: Error in Uploading the Document File to the Server", "red", timeout);
+      throw new Error("FAILED");
+    }
+  }
+
+  let form_data = new FormData();
+  form_data.append('action', 'UPDATE_DOC');
+  form_data.append('docID', docID);
+  form_data.append('description', description);
+  form_data.append('filename', filename);
+  form_data.append('local_filename', up_filename);
+  form_data.append('projectID', projectID);
+  form_data.append('class', class_val);
+  form_data.append('subclassID', subclass_val);
+
+  fetch('supporting_files_proc.php', {method: 'POST', body: form_data})
+  .then(response => response.json(), () => {
+    document.getElementById('sf_update').disabled = false;
+    display_message('Connection Failed: Error in Updating Document Request', 're', timeout);
+    throw new Error('FAILED');})
+  .then(result => {
+    document.getElementById('sf_update').disabled = false;
+    let err_msg = null;
+    if (result.blob != "OK"){
+      err_msg = result.blob;
+    }
+    if (result.image != "OK"){
+      err_msg += "\n\n" + result.image;
+    }
+    if (result.imageProject != "OK"){
+      err_msg += "\n\n" + result.imageProject;
+    }
+    if (result.imageClass != "OK"){
+      err_msg += "\n\n" + result.imageClass;
+    }
+    if (err_msg == null){
+      get_doc_info().then(
+        doc_info => {
+          parse_doc_info(doc_info);
+          document.getElementById("sf_edit").checked = false;
+          URL.revokeObjectURL(all_blobs["id_" + docID].url);
+          all_blobs["id_" + docID].url = null;
+          all_blobs["id_" + docID].type = null;
+          // delete all_blobs["id_" + docID];
+          mode = null;
+          handle_mode(element_view);
+          display_message("Document is successfully updated", 'green', timeout);
+        },
+        () => display_message("Connection Failed: Error in Fetching Document Information Request", 'red', timeout)
+      )
+    } else {
+      alert(err_msg);
+    }
+  })
 }
 
 
@@ -820,23 +967,115 @@ function get_sel_value(select_id){
   let element = document.getElementById(select_id);
   let option = element.options[element.selectedIndex];
   let value = option.value;
-  if (value == "EMPTY" || value == "SELECT"){
+  if (value == "EMPTY" || value == "SELECT") {
     return null;
-  } else {
+  } else{
     return value;
   }
 }
 
 function download_document() {
-  if (doc_blob == null){
+  let docID = get_sel_value("sf_sel_file");
+  if (docID == null) {
+    display_message("Select a document", "red", timeout);
+    return;
+  }
+  let blob = all_blobs[docID];
+  if (blob == null || blob.url == null){
+    display_message("Document is not downloaded yet", "red", timeout);
     return;
   }
   let filename = document.getElementById("sf_filename").value;
   let a = document.createElement('a');
-  a.href = window.URL.createObjectURL(doc_blob);
+  a.href = blob.url;
   a.download = filename;
   a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+function filter_text(input){
+  input.value = input.value.replace(/[^a-zA-Z0-9 .,_-]/g, '');
+}
+
+
+async function upload_blob(blob_obj, filename){
+  if (blob_obj.url == null){
+    return;
+  }
+  let response = await fetch(blob_obj.url);
+  if (! response.ok){
+    display_message("Failed: Revoked Document URL! Please Choose File.", "red", timeout);
+    throw new Error("FAILED");
+  }
+  let blob = await response.blob();
+  let base64 = await blob2base64(blob);
+  const slice_size = 1024 * 1000 * 2;
+  let offset = 0;
+  let attempt = 0;
+  const attempt_max = 5;
+  let chunk = base64.slice(offset, offset + slice_size);
+  const length = base64.length;
+  let sum = chunk.length;
+  display_message(`"Uploading: 0 %"`, 'green', timeout);
+  while (offset < base64.length){
+    
+    const state = await upload_chunk(chunk, filename);
+    if (state == "OK"){
+      attempt = 0;
+      offset += slice_size;
+      chunk = base64.slice(offset, offset + slice_size);
+      sum += chunk.length;
+      const perc = ((sum / length) * 100).toFixed(1);
+      display_message(`"Uploading: ${perc} %"`, 'green', timeout);
+    } else {
+      if (++attempt > attempt_max){
+        display_message("File Uploading Failed: Exceeded Maximum Attempts", "red", timeout);
+        throw new Error("FAILED");
+      }
+    }
+  }
+  return Promise.resolve("OK");
+}
+
+function blob2base64(blob){
+  return new Promise(function(resolve, reject){
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onload = function(e){
+      let base64 = e.target.result.slice(e.target.result.indexOf(',') + 1);
+      resolve(base64);
+    }
+    reader.onerror = () => reject(new Error("FAILED"));
+  }); 
+}
+
+
+function upload_chunk(chunk, filename){
+  
+  return new Promise(function(resolve, reject){
+    let xhr = new XMLHttpRequest();
+    // xhr.responseType = 'json';
+    xhr.open('POST', 'supporting_files_proc.php', true);
+    let formData = new FormData();
+    formData.append('action', 'GET_BLOB');
+    formData.append('data', chunk);
+    formData.append('filename', filename);
+    xhr.send(formData);
+    xhr.onload = function() {
+      if (xhr.status != 200) {
+        reject(new Error("FAILED"));
+      } else {
+        if (xhr.responseText == "OK"){
+          resolve("OK");
+        } else {
+          reject(new Error("FAILED"));
+        }
+      }
+    }
+    xhr.onerror = function() {
+      reject(new Error("FAILED"));
+    }
+  });
 }
