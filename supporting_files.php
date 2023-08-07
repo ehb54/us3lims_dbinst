@@ -87,7 +87,7 @@ echo <<< HTML
     </div>
 
     <div id="sf_button_item" class="sf_item">
-      <button id="sf_download" type="button" onclick="download_document()"> Download </button>
+      <button id="sf_save" type="button" onclick="save_document()"> Save File </button>
       <button id="sf_update" type="button" onclick="update_document()"> Update </button>
       <button id="sf_delete" type="button" onclick="delete_document()"> Delete </button>
       <button id="sf_upload" type="button" onclick="upload_document()"> Upload </button>

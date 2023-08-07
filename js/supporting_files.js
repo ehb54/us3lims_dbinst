@@ -44,8 +44,8 @@ function handle_mode(item) {
   document.getElementById('sf_txt_class').classList.remove('active');
   document.getElementById('sf_txt_subclass').classList.remove('active');
 
-  document.getElementById('sf_download').classList.remove('active');
-  document.getElementById('sf_download').disabled = false;
+  document.getElementById('sf_save').classList.remove('active');
+  document.getElementById('sf_save').disabled = false;
   document.getElementById('sf_update').classList.remove('active');
   document.getElementById('sf_update').disabled = false;
   document.getElementById('sf_delete').classList.remove('active');
@@ -102,7 +102,7 @@ function set_view_mode() {
   document.getElementById('sf_view').classList.add('active');
   document.getElementById('sf_txt_class').classList.add('active');
   document.getElementById('sf_txt_subclass').classList.add('active');
-  document.getElementById('sf_download').classList.add('active');
+  document.getElementById('sf_save').classList.add('active');
   document.getElementById('sf_browse').classList.remove('active');
   document.getElementById("sf_browse").value = null;
   set_edit_mode(document.getElementById("sf_edit"))
@@ -123,7 +123,7 @@ function set_edit_mode(input) {
     document.getElementById('sf_sel_subclass').classList.add('active');
     document.getElementById('sf_update').classList.add('active');
     document.getElementById('sf_delete').classList.add('active');
-    document.getElementById('sf_download').classList.remove('active');
+    document.getElementById('sf_save').classList.remove('active');
     document.getElementById('sf_browse').classList.add('active');
     document.getElementById('sf_sel_file_item').disabled = true;
   } else {
@@ -133,7 +133,7 @@ function set_edit_mode(input) {
     document.getElementById('sf_sel_subclass').classList.remove('active');
     document.getElementById('sf_update').classList.remove('active');
     document.getElementById('sf_delete').classList.remove('active');
-    document.getElementById('sf_download').classList.add('active');
+    document.getElementById('sf_save').classList.add('active');
     document.getElementById('sf_browse').classList.remove('active');
     select_project(document.getElementById("sf_sel_proj"));
     document.getElementById('sf_sel_file_item').disabled = false;
@@ -255,85 +255,73 @@ async function select_document(input) {
     }
 
     if (all_blobs[docID] == null || all_blobs[docID].url == null){
-      // let ext_chk = check_extension(filename);
-      // fetch_blob(docID.replace("id_", ""), guid, ext_chk.type, b64toBlob);
-      fetch_blob(docID.replace("id_", ""), guid);
+      let msg = await fetch_blob(docID.replace("id_", ""), guid);
+      delete_local_blob(guid);
+      if (msg != "OK"){
+        display_message(msg, "red", timeout);
+      }
     } else {
-      display_document(all_blobs[docID]);
+      display_document(docID);
     }
   }
 }
 
 async function fetch_blob(doc_id, doc_guid) {
+  let msg = "OK";
   let form_get = new FormData();
   form_get.append('action', 'GIVE_BLOB');
   form_get.append('docID', doc_id);
   form_get.append('docGUID', doc_guid);
-
-  let res_finfo = await fetch('supporting_files_proc.php', {method: 'POST', body: form_get});
-  if (! res_finfo.ok){
-    display_message("Connection Failed: Error in Fetching Document Path Request", "red", timeout);
-    throw new Error("FAILED");
+  let res_finfo, file_info;
+  try{
+    res_finfo = await fetch('supporting_files_proc.php', {method: 'POST', body: form_get});
+    file_info = await res_finfo.json();
+  } catch (_) {
+    msg = "Connection Failed: Error in Fetching Document Path";
+    return msg;
   }
-  let file_info = await res_finfo.json();
-  const file_path = file_info.path;
 
+  const file_path = file_info.path;
   if (file_path == null){
-    display_message("Failed: Document is not found on the server", "red", timeout);
-    throw new Error("FAILED");
+    msg = "Failed: Document is not found on the server";
+    return msg;
   }
   display_message("Please wait! Downloading ...", "red");
-
-  fetch(file_path).then(
-    res_blob => res_blob.blob(),
-    () => {
-      delete_local_blob(file_path).catch(
-        () => display_message("Error: Temporary File Wasn't Cleaned From Server")
-      );
-      display_message("Connection Failed: Error in Fetching Document File Request", "red", timeout);
-      throw new Error("FAILED");
-    }
-  ).then(
-    blob => {
-      all_blobs["id_" + doc_id].url = URL.createObjectURL(blob);
-      all_blobs["id_" + doc_id].type = blob.type;
-      display_message("Document is successfully received", "green", timeout);
-      display_document(all_blobs["id_" + doc_id]);
-      delete_local_blob(file_path).catch(
-        () => display_message("Error: Temporary File Wasn't Cleaned From Server")
-      );
-    },
-    () => {
-      display_message("Connection Failed: Error in Fetching Document Blob", "red", timeout);
-      delete_local_blob(file_path).catch(
-        () => display_message("Error: Temporary File Wasn't Cleaned From Server")
-      );
-      throw new Error("FAILED");
-    }
-  )
+  let response, blob;
+  try {
+    response = await fetch(file_path);
+    blob = await response.blob();
+  } catch (_) {
+    msg = "Connection Failed: Error in Fetching Document File";
+    return msg; 
+  }
+  all_blobs["id_" + doc_id].url = URL.createObjectURL(blob);
+  all_blobs["id_" + doc_id].type = blob.type;
+  display_message("Document is successfully received", "green", timeout);
+  display_document("id_" + doc_id);
+  return msg;
 }
 
-function delete_local_blob(file_path){
-  return new Promise(function(resolve, reject){
-    let form_del = new FormData();
-    form_del.append('action', 'DEL_FILE');
-    form_del.append('filepath', file_path);
-    fetch('supporting_files_proc.php', {method: 'POST', body: form_del}).then(
-      response => response.text(),
-      () => reject(new Error("FAILED"))
-    ).then(
-      state => {
-        if (state == "OK"){
-          resolve("OK");
-        } else {
-          reject(new Error("FAILED"));
-        }
-      }
-    )
-  })
+async function delete_local_blob(file_name){
+  let msg = "Failed: Error in deleting the temporary file from server";
+  let form_del = new FormData();
+  form_del.append('action', 'DEL_FILE');
+  form_del.append('filename', file_name);
+  let response, state;
+  try {
+    response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_del});
+    state = await response.text();
+    if (state == "OK"){
+      return "OK";
+    } else {
+      return msg;
+    }
+  } catch (_) {
+    return msg;
+  }
 }
 
-function init_setup() {
+async function init_setup() {
   element_view = document.getElementById("sf_view");
   element_new = document.getElementById("sf_new");
   doc_blob['url'] = null;
@@ -341,77 +329,79 @@ function init_setup() {
   // Get constant information
   let form_data = new FormData();
   form_data.append('action', 'GIVE_INIT_INFO');
-  fetch('supporting_files_proc.php', {method: 'POST', body: form_data}).then(
-    response => response.json(), () => {
-      display_message("Connection Failed: Error in Fetching Initial Information Request", 'red', timeout);
-      throw new Error("FAILED");
+  let response, init_info;
+  try {
+    response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_data});
+    init_info = await response.json();
+  } catch (_) {
+    display_message("Connection Failed: Error in Fetching Initial Information Request", 'red', timeout);
+    return;
+  }
+
+  if (init_info.project.data == null){
+    projects = null;
+  } else {
+    let obj = {};
+    for (let ii = 0; ii < init_info.project.data.length; ii++){
+      let id = init_info.project.data[ii].projectID;
+      obj["id_" + id] = {"description" : init_info.project.data[ii].description, "doc_IDs" : null};
     }
-  ).then(
-    init_info => {
-      // parse constant information
-      if (init_info.project.data == null){
-        projects = null;
-      } else {
-        let obj = {};
-        for (let ii = 0; ii < init_info.project.data.length; ii++){
-          let id = init_info.project.data[ii].projectID;
-          obj["id_" + id] = {"description" : init_info.project.data[ii].description, "doc_IDs" : null};
-        }
-        projects = obj;
-      }
+    projects = obj;
+  }
 
-      if (init_info.solution.data == null){
-        solutions = null;
-      } else {
-        let obj = {};
-        for (let ii = 0; ii < init_info.solution.data.length; ii++){
-          let id = init_info.solution.data[ii].solutionID;
-          obj["id_" + id] = init_info.solution.data[ii].description;
-        }
-        solutions = obj;
-      }
-
-      if (init_info.buffer.data == null){
-        buffers = null;
-      } else {
-        let obj = {};
-        for (let ii = 0; ii < init_info.buffer.data.length; ii++){
-          let id = init_info.buffer.data[ii].bufferID;
-          obj["id_" + id] = init_info.buffer.data[ii].description;
-        }
-        buffers = obj;
-      }
-
-      if (init_info.analyte.data == null){
-        analytes = null;
-      } else {
-        let obj = {};
-        for (let ii = 0; ii < init_info.analyte.data.length; ii++){
-          let id = init_info.analyte.data[ii].analyteID;
-          obj["id_" + id] = init_info.analyte.data[ii].description;
-        }
-        analytes = obj;
-      }
-
-      // parse document information
-      parse_doc_info(init_info.image_info);
-
-      fill_sel_class("sf_sel_class", {"solution" : "Solution" ,
-      "buffer"   : "Buffer" ,
-      "analyte"  : "Analyte"});
+  if (init_info.solution.data == null){
+    solutions = null;
+  } else {
+    let obj = {};
+    for (let ii = 0; ii < init_info.solution.data.length; ii++){
+      let id = init_info.solution.data[ii].solutionID;
+      obj["id_" + id] = init_info.solution.data[ii].description;
     }
-  )  
+    solutions = obj;
+  }
+
+  if (init_info.buffer.data == null){
+    buffers = null;
+  } else {
+    let obj = {};
+    for (let ii = 0; ii < init_info.buffer.data.length; ii++){
+      let id = init_info.buffer.data[ii].bufferID;
+      obj["id_" + id] = init_info.buffer.data[ii].description;
+    }
+    buffers = obj;
+  }
+
+  if (init_info.analyte.data == null){
+    analytes = null;
+  } else {
+    let obj = {};
+    for (let ii = 0; ii < init_info.analyte.data.length; ii++){
+      let id = init_info.analyte.data[ii].analyteID;
+      obj["id_" + id] = init_info.analyte.data[ii].description;
+    }
+    analytes = obj;
+  }
+
+  // parse document information
+  parse_doc_info(init_info.image_info);
+
+  fill_sel_class("sf_sel_class", {"solution" : "Solution" ,
+  "buffer"   : "Buffer" ,
+  "analyte"  : "Analyte"});
+ 
 }
 
-function get_doc_info(){
-  return new Promise(function(resolve, reject){
-        // Get document information
-    form = new FormData();
-    form.append('action', 'GIVE_DOC_INFO');
-    fetch('supporting_files_proc.php', {method: 'POST', body: form})
-    .then(response => response.json(), () => reject(new Error("FAILED")))
-    .then(result => resolve(result), () => reject(new Error("FAILED")));
-  }) 
+async function get_doc_info(){
+  let response, res_json;
+  form = new FormData();
+  form.append('action', 'GIVE_DOC_INFO');
+  try {
+    response = await fetch('supporting_files_proc.php', {method: 'POST', body: form});
+    res_json = await response.json();
+    return res_json;
+  } catch (_) {
+    return null;
+  }
 }
 
 function parse_doc_info (doc_info) {
@@ -601,6 +591,10 @@ function browse_document(input) {
     display_message("Error: File type is not supported", "red", timeout);
     return;
   }
+  if (doc_blob.url != null){
+    URL.revokeObjectURL(doc_blob.url);
+    doc_blob.type = null;
+  }
 
   const reader = new FileReader();
   reader.readAsArrayBuffer(file);
@@ -608,38 +602,61 @@ function browse_document(input) {
     const fileContent = e.target.result;
     let blob = new Blob([fileContent], { type: file.type });
     document.getElementById('sf_filename').value = file.name;
-    if (doc_blob.url != null){
-      URL.revokeObjectURL(doc_blob.url);
-    }
     doc_blob.url = URL.createObjectURL(blob);
     doc_blob.type = blob.type;
     display_document(doc_blob);
   }
 }
 
-function display_document(blob) {
+function display_document(input) {
+  let flag;
+  let blob_obj;
+  if (input == null){
+    flag = true;
+  } else if (typeof(input) == 'object'){
+    blob_obj = input;
+    flag = false;
+  } else if (typeof(input) == 'string') {
+    let doc_id = get_sel_value("sf_sel_file")
+    if (doc_id == null) {
+      flag = true;
+    } else {
+      if (input == null){
+        flag = true;
+      } else if (doc_id != input){
+        return;
+      } else {
+        flag = false;
+        blob_obj = all_blobs[doc_id];
+      }
+    }
+  } 
+
   let pdf_viewer = document.getElementById('pdf_viewer');
   let img_viewer = document.getElementById('image_viewer');
   pdf_viewer.classList.remove('active');
   pdf_viewer.data = '';
   img_viewer.classList.remove('active');
   img_viewer.src = '';
-  if (blob == null){
+  if (flag){
     return;
   }
 
-  if (blob.type === "application/pdf"){
+  if (blob_obj.type === "application/pdf"){
     pdf_viewer.classList.add('active');
-    pdf_viewer.data = blob.url;
-  } else if (blob.type.split("/")[0] === "image") {
+    pdf_viewer.data = blob_obj.url;
+  } else if (blob_obj.type.split("/")[0] === "image") {
     img_viewer.classList.add('active');
-    img_viewer.src = blob.url;
+    img_viewer.src = blob_obj.url;
   } else {
-    display_message("Document is loaded properly but cannot be shown on the screen.", "red", timeout);
+    display_message("Document is loaded properly but cannot be shown on the screen.", "green", timeout);
   }
 }
 
 function display_message(message, color="black", timeout=-1) {
+  if (color != 'red' && color != 'green'){
+    color = 'black';
+  }
   document.getElementById("sf_status").style.color = color;
   document.getElementById("sf_status").value = message;
   if (timeout > 0 && document.getElementById("sf_status").value === message){
@@ -691,11 +708,12 @@ async function upload_document() {
   let ms = date.getMilliseconds();
   let rn = Math.floor(Math.random() * 1e6);
   let up_filename = `${yy}${mm}${dd}${h}${m}${s}${ms}${rn}`;
-  let state = await upload_blob(doc_blob, up_filename);
-  if (state != "OK"){
+  let msg = await upload_blob(doc_blob, up_filename);
+  if (msg != "OK"){
     document.getElementById('sf_upload').disabled = false;
-    display_message("Connection Failed: Error in Uploading Document File to the Server", "red", timeout);
-    throw new Error("FAILED");
+    display_message(msg, 'red', timeout);
+    delete_local_blob(up_filename);
+    return;
   }
 
   let form_data = new FormData();
@@ -706,14 +724,16 @@ async function upload_document() {
   form_data.append('projectID', projectID);
   form_data.append('class', class_val);
   form_data.append('subclassID', subclass_val);
-
-  let response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_data});
-  if (! response.ok){
-    display_message("Connection Failed: Error in Adding a New Document Request", 'red', timeout);
+  let response, res_json;
+  try {
+    response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_data});
+    res_json = await response.json();
+  } catch (_) {
+    display_message("Connection Failed: Error in Uploading a New Document", 'red', timeout);
     document.getElementById('sf_upload').disabled = false;
-    throw new Error("FAILED");
+    return;
   }
-  res_json = await response.json();
+  
   document.getElementById('sf_upload').disabled = false;
   let err_msg = null;
   if (res_json.blob != "OK"){
@@ -733,8 +753,8 @@ async function upload_document() {
   }
   if (err_msg == null){
     let doc_info = await get_doc_info();
-    if (doc_info == "FAILED"){
-      display_message("Connection Failed: Error in Fetching Document Information Request", 'red', timeout);
+    if (doc_info == null){
+      display_message("Connection Failed: Error in Fetching Document Information", 'red', timeout);
     } else {
       parse_doc_info(doc_info);
       mode = null;
@@ -747,9 +767,9 @@ async function upload_document() {
   }
 }
 
-function delete_document() {
+async function delete_document() {
 
-  let projectID = get_sel_value("sf_sel_proj")
+  let projectID = get_sel_value("sf_sel_proj");
   if (projectID == null) {
     display_message("Failed: Select a Project", "red", timeout);
     return;
@@ -759,7 +779,7 @@ function delete_document() {
     projectID = projectID.replace("id_", "");
   }
 
-  let docID = get_sel_value("sf_sel_file")
+  let docID = get_sel_value("sf_sel_file");
   if (docID == null) {
     display_message("Failed: Select a Document", "red", timeout);
     return;
@@ -767,8 +787,8 @@ function delete_document() {
     docID = docID.replace("id_", "");
   }
 
-  let class_val = get_sel_value("sf_sel_class")
-  let subclass_val = get_sel_value("sf_sel_subclass")
+  let class_val = get_sel_value("sf_sel_class");
+  let subclass_val = get_sel_value("sf_sel_subclass");
   if (class_val != null){
     if (subclass_val == null){
       display_message("Failed: Select a Subcategory", "red", timeout);
@@ -788,43 +808,43 @@ function delete_document() {
   form_data.append('class', class_val);
   form_data.append('subclassID', subclass_val);
 
-  fetch('supporting_files_proc.php', {method: 'POST', body: form_data})
-  .then(response => response.json(), () => {
-    document.getElementById('sf_delete').disabled = false;
-    display_message("Connection Failed: Error in Deleting Document Request", "red", timeout);})
-  .then(result => {
+  let response, res_json;
+  try {
+    response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_data});
+    res_json = await response.json();
     document.getElementById('sf_delete').disabled = false;
     let err_msg = null;
-    if (result.image != "OK"){
-      err_msg = result.image;
+    if (res_json.image != "OK"){
+      err_msg = res_json.image;
     }
-    if (result.imagePerson != "OK"){
-      err_msg += "\n\n" + result.imagePerson;
+    if (res_json.imagePerson != "OK"){
+      err_msg += "\n\n" + res_json.imagePerson;
     }
-    if (result.imageProject != "OK"){
-      err_msg += "\n\n" + result.imageProject;
+    if (res_json.imageProject != "OK"){
+      err_msg += "\n\n" + res_json.imageProject;
     }
-    if (result.imageClass != "OK"){
-      err_msg += "\n\n" + result.imageClass;
+    if (res_json.imageClass != "OK"){
+      err_msg += "\n\n" + res_json.imageClass;
     }
-
-    get_doc_info().then(
-      doc_info => {
+    if (err_msg == null){
+      let doc_info = await get_doc_info();
+      if (doc_info == null){
+        display_message("Connection Failed: Error in Fetching Document Information Request", 'red', timeout);
+      } else {
         parse_doc_info(doc_info);
         URL.revokeObjectURL(all_blobs["id_" + docID].url);
         delete all_blobs["id_" + docID];
         mode = null;
         handle_mode(element_view);
-      }
-    )
-
-    if (err_msg == null){
-      display_message("Document was deleted successfully", 'green', timeout);
+        display_message("Document was deleted successfully", 'green', timeout);
+      }    
     } else {
       display_message("Failed: Error in Deleting Document", "red", timeout)
-      alert(err_msg);
+      alert(err_msg); 
     }
-  })
+  } catch (_) {
+    display_message("Connection Failed: Error in Deleting Document Request", "red", timeout);
+  }
 }
 
 async function update_document() {
@@ -936,11 +956,12 @@ async function update_document() {
     let ms = date.getMilliseconds();
     let rn = Math.floor(Math.random() * 1e6);
     up_filename = `${yy}${mm}${dd}${h}${m}${s}${ms}${rn}`;
-    let state = await upload_blob(doc_blob, up_filename);
-    if (state != "OK"){
+    let msg = await upload_blob(doc_blob, up_filename);
+    if (msg != "OK"){
       document.getElementById('sf_update').disabled = false;
-      display_message("Connection Failed: Error in Uploading the Document File to the Server", "red", timeout);
-      throw new Error("FAILED");
+      display_message(msg, 'red', timeout);
+      delete_local_blob(up_filename);
+      return;
     }
   }
 
@@ -954,47 +975,52 @@ async function update_document() {
   form_data.append('class', class_val);
   form_data.append('subclassID', subclass_val);
 
-  fetch('supporting_files_proc.php', {method: 'POST', body: form_data})
-  .then(response => response.json(), () => {
+  let response, res_json;
+  try {
+    response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_data})
+    res_json = await response.json();
+  } catch (_){
     document.getElementById('sf_update').disabled = false;
-    display_message('Connection Failed: Error in Updating Document Request', 're', timeout);
-    throw new Error('FAILED');})
-  .then(result => {
-    document.getElementById('sf_update').disabled = false;
-    let err_msg = null;
-    if (result.blob != "OK"){
-      err_msg = result.blob;
-    }
-    if (result.image != "OK"){
-      err_msg += "\n\n" + result.image;
-    }
-    if (result.imageProject != "OK"){
-      err_msg += "\n\n" + result.imageProject;
-    }
-    if (result.imageClass != "OK"){
-      err_msg += "\n\n" + result.imageClass;
-    }
-    if (err_msg == null){
-      get_doc_info().then(
-        doc_info => {
-          parse_doc_info(doc_info);
-          document.getElementById("sf_edit").checked = false;
-          URL.revokeObjectURL(all_blobs["id_" + docID].url);
-          all_blobs["id_" + docID].url = null;
-          all_blobs["id_" + docID].type = null;
-          // delete all_blobs["id_" + docID];
-          mode = null;
-          handle_mode(element_view);
-          display_message("Document is successfully updated", 'green', timeout);
-        },
-        () => display_message("Connection Failed: Error in Fetching Document Information Request", 'red', timeout)
-      )
-    } else {
-      alert(err_msg);
-    }
-  })
-}
+    display_message('Connection Failed: Error in Updating Document', 'red', timeout);
+    return;
+  }
 
+  document.getElementById('sf_update').disabled = false;
+  let err_msg = null;
+  if (res_json.blob != "OK"){
+    err_msg = res_json.blob;
+  }
+  if (res_json.image != "OK"){
+    err_msg += "\n\n" + res_json.image;
+  }
+  if (res_json.imageProject != "OK"){
+    err_msg += "\n\n" + res_json.imageProject;
+  }
+  if (res_json.imageClass != "OK"){
+    err_msg += "\n\n" + res_json.imageClass;
+  }
+  if (err_msg == null){
+    let doc_info = await get_doc_info();
+    if (doc_info == null){
+      display_message("Connection Failed: Error in Fetching Document Information Request", 'red', timeout);
+    } else {
+      parse_doc_info(doc_info);
+      document.getElementById("sf_edit").checked = false;
+      if (all_blobs["id_" + docID].url != null){
+        URL.revokeObjectURL(all_blobs["id_" + docID].url);
+      }
+      URL.revokeObjectURL(all_blobs["id_" + docID].url);
+      all_blobs["id_" + docID].url = null;
+      all_blobs["id_" + docID].type = null;
+      mode = null;
+      handle_mode(element_view);
+      display_message("Document is successfully updated", 'green', timeout);
+    }
+  } else {
+    display_message("Failed: Error in Document Information", 'red', timeout);
+    alert(err_msg);
+  } 
+}
 
 function get_sel_value(select_id){
   let element = document.getElementById(select_id);
@@ -1007,7 +1033,7 @@ function get_sel_value(select_id){
   }
 }
 
-function download_document() {
+function save_document() {
   let docID = get_sel_value("sf_sel_file");
   if (docID == null) {
     display_message("Select a document", "red", timeout);
@@ -1032,44 +1058,49 @@ function filter_text(input){
   input.value = input.value.replace(/[^a-zA-Z0-9 .,_-]/g, '');
 }
 
-
 async function upload_blob(blob_obj, filename){
-  if (blob_obj.url == null){
-    return;
+  let response, blob, base64;
+  let msg = "OK";
+  try {
+    response = await fetch(blob_obj.url);
+    blob = await response.blob();
+  } catch (_) {
+    msg = "Error in Fetching Blob Data From Memory URL";
+    return msg;
   }
-  let response = await fetch(blob_obj.url);
-  if (! response.ok){
-    display_message("Failed: Revoked Document URL! Please Choose File.", "red", timeout);
-    throw new Error("FAILED");
+
+  try{
+    base64 = await blob2base64(blob);
+  } catch (_) {
+    msg = "Failed: Error in Encoding Blob to Base64";
+    return msg;
   }
-  let blob = await response.blob();
-  let base64 = await blob2base64(blob);
+
   const slice_size = 1024 * 1000 * 2;
   let offset = 0;
   let attempt = 0;
-  const attempt_max = 5;
+  const max_attempt = 5;
   let chunk = base64.slice(offset, offset + slice_size);
   const length = base64.length;
   let sum = chunk.length;
   display_message(`"Uploading: 0 %"`, 'green', timeout);
   while (offset < base64.length){
-    
-    const state = await upload_chunk(chunk, filename);
-    if (state == "OK"){
+    try {
+      await upload_chunk(chunk, filename);
       attempt = 0;
       offset += slice_size;
       chunk = base64.slice(offset, offset + slice_size);
       sum += chunk.length;
       const perc = ((sum / length) * 100).toFixed(1);
       display_message(`"Uploading: ${perc} %"`, 'green', timeout);
-    } else {
-      if (++attempt > attempt_max){
-        display_message("File Uploading Failed: Exceeded Maximum Attempts", "red", timeout);
-        throw new Error("FAILED");
+    } catch (_){
+      if (++attempt > max_attempt){
+        msg = "Failed: Error in Uploading File: Maximum Attempts is Exceeded";
+        return msg;
       }
     }
   }
-  return Promise.resolve("OK");
+  return msg;
 }
 
 function blob2base64(blob){
@@ -1084,31 +1115,21 @@ function blob2base64(blob){
   }); 
 }
 
-
 function upload_chunk(chunk, filename){
-  
   return new Promise(function(resolve, reject){
-    let xhr = new XMLHttpRequest();
-    // xhr.responseType = 'json';
-    xhr.open('POST', 'supporting_files_proc.php', true);
-    let formData = new FormData();
-    formData.append('action', 'GET_BLOB');
-    formData.append('data', chunk);
-    formData.append('filename', filename);
-    xhr.send(formData);
-    xhr.onload = function() {
-      if (xhr.status != 200) {
-        reject(new Error("FAILED"));
+    let form_data = new FormData();
+    form_data.append('action', 'GET_BLOB');
+    form_data.append('data', chunk);
+    form_data.append('filename', filename);
+    fetch('supporting_files_proc.php', {method: 'POST', body: form_data}).then(
+      response => response.text(), () => reject(new Error('FAILED'))
+    ).then(result => {
+      if (result == 'OK'){
+        resolve('OK');
       } else {
-        if (xhr.responseText == "OK"){
-          resolve("OK");
-        } else {
-          reject(new Error("FAILED"));
-        }
+        reject(new Error('FAILED'));
       }
-    }
-    xhr.onerror = function() {
-      reject(new Error("FAILED"));
-    }
+    }, () => reject(new Error('FAILED'))
+    )
   });
 }

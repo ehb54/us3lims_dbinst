@@ -133,12 +133,14 @@ function get_image_info () {
     } 
     return $image_info;
 }
+
 $sf_dir = dirname(__FILE__) . '/sf_data/';
 if (! is_dir($sf_dir)){
     mkdir($sf_dir);
 }
 $sf_dir = 'sf_data/';
 $delete_file = null;
+
 if (isset($_POST['action'])) {
     $action = $_POST['action'];
 
@@ -337,7 +339,7 @@ if (isset($_POST['action'])) {
             $row = mysqli_fetch_assoc($sqlret);
             $blobData = $row["gelPicture"];
             $filename = $row["filename"];
-            $fpath = $sf_dir . uuid();
+            $fpath = $sf_dir . $imageGUID;
             file_put_contents($fpath, $blobData);
             $doc["path"] = $fpath;
         } else {
@@ -529,8 +531,7 @@ if (isset($_POST['action'])) {
         echo "OK";
     }
     else if ($action === 'DEL_FILE'){
-        $filepath = $_POST['filepath'];
-        $ff = realpath($filepath);
+        $filepath = $sf_dir . $_POST['filename'];
         if (realpath($filepath)){
             $delete_file = realpath($filepath);
             echo "OK";
@@ -545,6 +546,22 @@ if (isset($_POST['action'])) {
 mysqli_close($link);
 if ($delete_file != null){
     unlink($delete_file);
+}
+
+// Garbage collector
+$sf_dir = realpath($sf_dir);
+$sf_files = scandir($sf_dir);
+$sf_files = array_diff($sf_files, array('.', '..'));
+foreach ($sf_files as $file) {
+    $file_path = $sf_dir . '/' . $file;
+    if (is_file($file_path)) {
+        $file_time = filemtime($file_path);
+        $current_time = time();
+        $threshold = 30 * 60; // delete files existing over 30 minutes that has not been deleted so far for any reason
+        if ($current_time - $file_time >= $threshold) {
+            unlink($file_path);
+        }
+    }
 }
 
 
