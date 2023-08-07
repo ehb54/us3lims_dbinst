@@ -1,0 +1,178 @@
+
+#image_content{
+  float: left;
+  border: none;
+  margin: 0px;
+  width: 800px;
+  padding: 0px 10px;
+  box-sizing: border-box;
+  /* text-align: left; */
+}
+
+#image_content * {
+  box-sizing: border-box;
+}
+
+.image_item{
+  margin: 2px;
+  padding: 0px;
+  border: none;
+}
+
+.image_item * {
+  color: black;
+  font-size: 13px;
+  font-weight: normal;
+  padding: 4px;
+  margin: 0px;
+  border-width: 1px;
+}
+
+#image_content button {
+  width: 100px;
+}
+
+#image_content select {
+  border: none;
+  padding: 5px;
+  width: 300px;
+}
+
+#image_content label{
+  display: inline-block;
+  background-color: black;
+  color: white;
+  font-weight: bold;
+  width: 90px;
+  text-align: right;
+}
+
+#image_content input{
+  border: 1px solid white;
+}
+
+#image_navbar {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: center;
+  }
+
+.image_navbar_item {
+    background-color: #D3D3D3;
+    color: black;
+    font-size: 14px;
+    text-align: center;
+    width: 150px;
+    font-weight: bold;
+    margin: 0px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+#view_image:hover, #edit_image:hover, #new_image:hover {
+  background-color: green;
+  color: black;
+}
+
+#view_image.active, #edit_image.active, #new_image.active {
+  background-color: black;
+  color: white;
+}
+
+#image_desc, #image_filename, #image_cat_txt, #image_ins_txt {
+  background-color: #F8F8FF;
+}
+
+#image_desc {
+  width: 508px;
+}
+
+#image_filename {
+  width: 300px;
+}
+
+#image_desc:hover{
+  border-color: gray;
+}
+
+#image_cat_txt, #image_ins_txt {
+  width: 300px;
+  display: none;
+  padding: 0px;
+}
+
+#image_filename, #image_cat_txt, #image_ins_txt {
+  outline: none;
+}
+
+/* #image_filename:focus, #image_category_text:focus, #image_category_id_tex:focus {
+  outline: none;
+} */
+
+#browse_image {
+  width: 91px;
+  overflow: hidden;
+}
+
+#image_cat, #image_cat_txt, #image_ins, #image_ins_txt {
+  display: none;
+}
+
+#image_cat.active, #image_cat_txt.active,
+#image_ins.active, #image_ins_txt.active {
+  display: block;
+}
+
+#image_cat_item, #image_ins_item {
+  display: flex;
+}
+
+#image_status_handle_item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#image_status {
+  background-color: white;
+  color: black;
+  width: 500px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: left;
+  outline: none;
+  border: none;
+}
+
+#image_handle_item {
+  display: flex;
+  align-items: center;
+  justify-content: right;
+}
+
+#image_handle_item button {
+  margin: 0px 3px;
+  display: none;
+}
+
+#image_handle_item button.active {
+  margin: 0px 3px;
+  display: block;
+}
+
+#image_viewer, #pdf_viewer {
+  display: none;
+  max-height: 600px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#image_viewer.active, #pdf_viewer.active {
+  display: block;
+}
+
+
+
+

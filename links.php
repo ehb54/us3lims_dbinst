@@ -12,7 +12,8 @@ $userlevel = ( isset( $_SESSION['userlevel'] ) ) ? $_SESSION['userlevel'] : -1;
 $projects_menu = <<<HTML
   <h4>Project</h4>
   <a href='https://$org_site/view_projects.php'>Projects</a>
-  <a href='https://$org_site/edit_images.php'>Images</a>
+  <!-- <a href='https://$org_site/edit_images.php'>Edit Image</a> -->
+  <a href='https://$org_site/supporting_files.php'>Supporting Files</a>
   <a href='https://$org_site/view_reports.php'>Reports</a>
   <a href='https://$org_site/data_sharing.php'>Sharing</a>
 
