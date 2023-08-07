@@ -9,7 +9,7 @@ let all_documents = {};
 let all_blobs = {};
 let element_view;
 let element_new;
-const timeout = 15;
+const timeout = 15 * 1000;
 
 const image_pdf_ext = [{name: "bmp",  type: "image/bmp"},  {name: "gif" , type: "image/gif"},
                        {name: "jpeg", type: "image/jpeg"}, {name: "jpg", type: "image/jpeg"},
@@ -112,11 +112,11 @@ function set_edit_mode(input) {
   document.getElementById('sf_sel_file_item').classList.add('active');
   if (input.checked){
     if (get_sel_value("sf_sel_file") == null){
-      display_message("Failed: Select a Document", "red", timeout);
+      display_message("Error: Select a Document", "red");
       input.checked = false;
       return;
     }
-    display_message("");
+    display_message(null);
     document.getElementById('sf_txt_class').classList.remove('active');
     document.getElementById('sf_txt_subclass').classList.remove('active');
     document.getElementById('sf_sel_class').classList.add('active');
@@ -255,10 +255,10 @@ async function select_document(input) {
     }
 
     if (all_blobs[docID] == null || all_blobs[docID].url == null){
-      let msg = await fetch_blob(docID.replace("id_", ""), guid);
+      let msg = await download_blob(docID.replace("id_", ""), guid);
       delete_local_blob(guid);
       if (msg != "OK"){
-        display_message(msg, "red", timeout);
+        display_message(msg, "red");
       }
     } else {
       display_document(docID);
@@ -266,7 +266,7 @@ async function select_document(input) {
   }
 }
 
-async function fetch_blob(doc_id, doc_guid) {
+async function download_blob(doc_id, doc_guid) {
   let msg = "OK";
   let form_get = new FormData();
   form_get.append('action', 'GIVE_BLOB');
@@ -277,29 +277,53 @@ async function fetch_blob(doc_id, doc_guid) {
     res_finfo = await fetch('supporting_files_proc.php', {method: 'POST', body: form_get});
     file_info = await res_finfo.json();
   } catch (_) {
-    msg = "Connection Failed: Error in Fetching Document Path";
+    msg = "Failed: Error in Fetching Document Path";
     return msg;
   }
-
+  const chk_ext = check_extension(all_documents["id_" + doc_id].filename);
   const file_path = file_info.path;
-  if (file_path == null){
+  const file_size = file_info.size;
+  if (file_path == null || file_size == null){
     msg = "Failed: Document is not found on the server";
     return msg;
   }
-  display_message("Please wait! Downloading ...", "red");
-  let response, blob;
-  try {
-    response = await fetch(file_path);
-    blob = await response.blob();
-  } catch (_) {
-    msg = "Connection Failed: Error in Fetching Document File";
+  let blob_url = await fetch_blob(file_path, file_size, chk_ext.type);
+  if (blob_url == null){
+    msg = "Failed: Error in Fetching Document File";
     return msg; 
   }
-  all_blobs["id_" + doc_id].url = URL.createObjectURL(blob);
-  all_blobs["id_" + doc_id].type = blob.type;
-  display_message("Document is successfully received", "green", timeout);
+  all_blobs["id_" + doc_id].url = blob_url;
+  all_blobs["id_" + doc_id].type = chk_ext.type;
+
+  display_message("Document is successfully received", "green");
   display_document("id_" + doc_id);
   return msg;
+}
+
+async function fetch_blob(file_path, file_size, file_type){
+  let response, reader, chunks, received_size;
+  try {
+    response = await fetch(file_path);
+    reader = response.body.getReader();
+    received_size = 0;
+    chunks = [];
+    display_message("Please Wait! Downloading: 0 %", 'red', '');
+    while(true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        break;
+      }
+      chunks.push(value);
+      received_size += value.length;
+      const perc = ((received_size / file_size) * 100).toFixed(1);
+      display_message(`Please Wait! Downloading: ${perc} %`, 'red', '');
+    }
+    display_message("Please Wait! Downloading: 100 %", 'red', '');
+  } catch(_){
+    return null;
+  }
+  const blob = new Blob(chunks, {type: file_type});
+  return URL.createObjectURL(blob);
 }
 
 async function delete_local_blob(file_name){
@@ -334,7 +358,7 @@ async function init_setup() {
     response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_data});
     init_info = await response.json();
   } catch (_) {
-    display_message("Connection Failed: Error in Fetching Initial Information Request", 'red', timeout);
+    display_message("Failed: Error in Fetching Initial Information", 'red');
     return;
   }
 
@@ -580,15 +604,13 @@ function browse_document(input) {
   let file = input.files[0];
   const max_size = 52428800;
   if (file.size > max_size){
-    display_message("Error: Files exceeding 50MB are not allowed to be uploaded to the database", "red", timeout);
+    display_message("Error: Files exceeding 50MB are not allowed to be uploaded to the database", "red");
     input.value = null;
     return;
   }
-  const ext = file.name.split('.').pop().toLowerCase();
-
-  let ext_chk = check_extension(file.name);
-  if (! ext_chk.state){
-    display_message("Error: File type is not supported", "red", timeout);
+  const chk_ext = check_extension(file.name);
+  if (! chk_ext.state){
+    display_message("Error: File type is not supported", "red");
     return;
   }
   if (doc_blob.url != null){
@@ -649,18 +671,27 @@ function display_document(input) {
     img_viewer.classList.add('active');
     img_viewer.src = blob_obj.url;
   } else {
-    display_message("Document is loaded properly but cannot be shown on the screen.", "green", timeout);
+    display_message("Document is loaded properly but cannot be shown on the screen", "green");
   }
 }
 
-function display_message(message, color="black", timeout=-1) {
+function display_message(message, color, mode=null) {
+  let status = document.getElementById("sf_status");
+  if (message == null){
+    status.value = '';
+    return;
+  }
   if (color != 'red' && color != 'green'){
     color = 'black';
   }
-  document.getElementById("sf_status").style.color = color;
-  document.getElementById("sf_status").value = message;
-  if (timeout > 0 && document.getElementById("sf_status").value === message){
-    setTimeout(() => {document.getElementById("sf_status").value = '';}, timeout * 1000)
+  status.value = message;
+  status.style.color = color;
+  if (mode == null){
+    setTimeout(() => display_message(message, "black", "clear"), timeout);
+  } else if (mode == 'clear'){
+    if (status.value === message){
+      status.value = '';
+    }
   }
 }
 
@@ -669,16 +700,16 @@ async function upload_document() {
   const filename = document.getElementById('sf_filename').value;
   
   if (! filename || doc_blob.url == null){
-    display_message("Failed: Choose File", "red", timeout);
+    display_message("Error: Choose File", "red");
     return;
   }
   if (! description){
-    display_message("Failed: Description line is empty", "red", timeout);
+    display_message("Error: Description line is empty", "red");
     return;
   }
   let projectID = get_sel_value("sf_sel_proj")
   if (projectID == null || projectID == "UNK") {
-    display_message("Failed: Select a Project", "red", timeout);
+    display_message("Error: Select a Project", "red");
     return;
   } else{
     projectID = projectID.replace("id_", "");
@@ -688,7 +719,7 @@ async function upload_document() {
   let subclass_val = get_sel_value("sf_sel_subclass")
   if (class_val != null){
     if (subclass_val == null){
-      display_message("Failed: Select a Subcategory", "red", timeout);
+      display_message("Error: Select a Subcategory", "red");
       return;
     } else {
       subclass_val = subclass_val.replace("id_", "");
@@ -711,7 +742,7 @@ async function upload_document() {
   let msg = await upload_blob(doc_blob, up_filename);
   if (msg != "OK"){
     document.getElementById('sf_upload').disabled = false;
-    display_message(msg, 'red', timeout);
+    display_message(msg, 'red');
     delete_local_blob(up_filename);
     return;
   }
@@ -729,7 +760,7 @@ async function upload_document() {
     response = await fetch('supporting_files_proc.php', {method: 'POST', body: form_data});
     res_json = await response.json();
   } catch (_) {
-    display_message("Connection Failed: Error in Uploading a New Document", 'red', timeout);
+    display_message("Failed: Error in Uploading the Document", 'red');
     document.getElementById('sf_upload').disabled = false;
     return;
   }
@@ -754,15 +785,15 @@ async function upload_document() {
   if (err_msg == null){
     let doc_info = await get_doc_info();
     if (doc_info == null){
-      display_message("Connection Failed: Error in Fetching Document Information", 'red', timeout);
+      display_message("Failed: Error in Fetching Document Information", 'red');
     } else {
       parse_doc_info(doc_info);
       mode = null;
       handle_mode(element_new);
-      display_message("Document is successfully uploaded to the database", 'green', timeout);
+      display_message("Document is successfully uploaded to the database", 'green');
     }    
   } else {
-    display_message("Failed: Error in Document Information", 'red', timeout);
+    display_message("Failed: Error in Document Information", 'red');
     alert(err_msg);
   }
 }
@@ -771,7 +802,7 @@ async function delete_document() {
 
   let projectID = get_sel_value("sf_sel_proj");
   if (projectID == null) {
-    display_message("Failed: Select a Project", "red", timeout);
+    display_message("Error: Select a Project", "red");
     return;
   } else if (projectID == "UNK"){
     projectID = null;
@@ -781,7 +812,7 @@ async function delete_document() {
 
   let docID = get_sel_value("sf_sel_file");
   if (docID == null) {
-    display_message("Failed: Select a Document", "red", timeout);
+    display_message("Error: Select a Document", "red");
     return;
   } else{
     docID = docID.replace("id_", "");
@@ -791,7 +822,7 @@ async function delete_document() {
   let subclass_val = get_sel_value("sf_sel_subclass");
   if (class_val != null){
     if (subclass_val == null){
-      display_message("Failed: Select a Subcategory", "red", timeout);
+      display_message("Error: Select a Subcategory", "red");
       return;
     } else {
       subclass_val = subclass_val.replace("id_", "");
@@ -829,21 +860,21 @@ async function delete_document() {
     if (err_msg == null){
       let doc_info = await get_doc_info();
       if (doc_info == null){
-        display_message("Connection Failed: Error in Fetching Document Information Request", 'red', timeout);
+        display_message("Failed: Error in Fetching Document Information", 'red');
       } else {
         parse_doc_info(doc_info);
         URL.revokeObjectURL(all_blobs["id_" + docID].url);
         delete all_blobs["id_" + docID];
         mode = null;
         handle_mode(element_view);
-        display_message("Document was deleted successfully", 'green', timeout);
+        display_message("Document was deleted successfully", 'green');
       }    
     } else {
-      display_message("Failed: Error in Deleting Document", "red", timeout)
+      display_message("Failed: Error in Deleting Document", "red")
       alert(err_msg); 
     }
   } catch (_) {
-    display_message("Connection Failed: Error in Deleting Document Request", "red", timeout);
+    display_message("Failed: Error in Deleting Document Request", "red");
   }
 }
 
@@ -854,7 +885,7 @@ async function update_document() {
 
   let docID = get_sel_value("sf_sel_file")
   if (docID == null) {
-    display_message("Failed: Select a Document", "red", timeout);
+    display_message("Error: Select a Document", "red");
     return;
   } else {
     curr_document = all_documents[docID];
@@ -863,10 +894,10 @@ async function update_document() {
 
   let projectID = get_sel_value("sf_sel_proj");
   if (projectID == null) {
-    display_message("Failed: Select a Project", "red", timeout);
+    display_message("Error: Select a Project", "red");
     return;
   } else if (projectID == "UNK"){
-    display_message("Failed: Select a Project other than ' --- Unknown --- '", "red", timeout);
+    display_message("Error: Select a Project other than ' --- Unknown --- '", "red");
     return;
   } else {
     let doc_projectID = curr_document.projectID;
@@ -880,7 +911,7 @@ async function update_document() {
   }
 
   if (! description){
-    display_message("Failed: Description line is empty", "red", timeout);
+    display_message("Error: Description line is empty", "red");
     return;
   }
   if (description.localeCompare(curr_document.description) == 0){
@@ -897,7 +928,7 @@ async function update_document() {
   let subclass_val = get_sel_value("sf_sel_subclass")
   if (class_val != null){
     if (subclass_val == null){
-      display_message("Failed: Select a Subcategory", "red", timeout);
+      display_message("Error: Select a Subcategory", "red");
       return;
     } else {
       subclass_val = subclass_val.replace("id_", "");
@@ -937,7 +968,7 @@ async function update_document() {
   let check = projectID == null && description == null && filename == null && doc_blob == null;
   check = check && class_val == null && subclass_val == null;
   if (check) {
-    display_message("Failed: Nothing was found to edit", "red", timeout);
+    display_message("Error: Nothing was found to edit", "red");
     return;
   }
 
@@ -959,7 +990,7 @@ async function update_document() {
     let msg = await upload_blob(doc_blob, up_filename);
     if (msg != "OK"){
       document.getElementById('sf_update').disabled = false;
-      display_message(msg, 'red', timeout);
+      display_message(msg, 'red');
       delete_local_blob(up_filename);
       return;
     }
@@ -981,7 +1012,7 @@ async function update_document() {
     res_json = await response.json();
   } catch (_){
     document.getElementById('sf_update').disabled = false;
-    display_message('Connection Failed: Error in Updating Document', 'red', timeout);
+    display_message('Failed: Error in Updating Document', 'red');
     return;
   }
 
@@ -1002,7 +1033,7 @@ async function update_document() {
   if (err_msg == null){
     let doc_info = await get_doc_info();
     if (doc_info == null){
-      display_message("Connection Failed: Error in Fetching Document Information Request", 'red', timeout);
+      display_message("Failed: Error in Fetching Document Information", 'red');
     } else {
       parse_doc_info(doc_info);
       document.getElementById("sf_edit").checked = false;
@@ -1014,10 +1045,10 @@ async function update_document() {
       all_blobs["id_" + docID].type = null;
       mode = null;
       handle_mode(element_view);
-      display_message("Document is successfully updated", 'green', timeout);
+      display_message("Document is successfully updated", 'green');
     }
   } else {
-    display_message("Failed: Error in Document Information", 'red', timeout);
+    display_message("Failed: Error in Document Information", 'red');
     alert(err_msg);
   } 
 }
@@ -1036,12 +1067,12 @@ function get_sel_value(select_id){
 function save_document() {
   let docID = get_sel_value("sf_sel_file");
   if (docID == null) {
-    display_message("Select a document", "red", timeout);
+    display_message("Error: Select a Document", "red");
     return;
   }
   let blob = all_blobs[docID];
   if (blob == null || blob.url == null){
-    display_message("Document is not downloaded yet", "red", timeout);
+    display_message("Error: Document is not downloaded yet!", "red");
     return;
   }
   let filename = document.getElementById("sf_filename").value;
@@ -1065,7 +1096,7 @@ async function upload_blob(blob_obj, filename){
     response = await fetch(blob_obj.url);
     blob = await response.blob();
   } catch (_) {
-    msg = "Error in Fetching Blob Data From Memory URL";
+    msg = "Failed: Error in Fetching Blob Data From Memory URL";
     return msg;
   }
 
@@ -1083,7 +1114,7 @@ async function upload_blob(blob_obj, filename){
   let chunk = base64.slice(offset, offset + slice_size);
   const length = base64.length;
   let sum = chunk.length;
-  display_message(`"Uploading: 0 %"`, 'green', timeout);
+  display_message("Please Wait! Uploading: 0 %", 'red', '');
   while (offset < base64.length){
     try {
       await upload_chunk(chunk, filename);
@@ -1092,7 +1123,7 @@ async function upload_blob(blob_obj, filename){
       chunk = base64.slice(offset, offset + slice_size);
       sum += chunk.length;
       const perc = ((sum / length) * 100).toFixed(1);
-      display_message(`"Uploading: ${perc} %"`, 'green', timeout);
+      display_message(`Please Wait! Uploading: ${perc} %`, 'red', '');
     } catch (_){
       if (++attempt > max_attempt){
         msg = "Failed: Error in Uploading File: Maximum Attempts is Exceeded";
@@ -1100,6 +1131,7 @@ async function upload_blob(blob_obj, filename){
       }
     }
   }
+  display_message("Please Wait! Uploading: 100 %", 'red', '');
   return msg;
 }
 

@@ -334,7 +334,7 @@ if (isset($_POST['action'])) {
                  "WHERE imageID = '$imageID' AND imageGUID = '$imageGUID'";
         $sqlret = mysqli_query( $link, $query );
         $nrows = mysqli_num_rows($sqlret);
-        $doc = array("error" => null, "path" => null);
+        $doc = array("error" => null, "path" => null, "size" => null);
         if ($nrows > 0){
             $row = mysqli_fetch_assoc($sqlret);
             $blobData = $row["gelPicture"];
@@ -342,6 +342,7 @@ if (isset($_POST['action'])) {
             $fpath = $sf_dir . $imageGUID;
             file_put_contents($fpath, $blobData);
             $doc["path"] = $fpath;
+            $doc["size"] = filesize(realpath($fpath));
         } else {
             $doc["error"] = mysqli_error($link);
         }
