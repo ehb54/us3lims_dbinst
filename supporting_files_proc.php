@@ -383,7 +383,7 @@ if (isset($_POST['action'])) {
         $output = array("image" => "OK", "imagePerson" => "OK",
                         "imageProject" => "OK", "imageClass" => "OK");
 
-        $query = "UPDATE image SET imageGUID=NULL, description = '', gelPicture = NULL, filename = '' " . 
+        $query = "UPDATE image SET imageGUID = NULL, description = '', gelPicture = '', filename = '' " . 
                  "WHERE imageID = $imageID";
         if (! mysqli_query( $link, $query )){
             $output["image"] = "Error : " . mysqli_error($link);
