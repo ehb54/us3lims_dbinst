@@ -187,10 +187,8 @@ function select_project(input) {
   document.getElementById("sf_txt_subclass").value = "";
 }
 
-async function select_document(input) {
-  if (mode == "sf_new"){
-    return;
-  }
+async function select_document() {
+  const input = document.getElementById('sf_sel_file');
   let option = input.options[input.selectedIndex];
   let value = option.value;
   doc_blob.url = null;
@@ -256,6 +254,10 @@ async function select_document(input) {
 
     if (all_blobs[docID] == null || all_blobs[docID].url == null){
       let msg = await download_blob(docID.replace("id_", ""), guid);
+      if (msg == null){
+        display_document(null);
+        return;
+      }
       delete_local_blob(guid);
       if (msg != "OK"){
         display_message(msg, "red");
@@ -283,6 +285,10 @@ async function download_blob(doc_id, doc_guid) {
   const chk_ext = check_extension(all_documents["id_" + doc_id].filename);
   const file_path = file_info.path;
   const file_size = file_info.size;
+  const file_error = file_info.error;
+  if (file_path == null && file_size == null && file_error == null){
+    return null;
+  }
   if (file_path == null || file_size == null){
     msg = "Failed: Document is not found on the server";
     return msg;
@@ -611,6 +617,7 @@ function browse_document(input) {
   const chk_ext = check_extension(file.name);
   if (! chk_ext.state){
     display_message("Error: File type is not supported", "red");
+    input.value = null;
     return;
   }
   if (doc_blob.url != null){
@@ -1164,4 +1171,26 @@ function upload_chunk(chunk, filename){
     }, () => reject(new Error('FAILED'))
     )
   });
+}
+
+function sf_next_doc() {
+  const sel_file = document.getElementById("sf_sel_file");
+  const n_options = sel_file.options.length;
+  const curr_id = sel_file.selectedIndex;
+  if ((curr_id + 1) >= n_options){
+    return;
+  }
+  sel_file.selectedIndex = curr_id + 1;
+  select_document();
+}
+
+function sf_prev_doc() {
+  const sel_file = document.getElementById("sf_sel_file");
+  const n_options = sel_file.options.length;
+  const curr_id = sel_file.selectedIndex;
+  if ((curr_id - 1) <= 0){
+    return;
+  }
+  sel_file.selectedIndex = curr_id - 1;
+  select_document();
 }

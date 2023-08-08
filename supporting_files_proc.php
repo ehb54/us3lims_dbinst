@@ -340,9 +340,13 @@ if (isset($_POST['action'])) {
             $blobData = $row["gelPicture"];
             $filename = $row["filename"];
             $fpath = $sf_dir . $imageGUID;
-            file_put_contents($fpath, $blobData);
-            $doc["path"] = $fpath;
-            $doc["size"] = filesize(realpath($fpath));
+            $state = is_file($fpath) && strlen($blobData) != filesize($fpath);
+            $state = $state || (! is_file($fpath));
+            if ($state){
+                file_put_contents($fpath, $blobData);
+                $doc["path"] = $fpath;
+                $doc["size"] = filesize(realpath($fpath));
+            }
         } else {
             $doc["error"] = mysqli_error($link);
         }
