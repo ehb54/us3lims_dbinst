@@ -47,11 +47,11 @@ echo <<< HTML
 
   <fieldset id="sf_sel_file_item" class="sf_item">
     <label for="sf_sel_file">Document:</label>
-    <select id="sf_sel_file" onchange="select_document(this)">
+    <select id="sf_sel_file" onchange="select_document()">
       <option value="EMPTY">--- Empty ---</option>
     </select>
-    <button id="sf_prev" type="button" onclick=""> Previous </button>
-    <button id="sf_next" type="button" onclick=""> Next </button>
+    <button id="sf_prev" type="button" onclick="sf_prev_doc()"> Previous </button>
+    <button id="sf_next" type="button" onclick="sf_next_doc()"> Next </button>
   </fieldset>
 
   <div class="sf_item">
