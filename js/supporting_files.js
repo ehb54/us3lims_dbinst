@@ -26,6 +26,13 @@ const doc_ext = [ {name: "odp",  type: "application/vnd.oasis.opendocument.prese
                   {name: "pptx", type: "application/vnd.openxmlformats-officedocument.presentationml.presentation"},
                   {name: "xls",  type: "application/vnd.ms-excel"},
                   {name: "xlsx", type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+	          {name: "rar",  type: "application/vnd.rar"},
+	          {name: "zip",  type: "application/zip"},
+	          {name: "gz",   type: "application/gzip"},
+	          {name: "tar",  type: "application/x-tar"},
+	          {name: "bz",   type: "application/x-bzip"},
+	          {name: "bz2",  type: "application/x-bzip2"},
+	          {name: "7z",   type: "application/x-7z-compressed"}
                 ];
 
 
