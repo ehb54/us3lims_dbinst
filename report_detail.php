@@ -153,7 +153,15 @@ function get_document_content( $link, $documentID )
             $doctype == 'rpt' ||
             $doctype == 'csv' )
   {
-    $text = "<div><pre>\n" .
+    $file = $data_dir . $filename;
+    $r    = fopen( $file, "w+" );
+    fwrite( $r, $contents );
+    fclose( $r );
+    // Figure out the apache file name, assuming a subdirectory
+    $apache_file = substr( $data_dir, strlen( $full_path ) ) . $filename;
+
+    $text = "<div><a href='$apache_file' target=_blank>Download</a></div>";
+    $text .= "<div><pre>\n" .
               $contents .
             "</pre></div>\n";
   }
@@ -171,6 +179,9 @@ function get_document_content( $link, $documentID )
 
     // Now create some html that includes the file
     $text = <<<HTML
+    <div> 
+      <a href='$apache_file' target=_blank>Download</a>
+    </div>
     <div>
       <img src='$apache_file' alt='UltraScan 3 png file' />
     </div>
