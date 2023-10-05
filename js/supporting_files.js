@@ -26,13 +26,14 @@ const doc_ext = [ {name: "odp",  type: "application/vnd.oasis.opendocument.prese
                   {name: "pptx", type: "application/vnd.openxmlformats-officedocument.presentationml.presentation"},
                   {name: "xls",  type: "application/vnd.ms-excel"},
                   {name: "xlsx", type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
-	          {name: "rar",  type: "application/vnd.rar"},
-	          {name: "zip",  type: "application/zip"},
-	          {name: "gz",   type: "application/gzip"},
-	          {name: "tar",  type: "application/x-tar"},
-	          {name: "bz",   type: "application/x-bzip"},
-	          {name: "bz2",  type: "application/x-bzip2"},
-	          {name: "7z",   type: "application/x-7z-compressed"}
+                  {name: "rar",  type: "application/vnd.rar"},
+                  {name: "zip",  type: "application/zip"},
+                  {name: "tar",  type: "application/x-tar"},
+                  {name: "xz",   type: "application/x-xz"},
+                  {name: "bz",   type: "application/x-bzip"},
+                  {name: "bz2",  type: "application/x-bzip2"},
+                  {name: "gz",   type: "application/gzip"},
+                  {name: "7z",   type: "application/x-7z-compressed"}
                 ];
 
 
@@ -589,11 +590,10 @@ function fill_sel_class(tag_id, options) {
 }
 
 function check_extension(file_name) {
-  const ext = file_name.split('.').pop().toLowerCase();
   let state = false;
   let ftype = null;
   for (let i = 0; i < image_pdf_ext.length; i++){
-    if (image_pdf_ext[i].name === ext){
+    if (file_name.endsWith(image_pdf_ext[i].name)){
       state = true;
       ftype = image_pdf_ext[i].type;
       break;
@@ -602,7 +602,7 @@ function check_extension(file_name) {
 
   if (! state){
     for (let i = 0; i < doc_ext.length; i++){
-      if (doc_ext[i].name === ext){
+      if (file_name.endsWith(doc_ext[i].name)){
         state = true;
         ftype = doc_ext[i].type;
         break;
