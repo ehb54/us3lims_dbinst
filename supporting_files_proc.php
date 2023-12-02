@@ -187,17 +187,6 @@ if (isset($_POST['action'])) {
             $tab = null;
         }
 
-        $query = "UPDATE image SET description = ? , filename = ? , gelPicture = ? WHERE imageID = ?";
-            $smt = mysqli_prepare($link, $query);
-            $smt->bind_param('ssbi', $description, $filename, $blob, $imageID);
-            $smt->send_long_data(2, $blob);
-            if ($smt != null){
-                if (! $smt->execute()){
-                    $output["image"] = "Error : " . $smt->error;
-                }
-                $smt->close();
-            }
-        
         $query = "INSERT INTO image (imageGUID, description, gelPicture, filename) VALUES ( ?, ?, ?, ? )";
         $smt = mysqli_prepare($link, $query);
         $smt->bind_param('ssbs', $uuid, $description, $blob, $filename);
