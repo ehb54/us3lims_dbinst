@@ -1,7 +1,7 @@
 <?php
 
 function dt_duration_seconds ( $datetime_start, $datetime_end ) {
-    return ($datetime_end->getTimestamp() - $datetime_start->getTimestamp());
+    return ((int)$datetime_end->format('Uv') - (int)$datetime_start->format('Uv')) / 1000;
 }
 
 function dt_now () {
