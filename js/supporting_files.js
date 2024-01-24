@@ -674,8 +674,11 @@ function display_document(input) {
 
   let pdf_viewer = document.getElementById('pdf_viewer');
   let img_viewer = document.getElementById('image_viewer');
+  let txt_viewer = document.getElementById('txt_viewer');
   pdf_viewer.classList.remove('active');
   pdf_viewer.data = '';
+  txt_viewer.classList.remove('active');
+  txt_viewer.value = '';
   img_viewer.classList.remove('active');
   img_viewer.src = '';
   if (flag){
@@ -685,6 +688,15 @@ function display_document(input) {
   if (blob_obj.type === "application/pdf"){
     pdf_viewer.classList.add('active');
     pdf_viewer.data = blob_obj.url;
+  } else if (blob_obj.type.split("/")[0] === "text") {
+    txt_viewer.classList.add('active');
+    fetch(blob_obj.url).then(
+      response => response.text()
+    ).then(data => {
+      txt_viewer.value = data;}
+      ).catch(error => {
+        display_message("Error in displaying the content of a text file!", "red");
+      });
   } else if (blob_obj.type.split("/")[0] === "image") {
     img_viewer.classList.add('active');
     img_viewer.src = blob_obj.url;
