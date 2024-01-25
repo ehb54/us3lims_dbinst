@@ -93,10 +93,13 @@ echo <<< HTML
       <button id="sf_upload" type="button" onclick="upload_document()"> Upload </button>
     </div>
   </div>
-  
+
   <br>
   <object id="pdf_viewer" type="application/pdf" data="" width="800" height="600"></object>
   <img id="image_viewer" src="" alt="">
+  <div>
+    <textarea id="txt_viewer" rows="20" cols="100"></textarea>
+  </div>
 
 </div>
 

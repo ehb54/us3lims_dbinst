@@ -33,7 +33,10 @@ const doc_ext = [ {name: "odp",  type: "application/vnd.oasis.opendocument.prese
                   {name: "bz",   type: "application/x-bzip"},
                   {name: "bz2",  type: "application/x-bzip2"},
                   {name: "gz",   type: "application/gzip"},
-                  {name: "7z",   type: "application/x-7z-compressed"}
+                  {name: "7z",   type: "application/x-7z-compressed"},
+                  {name: "csv",  type: "text/csv"},
+                  {name: "txt",  type: "text/plain"},
+                  {name: "xml",  type: "text/xml"}
                 ];
 
 
@@ -592,6 +595,7 @@ function fill_sel_class(tag_id, options) {
 function check_extension(file_name) {
   let state = false;
   let ftype = null;
+  file_name = file_name.toLowerCase();
   for (let i = 0; i < image_pdf_ext.length; i++){
     if (file_name.endsWith(image_pdf_ext[i].name)){
       state = true;
@@ -670,8 +674,11 @@ function display_document(input) {
 
   let pdf_viewer = document.getElementById('pdf_viewer');
   let img_viewer = document.getElementById('image_viewer');
+  let txt_viewer = document.getElementById('txt_viewer');
   pdf_viewer.classList.remove('active');
   pdf_viewer.data = '';
+  txt_viewer.classList.remove('active');
+  txt_viewer.value = '';
   img_viewer.classList.remove('active');
   img_viewer.src = '';
   if (flag){
@@ -681,6 +688,15 @@ function display_document(input) {
   if (blob_obj.type === "application/pdf"){
     pdf_viewer.classList.add('active');
     pdf_viewer.data = blob_obj.url;
+  } else if (blob_obj.type.split("/")[0] === "text") {
+    txt_viewer.classList.add('active');
+    fetch(blob_obj.url).then(
+      response => response.text()
+    ).then(data => {
+      txt_viewer.value = data;}
+      ).catch(error => {
+        display_message("Error in displaying the content of a text file!", "red");
+      });
   } else if (blob_obj.type.split("/")[0] === "image") {
     img_viewer.classList.add('active');
     img_viewer.src = blob_obj.url;
@@ -1123,26 +1139,25 @@ async function upload_blob(blob_obj, filename){
 
   const slice_size = 1024 * 1000 * 2;
   let offset = 0;
-  let attempt = 0;
-  const max_attempt = 5;
   let chunk = base64.slice(offset, offset + slice_size);
   const length = base64.length;
   let sum = chunk.length;
   display_message("Please Wait! Uploading: 0 %", 'red', '');
   while (offset < base64.length){
     try {
-      await upload_chunk(chunk, filename);
-      attempt = 0;
+      let state = await upload_chunk(chunk, filename);
+      if (! state) {
+        msg = "Failed: Error in Uploading the Document! Try again!";
+        return msg;
+      }
       offset += slice_size;
       chunk = base64.slice(offset, offset + slice_size);
       sum += chunk.length;
       const perc = ((sum / length) * 100).toFixed(1);
       display_message(`Please Wait! Uploading: ${perc} %`, 'red', '');
     } catch (_){
-      if (++attempt > max_attempt){
-        msg = "Failed: Error in Uploading File: Maximum Attempts is Exceeded";
-        return msg;
-      }
+      msg = "Failed: Error in Uploading the Document! Try again!";
+      return msg;
     }
   }
   display_message("Please Wait! Uploading: 100 %", 'red', '');
@@ -1161,23 +1176,26 @@ function blob2base64(blob){
   }); 
 }
 
-function upload_chunk(chunk, filename){
-  return new Promise(function(resolve, reject){
-    let form_data = new FormData();
-    form_data.append('action', 'GET_BLOB');
-    form_data.append('data', chunk);
-    form_data.append('filename', filename);
-    fetch('supporting_files_proc.php', {method: 'POST', body: form_data}).then(
-      response => response.text(), () => reject(new Error('FAILED'))
-    ).then(result => {
-      if (result == 'OK'){
-        resolve('OK');
-      } else {
-        reject(new Error('FAILED'));
-      }
-    }, () => reject(new Error('FAILED'))
-    )
-  });
+async function upload_chunk(chunk, filename) {
+  let response, res_text;
+  let form_data = new FormData();
+  form_data.append('action', 'GET_BLOB');
+  form_data.append('data', chunk);
+  form_data.append('filename', filename);
+
+  try {
+    response = await fetch('supporting_files_proc.php', { method: 'POST', body: form_data });
+    res_text = await response.text();
+    if (res_text === "OK") {
+      return true;
+    } else {
+      document.getElementById('sf_upload').disabled = false;
+      return false;
+    }
+  } catch (_) {
+    document.getElementById('sf_upload').disabled = false;
+    return false;
+  }
 }
 
 function sf_next_doc() {
