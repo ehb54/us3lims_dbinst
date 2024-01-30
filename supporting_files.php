@@ -98,7 +98,7 @@ echo <<< HTML
   <object id="pdf_viewer" type="application/pdf" data="" width="800" height="600"></object>
   <img id="image_viewer" src="" alt="">
   <div>
-    <textarea id="txt_viewer" rows="20" cols="100"></textarea>
+    <textarea id="txt_viewer" rows="20" cols="100" readonly></textarea>
   </div>
 
 </div>

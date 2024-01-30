@@ -11,11 +11,17 @@ let element_view;
 let element_new;
 const timeout = 15 * 1000;
 
-const image_pdf_ext = [{name: "bmp",  type: "image/bmp"},  {name: "gif" , type: "image/gif"},
-                       {name: "jpeg", type: "image/jpeg"}, {name: "jpg", type: "image/jpeg"},
-                       {name: "png" , type: "image/png"},  {name: "tiff", type: "image/tiff"},
-                       {name: "webp", type: "image/webp"}, {name: "svg" , type: "image/svg+xml"}, 
-                       {name: "pdf" , type: "application/pdf"} ];
+const image_pdf_ext = [ {name: "bmp",  type: "image/bmp"},
+                        {name: "gif" , type: "image/gif"},
+                        {name: "jpeg", type: "image/jpeg"},
+                        {name: "jpg", type: "image/jpeg"},
+                        {name: "png" , type: "image/png"},
+                        {name: "webp", type: "image/webp"},
+                        {name: "tif" , type: "image/tiff"},
+                        {name: "tiff", type: "image/tiff"},
+                        {name: "svg" , type: "image/svg+xml"},
+                        {name: "pdf" , type: "application/pdf"}
+                      ];
 
 const doc_ext = [ {name: "odp",  type: "application/vnd.oasis.opendocument.presentation"},
                   {name: "ods",  type: "application/vnd.oasis.opendocument.spreadsheet"},
@@ -36,7 +42,8 @@ const doc_ext = [ {name: "odp",  type: "application/vnd.oasis.opendocument.prese
                   {name: "7z",   type: "application/x-7z-compressed"},
                   {name: "csv",  type: "text/csv"},
                   {name: "txt",  type: "text/plain"},
-                  {name: "xml",  type: "text/xml"}
+                  {name: "xml",  type: "text/xml"},
+                  {name: "dat",  type: "text/plain"}
                 ];
 
 
@@ -595,11 +602,13 @@ function fill_sel_class(tag_id, options) {
 function check_extension(file_name) {
   let state = false;
   let ftype = null;
+  let ext = null;
   file_name = file_name.toLowerCase();
   for (let i = 0; i < image_pdf_ext.length; i++){
     if (file_name.endsWith(image_pdf_ext[i].name)){
       state = true;
       ftype = image_pdf_ext[i].type;
+      ext = image_pdf_ext[i].name;
       break;
     }
   }
@@ -609,12 +618,26 @@ function check_extension(file_name) {
       if (file_name.endsWith(doc_ext[i].name)){
         state = true;
         ftype = doc_ext[i].type;
+        ext = doc_ext[i].name;
         break;
       }
     }
   }
-  let output = {state: state, type : ftype};
+  let output = {state: state, type : ftype, ext : ext};
   return output;
+}
+
+function isASCII(buffer) {
+  const view = new DataView(buffer);
+
+  for (let i = 0; i < buffer.byteLength; i++) {
+    const byteValue = view.getUint8(i);
+    if (byteValue > 127) {
+      // If any byte is outside the ASCII range, return false
+      return false;
+    }
+  }
+  return true;
 }
 
 function browse_document(input) {
@@ -631,6 +654,10 @@ function browse_document(input) {
     input.value = null;
     return;
   }
+  if (file.type != chk_ext.type && chk_ext.ext != "dat") {
+    display_message("Error: File content is not matched with the file format", "red");
+    return;
+  }
   if (doc_blob.url != null){
     URL.revokeObjectURL(doc_blob.url);
     doc_blob.type = null;
@@ -640,11 +667,17 @@ function browse_document(input) {
   reader.readAsArrayBuffer(file);
   reader.onload = function(e) {
     const fileContent = e.target.result;
-    let blob = new Blob([fileContent], { type: file.type });
-    document.getElementById('sf_filename').value = file.name;
-    doc_blob.url = URL.createObjectURL(blob);
-    doc_blob.type = blob.type;
-    display_document(doc_blob);
+    if (chk_ext.type.split("/")[0] === "text" && !isASCII(fileContent)){
+      display_message("Error: File content is not ASCII!", "red");
+      document.getElementById('sf_filename').value = '';
+      display_document();
+    } else {
+      let blob = new Blob([fileContent], { type: chk_ext.type });
+      document.getElementById('sf_filename').value = file.name;
+      doc_blob.url = URL.createObjectURL(blob);
+      doc_blob.type = blob.type;
+      display_document(doc_blob);
+    }
   }
 }
 
