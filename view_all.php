@@ -7,9 +7,11 @@
  */
 include_once 'checkinstance.php';
 
-if ( ($_SESSION['userlevel'] != 3) &&
-     ($_SESSION['userlevel'] != 4) &&
-     ($_SESSION['userlevel'] != 5) )    // super, admin and super admin only
+if ( !isset($_SESSION['userlevel']) ||
+     ( ($_SESSION['userlevel'] != 0) &&
+       ($_SESSION['userlevel'] != 3) &&
+       ($_SESSION['userlevel'] != 4) &&
+       ($_SESSION['userlevel'] != 5) ) )   // Super user, admin and super admin only
 {
   header('Location: index.php');
   exit();

@@ -7,9 +7,11 @@
  */
 include_once 'checkinstance.php';
 
-if ( ($_SESSION['userlevel'] != 3) &&
-     ($_SESSION['userlevel'] != 4) &&
-     ($_SESSION['userlevel'] != 5) )    // super, admin and super admin only
+if ( !isset( $_SESSION['userlevel'] ) ||
+     ( ($_SESSION['userlevel'] != 0) &&
+       ($_SESSION['userlevel'] != 3) &&
+       ($_SESSION['userlevel'] != 4) &&
+       ($_SESSION['userlevel'] != 5) ) )    // super, admin and super admin only + 0
 {
   header('Location: index.php');
   exit();
@@ -46,6 +48,14 @@ $admin3_menu = <<<HTML
 
 HTML;
 
+$user_menu_no_edit = <<<HTML
+      <li><a href='https://$org_site/view_users.php'>View User Info</a></li>
+      <li><a href='https://$org_site/view_all.php'>View All Users</a></li>
+      <li><a href='https://$org_site/admin_view_projects.php'>View Users&rsquo; Projects</a></li>
+      <li><a href='https://$org_site/select_user.php'>Select Data from Another User</a></li>
+
+HTML;
+
 $edituser_menu = <<<HTML
       <li><a href='https://$org_site/edit_users.php'>Edit User Info</a></li>
       <li><a href='https://$org_site/view_users.php'>View User Info</a></li>
@@ -53,6 +63,12 @@ $edituser_menu = <<<HTML
       <li><a href='https://$org_site/admin_view_projects.php'>View Users&rsquo; Projects</a></li>
       <li><a href='https://$org_site/select_user.php'>Select Data from Another User</a></li>
 
+HTML;
+
+$edituser_menu_level_0 = <<<HTML
+      <li><a href='https://$org_site/edit_users.php'>Edit User Info</a></li>
+      <li><a href='https://$org_site/view_users.php'>View User Info</a></li>
+      <li><a href='https://$org_site/view_all.php'>View All Users</a></li>
 HTML;
 
 $hardware_menu = <<<HTML
@@ -112,19 +128,31 @@ if ( $userlevel == 4 || $userlevel == 5 )
 HTML;
 }
 
-else // $userlevel = 3
+else if ( $userlevel == 3 )
 {
   $admin_menu .= <<<HTML
     <li>User Information<br />
       <ul>
-        $edituser_menu
+        $user_menu_no_edit
+      </ul>
+    </li>
+
+HTML;
+}
+else if ( $userlevel == 0 )
+{
+  $admin_menu .= <<<HTML
+    <li>User Information<br />
+      <ul>
+        $edituser_menu_level_0
       </ul>
     </li>
 
 HTML;
 }
 
-  // For all $userlevel = 3, 4, 5 users
+if ( $userlevel == 0 || $userlevel == 4 || $userlevel == 5 ) {
+  // For all $userlevel = 0, 4, 5 users
   $admin_menu .= <<<HTML
     <li>Facilities Management<br />
       <ul>
@@ -133,6 +161,7 @@ HTML;
     </li>
 
 HTML;
+}
 
 // Close out the list
 $admin_menu .= "</ol>\n";

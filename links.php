@@ -9,6 +9,7 @@
 
 $userlevel = ( isset( $_SESSION['userlevel'] ) ) ? $_SESSION['userlevel'] : -1;
 
+if ( $userlevel > 0 ) {
 $projects_menu = <<<HTML
   <h4>Project</h4>
   <a href='https://$org_site/view_projects.php'>Projects</a>
@@ -18,6 +19,7 @@ $projects_menu = <<<HTML
   <a href='https://$org_site/data_sharing.php'>Sharing</a>
 
 HTML;
+}
 
 $analysis_menu = <<<HTML
   <h4>Analysis</h4>
@@ -132,6 +134,7 @@ else if ( $userlevel == 0 )  // level 0 = regular user
   $sidebar_menu = <<<HTML
   <h4>Navigation</h4>
   <a href="https://$org_site/index.php">Welcome!</a>
+  <a href='https://$org_site/admin_links.php'>Admin Info</a>
   $projects_menu
   $general_menu_1
 
