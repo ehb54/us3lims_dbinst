@@ -201,4 +201,3 @@ HTML;
 
   return $text;
 }
-?>

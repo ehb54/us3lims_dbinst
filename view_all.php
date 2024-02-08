@@ -48,10 +48,16 @@ exit();
 // Function to create a table of all records
 function create_table($link)
 {
+  $querywhere = "";
+  if ( $_SESSION['userlevel'] == 0 ) {
+      $querywhere = "WHERE userlevel <= 3 ";
+  }
+
   $query  = "SELECT personID, lname, fname, " .
             "organization, address, city, state, zip, country, " .
             "phone, email " .
             "FROM people " .
+            $querywhere .
             "ORDER BY lname, fname ";
   $result = mysqli_query($link, $query)
             or die("Query failed : $query<br />\n" . mysqli_error($link));

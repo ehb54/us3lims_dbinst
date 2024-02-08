@@ -67,8 +67,14 @@ function do_prior($link)
 {
   $personID = $_POST['personID'];
 
-  $query  = "SELECT personID FROM people " .
+  $querywhere = "";
+  if ( $_SESSION['userlevel'] == 0 ) {
+      $querywhere = "WHERE userlevel <= 3 ";
+  }
+
+  $query  = "SELECT personID FROM people $querywhere" .
             "ORDER BY lname, fname ";
+  
   $result = mysqli_query($link, $query)
       or die("Query failed : $query<br />\n" . mysqli_error($link));
 
@@ -90,8 +96,14 @@ function do_next($link)
 {
   $personID = $_POST['personID'];
 
-  $query  = "SELECT personID FROM people " .
+  $querywhere = "";
+  if ( $_SESSION['userlevel'] == 0 ) {
+      $querywhere = "WHERE userlevel <= 3 ";
+  }
+
+  $query  = "SELECT personID FROM people $querywhere" .
             "ORDER BY lname, fname ";
+
   $result = mysqli_query($link, $query)
       or die("Query failed : $query<br />\n" . mysqli_error($link));
 
@@ -133,7 +145,13 @@ function display_record($link)
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
                   "        onchange='get_person(this);' >" .
                   "  <option value='null'>None selected...</option>\n";
-  $query  = "SELECT personID, lname, fname FROM people " .
+
+  $querywhere = "";
+  if ( $_SESSION['userlevel'] == 0 ) {
+      $querywhere = "WHERE userlevel <= 3 ";
+  }
+
+  $query  = "SELECT personID, lname, fname FROM people $querywhere" .
             "ORDER BY lname, fname ";
   $result = mysqli_query($link, $query)
             or die("Query failed : $query<br />\n" . mysqli_error($link));
