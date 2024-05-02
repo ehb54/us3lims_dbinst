@@ -1150,6 +1150,9 @@ function save_document() {
 
 function filter_text(input){
   input.value = input.value.replace(/[^a-zA-Z0-9 .,_-]/g, '');
+  if (input.value.length > 80) {
+    input.value = input.value.slice(0, 80);
+  }
 }
 
 async function upload_blob(blob_obj, filename){
