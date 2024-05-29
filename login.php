@@ -12,6 +12,12 @@ include 'header.php';
 
 if (! isset($message) ) $message = "";
 
+$loginusertext =
+    ( isset( $enable_PAM ) && $enable_PAM )
+    ? "Username or E-Mail Address:"
+    : "E-Mail Address:"
+    ;
+
 echo<<<HTML
 
 <div id='content'>
@@ -23,7 +29,7 @@ echo<<<HTML
 
   <form method='post' action='https://$org_site/checkuser.php'>
     <table cellspacing='0' cellpadding='7'>
-      <tr><td>E-Mail Address:</td>
+      <tr><td>$loginusertext</td>
           <td><input type='text' name='email' maxlength='64' size='20'
                      style='width:20em;' /></td></tr>
 
@@ -45,4 +51,3 @@ echo<<<HTML
 HTML;
 
 include 'footer.php';
-?>

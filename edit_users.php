@@ -22,6 +22,9 @@ include 'lib/utility.php';
 include 'lib/selectboxes.php';
 // ini_set('display_errors', 'On');
 
+if ( !isset( $enable_PAM ) ) {
+  $enable_PAM = false;
+}
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
@@ -161,10 +164,12 @@ function do_delete($link)
 function do_update($link)
 {
   include 'get_user_info.php';
-  $personID     = $_POST['personID'];
-  $activated    = ( $_POST['activated'] == 'on' ) ? 1 : 0;
-  $userlevel    = $_POST['userlevel'];
-  $advancelevel = $_POST['advancelevel'];
+  $personID        = $_POST['personID'];
+  $activated       = ( $_POST['activated'] == 'on' ) ? 1 : 0;
+  $userlevel       = $_POST['userlevel'];
+  $advancelevel    = $_POST['advancelevel'];
+  $authenticatePAM = ( $_POST['authenticatePAM'] == 'on' ) ? 1 : 0;
+  $userNamePAM     = $_POST['userNamePAM'];
 
   // Get cluster information
   global $clusters;
@@ -190,21 +195,23 @@ function do_update($link)
   {
 
     $query = "UPDATE people " .
-             "SET lname      = '$lname',          " .
-             "fname          = '$fname',          " .
-             "organization   = '$organization',   " .
-             "address        = '$address',        " .
-             "city           = '$city',           " .
-             "state          = '$state',          " .
-             "zip            = '$zip',            " .
-             "country        = '$country',        " .
-             "phone          = '$phone',          " .
-             "email          = '$email',          " .
-             "activated      = '$activated',      " .
-             "userlevel      = '$userlevel',      " .
-             "advancelevel   = '$advancelevel',   " .
-             "clusterAuthorizations = '$clusterAuth'    " .
-             "WHERE personID =  $personID         ";
+             "SET lname             = '$lname',          " .
+             "fname                 = '$fname',          " .
+             "organization          = '$organization',   " .
+             "address               = '$address',        " .
+             "city                  = '$city',           " .
+             "state                 = '$state',          " .
+             "zip                   = '$zip',            " .
+             "country               = '$country',        " .
+             "phone                 = '$phone',          " .
+             "email                 = '$email',          " .
+             "activated             = '$activated',      " .
+             "userlevel             = '$userlevel',      " .
+             "advancelevel          = '$advancelevel',   " .
+             "clusterAuthorizations = '$clusterAuth',    " .
+             "authenticatePAM       = $authenticatePAM,  " .
+             "userNamePAM           = '$userNamePAM'     " .
+             "WHERE personID  =  $personID         ";
 
     mysqli_query($link, $query)
           or die("Query failed : $query<br />\n" . mysqli_error($link));
@@ -241,13 +248,14 @@ function do_update($link)
 // Function to create a new record
 function do_create($link)
 {
+  global $enable_PAM;
+
   include 'get_user_info.php';
 
   $guid = uuid();
 
   if ( empty($message) )
   {
-
     $query = "INSERT INTO people " .
              "SET lname      = '$lname',          " .
              "fname          = '$fname',          " .
@@ -263,6 +271,9 @@ function do_create($link)
              "userlevel      = 0,                 " .
              "advancelevel   = 0,                 " .
              "activated      = 1,                 " .
+             "authenticatePAM = $authenticatePAM, " .
+             "userNamePAM    = '$userNamePAM',    " .
+             "password       = '__invalid__',     " .
              "signup         = NOW()              ";    // use the default cluster auths
 
     mysqli_query($link, $query)
@@ -276,7 +287,7 @@ function do_create($link)
   else
     $_SESSION['message'] = "The following errors were noted:<br />" .
                            $message .
-                           "Record was not recorded.";
+                           "New user was not created!";
 
   header("Location: {$_SERVER['PHP_SELF']}");
 }
@@ -284,6 +295,7 @@ function do_create($link)
 // Function to display and navigate records
 function display_record($link)
 {
+  global $enable_PAM;
   // Find a record to display
   $personID = get_id($link);
   if ($personID === false)
@@ -291,7 +303,7 @@ function display_record($link)
 
   $query  = "SELECT lname, fname, organization, " .
             "address, city, state, zip, country, phone, email, " .
-            "activated, userlevel, advancelevel, clusterAuthorizations " .
+            "activated, userlevel, advancelevel, clusterAuthorizations, authenticatePAM, userNamePAM " .
             "FROM people " .
             "WHERE personID = $personID ";
   $result = mysqli_query($link, $query)
@@ -306,6 +318,8 @@ function display_record($link)
 
   $userlevel    = $row['userlevel'];    // 0 translates to null
   $advancelevel = $row['advancelevel']; // 0 translates to null
+  $authenticatePAM = $row['authenticatePAM'];
+  $userNamePAM     = $row['userNamePAM'];
   $activated    = ( $row['activated'] == 1 ) ? "yes" : "no";
   $clusterAuth  = explode( ":", $row['clusterAuthorizations'] );
   $clusterAuthorizations = implode( ", ", $clusterAuth );
@@ -343,6 +357,15 @@ function display_record($link)
     $nav_listbox .= "  <option$selected value='$t_id'>$t_last, $t_first</option>\n";
   }
   $nav_listbox .= "</select>\n";
+
+  $extrasPAM =
+    $enable_PAM
+    ? "<tr><th>Authenticate via PAM:</th>"
+      . "<td>" . ( $authenticatePAM ? "yes" : "no" ) . "</td></tr>"
+      . "<tr><th>User name (PAM):</th>"
+      . " <td>$userNamePAM</td></tr>"
+    : ""
+    ;
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
@@ -391,6 +414,7 @@ echo<<<HTML
           <td>$clusterAuthorizations</td></tr>
       <tr><th>Instrument Permissions:</th>
           <td>$instruments_text</td></tr>
+      $extrasPAM
     </tbody>
   </table>
   </form>
@@ -448,12 +472,14 @@ HTML;
 // Function to edit a record
 function edit_record($link)
 {
+  global $enable_PAM;
   // Get the record we need to edit
   $personID = $_POST['personID'];
 
   $query  = "SELECT lname, fname, organization, " .
             "address, city, state, zip, country, phone, email, " .
-            "activated, userlevel, advancelevel, clusterAuthorizations " .
+            "activated, userlevel, advancelevel, clusterAuthorizations" .
+            ", authenticatePAM, userNamePAM " .
             "FROM people " .
             "WHERE personID = $personID ";
   $result = mysqli_query($link, $query)
@@ -474,6 +500,8 @@ function edit_record($link)
   $userlevel       =                                 $row['userlevel'];
   $advancelevel    =                                 $row['advancelevel'];
   $clusterAuth     =                                 $row['clusterAuthorizations'];
+  $authenticatePAM =                                 $row['authenticatePAM'];
+  $userNamePAM     =                                 $row['userNamePAM'];
 
   // Create dropdowns
   $userlevel_text    = userlevel_select( $userlevel );
@@ -539,6 +567,22 @@ function edit_record($link)
   }
   $instrument_table .= "</table>\n";
 
+  $authenticatePAM_text =
+     "<input type='checkbox' name='authenticatePAM'"
+     . ( $authenticatePAM ? " checked" : "" )
+     . ">"
+     ;
+
+  $extrasPAM =
+    $enable_PAM
+    ? "<tr><th>Authenticate via PAM:</th>"
+      .  "<td>$authenticatePAM_text</td></tr>"
+      .  "<tr><th>User name (PAM):</th>"
+      .  "<td><input type='text' name='userNamePAM' size='40'"
+      .  "          maxlength='64' value='$userNamePAM' /></td></tr>"
+    : ""
+    ;
+    
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"
         onsubmit="return validate(this);">
@@ -593,7 +637,7 @@ echo<<<HTML
         <td>$cluster_table</td></tr>
     <tr><th>Instrument Permissions:</th>
         <td>$instrument_table</td></tr>
-
+    $extrasPAM
     </tbody>
   </table>
   </form>
@@ -604,6 +648,19 @@ HTML;
 // Function to create a new record
 function do_new($link)
 {
+   global $enable_PAM;
+
+   $extrasPAM =
+    $enable_PAM
+    ? "<tr><th>Authenticate via PAM:</th>"
+      . "<td><input type='checkbox' name='authenticatePAM' checked>"
+      . "</td></tr>"
+      . "<tr><th>User name (PAM):</th>"
+      . "<td><input type='text' name='userNamePAM' size='40'"
+      . "               maxlength='64'></td></tr>"
+    : ""
+    ;
+
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"
         onsubmit="return validate(this);">
@@ -647,12 +704,10 @@ echo<<<HTML
     <tr><th>Email:</th>
         <td><input type='text' name='email' size='40'
                    maxlength='64' /></td></tr>
-
+    $extrasPAM
     </tbody>
   </table>
   </form>
 
 HTML;
 }
-
-?>

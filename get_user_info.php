@@ -18,7 +18,14 @@ $zip          = trim(substr(addslashes(htmlentities($_POST['zip'])), 0,16));
 $country      = trim(substr(addslashes(htmlentities($_POST['country'])), 0,64));
 $phone        = trim(substr(addslashes(htmlentities($_POST['phone'])), 0,64));
 $email        = trim(substr(addslashes(htmlentities($_POST['email'])), 0,64));
-
+if ( isset( $enable_PAM ) && $enable_PAM ) {
+    $authenticatePAM = trim(substr(addslashes(htmlentities($_POST['authenticatePAM'])), 0, 4)) == "on" ? 1 : 0;
+    $userNamePAM     = trim(substr(addslashes(htmlentities($_POST['userNamePAM'])), 0,64));
+    if ( !$authenticatePAM && empty( $userNamePAM ) ) {
+      $userNamePAM = $email;
+    }
+}
+  
 // Let's do some error checking first of all
 // -- most fields are required
 $message = "";
@@ -55,4 +62,11 @@ if ( empty($email) )
 if (! emailsyntax_is_valid($email) )
   $message .= "--$email is not a valid email address<br />";
 
-?>
+if ( isset( $enable_PAM ) && $enable_PAM && empty( $userNamePAM ) ) {
+  $message .= "--user name (PAM) is missing <br>";
+}
+
+if ( !isset( $enable_PAM ) ) {
+  $userNamePAM     = $email;
+  $authenticatePAM = 0;
+}

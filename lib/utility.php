@@ -163,7 +163,12 @@ if ( !isset( $admin_list ) || count( $admin_list ) == 0 ) {
 
 function emailsyntax_is_valid($email)
 {
-  list($local, $domain) = explode("@", $email);
+  $array = explode("@", $email);
+  if ( count($array) != 2 ) {
+    return FALSE;
+  }
+
+  list($local, $domain) = $array;
 
   $pattern_local  = '/^([0-9a-z]*([-|_]?[0-9a-z]+)*)' .
                     '(([-|_]?)\.([-|_]?)[0-9a-z]*([-|_]?[0-9a-z]+)+)*([-|_]?)$/i';
@@ -179,6 +184,22 @@ function emailsyntax_is_valid($email)
     return TRUE;
   }
 
+  return FALSE;
+}
+
+function PAM_name_is_valid($name)
+{
+        
+  if ( emailsyntax_is_valid( $name ) ) {
+    return TRUE;
+  }
+
+  $pattern  = '/^([0-9a-zA-Z]*([-|_]?[0-9a-zA-Z]+)*)' .
+              '(([-|_]?)\.([-|_]?)[0-9a-zA-Z]*([-|_]?[0-9a-zA-Z]+)+)*([-|_]?)$/i';
+  $match    = preg_match( $pattern, $name );
+  if ( $match ) {
+     return TRUE;
+  }
   return FALSE;
 }
 
