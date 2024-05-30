@@ -22,6 +22,10 @@ include 'lib/utility.php';
 include 'lib/selectboxes.php';
 // ini_set('display_errors', 'On');
 
+if ( !isset( $enable_GMP ) ) {
+  $enable_GMP = false;
+}
+
 if ( !isset( $enable_PAM ) ) {
   $enable_PAM = false;
 }
@@ -251,6 +255,7 @@ function do_update($link)
 function do_create($link)
 {
   global $enable_PAM;
+  global $enable_GMP;
 
   include 'get_user_info.php';
 
@@ -299,6 +304,7 @@ function do_create($link)
 function display_record($link)
 {
   global $enable_PAM;
+  global $enable_GMP;
   // Find a record to display
   $personID = get_id($link);
   if ($personID === false)
@@ -363,6 +369,13 @@ function display_record($link)
   }
   $nav_listbox .= "</select>\n";
 
+  $extrasGMP =
+    $enable_GMP
+    ? "<tr><th>GMP Reviewer Role:</th>"
+      . "<td>$gmpReviewerRole</td></tr>"
+    : ""
+    ;
+
   $extrasPAM =
     $enable_PAM
     ? "<tr><th>Authenticate via PAM:</th>"
@@ -419,8 +432,7 @@ echo<<<HTML
           <td>$clusterAuthorizations</td></tr>
       <tr><th>Instrument Permissions:</th>
           <td>$instruments_text</td></tr>
-      <tr><th>GMP Reviewer Role:</th>
-          <td>$gmpReviewerRole</td></tr>
+      $extrasGMP
       $extrasPAM
     </tbody>
   </table>
@@ -479,6 +491,7 @@ HTML;
 // Function to edit a record
 function edit_record($link)
 {
+  global $enable_GMP;
   global $enable_PAM;
   // Get the record we need to edit
   $personID = $_POST['personID'];
@@ -581,6 +594,20 @@ function edit_record($link)
      . ">"
      ;
 
+  $extrasGMP =
+    $enable_GMP
+    ? "<tr><th>GMP Reviewer Role:</th>"
+      . "<td>"
+      . "<select name='gmpReviewerRole'>"
+      . "<option value='NONE'" . ( $gmpReviewerRole == "NONE" ? " selected" : "" ) . ">None</option>"
+      . "<option value='REVIEWER'" . ( $gmpReviewerRole == "REVIEWER" ? " selected" : "" ) . ">Reviewer</option>"
+      . "<option value='APPROVER'" . ( $gmpReviewerRole == "APPROVER" ? " selected" : "" ) . ">Approver</option>"
+      . "</select>"
+      . "</td>"
+      . "</tr>"
+    : ""
+    ;
+
   $extrasPAM =
     $enable_PAM
     ? "<tr><th>Authenticate via PAM:</th>"
@@ -646,16 +673,7 @@ echo<<<HTML
     <tr><th>Instrument Permissions:</th>
         <td>$instrument_table</td></tr>
 
-    <tr><th>GMP Reviewer Role:</th>
-        <td>
-            <select name="gmpReviewerRole">
-              <option value="NONE">None</option>
-              <option value="REVIEWER">Reviewer</option>
-              <option value="APPROVER">Approver</option>
-            </select>
-       </td>
-    </tr>
-
+    $extrasGMP
     $extrasPAM
     </tbody>
   </table>
@@ -667,7 +685,22 @@ HTML;
 // Function to create a new record
 function do_new($link)
 {
+   global $enable_GMP;
    global $enable_PAM;
+
+   $extrasGMP =
+    $enable_GMP
+    ? "<tr><th>GMP Reviewer Role:</th>"
+      . "<td>"
+      . "<select name='gmpReviewerRole'>"
+      . "<option value='NONE'>None</option>"
+      . "<option value='REVIEWER'>Reviewer</option>"
+      . "<option value='APPROVER'>Approver</option>"
+      . "</select>"
+      . "</td>"
+      . "</tr>"
+    : ""
+    ;
 
    $extrasPAM =
     $enable_PAM
@@ -723,16 +756,10 @@ echo<<<HTML
     <tr><th>Email:</th>
         <td><input type='text' name='email' size='40'
                    maxlength='64' /></td></tr>
-    <tr><th>GMP Reviewer Role:</th>
-        <td>
-            <select name="gmpReviewerRole">
-              <option value="NONE">None</option>
-              <option value="REVIEWER">Reviewer</option>
-              <option value="APPROVER">Approver</option>
-            </select>
-       </td>
-    </tr>
+
+    $extrasGMP
     $extrasPAM
+
     </tbody>
   </table>
   </form>
