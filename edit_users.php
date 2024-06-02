@@ -20,6 +20,8 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include 'lib/selectboxes.php';
+include 'lib/grant_integrity.php';
+
 // ini_set('display_errors', 'On');
 
 if ( !isset( $enable_GMP ) ) {
@@ -151,6 +153,8 @@ function do_next($link)
 function do_delete($link)
 {
   global $admin_list;      // To protect our admin entries
+  global $enable_PAM;
+
   $admins = implode( "','", $admin_list );
 
   $personID = $_POST['personID'];
@@ -161,6 +165,10 @@ function do_delete($link)
   mysqli_query($link, $query)
     or die("Query failed : $query<br />\n" . mysqli_error($link));
 
+  if ( $enable_PAM ) {
+    $_SESSION['message'] = grant_integrity( $_POST['userNamePAM'], false, 0 );
+  }       
+
   header("Location: {$_SERVER['PHP_SELF']}");
 }
 
@@ -168,13 +176,27 @@ function do_delete($link)
 function do_update($link)
 {
   include 'get_user_info.php';
+
+  global $enable_PAM;
+
   $personID        = $_POST['personID'];
   $activated       = ( $_POST['activated'] == 'on' ) ? 1 : 0;
   $userlevel       = $_POST['userlevel'];
   $advancelevel    = $_POST['advancelevel'];
   $gmpReviewerRole = $_POST['gmpReviewerRole'];
-  $authenticatePAM = ( $_POST['authenticatePAM'] == 'on' ) ? 1 : 0;
+  $authenticatePAM = ( isset( $_POST['authenticatePAM'] ) && $_POST['authenticatePAM'] == 'on' ) ? 1 : 0;
   $userNamePAM     = $_POST['userNamePAM'];
+
+  if ( $enable_PAM ) {
+      $query  = "SELECT userNamePAM " .
+          "FROM people " .
+          "WHERE personID = $personID ";
+      $result = mysqli_query($link, $query)
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
+      
+      $row  = mysqli_fetch_array($result, MYSQLI_ASSOC);
+      $last_userNamePAM = $row['userNamePAM'];
+  }
 
   // Get cluster information
   global $clusters;
@@ -191,9 +213,14 @@ function do_update($link)
   $instrumentIDs = array();
   foreach( $_POST as $ndx => $value )
   {
-    list( $prefix, $instrumentID ) = explode( "_", $ndx );
-    if ( $prefix == 'inst' && $value == 'on' )
-      $instrumentIDs[] = $instrumentID;
+    $exploded = explode( "_", $ndx );
+    if ( count( $exploded ) > 1 ) {
+      $prefix       = $exploded[ 0 ];
+      $instrumentID = $exploded[ 1 ];
+      if ( $prefix == 'inst' && $value == 'on' ) {
+        $instrumentIDs[] = $instrumentID;
+      }
+    }
   }
 
   if ( empty($message) )
@@ -241,6 +268,19 @@ function do_update($link)
 
     }
 
+    if ( $enable_PAM ) {
+      if ( $last_userNamePAM != $userNamePAM ) {
+        $_SESSION['message'] = 
+            grant_integrity( $last_userNamePAM, false, 0 )
+            . "<br>"
+            . grant_integrity( $userNamePAM, $authenticatePAM, $userlevel )
+            ;
+      } else {
+        $_SESSION['message'] = 
+            grant_integrity( $userNamePAM, $authenticatePAM, $userlevel )
+            ;
+      }
+    }       
   }
 
   else
@@ -288,6 +328,10 @@ function do_create($link)
           or die("Query failed : $query<br />\n" . mysqli_error($link));
     $new = mysqli_insert_id($link);
 
+    if ( $enable_PAM ) {
+       $_SESSION['message'] = grant_integrity( $userNamePAM, $authenticatePAM, $userlevel );
+    }       
+
     header("Location: {$_SERVER['PHP_SELF']}?personID=$new");
     return;
   }
@@ -305,6 +349,7 @@ function display_record($link)
 {
   global $enable_PAM;
   global $enable_GMP;
+
   // Find a record to display
   $personID = get_id($link);
   if ($personID === false)
@@ -493,6 +538,7 @@ function edit_record($link)
 {
   global $enable_GMP;
   global $enable_PAM;
+
   // Get the record we need to edit
   $personID = $_POST['personID'];
 
