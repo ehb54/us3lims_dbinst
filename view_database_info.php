@@ -84,7 +84,7 @@ which can be opened by selecting:</p>
       <td>{$_SESSION['email']}</td></tr>
 
   <tr><th>Investigator Password</th>
-      <td>The password you logged in here with</td></tr>
+      <td>Not used for this database</td></tr>
 
 </table>
 

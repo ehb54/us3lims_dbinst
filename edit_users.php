@@ -315,7 +315,7 @@ function do_create($link)
              "country          = '$country',         " .
              "phone            = '$phone',           " .
              "email            = '$email',           " .
-             "userlevel        = 0,                  " .
+             "userlevel        = 1,                  " .
              "advancelevel     = 0,                  " .
              "activated        = 1,                  " .
              "gmpReviewerRole  = '$gmpReviewerRole', " .

@@ -10,7 +10,21 @@ include_once 'checkinstance.php';
 include 'db.php';
 include 'lib/utility.php';
 // ini_set('display_errors', 'On');
+if ( !isset( $enable_PAM ) ) {
+  $enable_PAM = false;
+}
 
+if ( $enable_PAM
+     && $_SESSION['authenticatePAM'] == true ) {
+  include 'header.php';
+  include 'footer.php';
+  exit();
+}
+
+if ( !isset( $_SESSION['id'] ) ) {
+  include 'login.php';
+  exit();
+}
 
 // Are we being directed here from a push button?
 if (isset($_POST['update']))
