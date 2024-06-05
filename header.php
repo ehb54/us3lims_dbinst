@@ -103,7 +103,7 @@ echo<<<HTML
    </tr>
    </table>
    <span style='font-size:20px;font-weight:bold;color:white;padding:0 1em;'>
-    $org_name ($dbname)$title_devel</span>
+    $org_name</span>
 
 HTML;
 
