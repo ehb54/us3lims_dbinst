@@ -8,15 +8,36 @@
 
 include 'config.php';
 
-$page_title = 'Create Password';
+if ( !isset( $enable_PAM ) ) {
+  $enable_PAM = false;
+}
+
+$page_title = 'Lost Password';
 include 'header.php';
-?>
+
+
+if ( $enable_PAM ) {
+echo<<<HTML
 <div id='content'>
 
   <h1 class="title">Lost Password</h1>
 
-  <?php if ( isset($message) ) echo "<p class='message'>$message</p>\n"; ?>
+  <p>Please contact your administrator for instructions</p>
+</div>
+HTML;
+} else {
+  $echo_msg =
+    isset( $message )
+    ? "<p class='message'>$message</p>"
+    : ""
+  ;
+echo<<<HTML
+<div id='content'>
 
+  <h1 class="title">Lost Password</h1>
+
+  $echo_msg
+  
   <h3>Recover Password Form</h3>
 
   <form action="recover_password.php" method="post">
@@ -28,7 +49,8 @@ include 'header.php';
   </form>
 
 </div>
+HTML;
+}
 
-<?php
 include 'footer.php';
 ?>

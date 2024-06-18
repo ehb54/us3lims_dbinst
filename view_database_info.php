@@ -43,7 +43,59 @@ include 'header.php';
 $parts = explode( "_", $database_name );
 $description = ucwords( $parts[ 1 ] . " Database" );
 
-echo <<<HTML
+include "config.php";
+
+if ( $_SESSION['authenticatePAM'] ) {
+  $userNamePAM = $_SESSION['userNamePAM'];
+
+  echo <<<HTML
+
+<div id='main'>
+
+<h3>Database Login Info</h3>
+
+<p>In order to configure your UltraScan III application to work with this
+database, please use the information printed below. This information
+should be entered into the database configuration dialog in UltraScan III,
+which can be opened by selecting:</p>
+
+<p>&ldquo;Edit:Preferences:Database Preferences:Change.&rdquo;</p>
+
+<p>Then click on &ldquo;Reset&rdquo; and enter the following information (use
+   copy/paste, but don&rsquo;t add any leading or trailing blanks):</p>
+
+<table cellpadding='4' cellspacing='0'>
+  <tr><th>Database Description:</th>
+      <td>You are free to put what you like here</td></tr>
+
+  <tr><th>User Name:</th>
+      <td>$userNamePAM</td></tr>
+
+  <tr><th>Password:</th>
+      <td>The password you logged in here with</td></tr>
+
+  <tr><th>Database Name:</th>
+      <td>$dbname</td></tr>
+
+  <tr><th>Host Address</th>
+      <td>$hostaddr</td></tr>
+
+  <tr><th>Investigator Email</th>
+      <td>{$_SESSION['email']}</td></tr>
+
+  <tr><th>Investigator Password</th>
+      <td>Not used for this database</td></tr>
+
+</table>
+
+</div>
+
+</div>
+
+HTML;
+
+} else {
+    echo <<<HTML
 
 <div id='main'>
 
@@ -88,6 +140,5 @@ which can be opened by selecting:</p>
 </div>
 
 HTML;
-
+}
 include 'footer.php';
-?>

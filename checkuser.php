@@ -9,10 +9,13 @@ include 'checkinstance.php';
 include 'db.php';
 include 'lib/utility.php';
 
-$email  = htmlentities(trim($_POST['email']));
+$loginname  = htmlentities(trim($_POST['email']));
 $passwd = trim($_POST['password']);
+if ( !isset( $enable_PAM ) ) {
+  $enable_PAM = false;
+}
 
-if (  ! $email || ! $passwd )
+if ( ! $loginname || ! $passwd )
 {
   remove_session();
   $message =  "Please enter both email address and password!";
@@ -20,24 +23,57 @@ if (  ! $email || ! $passwd )
   exit();
 }
 
-if ( ! emailsyntax_is_valid($email) )
-{
+if ( ! ( emailsyntax_is_valid($loginname) ||
+     ( $enable_PAM && PAM_name_is_valid( $loginname ) ) )
+   ) {
   remove_session();
-  $message = "Error: $email is not a valid email address!";
+  $message = $enable_PAM
+             ? "Error: $loginname is neither a valid user name nor email address!"
+             : "Error: $loginname is not a valid email address!"
+             ;
   include 'login.php';
   exit();
 }
 
-// Convert password to md5 hash
-$md5pass = md5($passwd);
+$pamActive = false;
 
-// Find the id of the record with the same e-mail address:
+if ( $enable_PAM && PAM_name_is_valid( $loginname ) ) {
+  // for PAM authentication
+  $query     = "SELECT * FROM people WHERE userNamePAM='$loginname'";
 
-$query  = "SELECT * FROM people WHERE email='$email'";
-$result = mysqli_query($link, $query)
+  $result = mysqli_query($link, $query)
           or die( "Query failed : $query<br />\n" . mysqli_error($link) );
-$row    = mysqli_fetch_assoc($result);
-$count  = mysqli_num_rows($result);
+  $row    = mysqli_fetch_assoc($result);
+  $count  = mysqli_num_rows($result);
+
+  if ( $count == 1 && $row['authenticatePAM'] == 1 ) {
+     $pamActive = true;
+  }
+}
+
+if ( !$pamActive ) {
+  // for email authentication
+
+  // Convert password to md5 hash
+  $md5pass = md5($passwd);
+
+  // Find the id of the record with the same e-mail address:
+
+  $query  = "SELECT * FROM people WHERE email='$loginname'";
+
+  $result = mysqli_query($link, $query)
+          or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $row    = mysqli_fetch_assoc($result);
+  $count  = mysqli_num_rows($result);
+}
+
+
+if ( $enable_PAM && !$pamActive && $row['authenticatePAM'] == 1 ) {
+  remove_session();
+  $message = "Error: E-Mail address login is not allowed for this user";
+  include 'login.php';
+  exit();
+}
 
 // Register the variables:
 
@@ -48,17 +84,19 @@ if ( $count == 1 )
      $$key = stripslashes( $val );
   }
 
-  $_SESSION['id']           = $personID;
-  $_SESSION['loginID']      = $personID;  // This never changes, even if working on behalf of another
-  $_SESSION['firstname']    = $fname;
-  $_SESSION['lastname']     = $lname;
-  $_SESSION['phone']        = $phone;
-  $_SESSION['email']        = $email;
-  $_SESSION['submitter_email'] = $email;
-  $_SESSION['userlevel']    = $userlevel;
-  $_SESSION['instance']     = $dbname;
-  $_SESSION['user_id' ]     = $fname . "_" . $lname . "_" . $personGUID;
-  $_SESSION['advancelevel'] = $advancelevel;
+  $_SESSION['id']               = $personID;
+  $_SESSION['loginID']          = $personID;  // This never changes, even if working on behalf of another
+  $_SESSION['firstname']        = $fname;
+  $_SESSION['lastname']         = $lname;
+  $_SESSION['phone']            = $phone;
+  $_SESSION['email']            = $email;
+  $_SESSION['submitter_email']  = $email;
+  $_SESSION['userlevel']        = $userlevel;
+  $_SESSION['instance']         = $dbname;
+  $_SESSION['user_id' ]         = $fname . "_" . $lname . "_" . $personGUID;
+  $_SESSION['advancelevel']     = $advancelevel;
+  $_SESSION['userNamePAM']      = $userNamePAM;
+  $_SESSION['authenticatePAM']  = $authenticatePAM;
 
   // Set cluster authorizations
   $clusterAuth = array();
@@ -103,17 +141,23 @@ else if ( $count > 1 )
 if ( $count < 1 )
 {
   remove_session();
-  $message =  "Error: The account for <i>\"$email\"</i> has not been " .
+  $message =  "Error: The account for <i>\"$loginname\"</i> has not been " .
               "correctly set up. <br/>Please set up a new account first " .
-              "or correctly type the email address.";
+              "or correctly type the username or email address.";
   include 'login.php';
   exit();
 }
 
-if ( $row["password"] != $md5pass )
-{
+if ( !$pamActive && $row["password"] != $md5pass ) {
   remove_session();
-  $message = "Error: Invalid password for $email.";
+  $message = "Error: Invalid password for $loginname.";
+  include 'login.php';
+  exit();
+}
+
+if ( $pamActive && !pam_auth( $loginname, $passwd, $error ) ) {
+  remove_session();
+  $message = "Error: Password failed for $loginname.\n$error";
   include 'login.php';
   exit();
 }
@@ -143,4 +187,3 @@ function remove_session()
       setcookie(session_name(), '', time()-42000, '/');
   session_destroy();
 }
-?>
