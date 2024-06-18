@@ -159,6 +159,17 @@ function do_delete($link)
 
   $personID = $_POST['personID'];
 
+  if ( $enable_PAM ) {
+      $query = "SELECT userNamePAM FROM people " .
+          "WHERE personID = $personID " .
+          "AND email NOT IN ( '$admins' ) ";
+      $result = mysqli_query($link, $query)
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
+
+      $row  = mysqli_fetch_array($result, MYSQLI_ASSOC);
+      $userNamePAM = $row['userNamePAM'];
+  }
+
   $query = "DELETE FROM people " .
            "WHERE personID = $personID " .
            "AND email NOT IN ( '$admins' ) ";
@@ -166,7 +177,7 @@ function do_delete($link)
     or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   if ( $enable_PAM ) {
-    $_SESSION['message'] = grant_integrity( $_POST['userNamePAM'], false, 0 );
+    $_SESSION['message'] = grant_integrity( $userNamePAM, false, 0 );
   }       
 
   header("Location: {$_SERVER['PHP_SELF']}");
@@ -186,6 +197,9 @@ function do_update($link)
   $gmpReviewerRole = $_POST['gmpReviewerRole'];
   $authenticatePAM = ( isset( $_POST['authenticatePAM'] ) && $_POST['authenticatePAM'] == 'on' ) ? 1 : 0;
   $userNamePAM     = $_POST['userNamePAM'];
+  if ( empty( $userNamePAM ) ) {
+     $userNamePAM = $_POST['email'];
+  }
 
   if ( $enable_PAM ) {
       $query  = "SELECT userNamePAM " .
@@ -303,6 +317,8 @@ function do_create($link)
 
   if ( empty($message) )
   {
+    $userlevel = 1; // default for new users
+
     $query = "INSERT INTO people " .
              "SET lname        = '$lname',           " .
              "fname            = '$fname',           " .
@@ -315,7 +331,7 @@ function do_create($link)
              "country          = '$country',         " .
              "phone            = '$phone',           " .
              "email            = '$email',           " .
-             "userlevel        = 1,                  " .
+             "userlevel        = $userlevel,         " .
              "advancelevel     = 0,                  " .
              "activated        = 1,                  " .
              "gmpReviewerRole  = '$gmpReviewerRole', " .

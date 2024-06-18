@@ -67,7 +67,7 @@ if ( isset( $enable_PAM ) && $enable_PAM && empty( $userNamePAM ) ) {
   $message .= "--user name (PAM) is missing <br>";
 }
 
-if ( !isset( $enable_PAM ) ) {
+if ( !isset( $enable_PAM ) || !$enable_PAM ) {
   $userNamePAM     = $email;
   $authenticatePAM = 0;
 }
