@@ -105,7 +105,7 @@ $missit_msg = "<br/>ds_remain=" . $ds_remain;
     {
 $missit_msg .= "<br/>composite=" . $composite;
 $missit_msg .= "<br/> kr=" . $kr;
-$missit_msg .= "<br/> fnkr=" . $filenames[kr];
+$missit_msg .= "<br/> fnkr=" . $filenames[$kr];
       $files_ok = false;
     }
 
