@@ -7,9 +7,10 @@
  */
 include_once 'checkinstance.php';
 
-if ( ($_SESSION['userlevel'] != 3) &&
-     ($_SESSION['userlevel'] != 4) &&
-     ($_SESSION['userlevel'] != 5) )    // Super user, admin and super admin only
+if ( !isset($_SESSION['userlevel']) ||
+     ( ($_SESSION['userlevel'] != 0) &&
+       ($_SESSION['userlevel'] != 4) &&
+       ($_SESSION['userlevel'] != 5) ) )   // Super user, admin and super admin only
 {
   header('Location: index.php');
   exit();
@@ -19,8 +20,17 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 include 'lib/selectboxes.php';
+include 'lib/grant_integrity.php';
+
 // ini_set('display_errors', 'On');
 
+if ( !isset( $enable_GMP ) ) {
+  $enable_GMP = false;
+}
+
+if ( !isset( $enable_PAM ) ) {
+  $enable_PAM = false;
+}
 
 // Are we being directed here from a push button?
 if (isset($_POST['prior']))
@@ -91,7 +101,12 @@ function do_prior($link)
 {
   $personID = $_POST['personID'];
 
-  $query  = "SELECT personID FROM people " .
+  $querywhere = "";
+  if ( $_SESSION['userlevel'] == 0 ) {
+      $querywhere = "WHERE userlevel <= 3 ";
+  }
+
+  $query  = "SELECT personID FROM people $querywhere" .
             "ORDER BY lname, fname ";
   $result = mysqli_query($link, $query)
       or die("Query failed : $query<br />\n" . mysqli_error($link));
@@ -114,7 +129,12 @@ function do_next($link)
 {
   $personID = $_POST['personID'];
 
-  $query  = "SELECT personID FROM people " .
+  $querywhere = "";
+  if ( $_SESSION['userlevel'] == 0 ) {
+      $querywhere = "WHERE userlevel <= 3 ";
+  }
+
+  $query  = "SELECT personID FROM people $querywhere" .
             "ORDER BY lname, fname ";
   $result = mysqli_query($link, $query)
       or die("Query failed : $query<br />\n" . mysqli_error($link));
@@ -133,15 +153,32 @@ function do_next($link)
 function do_delete($link)
 {
   global $admin_list;      // To protect our admin entries
+  global $enable_PAM;
+
   $admins = implode( "','", $admin_list );
 
   $personID = $_POST['personID'];
+
+  if ( $enable_PAM ) {
+      $query = "SELECT userNamePAM FROM people " .
+          "WHERE personID = $personID " .
+          "AND email NOT IN ( '$admins' ) ";
+      $result = mysqli_query($link, $query)
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
+
+      $row  = mysqli_fetch_array($result, MYSQLI_ASSOC);
+      $userNamePAM = $row['userNamePAM'];
+  }
 
   $query = "DELETE FROM people " .
            "WHERE personID = $personID " .
            "AND email NOT IN ( '$admins' ) ";
   mysqli_query($link, $query)
     or die("Query failed : $query<br />\n" . mysqli_error($link));
+
+  if ( $enable_PAM ) {
+    $_SESSION['message'] = grant_integrity( $userNamePAM, false, 0 );
+  }       
 
   header("Location: {$_SERVER['PHP_SELF']}");
 }
@@ -150,10 +187,30 @@ function do_delete($link)
 function do_update($link)
 {
   include 'get_user_info.php';
-  $personID     = $_POST['personID'];
-  $activated    = ( $_POST['activated'] == 'on' ) ? 1 : 0;
-  $userlevel    = $_POST['userlevel'];
-  $advancelevel = $_POST['advancelevel'];
+
+  global $enable_PAM;
+
+  $personID        = $_POST['personID'];
+  $activated       = ( $_POST['activated'] == 'on' ) ? 1 : 0;
+  $userlevel       = $_POST['userlevel'];
+  $advancelevel    = $_POST['advancelevel'];
+  $gmpReviewerRole = $_POST['gmpReviewerRole'];
+  $authenticatePAM = ( isset( $_POST['authenticatePAM'] ) && $_POST['authenticatePAM'] == 'on' ) ? 1 : 0;
+  $userNamePAM     = $_POST['userNamePAM'];
+  if ( empty( $userNamePAM ) ) {
+     $userNamePAM = $_POST['email'];
+  }
+
+  if ( $enable_PAM ) {
+      $query  = "SELECT userNamePAM " .
+          "FROM people " .
+          "WHERE personID = $personID ";
+      $result = mysqli_query($link, $query)
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
+      
+      $row  = mysqli_fetch_array($result, MYSQLI_ASSOC);
+      $last_userNamePAM = $row['userNamePAM'];
+  }
 
   // Get cluster information
   global $clusters;
@@ -170,30 +227,38 @@ function do_update($link)
   $instrumentIDs = array();
   foreach( $_POST as $ndx => $value )
   {
-    list( $prefix, $instrumentID ) = explode( "_", $ndx );
-    if ( $prefix == 'inst' && $value == 'on' )
-      $instrumentIDs[] = $instrumentID;
+    $exploded = explode( "_", $ndx );
+    if ( count( $exploded ) > 1 ) {
+      $prefix       = $exploded[ 0 ];
+      $instrumentID = $exploded[ 1 ];
+      if ( $prefix == 'inst' && $value == 'on' ) {
+        $instrumentIDs[] = $instrumentID;
+      }
+    }
   }
 
   if ( empty($message) )
   {
 
     $query = "UPDATE people " .
-             "SET lname      = '$lname',          " .
-             "fname          = '$fname',          " .
-             "organization   = '$organization',   " .
-             "address        = '$address',        " .
-             "city           = '$city',           " .
-             "state          = '$state',          " .
-             "zip            = '$zip',            " .
-             "country        = '$country',        " .
-             "phone          = '$phone',          " .
-             "email          = '$email',          " .
-             "activated      = '$activated',      " .
-             "userlevel      = '$userlevel',      " .
-             "advancelevel   = '$advancelevel',   " .
-             "clusterAuthorizations = '$clusterAuth'    " .
-             "WHERE personID =  $personID         ";
+             "SET lname             = '$lname',            " .
+             "fname                 = '$fname',            " .
+             "organization          = '$organization',     " .
+             "address               = '$address',          " .
+             "city                  = '$city',             " .
+             "state                 = '$state',            " .
+             "zip                   = '$zip',              " .
+             "country               = '$country',          " .
+             "phone                 = '$phone',            " .
+             "email                 = '$email',            " .
+             "activated             = '$activated',        " .
+             "userlevel             = '$userlevel',        " .
+             "advancelevel          = '$advancelevel',     " .
+             "clusterAuthorizations = '$clusterAuth',      " .
+             "gmpReviewerRole       = '$gmpReviewerRole',  " .
+             "authenticatePAM       = $authenticatePAM,    " .
+             "userNamePAM           = '$userNamePAM'       " .
+             "WHERE personID  =  $personID         ";
 
     mysqli_query($link, $query)
           or die("Query failed : $query<br />\n" . mysqli_error($link));
@@ -217,6 +282,19 @@ function do_update($link)
 
     }
 
+    if ( $enable_PAM ) {
+      if ( $last_userNamePAM != $userNamePAM ) {
+        $_SESSION['message'] = 
+            grant_integrity( $last_userNamePAM, false, 0 )
+            . "<br>"
+            . grant_integrity( $userNamePAM, $authenticatePAM, $userlevel )
+            ;
+      } else {
+        $_SESSION['message'] = 
+            grant_integrity( $userNamePAM, $authenticatePAM, $userlevel )
+            ;
+      }
+    }       
   }
 
   else
@@ -230,33 +308,45 @@ function do_update($link)
 // Function to create a new record
 function do_create($link)
 {
+  global $enable_PAM;
+  global $enable_GMP;
+
   include 'get_user_info.php';
 
   $guid = uuid();
 
   if ( empty($message) )
   {
+    $userlevel = 1; // default for new users
 
     $query = "INSERT INTO people " .
-             "SET lname      = '$lname',          " .
-             "fname          = '$fname',          " .
-             "personGUID     = '$guid',           " .
-             "organization   = '$organization',   " .
-             "address        = '$address',        " .
-             "city           = '$city',           " .
-             "state          = '$state',          " .
-             "zip            = '$zip',            " .
-             "country        = '$country',        " .
-             "phone          = '$phone',          " .
-             "email          = '$email',          " .
-             "userlevel      = 0,                 " .
-             "advancelevel   = 0,                 " .
-             "activated      = 1,                 " .
-             "signup         = NOW()              ";    // use the default cluster auths
+             "SET lname        = '$lname',           " .
+             "fname            = '$fname',           " .
+             "personGUID       = '$guid',            " .
+             "organization     = '$organization',    " .
+             "address          = '$address',         " .
+             "city             = '$city',            " .
+             "state            = '$state',           " .
+             "zip              = '$zip',             " .
+             "country          = '$country',         " .
+             "phone            = '$phone',           " .
+             "email            = '$email',           " .
+             "userlevel        = $userlevel,         " .
+             "advancelevel     = 0,                  " .
+             "activated        = 1,                  " .
+             "gmpReviewerRole  = '$gmpReviewerRole', " .
+             "authenticatePAM  = $authenticatePAM,  " .
+             "userNamePAM      = '$userNamePAM',     " .
+             "password         = '__invalid__',      " .
+             "signup           = NOW()               ";    // use the default cluster auths
 
     mysqli_query($link, $query)
           or die("Query failed : $query<br />\n" . mysqli_error($link));
     $new = mysqli_insert_id($link);
+
+    if ( $enable_PAM ) {
+       $_SESSION['message'] = grant_integrity( $userNamePAM, $authenticatePAM, $userlevel );
+    }       
 
     header("Location: {$_SERVER['PHP_SELF']}?personID=$new");
     return;
@@ -265,7 +355,7 @@ function do_create($link)
   else
     $_SESSION['message'] = "The following errors were noted:<br />" .
                            $message .
-                           "Record was not recorded.";
+                           "New user was not created!";
 
   header("Location: {$_SERVER['PHP_SELF']}");
 }
@@ -273,6 +363,9 @@ function do_create($link)
 // Function to display and navigate records
 function display_record($link)
 {
+  global $enable_PAM;
+  global $enable_GMP;
+
   // Find a record to display
   $personID = get_id($link);
   if ($personID === false)
@@ -280,7 +373,8 @@ function display_record($link)
 
   $query  = "SELECT lname, fname, organization, " .
             "address, city, state, zip, country, phone, email, " .
-            "activated, userlevel, advancelevel, clusterAuthorizations " .
+            "activated, userlevel, advancelevel, clusterAuthorizations, " .
+            "gmpReviewerRole, authenticatePAM, userNamePAM " .
             "FROM people " .
             "WHERE personID = $personID ";
   $result = mysqli_query($link, $query)
@@ -293,10 +387,13 @@ function display_record($link)
     $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( $value ));
   }
 
-  $userlevel    = $row['userlevel'];    // 0 translates to null
-  $advancelevel = $row['advancelevel']; // 0 translates to null
-  $activated    = ( $row['activated'] == 1 ) ? "yes" : "no";
-  $clusterAuth  = explode( ":", $row['clusterAuthorizations'] );
+  $userlevel             = $row['userlevel'];    // 0 translates to null
+  $advancelevel          = $row['advancelevel']; // 0 translates to null
+  $gmpReviewerRole       = $row['gmpReviewerRole'];
+  $authenticatePAM       = $row['authenticatePAM'];
+  $userNamePAM           = $row['userNamePAM'];
+  $activated             = ( $row['activated'] == 1 ) ? "yes" : "no";
+  $clusterAuth           = explode( ":", $row['clusterAuthorizations'] );
   $clusterAuthorizations = implode( ", ", $clusterAuth );
 
   // Operator permissions
@@ -316,7 +413,11 @@ function display_record($link)
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
                   "        onchange='get_person(this);' >" .
                   "  <option value='null'>None selected...</option>\n";
-  $query  = "SELECT personID, lname, fname FROM people " .
+  $querywhere = "";
+  if ( $_SESSION['userlevel'] == 0 ) {
+      $querywhere = "WHERE userlevel <= 3 ";
+  }
+  $query  = "SELECT personID, lname, fname FROM people $querywhere" .
             "ORDER BY lname, fname ";
   $result = mysqli_query($link, $query)
             or die("Query failed : $query<br />\n" . mysqli_error($link));
@@ -328,6 +429,22 @@ function display_record($link)
     $nav_listbox .= "  <option$selected value='$t_id'>$t_last, $t_first</option>\n";
   }
   $nav_listbox .= "</select>\n";
+
+  $extrasGMP =
+    $enable_GMP
+    ? "<tr><th>GMP Reviewer Role:</th>"
+      . "<td>$gmpReviewerRole</td></tr>"
+    : ""
+    ;
+
+  $extrasPAM =
+    $enable_PAM
+    ? "<tr><th>Authenticate via PAM:</th>"
+      . "<td>" . ( $authenticatePAM ? "yes" : "no" ) . "</td></tr>"
+      . "<tr><th>User name (PAM):</th>"
+      . " <td>$userNamePAM</td></tr>"
+    : ""
+    ;
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
@@ -376,6 +493,8 @@ echo<<<HTML
           <td>$clusterAuthorizations</td></tr>
       <tr><th>Instrument Permissions:</th>
           <td>$instruments_text</td></tr>
+      $extrasGMP
+      $extrasPAM
     </tbody>
   </table>
   </form>
@@ -433,12 +552,16 @@ HTML;
 // Function to edit a record
 function edit_record($link)
 {
+  global $enable_GMP;
+  global $enable_PAM;
+
   // Get the record we need to edit
   $personID = $_POST['personID'];
 
   $query  = "SELECT lname, fname, organization, " .
             "address, city, state, zip, country, phone, email, " .
-            "activated, userlevel, advancelevel, clusterAuthorizations " .
+            "activated, userlevel, advancelevel, clusterAuthorizations, " .
+            "gmpReviewerRole, authenticatePAM, userNamePAM " .
             "FROM people " .
             "WHERE personID = $personID ";
   $result = mysqli_query($link, $query)
@@ -459,6 +582,9 @@ function edit_record($link)
   $userlevel       =                                 $row['userlevel'];
   $advancelevel    =                                 $row['advancelevel'];
   $clusterAuth     =                                 $row['clusterAuthorizations'];
+  $gmpReviewerRole =                                 $row['gmpReviewerRole'];
+  $authenticatePAM =                                 $row['authenticatePAM'];
+  $userNamePAM     =                                 $row['userNamePAM'];
 
   // Create dropdowns
   $userlevel_text    = userlevel_select( $userlevel );
@@ -524,6 +650,36 @@ function edit_record($link)
   }
   $instrument_table .= "</table>\n";
 
+  $authenticatePAM_text =
+     "<input type='checkbox' name='authenticatePAM'"
+     . ( $authenticatePAM ? " checked" : "" )
+     . ">"
+     ;
+
+  $extrasGMP =
+    $enable_GMP
+    ? "<tr><th>GMP Reviewer Role:</th>"
+      . "<td>"
+      . "<select name='gmpReviewerRole'>"
+      . "<option value='NONE'" . ( $gmpReviewerRole == "NONE" ? " selected" : "" ) . ">None</option>"
+      . "<option value='REVIEWER'" . ( $gmpReviewerRole == "REVIEWER" ? " selected" : "" ) . ">Reviewer</option>"
+      . "<option value='APPROVER'" . ( $gmpReviewerRole == "APPROVER" ? " selected" : "" ) . ">Approver</option>"
+      . "</select>"
+      . "</td>"
+      . "</tr>"
+    : ""
+    ;
+
+  $extrasPAM =
+    $enable_PAM
+    ? "<tr><th>Authenticate via PAM:</th>"
+      .  "<td>$authenticatePAM_text</td></tr>"
+      .  "<tr><th>User name (PAM):</th>"
+      .  "<td><input type='text' name='userNamePAM' size='40'"
+      .  "          maxlength='64' value='$userNamePAM' /></td></tr>"
+    : ""
+    ;
+    
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"
         onsubmit="return validate(this);">
@@ -579,6 +735,8 @@ echo<<<HTML
     <tr><th>Instrument Permissions:</th>
         <td>$instrument_table</td></tr>
 
+    $extrasGMP
+    $extrasPAM
     </tbody>
   </table>
   </form>
@@ -589,6 +747,34 @@ HTML;
 // Function to create a new record
 function do_new($link)
 {
+   global $enable_GMP;
+   global $enable_PAM;
+
+   $extrasGMP =
+    $enable_GMP
+    ? "<tr><th>GMP Reviewer Role:</th>"
+      . "<td>"
+      . "<select name='gmpReviewerRole'>"
+      . "<option value='NONE'>None</option>"
+      . "<option value='REVIEWER'>Reviewer</option>"
+      . "<option value='APPROVER'>Approver</option>"
+      . "</select>"
+      . "</td>"
+      . "</tr>"
+    : ""
+    ;
+
+   $extrasPAM =
+    $enable_PAM
+    ? "<tr><th>Authenticate via PAM:</th>"
+      . "<td><input type='checkbox' name='authenticatePAM' checked>"
+      . "</td></tr>"
+      . "<tr><th>User name (PAM):</th>"
+      . "<td><input type='text' name='userNamePAM' size='40'"
+      . "               maxlength='64'></td></tr>"
+    : ""
+    ;
+
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"
         onsubmit="return validate(this);">
@@ -633,11 +819,12 @@ echo<<<HTML
         <td><input type='text' name='email' size='40'
                    maxlength='64' /></td></tr>
 
+    $extrasGMP
+    $extrasPAM
+
     </tbody>
   </table>
   </form>
 
 HTML;
 }
-
-?>

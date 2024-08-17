@@ -7,9 +7,11 @@
  */
 include_once 'checkinstance.php';
 
-if ( ($_SESSION['userlevel'] != 3) &&
-     ($_SESSION['userlevel'] != 4) &&
-     ($_SESSION['userlevel'] != 5) )    // super, admin and super admin only
+if ( !isset($_SESSION['userlevel']) ||
+     ( ($_SESSION['userlevel'] != 0) &&
+       ($_SESSION['userlevel'] != 3) &&
+       ($_SESSION['userlevel'] != 4) &&
+       ($_SESSION['userlevel'] != 5) ) )   // Super user, admin and super admin only
 {
   header('Location: index.php');
   exit();
@@ -46,10 +48,16 @@ exit();
 // Function to create a table of all records
 function create_table($link)
 {
+  $querywhere = "";
+  if ( $_SESSION['userlevel'] == 0 ) {
+      $querywhere = "WHERE userlevel <= 3 ";
+  }
+
   $query  = "SELECT personID, lname, fname, " .
             "organization, address, city, state, zip, country, " .
             "phone, email " .
             "FROM people " .
+            $querywhere .
             "ORDER BY lname, fname ";
   $result = mysqli_query($link, $query)
             or die("Query failed : $query<br />\n" . mysqli_error($link));

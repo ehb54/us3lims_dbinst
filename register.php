@@ -77,6 +77,7 @@ $query = "INSERT INTO people " .
          "password        = '$db_password', " .
          "userlevel       = 1, " .
          "activated       = 0, " .
+         "userNamePAM     = '$email', " .
          "signup          = now() ";
 
 $result = mysqli_query( $link, $query ) 

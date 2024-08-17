@@ -33,15 +33,34 @@ $is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
 $query  = "SELECT gfacID, us3_db, cluster, status, metaschedulerClusterExecuting FROM analysis ";
 if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
   $query .= "WHERE us3_db = '$dbname' ";
+}
+
+if ( $_SESSION['userlevel'] == 2 ) {
+    $submitterGUID = preg_replace( '/^.*_/', '', $_SESSION["user_id"] );
+    $query =
+        "SELECT analysis.gfacID, analysis.us3_db, analysis.cluster, analysis.status"
+        . " FROM gfac.analysis"
+        . " INNER JOIN $dbname.HPCAnalysisResult ON $dbname.HPCAnalysisResult.gfacID = analysis.gfacID"
+        . " INNER JOIN $dbname.HPCAnalysisRequest ON $dbname.HPCAnalysisResult.HPCAnalysisRequestID = $dbname.HPCAnalysisRequest.HPCAnalysisRequestID"
+        . " WHERE analysis.us3_db = '$dbname' AND $dbname.HPCAnalysisRequest.submitterGUID = '$submitterGUID'"
+        . " "
+        ;
+}
+
 $query .= "ORDER BY time ";
 $result = mysqli_query( $globaldb, $query )
           or die( "Query failed : $query<br />" . mysqli_error($globaldb));
 if ( mysqli_num_rows( $result ) == 0 )
 {
-  if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
-    echo "<p>No <b>$dbname</b> jobs are currently queued, running, or completing.</p>\n";
-  else
-    echo "<p>No jobs are currently queued, running, or completing.</p>\n";
+    if ( $_SESSION['userlevel'] < 4 ) {
+        if ( $_SESSION['userlevel'] == 2 ) {
+            echo "<p>You have no <b>$dbname</b> jobs currently queued, running or completing.</p>\n";
+        } else {
+            echo "<p>No <b>$dbname</b> jobs are currently queued, running or completing.</p>\n";
+        }
+    } else {
+        echo "<p>No jobs are currently queued, running or completing.</p>\n";
+    }
   return;
 }
 
@@ -85,12 +104,18 @@ if ( $count_jobs == 1 )
   $strjob     = "job";
 }
 
-if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
-  $content .= "<p>There $is_are $count_jobs <b>$dbname</b> $strjob" .
-              " queued, running, or completing.</p>\n";
-else
+if ( $_SESSION['userlevel'] < 4 ) {
+    if ( $_SESSION['userlevel'] == 2 ) {
+        $content .= "<p>You have $count_jobs <b>$dbname</b> $strjob" .
+            " queued, running or completing.</p>\n";
+    } else {
+        $content .= "<p>There $is_are $count_jobs <b>$dbname</b> $strjob" .
+            " queued, running or completing.</p>\n";
+    }
+} else {
   $content .= "<p>There $is_are $count_jobs $strjob" .
-              " queued, running, or completing.</p>\n";
+      " queued, running or completing.</p>\n";
+}
 
 $content .= "<table>\n";
 $content .= "<tr><td colspan='5' class='decoration'><hr/></td></tr>\n";

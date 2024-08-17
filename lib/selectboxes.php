@@ -42,18 +42,24 @@ function userlevel_select( $userlevel = 0 )
 {
   // Create userlevel drop down
   $myUserlevel = $_SESSION['userlevel'];
-  $ulimit = ( $myUserlevel >= 3 ) ? $myUserlevel : 0;
 
-  if ( $userlevel > $myUserlevel )
-  {
+  ## disable for user level 1,2,3
+  if ( $myUserlevel > 0 && $myUserlevel < 4 )  {
      $text = "<input type='hidden' name='userlevel' value='$userlevel' /> " .
              "<input type='text' value='$userlevel' disabled='disabled' />\n";
      return $text;
   }
 
+  $ustart = 1;
+  $uend   = 3;
+
+  if ( $myUserlevel >= 4 ) {
+      $ustart = 0;
+      $uend   = 4;
+  }
+
   $text = "<select name='userlevel'>\n";
-  for ( $x = 0; $x <= $ulimit; $x++ )
-  {
+  for ( $x = $ustart; $x <= $uend; ++$x ) {
     $selected = ( $userlevel == $x ) ? " selected='selected'" : "";
     $text    .= "  <option value='$x'$selected>$x</option>\n";
   }
@@ -102,8 +108,13 @@ function lab_select( $link, $select_name, $current_lab = NULL )
 // Function to create a dropdown for available personIDs
 function person_select( $link, $select_name, $current_ID = NULL )
 {
+  $querywhere = "";
+  if ( $_SESSION['userlevel'] < 4 ) {
+      $querywhere = "WHERE userlevel <= 3 ";
+  }
+
   $query  = "SELECT personID, lname, fname " .
-            "FROM people " .
+            "FROM people $querywhere" .
             "ORDER BY lname, fname ";
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />" . mysqli_error($link) );

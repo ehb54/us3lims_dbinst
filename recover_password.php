@@ -10,6 +10,15 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 
+if ( !isset( $enable_PAM ) ) {
+  $enable_PAM = false;
+}
+
+if ( $enable_PAM ) {
+   include 'login.php';
+   exit();
+}
+
 $email_address = stripslashes( $_POST['email_address'] );
 
 if ( ! $email_address )

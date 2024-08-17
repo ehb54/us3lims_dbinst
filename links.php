@@ -7,16 +7,29 @@
  *
  */
 
+if ( !isset( $enable_PAM ) ) {
+  $enable_PAM = false;
+}
+
 $userlevel = ( isset( $_SESSION['userlevel'] ) ) ? $_SESSION['userlevel'] : -1;
 
+$change_my_info_if_not_PAM =
+  $enable_PAM && $_SESSION['authenticatePAM'] == true
+  ? ""
+  : "<a href='https://$org_site/profile.php?edit=12'>Change My Info</a>"
+  ;
+
+if ( $userlevel > 0 ) {
 $projects_menu = <<<HTML
   <h4>Project</h4>
   <a href='https://$org_site/view_projects.php'>Projects</a>
-  <a href='https://$org_site/edit_images.php'>Images</a>
+  <!-- <a href='https://$org_site/edit_images.php'>Edit Image</a> -->
+  <a href='https://$org_site/supporting_files.php'>Supporting Files</a>
   <a href='https://$org_site/view_reports.php'>Reports</a>
   <a href='https://$org_site/data_sharing.php'>Sharing</a>
 
 HTML;
+}
 
 $analysis_menu = <<<HTML
   <h4>Analysis</h4>
@@ -39,7 +52,7 @@ HTML;
 
 $general_menu = <<<HTML
   <h4>General</h4>
-  <a href='https://$org_site/profile.php?edit=12'>Change My Info</a>
+  $change_my_info_if_not_PAM
   <a href='https://$org_site/view_database_info.php'>Database Login Info</a>
   <a href="partners.php">Partners</a>
   <a href='contacts.php'>Contacts</a>
@@ -51,7 +64,7 @@ HTML;
 
 $general_menu_1 = <<<HTML
   <h4>General</h4>
-  <a href='https://$org_site/profile.php?edit=12'>Change My Info</a>
+  $change_my_info_if_not_PAM
   <a href="partners.php">Partners</a>
   <a href='contacts.php'>Contacts</a>
   <a href='mailto:$admin_email'>Webmaster</a>
@@ -131,6 +144,7 @@ else if ( $userlevel == 0 )  // level 0 = regular user
   $sidebar_menu = <<<HTML
   <h4>Navigation</h4>
   <a href="https://$org_site/index.php">Welcome!</a>
+  <a href='https://$org_site/admin_links.php'>Admin Info</a>
   $projects_menu
   $general_menu_1
 

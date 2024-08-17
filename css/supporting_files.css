@@ -1,0 +1,203 @@
+
+#sf_content{
+  float: left;
+  border: none;
+  margin: 5px;
+  width: 800px;
+  padding: 0px;
+  box-sizing: border-box;
+  /* text-align: left; */
+}
+
+#sf_content * {
+  box-sizing: border-box;
+}
+
+.sf_item{
+  margin: 0px;
+  padding: 0px;
+  border: none;
+}
+
+#sf_content label{
+  display: inline-block;
+  background-color: black;
+  color: white;
+  font-size: 13px;
+  font-weight: bold;
+  width: 90px;
+  text-align: right;
+  padding: 4px;
+  margin: 0px;
+}
+
+.sf_item button {
+  color: black;
+  font-size: 13px;
+  font-weight: normal;
+  padding: 4px;
+  margin: 0px;
+  width: 100px;
+  /* border-width: 1px; */
+}
+
+#sf_content select {
+  border: none;
+  padding: 5px;
+  width: 300px;
+}
+
+#sf_edit_label {
+  background-color: white;
+  color: black;
+  font-size: 14px;
+  font-weight: bold;
+  width: 300px;
+  /* text-align: left; */
+}
+
+#sf_navbar {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: center;
+  }
+
+.sf_navbar_item {
+    background-color: #D3D3D3;
+    color: black;
+    font-size: 14px;
+    text-align: center;
+    width: 150px;
+    font-weight: bold;
+    margin: 0px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+#sf_view:hover, #sf_new:hover {
+  background-color: green;
+  color: black;
+}
+
+#sf_view.active, #sf_new.active {
+  background-color: black;
+  color: white;
+}
+
+#sf_filename {
+  background-color: white;
+  border: 0px solid white;
+  padding: 0px;
+  width: 300px;
+  outline: none;
+  margin-left: 1px;
+
+}
+
+#sf_desc {
+  background-color: #F8F8FF;
+  border: 0px solid white;
+  padding: 1px;
+  width: 508px;
+  height: 25px;
+}
+
+#sf_txt_class, #sf_txt_subclass {
+  background-color: white;
+  border: 0px solid white;
+  width: 300px;
+  padding-top: 5px;
+  margin-left: 3px;
+  outline: none;
+} 
+
+#sf_sel_class , #sf_sel_subclass{
+  display: none;
+  margin-left: 3px;
+  height: 25px;
+}
+
+#sf_browse {
+  /* width: 80px; */
+  overflow: hidden;
+  display: none;
+}
+
+#sf_browse.active {
+  display: inline-block;
+}
+
+#sf_txt_class, #sf_txt_subclass, #sf_edit_item {
+  display: none;
+}
+
+#sf_sel_file_item {
+  display: none;
+}
+
+#sf_sel_class.active, #sf_txt_class.active, #sf_edit_item.active,
+#sf_sel_subclass.active, #sf_txt_subclass.active, #sf_sel_file_item.active {
+  display: block;
+}
+
+#sf_class_item, #sf_subclass_item {
+  display: flex;
+  align-items:center;
+}
+
+#sf_status_button_item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#sf_status {
+  background-color: white;
+  color: black;
+  width: 500px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: left;
+  outline: none;
+  border: none;
+}
+
+#sf_button_item {
+  display: flex;
+  align-items: center;
+  justify-content: right;
+}
+
+#sf_button_item button {
+  margin: 0px 3px;
+  display: none;
+}
+
+#sf_button_item button.active {
+  margin: 0px 3px;
+  display: block;
+}
+
+#image_viewer, #pdf_viewer {
+  display: none;
+  max-height: 600px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#txt_viewer {
+  display: none;
+  overflow-y: scroll;
+  height: 80%;
+  width: 80%;
+  max-height: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#image_viewer.active, #pdf_viewer.active, #txt_viewer.active {
+  display: block;
+}
