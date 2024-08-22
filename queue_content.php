@@ -31,7 +31,7 @@ if ( ! $globaldb )
 $is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
 
 $query  = "SELECT gfacID, us3_db, cluster, status, metaschedulerClusterExecuting FROM analysis ";
-if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 )
+if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 ) {
   $query .= "WHERE us3_db = '$dbname' ";
 }
 
