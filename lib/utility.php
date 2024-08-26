@@ -210,7 +210,9 @@ function makeRandomPassword() {
   srand( (double)microtime() * 1234567 ); 
   $i    = 0;
   $pass = '';
-  while ( $i <= 7 ) 
+  // length of random password
+  $max_len = rand(6, 12);
+  while ( $i <= $max_len )
   {
     $num  = rand() % 33;
     $tmp  = substr($salt, $num, 1);
