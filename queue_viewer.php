@@ -198,11 +198,16 @@ function updateLimsStatus( $gfacID, $status, $message )
 
   // Get database name
   $query  = "SELECT us3_db FROM analysis " .
-            "WHERE gfacID = '$gfacID'";
-  $result = mysqli_query( $gLink, $query );
+            "WHERE gfacID = ?";
+  $stmt = mysqli_prepare( $gLink, $query );
+  $stmt->bind_param( 's', $gfacID );
+  $stmt->execute();
+  $result = $stmt->get_result();
   if ( ! $result ) return;
   if ( mysqli_num_rows( $result ) == 0 ) return;
   list( $db ) = mysqli_fetch_array( $result );
+  $stmt->close();
+  $result->close();
   mysqli_close( $gLink );
 
   // Using credentials that will work for all databases
@@ -211,10 +216,15 @@ function updateLimsStatus( $gfacID, $status, $message )
   if ( ! $us3link ) return false;
 
   $query  = "UPDATE HPCAnalysisResult SET " .
-            "queueStatus = '$status', " .
-            "lastMessage = '" . mysqli_real_escape_string($us3link,$message) . "' " .
-            "WHERE gfacID = '$gfacID' ";
-  mysqli_query( $us3link, $query );
+            "queueStatus = ?, " .
+            "lastMessage = ? " .
+            "WHERE gfacID = ? ";
+  $args = [$status, mysqli_real_escape_string($us3link,$message), $gfacID];
+  $stmt = mysqli_prepare( $us3link, $query );
+  $stmt->bind_param( 'sss', ...$args );
+  $stmt->execute()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
+  $stmt->close();
 
   mysqli_close( $us3link );
 }
@@ -235,11 +245,17 @@ function updateGFACStatus( $gfacID, $status, $message )
   $status = strtoupper( $status );
 
   // Update gfac status
+  // language=MariaDB
   $query  = "UPDATE analysis " .
-            "SET status = '$status', " .
-            "queue_msg = '$message' " .
-            "WHERE gfacID = '$gfacID' ";
-  mysqli_query( $gLink, $query );
+            "SET status = ?, " .
+            "queue_msg = ? " .
+            "WHERE gfacID = ? ";
+  $args = [ $status, $message, $gfacID ];
+  $stmt = mysqli_prepare( $gLink, $query );
+  $stmt->bind_param( 'sss', ...$args );
+  $stmt->execute()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
+  $stmt->close();
   mysqli_close( $gLink );
 }
 

@@ -161,20 +161,29 @@ function do_delete($link)
 
   if ( $enable_PAM ) {
       $query = "SELECT userNamePAM FROM people " .
-          "WHERE personID = $personID " .
+          "WHERE personID = ? " .
           "AND email NOT IN ( '$admins' ) ";
-      $result = mysqli_query($link, $query)
-          or die("Query failed : $query<br />\n" . mysqli_error($link));
+      $stmt = $link->prepare( $query );
+      $stmt->bind_param( 'i', $personID );
+      $stmt->execute()
+            or die( "Query failed : $query<br />\n" . $stmt->error );
+      $result = $stmt->get_result()
+              or die( "Query failed : $query<br />\n" . $stmt->error );
 
       $row  = mysqli_fetch_array($result, MYSQLI_ASSOC);
       $userNamePAM = $row['userNamePAM'];
+      $result->close();
+      $stmt->close();
   }
 
   $query = "DELETE FROM people " .
-           "WHERE personID = $personID " .
+           "WHERE personID = ? " .
            "AND email NOT IN ( '$admins' ) ";
-  mysqli_query($link, $query)
-    or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $personID );
+  $stmt->execute()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
+  $stmt->close();
 
   if ( $enable_PAM ) {
     $_SESSION['message'] = grant_integrity( $userNamePAM, false, 0 );
@@ -204,12 +213,18 @@ function do_update($link)
   if ( $enable_PAM ) {
       $query  = "SELECT userNamePAM " .
           "FROM people " .
-          "WHERE personID = $personID ";
-      $result = mysqli_query($link, $query)
-          or die("Query failed : $query<br />\n" . mysqli_error($link));
+          "WHERE personID = ? ";
+      $stmt = $link->prepare( $query );
+      $stmt->bind_param( 'i', $personID );
+      $stmt->execute()
+            or die( "Query failed : $query<br />\n" . $stmt->error );
+      $result = $stmt->get_result()
+              or die( "Query failed : $query<br />\n" . $stmt->error );
       
       $row  = mysqli_fetch_array($result, MYSQLI_ASSOC);
       $last_userNamePAM = $row['userNamePAM'];
+      $result->close();
+      $stmt->close();
   }
 
   // Get cluster information
@@ -239,47 +254,55 @@ function do_update($link)
 
   if ( empty($message) )
   {
-
+    // language=MariaDB
     $query = "UPDATE people " .
-             "SET lname             = '$lname',            " .
-             "fname                 = '$fname',            " .
-             "organization          = '$organization',     " .
-             "address               = '$address',          " .
-             "city                  = '$city',             " .
-             "state                 = '$state',            " .
-             "zip                   = '$zip',              " .
-             "country               = '$country',          " .
-             "phone                 = '$phone',            " .
-             "email                 = '$email',            " .
-             "activated             = '$activated',        " .
-             "userlevel             = '$userlevel',        " .
-             "advancelevel          = '$advancelevel',     " .
-             "clusterAuthorizations = '$clusterAuth',      " .
-             "gmpReviewerRole       = '$gmpReviewerRole',  " .
-             "authenticatePAM       = $authenticatePAM,    " .
-             "userNamePAM           = '$userNamePAM'       " .
-             "WHERE personID  =  $personID         ";
-
-    mysqli_query($link, $query)
-          or die("Query failed : $query<br />\n" . mysqli_error($link));
+             "SET lname             = ?,   " .
+             "fname                 = ?,   " .
+             "organization          = ?,   " .
+             "address               = ?,   " .
+             "city                  = ?,   " .
+             "state                 = ?,   " .
+             "zip                   = ?,   " .
+             "country               = ?,   " .
+             "phone                 = ?,   " .
+             "email                 = ?,   " .
+             "activated             = ?,   " .
+             "userlevel             = ?,   " .
+             "advancelevel          = ?,   " .
+             "clusterAuthorizations = ?,   " .
+             "gmpReviewerRole       = ?,  " .
+             "authenticatePAM       = ?,   " .
+             "userNamePAM           = ?   " .
+             "WHERE personID  =  ?         ";
+    $args = [ $lname, $fname, $organization, $address, $city, $state, $zip, $country, $phone, $email, $activated,
+        $userlevel, $advancelevel, $clusterAuth, $gmpReviewerRole, $authenticatePAM, $userNamePAM, $personID ];
+    $stmt = $link->prepare( $query );
+    $stmt->bind_param( 'ssssssssssiiissisi', ...$args );
+    $stmt->execute()
+          or die( "Query failed : $query<br />\n" . $stmt->error );
+    $stmt->close();
 
     // Now delete operator permissions, because we're going to redo it
     $query  = "DELETE FROM permits " .
-              "WHERE personID = $personID ";
+              "WHERE personID = ? ";
+    $stmt = $link->prepare( $query );
+    $stmt->bind_param( 'i', $personID );
+    $stmt->execute()
+          or die( "Query failed : $query<br />\n" . $stmt->error );
+    $stmt->close();
 
-    mysqli_query($link, $query)
-          or die("Query failed : $query<br />\n" . mysqli_error($link));
+    $query  = "INSERT INTO permits " .
+        "SET instrumentID = ?, " .
+        "personID         = ? ";
+    $stmt = $link->prepare( $query );
+
 
     // Now add the new ones
     foreach ( $instrumentIDs as $instrumentID )
     {
-      $query  = "INSERT INTO permits " .
-                "SET instrumentID = $instrumentID, " .
-                "personID         = $personID ";
-
-      mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
-
+      $stmt->bind_param( 'ii', $instrumentID, $personID );
+      $stmt->execute()
+            or die( "Query failed : $query<br />\n" . $stmt->error );
     }
 
     if ( $enable_PAM ) {
@@ -320,29 +343,33 @@ function do_create($link)
     $userlevel = 1; // default for new users
 
     $query = "INSERT INTO people " .
-             "SET lname        = '$lname',           " .
-             "fname            = '$fname',           " .
-             "personGUID       = '$guid',            " .
-             "organization     = '$organization',    " .
-             "address          = '$address',         " .
-             "city             = '$city',            " .
-             "state            = '$state',           " .
-             "zip              = '$zip',             " .
-             "country          = '$country',         " .
-             "phone            = '$phone',           " .
-             "email            = '$email',           " .
-             "userlevel        = $userlevel,         " .
-             "advancelevel     = 0,                  " .
-             "activated        = 1,                  " .
-             "gmpReviewerRole  = '$gmpReviewerRole', " .
-             "authenticatePAM  = $authenticatePAM,  " .
-             "userNamePAM      = '$userNamePAM',     " .
+             "SET lname        = ?, " .
+             "fname            = ?, " .
+             "personGUID       = ?, " .
+             "organization     = ?, " .
+             "address          = ?, " .
+             "city             = ?, " .
+             "state            = ?, " .
+             "zip              = ?, " .
+             "country          = ?, " .
+             "phone            = ?, " .
+             "email            = ?, " .
+             "userlevel        = ?, " .
+             "advancelevel     = 0, " .
+             "activated        = 1, " .
+             "gmpReviewerRole  = ?, " .
+             "authenticatePAM  = ?," .
+             "userNamePAM      = ?, " .
              "password         = '__invalid__',      " .
              "signup           = NOW()               ";    // use the default cluster auths
-
-    mysqli_query($link, $query)
-          or die("Query failed : $query<br />\n" . mysqli_error($link));
-    $new = mysqli_insert_id($link);
+    $args = [ $lname, $fname, $guid, $organization, $address, $city, $state, $zip, $country, $phone, $email, $userlevel,
+        $gmpReviewerRole, $authenticatePAM, $userNamePAM ];
+    $stmt = $link->prepare( $query );
+    $stmt->bind_param( 'sssssssssssisss', ...$args );
+    $stmt->execute()
+          or die("Query failed : $query<br />\n" . $stmt->error);
+    $new = $stmt->insert_id;
+    $stmt->close();
 
     if ( $enable_PAM ) {
        $_SESSION['message'] = grant_integrity( $userNamePAM, $authenticatePAM, $userlevel );
@@ -376,9 +403,13 @@ function display_record($link)
             "activated, userlevel, advancelevel, clusterAuthorizations, " .
             "gmpReviewerRole, authenticatePAM, userNamePAM " .
             "FROM people " .
-            "WHERE personID = $personID ";
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+            "WHERE personID = ? ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $personID );
+  $stmt->execute()
+  or die("Query failed : $query<br />\n" . $stmt->error);
+  $result = $stmt->get_result()
+  or die("Query failed : $query<br />\n" . $stmt->error);
 
   $row    = mysqli_fetch_array($result, MYSQLI_ASSOC);
 
@@ -386,6 +417,8 @@ function display_record($link)
   {
     $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( $value ));
   }
+  $result->close();
+  $stmt->close();
 
   $userlevel             = $row['userlevel'];    // 0 translates to null
   $advancelevel          = $row['advancelevel']; // 0 translates to null
@@ -399,15 +432,21 @@ function display_record($link)
   // Operator permissions
   $query  = "SELECT name " .
             "FROM permits, instrument " .
-            "WHERE permits.personID = $personID " .
+            "WHERE permits.personID = ? " .
             "AND permits.instrumentID = instrument.instrumentID ";
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $personID );
+  $stmt->execute()
+        or die("Query failed : $query<br />\n" . $stmt->error);
+  $result = $stmt->get_result()
+          or die("Query failed : $query<br />\n" . $stmt->error);
 
   $instruments = array();
   while ( list( $instName ) = mysqli_fetch_array( $result ) )
     $instruments[] = $instName;
   $instruments_text = implode( ", ", $instruments );
+  $result->close();
+  $stmt->close();
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
@@ -563,9 +602,14 @@ function edit_record($link)
             "activated, userlevel, advancelevel, clusterAuthorizations, " .
             "gmpReviewerRole, authenticatePAM, userNamePAM " .
             "FROM people " .
-            "WHERE personID = $personID ";
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+            "WHERE personID = ? ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $personID );
+
+  $stmt->execute()
+          or die("Query failed : $query<br />\n" . $stmt->error);
+  $result = $stmt->get_result()
+          or die("Query failed : $query<br />\n" . $stmt->error);
 
   $row = mysqli_fetch_array($result);
 
@@ -585,6 +629,8 @@ function edit_record($link)
   $gmpReviewerRole =                                 $row['gmpReviewerRole'];
   $authenticatePAM =                                 $row['authenticatePAM'];
   $userNamePAM     =                                 $row['userNamePAM'];
+  $result->close();
+  $stmt->close();
 
   // Create dropdowns
   $userlevel_text    = userlevel_select( $userlevel );
@@ -624,12 +670,19 @@ function edit_record($link)
   // A list of current user operator permissions
   $query  = "SELECT instrumentID " .
             "FROM permits " .
-            "WHERE personID = $personID " ;
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+            "WHERE personID = ? " ;
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $personID );
+  $stmt->execute()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result()
+          or die( "Query failed : $query<br />\n" . $stmt->error );
+
   $instrAuth = array();
   while ( list( $instrumentID ) = mysqli_fetch_array( $result ) )
     $instrAuth[] = $instrumentID;
+  $stmt->close();
+  $result->close();
   $instrAuth_text = implode( ":", $instrAuth );
 
   foreach ( $instruments as $instrumentID => $instName )

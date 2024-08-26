@@ -79,14 +79,18 @@ function do_prior( $link )
 {
   $ID = $_SESSION['id'];
   $projectID = $_POST['projectID'];
-
+  // language=MariaDB
   $query  = "SELECT j.projectID " .
             "FROM project j, projectPerson p " .
-            "WHERE p.personID = $ID " .
+            "WHERE p.personID = ? " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysqli_query( $link, $query )
-      or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $ID );
+  $stmt->execute()
+        or die ("Query failed : $query<br/>" . $stmt->error);
+  $result = $stmt->get_result()
+          or die ("Query failed : $query<br/>" . $stmt->error);
 
   // Find prior record
   $current = null;
@@ -96,6 +100,8 @@ function do_prior( $link )
     $prior = $current;
     list( $current ) = mysqli_fetch_array( $result );
   }
+  $result->close();
+  $stmt->close();
 
   $redirect = ($prior == null) ? "" : "?ID=$prior";
   header("Location: $_SERVER[PHP_SELF]$redirect");
@@ -107,20 +113,26 @@ function do_next( $link )
 {
   $ID = $_SESSION['id'];
   $projectID = $_POST['projectID'];
-
+  // language=MariaDB
   $query  = "SELECT j.projectID " .
             "FROM project j, projectPerson p " .
-            "WHERE p.personID = $ID " .
+            "WHERE p.personID = ? " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description ";
-  $result = mysqli_query( $link, $query )
-      or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $ID );
+  $stmt->execute()
+        or die ("Query failed : $query<br/>" . $stmt->error);
+  $result = $stmt->get_result()
+          or die ("Query failed : $query<br/>" . $stmt->error);
 
   // Find next record
   $next = null;
   while ($projectID != $next)
     list($next) = mysqli_fetch_array( $result );
   list($next) = mysqli_fetch_array( $result );
+  $result->close();
+  $stmt->close();
 
   $redirect = ($next == null) ? "?ID=$projectID" : "?ID=$next";
   header("Location: $_SERVER[PHP_SELF]$redirect");
@@ -141,11 +153,16 @@ function do_new( $link )
   $new = mysqli_insert_id( $link );
 
   // Add the ownership record
+  // language=MariaDB
   $query  = "INSERT INTO projectPerson SET " .
-            "projectID = $new, " .
-            "personID  = $ID ";
-  mysqli_query( $link, $query )
-        or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+            "projectID = ?, " .
+            "personID  = ? ";
+  $args = [ $new, $ID ];
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'ii', ...$args );
+  $stmt->execute()
+        or die ("Query failed : $query<br/>" . $stmt->error);
+  $stmt->close();
 
   header("Location: $_SERVER[PHP_SELF]?edit=$new");
   exit();
@@ -159,15 +176,22 @@ function do_update( $link )
 
   // Since we always send out emails here, and the user could press the
   //  Update button even though nothing has changed, let's check
+  // language=MariaDB
   $query  = "SELECT goals, molecules, purity, expense, " .
             "bufferComponents, saltInformation, AUC_questions, " .
             "expDesign, notes, description " .
             "FROM project " .
-            "WHERE projectID = $projectID ";
-  $result = mysqli_query( $link, $query )
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+            "WHERE projectID = ? ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $projectID );
+  $stmt->execute()
+        or die ("Query failed : $query<br/>" . $stmt->error);
+  $result = $stmt->get_result()
+          or die ("Query failed : $query<br/>" . $stmt->error);
 
   $row    = mysqli_fetch_array( $result, MYSQLI_ASSOC );
+  $result->close();
+  $stmt->close();
 
   // Create local variables
   foreach ($row as $key => $value)
@@ -224,22 +248,27 @@ HTML;
   $expDesign           =        addslashes(htmlentities($_POST['expDesign']));
   $notes               =        addslashes(htmlentities($_POST['notes']));
   $description         =        addslashes(htmlentities($_POST['description']));
-
+  // language=MariaDB
   $query = "UPDATE project " .
-           "SET goals  = '$goals', " .
-           "molecules  = '$molecules', " .
-           "purity  = '$purity', " .
-           "expense  = '$expense', " .
-           "bufferComponents  = '$bufferComponents', " .
-           "saltInformation  = '$saltInformation', " .
-           "AUC_questions  = '$AUC_questions', " .
-           "expDesign = '$expDesign', " .
-           "notes  = '$notes', " .
-           "description  = '$description' " .
-           "WHERE projectID = $projectID ";
+           "SET goals  = ?, " .
+           "molecules  = ?, " .
+           "purity  = ?, " .
+           "expense  = ?, " .
+           "bufferComponents  = ?, " .
+           "saltInformation  = ?, " .
+           "AUC_questions  = ?, " .
+           "expDesign = ?, " .
+           "notes  = ?, " .
+           "description  = ? " .
+           "WHERE projectID = ? ";
+  $args = [ $goals, $molecules, $purity, $expense, $bufferComponents,
+            $saltInformation, $AUC_questions, $expDesign, $notes, $description, $projectID ];
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'ssssssssssi', ...$args );
+  $stmt->execute()
+        or die("Query failed : $query<br />\n" . $stmt->error);
+  $stmt->close();
 
-  mysqli_query( $link, $query )
-    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   // The project is new or has changed, so let's mail the user
   global $org_name, $org_site, $dbname, $admin_email;
@@ -447,20 +476,28 @@ function get_id( $link )
   $ID = $_SESSION['id'];
 
   // We don't know which record, so just find the first one
+    // language=MariaDB
   $query  = "SELECT projectID " .
             "FROM project j, projectPerson p " .
-            "WHERE p.personID = $ID " .
+            "WHERE p.personID = ? " .
             "AND p.projectID = j.projectID " .
             "ORDER BY description " .
             "LIMIT 1 ";
-  $result = mysqli_query( $link, $query )
-      or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $ID );
+  $stmt->execute() or die ("Query failed : $query<br/>" . $stmt->error);
+  $result = $stmt->get_result() or die ("Query failed : $query<br/>" . $stmt->error);
+
 
   if ( mysqli_num_rows( $result ) == 1 )
   {
     list($projectID) = mysqli_fetch_array( $result );
+    $result->close();
+    $stmt->close();
     return( $projectID );
   }
+  $result->close();
+    $stmt->close();
 
   // If we're here, there aren't any records
 echo<<<HTML

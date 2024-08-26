@@ -21,10 +21,16 @@ abstract class File_writer
     global $link;
     // Get the rest of the information we need
     $query  = "SELECT HPCAnalysisRequestGUID FROM HPCAnalysisRequest " .
-              "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-    $result = mysqli_query( $link, $query )
+              "WHERE HPCAnalysisRequestID = ? ";
+    $stmt = mysqli_prepare( $link, $query );
+    $stmt->bind_param( "i", $HPCAnalysisRequestID );
+    $stmt->execute();
+    $result = $stmt->get_result()
               or die( "Query failed : $query<br />" . mysqli_error($link));
     list( $HPCAnalysisRequestGUID ) = mysqli_fetch_array( $result );
+    $result->close();
+    $stmt->close();
+
 
     // First create a directory with a unique name
     if ( ! ( $current_dir = $this->create_dir( $HPCAnalysisRequestGUID ) ) )
@@ -329,10 +335,16 @@ abstract class File_writer
     {
       // auc files
       $query  = "SELECT data, experimentID FROM rawData " .
-                "WHERE rawDataID = {$dataset['rawDataID']} ";
-      $result = mysqli_query( $link, $query )
+                "WHERE rawDataID = ? ";
+      $stmt = mysqli_prepare( $link, $query );
+      $stmt->bind_param( "i", $dataset['rawDataID'] );
+      $stmt->execute();
+
+      $result = $stmt->get_result()
                 or die( "Query failed : $query<br />" . mysqli_error($link));
       list( $aucdata, $expID ) = mysqli_fetch_array( $result );
+      $result->close();
+      $stmt->close();
       if ( $expID != $experID )
       {
         $expIDs[$dataset_id] = $expID;
@@ -344,10 +356,15 @@ abstract class File_writer
 
       // edit profile
       $query  = "SELECT data FROM editedData " .
-                "WHERE editedDataID = {$dataset['editedDataID']} ";
-      $result = mysqli_query( $link, $query )
+                "WHERE editedDataID = ? ";
+      $stmt = mysqli_prepare( $link, $query );
+      $stmt->bind_param( "i", $dataset['editedDataID'] );
+      $stmt->execute();
+      $result = $stmt->get_result()
                 or die( "Query failed : $query<br />" . mysqli_error($link));
       list( $edit_profile ) = mysqli_fetch_array( $result );
+      $result->close();
+      $stmt->close();
       if ( ! $this->create_file( $dataset['edit'], $dir, $edit_profile ) )
         return false;
       $filenames[$dataset_id]['edit'] = $dataset['edit'];
@@ -371,10 +388,15 @@ abstract class File_writer
       foreach ( $dataset['noiseIDs'] as $ndx => $noiseID )
       {
         $query  = "SELECT noiseType, xml FROM noise " .
-                  "WHERE noiseID = $noiseID ";
-        $result = mysqli_query( $link, $query )
+                  "WHERE noiseID = ? ";
+        $stmt = mysqli_prepare( $link, $query );
+        $stmt->bind_param( "i", $noiseID );
+        $stmt->execute();
+        $result = $stmt->get_result()
                   or die( "Query failed : $query<br />" . mysqli_error($link));
         list( $type, $vector ) = mysqli_fetch_array( $result );
+        $result->close();
+        $stmt->close();
         if ( ! ($noise_file = $this->my_tmpname( ".$type", '', $dir ) ) )
           return false;
         $noise_file = basename( $noise_file );
@@ -389,10 +411,13 @@ abstract class File_writer
         $expID   = $expIDs[$dataset_id];
         $query   = "SELECT filename, definitions, data, length(data) " .
                    "FROM timestate " .
-                   "WHERE experimentID = $expID ";
-        $result  = mysqli_query( $link, $query )
+                   "WHERE experimentID = ? ";
+        $stmt = mysqli_prepare( $link, $query );
+        $stmt->bind_param( "i", $expID );
+        $stmt->execute();
+        $result  = $stmt->get_result()
                    or die( "Query failed : $query<br />" . mysqli_error($link));
-        if ( mysqli_num_rows( $result ) > 0 )
+        if ( $result->num_rows > 0 )
         { // TimeState DB record exists:  write the tmst,def files
           list( $tmst_fn, $def, $data ) = mysqli_fetch_array( $result );
 
@@ -405,6 +430,8 @@ abstract class File_writer
               $filenames[$dataset_id]['tdef_fn'] = $tdef_fn;
           } // END: .tmst file write succeeded
         } // END: TimeState record for experiment exists
+        $result->close();
+        $stmt->close();
       } // END: expID for dataset is set
     } // END:  datasets loop
 
@@ -414,10 +441,15 @@ abstract class File_writer
       $CG_modelID = $job['job_parameters']['CG_modelID'];
       $query  = "SELECT description, xml " .
                 "FROM model " .
-                "WHERE modelID = $CG_modelID ";
-      $result = mysqli_query( $link, $query )
+                "WHERE modelID = ? ";
+      $stmt = mysqli_prepare( $link, $query );
+      $stmt->bind_param( "i", $CG_modelID );
+      $stmt->execute();
+      $result = $stmt->get_result()
                 or die( "Query failed : $query<br />" . mysqli_error($link));
       list( $fn, $contents ) = mysqli_fetch_array( $result );
+      $result->close();
+      $stmt->close();
       if ( ! $this->create_file( $fn, $dir, $contents ) )
         return false;
       $filenames[0]['CG_model'] = $fn;  // put it in with other dataset[0] files so
@@ -431,10 +463,15 @@ abstract class File_writer
       $DC_modelID = $job['job_parameters']['DC_modelID'];
       $query  = "SELECT description, xml " .
                 "FROM model " .
-                "WHERE modelID = $DC_modelID ";
-      $result = mysqli_query( $link, $query )
+                "WHERE modelID = ? ";
+      $stmt = mysqli_prepare( $link, $query );
+      $stmt->bind_param( "i", $DC_modelID );
+      $stmt->execute();
+      $result = $stmt->get_result()
                 or die( "Query failed : $query<br />" . mysqli_error($link));
       list( $fn, $contents ) = mysqli_fetch_array( $result );
+      $result->close();
+      $stmt->close();
       if ( ! $this->create_file( $fn, $dir, $contents ) )
         return false;
       $filenames[0]['DC_model'] = $fn;  // put it in with other dataset[0] files so
@@ -676,10 +713,15 @@ class File_2DSA_CG extends File_writer
     $CG_modelID = $parameters['CG_modelID'];
 
     $query  = "SELECT description FROM model " .
-              "WHERE  modelID = $CG_modelID ";
-    $result = mysqli_query( $link, $query )
+              "WHERE  modelID = ? ";
+    $stmt = mysqli_prepare( $link, $query );
+    $stmt->bind_param( "i", $CG_modelID );
+    $stmt->execute();
+    $result = $stmt->get_result()
               or die( "Query failed : $query<br />" . mysqli_error($link));
     list( $fn ) = mysqli_fetch_array( $result );
+    $result->close();
+    $stmt->close();
 
     $xml->startElement( 'jobParameters' );
       $xml->startElement( 'CG_model' );
@@ -844,10 +886,15 @@ class File_DMGA extends File_writer
     $DC_modelID = $parameters['DC_modelID'];
 
     $query  = "SELECT description FROM model " .
-              "WHERE  modelID = $DC_modelID ";
-    $result = mysqli_query( $link, $query )
+              "WHERE  modelID = ? ";
+    $stmt = mysqli_prepare( $link, $query );
+    $stmt->bind_param( "i", $DC_modelID );
+    $stmt->execute();
+    $result = $stmt->get_result()
               or die( "Query failed : $query<br />" . mysqli_error($link));
     list( $fn ) = mysqli_fetch_array( $result );
+    $result->close();
+    $stmt->close();
 
     $xml->startElement( 'jobParameters' );
       $xml->startElement( 'DC_model' );

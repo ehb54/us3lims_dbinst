@@ -47,38 +47,53 @@ abstract class HPC_analysis
     // Get any remaining information we need
     // investigatorGUID
     $query  = "SELECT personGUID FROM people " .
-              "WHERE personID = {$_SESSION['id']} ";
-    $result = mysqli_query( $link, $query )
+              "WHERE personID = ? ";
+    $stmt = mysqli_prepare( $link, $query );
+    $stmt->bind_param("i", $_SESSION['id'] );
+    $stmt->execute();
+    $result = $stmt->get_result()
               or die( "Query failed : $query<br />" . mysqli_error($link));
     list( $investigatorGUID ) = mysqli_fetch_array( $result );
+    $result->close();
+    $stmt->close();
 
     // submitterGUID
     $query  = "SELECT personGUID FROM people " .
-              "WHERE personID = {$_SESSION['loginID']} ";
-    $result = mysqli_query( $link, $query )
+              "WHERE personID = ? ";
+    $stmt = mysqli_prepare( $link, $query );
+    $stmt->bind_param("i", $_SESSION['loginID'] );
+    $stmt->execute();
+    $result = $stmt->get_result()
               or die( "Query failed : $query<br />" . mysqli_error($link));
     list( $submitterGUID ) = mysqli_fetch_array( $result );
-
+    $result->close();
+    $stmt->close();
     $guid = uuid();
     $analType = $job['method'];
     if ( isset( $job['analType'] ) )
       $analType = $job['analType'];
     // What about $job['cluster']['shortname'] and $job['cluster']['queue']?
     $query  = "INSERT INTO HPCAnalysisRequest SET " .
-              "HPCAnalysisRequestGUID = '$guid', " .
-              "investigatorGUID = '$investigatorGUID', " .
-              "submitterGUID = '$submitterGUID', " .
-              "email = '{$job['database']['submitter_email']}', " .
-              "experimentID = '{$job['job_parameters']['experimentID']}', " .
+              "HPCAnalysisRequestGUID = ?, " .
+              "investigatorGUID = ?, " .
+              "submitterGUID = ?, " .
+              "email = ?, " .
+              "experimentID = ?, " .
               "submitTime =  now(), " .
-              "clusterName = '{$job['cluster']['name']}', " .
-              "analType = '$analType', " .
-              "method = '{$job['method']}' " ;
-    mysqli_query( $link, $query )
-          or die( "Query failed : $query<br />" . mysqli_error($link));
+              "clusterName = ?, " .
+              "analType = ?, " .
+              "method = ? " ;
+    $stmt = mysqli_prepare( $link, $query );
+    $args = [ $guid, $investigatorGUID, $submitterGUID,
+              $job['database']['submitter_email'], $job['job_parameters']['experimentID'], $job['cluster']['name'],
+              $analType, $job['method'] ];
+    $stmt->bind_param("ssssisss", ...$args );
+    $stmt->execute()
+          or die( "Query failed : $query<br />" . print_r($args, true) . "<br />"  . $stmt->error);
+    $stmt->close();
 
     // Return the generated ID
-    return ( mysqli_insert_id( $link ) );
+    return ( $stmt->insert_id );
   }
 
   // Function to create the HPCDataset and HPCRequestData table entries
@@ -88,29 +103,38 @@ abstract class HPC_analysis
     foreach ( $datasets as $dataset_id => $dataset )
     {
       $query  = "INSERT INTO HPCDataset SET " .
-                "HPCAnalysisRequestID = $HPCAnalysisRequestID,      " .
-                "editedDataID         = {$dataset['editedDataID']}, " .
-                "simpoints            = {$dataset['simpoints']},    " .
-                "band_volume          = {$dataset['band_volume']},  " .
-                "radial_grid          = {$dataset['radial_grid']},  " .
-                "time_grid            = {$dataset['time_grid']},    " .
-                "rotor_stretch        = '{$dataset['rotor_stretch']}' " ;
-      mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />" . mysqli_error($link));
+                "HPCAnalysisRequestID = ?,      " .
+                "editedDataID         = ?, " .
+                "simpoints            = ?,    " .
+                "band_volume          = ?,  " .
+                "radial_grid          = ?,  " .
+                "time_grid            = ?,    " .
+                "rotor_stretch        = ? " ;
+      $args = [ $HPCAnalysisRequestID, $dataset['editedDataID'], $dataset['simpoints'], $dataset['band_volume'],
+                $dataset['radial_grid'], $dataset['time_grid'], $dataset['rotor_stretch'] ];
+      $stmt = mysqli_prepare( $link, $query );
+      $stmt->bind_param("iiidiis", ...$args );
+      $stmt->execute()
+            or die( "Query failed : $query<br />" . print_r($args, true) . "<br />" . $stmt->error);
 
-      $HPCDatasetID = mysqli_insert_id( $link );
+      $HPCDatasetID = $stmt->insert_id;
+      $stmt->close();
+
 
       // Now for the HPCRequestData table
       if ( isset( $dataset['noiseIDs'][ 0 ] ) && $dataset['noiseIDs'][ 0 ] > 0 )
       {
+        $query  = "INSERT INTO HPCRequestData SET      " .
+            "HPCDatasetID       = ?, " .
+            "noiseID             = ?       " ;
+        $stmt = mysqli_prepare( $link, $query );
         foreach ( $dataset['noiseIDs'] as $noiseID )
         {
-          $query  = "INSERT INTO HPCRequestData SET      " .
-                    "HPCDatasetID       = $HPCDatasetID, " .
-                    "noiseID             = $noiseID       " ;
-          mysqli_query( $link, $query )
-                or die( "Query failed : $query<br />" . mysqli_error($link));
+          $args = [ $HPCDatasetID, $noiseID ];
+          $stmt->bind_param("ii", ...$args );
+          $stmt->execute() or die( "Query failed : $query<br />". print_r($args, true) . "<br />". $stmt->error);
         }
+        $stmt->close();
       }
     }
   }
@@ -178,23 +202,29 @@ class HPC_2DSA extends HPC_analysis
   {
     global $link;
     $query  = "INSERT INTO 2DSA_Settings SET " .
-              "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
-              "s_min                = {$job_parameters['s_min']},            " .
-              "s_max                = {$job_parameters['s_max']},            " .
-              "s_resolution         = {$job_parameters['s_grid_points']},    " .
-              "ff0_min              = {$job_parameters['ff0_min']},          " .
-              "ff0_max              = {$job_parameters['ff0_max']},          " .
-              "ff0_resolution       = {$job_parameters['ff0_grid_points']},  " .
-              "uniform_grid         = {$job_parameters['uniform_grid']},     " .
-              "mc_iterations        = {$job_parameters['mc_iterations']}, " .
-              "tinoise_option       = {$job_parameters['tinoise_option']},   " .
-              "meniscus_range       = {$job_parameters['meniscus_range']},   " .
-              "meniscus_points      = {$job_parameters['meniscus_points']},  " .
-              "max_iterations       = {$job_parameters['max_iterations']}, " .
-              "rinoise_option       = {$job_parameters['rinoise_option']}    ";
-
-    mysqli_query( $link, $query )
-          or die( "Query failed : $query<br />" . mysqli_error($link));
+              "HPCAnalysisRequestID = ?," .
+              "s_min                = ?," .
+              "s_max                = ?," .
+              "s_resolution         = ?," .
+              "ff0_min              = ?," .
+              "ff0_max              = ?," .
+              "ff0_resolution       = ?," .
+              "uniform_grid         = ?," .
+              "mc_iterations        = ?," .
+              "tinoise_option       = ?," .
+              "meniscus_range       = ?," .
+              "meniscus_points      = ?," .
+              "max_iterations       = ?," .
+              "rinoise_option       = ?";
+    $stmt = mysqli_prepare( $link, $query );
+    $args = [ $HPCAnalysisRequestID, $job_parameters['s_min'], $job_parameters['s_max'],
+        $job_parameters['s_grid_points'], $job_parameters['ff0_min'], $job_parameters['ff0_max'],
+        $job_parameters['ff0_grid_points'], $job_parameters['uniform_grid'], $job_parameters['mc_iterations'],
+        $job_parameters['tinoise_option'], $job_parameters['meniscus_range'], $job_parameters['meniscus_points'],
+        $job_parameters['max_iterations'], $job_parameters['rinoise_option'] ];
+    $stmt->bind_param("iddiddiiiidiii", ...$args );
+    $stmt->execute() or die( "Query failed : $query<br />" . print_r($args, true) . "<br />" . $stmt->error);
+    $stmt->close();
 
   }
 }
@@ -210,18 +240,23 @@ class HPC_2DSA_CG extends HPC_analysis
   {
     global $link;
     $query  = "INSERT INTO 2DSA_CG_Settings SET " .
-              "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
-              "CG_modelID           = {$job_parameters['CG_modelID']},       " .
-              "uniform_grid         = {$job_parameters['uniform_grid']},     " .
-              "mc_iterations        = {$job_parameters['mc_iterations']},    " .
-              "tinoise_option       = {$job_parameters['tinoise_option']},   " .
-              "meniscus_range       = {$job_parameters['meniscus_range']},   " .
-              "meniscus_points      = {$job_parameters['meniscus_points']},  " .
-              "max_iterations       = {$job_parameters['max_iterations']},   " .
-              "rinoise_option       = {$job_parameters['rinoise_option']}    ";
+              "HPCAnalysisRequestID = ?, " .
+              "CG_modelID           = ?, " .
+              "uniform_grid         = ?, " .
+              "mc_iterations        = ?, " .
+              "tinoise_option       = ?, " .
+              "meniscus_range       = ?, " .
+              "meniscus_points      = ?, " .
+              "max_iterations       = ?, " .
+              "rinoise_option       = ?   ";
+    $stmt = mysqli_prepare( $link, $query );
+    $args = [ $HPCAnalysisRequestID, $job_parameters['CG_modelID'], $job_parameters['uniform_grid'],
+        $job_parameters['mc_iterations'], $job_parameters['tinoise_option'], $job_parameters['meniscus_range'],
+        $job_parameters['meniscus_points'], $job_parameters['max_iterations'], $job_parameters['rinoise_option'] ];
+    $stmt->bind_param("iiiiidiii", ...$args );
 
-    mysqli_query( $link, $query )
-          or die( "Query failed : $query<br />" . mysqli_error($link));
+    $stmt->execute() or die( "Query failed : $query<br />" . print_r($args, true) . "<br />" . $stmt->error);
+    $stmt->close();
 
   }
 }
@@ -237,28 +272,37 @@ class HPC_GA extends HPC_analysis
   {
     global $link;
     $query  = "INSERT INTO GA_Settings SET " .
-              "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
-              "montecarlo_value     = {$job_parameters['mc_iterations']},  " .
-              "demes_value          = {$job_parameters['demes']},          " .
-              "genes_value          = {$job_parameters['population']},     " .
-              "generations_value    = {$job_parameters['generations']},    " .
-              "crossover_value      = {$job_parameters['crossover']},      " .
-              "mutation_value       = {$job_parameters['mutation']},       " .
-              "plague_value         = {$job_parameters['plague']},         " .
-              "elitism_value        = {$job_parameters['elitism']},        " .
-              "migration_value      = {$job_parameters['migration']},      " .
-              "regularization_value = {$job_parameters['regularization']}, " .
-              "seed_value           = {$job_parameters['seed']},           " .
-              "conc_threshold       = {$job_parameters['conc_threshold']}, " .
-              "s_grid               = {$job_parameters['s_grid']},         " .
-              "k_grid               = {$job_parameters['k_grid']},         " .
-              "mutate_sigma         = {$job_parameters['mutate_sigma']},   " .
-              "mutate_s             = {$job_parameters['p_mutate_s']},     " .
-              "mutate_k             = {$job_parameters['p_mutate_k']},     " .
-              "mutate_sk            = {$job_parameters['p_mutate_sk']}     " ;
-    mysqli_query( $link, $query )
-          or die( "Query failed : $query<br />" . mysqli_error($link));
-    $settingsID = mysqli_insert_id( $link );
+              "HPCAnalysisRequestID = ?, " .
+              "montecarlo_value     = ?, " .
+              "demes_value          = ?, " .
+              "genes_value          = ?, " .
+              "generations_value    = ?, " .
+              "crossover_value      = ?, " .
+              "mutation_value       = ?, " .
+              "plague_value         = ?, " .
+              "elitism_value        = ?, " .
+              "migration_value      = ?, " .
+              "regularization_value = ?, " .
+              "seed_value           = ?, " .
+              "conc_threshold       = ?, " .
+              "s_grid               = ?, " .
+              "k_grid               = ?, " .
+              "mutate_sigma         = ?, " .
+              "mutate_s             = ?, " .
+              "mutate_k             = ?, " .
+              "mutate_sk            = ? " ;
+    $stmt = mysqli_prepare( $link, $query );
+    $args = [ $HPCAnalysisRequestID, $job_parameters['mc_iterations'], $job_parameters['demes'],
+        $job_parameters['population'], $job_parameters['generations'], $job_parameters['crossover'],
+        $job_parameters['mutation'], $job_parameters['plague'], $job_parameters['elitism'],
+        $job_parameters['migration'], $job_parameters['regularization'], $job_parameters['seed'],
+        $job_parameters['conc_threshold'], $job_parameters['s_grid'], $job_parameters['k_grid'],
+        $job_parameters['mutate_sigma'], $job_parameters['p_mutate_s'], $job_parameters['p_mutate_k'],
+        $job_parameters['p_mutate_sk'] ];
+    $stmt->bind_param("iiiiiiiiiididiidiii", ...$args );
+    $stmt->execute() or die( "Query failed : $query<br />" . print_r($args, true) . "<br />" . $stmt->error);
+    $settingsID = $stmt->insert_id;
+    $stmt->close();
     $bucket     = $job_parameters['buckets'][1];
     $xtype      = $job_parameters['x-type'];
     $ytype      = $job_parameters['y-type'];
@@ -269,18 +313,21 @@ class HPC_GA extends HPC_analysis
     $ythi       = 'y_max';
 
     // Now save the buckets
+    $query  = "INSERT INTO HPCSoluteData SET " .
+              "GA_SettingsID = ?, " .
+              "s_min         = ?, " .
+              "s_max         = ?, " .
+              "ff0_min       = ?, " .
+              "ff0_max       = ?  " ;
+    $stmt = mysqli_prepare( $link, $query );
     for ( $i = 1; $i <= sizeof( $job_parameters['buckets'] ); $i++ )
     {
       $bucket = $job_parameters['buckets'][$i];
-      $query  = "INSERT INTO HPCSoluteData SET " .
-                "GA_SettingsID = $settingsID, " .
-                "s_min         = {$bucket[$xtlo]}, " .
-                "s_max         = {$bucket[$xthi]}, " .
-                "ff0_min       = {$bucket[$ytlo]}, " .
-                "ff0_max       = {$bucket[$ythi]}  " ;
-      mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />" . mysqli_error($link));
+      $args = [ $settingsID, $bucket[$xtlo], $bucket[$xthi], $bucket[$ytlo], $bucket[$ythi] ];
+      $stmt->bind_param("idddd", ...$args );
+      $stmt->execute() or die( "Query failed : $query<br />" . print_r($args, true) . "<br />" . $stmt->error);
     }
+    $stmt->close();
   }
 }
 
@@ -295,22 +342,29 @@ class HPC_DMGA extends HPC_analysis
   {
     global $link;
     $query  = "INSERT INTO DMGA_Settings SET " .
-              "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
-              "DC_modelID     = {$job_parameters['DC_modelID']},    " .
-              "mc_iterations  = {$job_parameters['mc_iterations']}, " .
-              "demes          = {$job_parameters['demes']},         " .
-              "population     = {$job_parameters['population']},    " .
-              "generations    = {$job_parameters['generations']},   " .
-              "mutation       = {$job_parameters['mutation']},      " .
-              "crossover      = {$job_parameters['crossover']},     " .
-              "plague         = {$job_parameters['plague']},        " .
-              "elitism        = {$job_parameters['elitism']},       " .
-              "migration      = {$job_parameters['migration']},     " .
-              "p_grid         = {$job_parameters['p_grid']},        " .
-              "seed           = {$job_parameters['seed']}           " ;
-    mysqli_query( $link, $query )
-          or die( "Query failed : $query<br />" . mysqli_error($link));
-    $settingsID = mysqli_insert_id( $link );
+              "HPCAnalysisRequestID = ?, " .
+              "DC_modelID           = ?, " .
+              "mc_iterations        = ?, " .
+              "demes                = ?, " .
+              "population           = ?, " .
+              "generations          = ?, " .
+              "mutation             = ?, " .
+              "crossover            = ?, " .
+              "plague               = ?, " .
+              "elitism              = ?, " .
+              "migration            = ?, " .
+              "p_grid               = ?, " .
+              "seed                 = ? " ;
+    $stmt = mysqli_prepare( $link, $query );
+    $args = [ $HPCAnalysisRequestID, $job_parameters['DC_modelID'], $job_parameters['mc_iterations'],
+        $job_parameters['demes'], $job_parameters['population'], $job_parameters['generations'],
+        $job_parameters['mutation'], $job_parameters['crossover'], $job_parameters['plague'],
+        $job_parameters['elitism'], $job_parameters['migration'], $job_parameters['p_grid'],
+        $job_parameters['seed'] ];
+    $stmt->bind_param("iiiiiiiiiiiii", ...$args );
+    $stmt->execute() or die( "Query failed : $query<br />" . print_r($args, true) . "<br />" . $stmt->error);
+    $settingsID = $stmt->insert_id;
+    $stmt->close();
   }
 }
 
@@ -340,9 +394,14 @@ class HPC_PCSA extends HPC_analysis
               "mc_iterations        = {$job_parameters['mc_iterations']},    " .
               "tinoise_option       = {$job_parameters['tinoise_option']},   " .
               "rinoise_option       = {$job_parameters['rinoise_option']}    ";
-
-    mysqli_query( $link, $query )
-          or die( "Query failed : $query<br />" . mysqli_error($link));
+    $stmt = mysqli_prepare( $link, $query );
+    $args = [ $HPCAnalysisRequestID, $job_parameters['curve_type'], $job_parameters['x_min'],
+        $job_parameters['x_max'], $job_parameters['y_min'], $job_parameters['y_max'],
+        $job_parameters['vars_count'], $job_parameters['gfit_iterations'], $job_parameters['curves_points'],
+        $job_parameters['thr_deltr_ratio'], $job_parameters['tikreg_option'], $job_parameters['tikreg_alpha'],
+        $job_parameters['mc_iterations'], $job_parameters['tinoise_option'], $job_parameters['rinoise_option'] ];
+    $stmt->bind_param("isddddiiididiii", ...$args );
+    $stmt->execute() or die( "Query failed : $query<br />" . print_r($args, true) . "<br />" . $stmt->error);
   }
 }
 

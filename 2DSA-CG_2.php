@@ -96,15 +96,19 @@ if ( $separate_datasets > 0 )
       $xml_content = mysqli_real_escape_string( $link, file_get_contents( $filenames[ $kr ] ) );
       $edit_filename = $composite['dataset'][0]['edit'];
       $experimentID  = $_SESSION['request'][$index]['experimentID'];
-
+      // Update the HPCAnalysisRequest record
+      // language=MariaDB
       $query  = "UPDATE HPCAnalysisRequest " .
-                "SET requestXMLfile = '$xml_content', " .
-                "experimentID = '$experimentID', " .
-                "editXMLFilename = '$edit_filename' " .
-                "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-
-      mysqli_query( $link, $query )
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+                "SET requestXMLfile = ?, " .
+                "experimentID = ?, " .
+                "editXMLFilename = ? " .
+                "WHERE HPCAnalysisRequestID = ? ";
+      $stmt = $link->prepare( $query );
+      $args = [$xml_content, $experimentID, $edit_filename, $HPCAnalysisRequestID];
+      $stmt->bind_param( 'sisi', ...$args );
+      $stmt->execute()
+            or die("Query failed : $query<br />\n" .$stmt->error);
+      $stmt->close();
     }
 
     $index        += $reqds_count;
@@ -133,12 +137,18 @@ else
     // Write the xml file content to the db
     $xml_content = mysqli_real_escape_string( $link, file_get_contents( $filenames[ 0 ] ) );
     $edit_filename = $globalfit['dataset'][0]['edit'];
+    // Update the HPCAnalysisRequest record
+    // language=MariaDB
     $query  = "UPDATE HPCAnalysisRequest " .
-              "SET requestXMLfile = '$xml_content', " .
-              "editXMLFilename = '$edit_filename' " .
-              "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-    mysqli_query( $link, $query )
-          or die("Query failed : $query<br />\n" . mysqli_error($link));
+              "SET requestXMLfile = ?, " .
+              "editXMLFilename = ? " .
+              "WHERE HPCAnalysisRequestID = ? ";
+    $args = [$xml_content, $edit_filename, $HPCAnalysisRequestID];
+    $stmt = $link->prepare( $query );
+    $stmt->bind_param( 'ssi', ...$args );
+    $stmt->execute()
+          or die("Query failed : $query<br />\n" . $stmt->error);
+    $stmt->close();
     
   }
 }
