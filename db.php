@@ -5,7 +5,7 @@ global $dbhost, $dbusername, $dbpasswd, $dbname;
 
 $link = mysqli_connect($dbhost, $dbusername, $dbpasswd, $dbname) or die("Could not connect to $dbname on database server.");
 
-function mysqli_prepared_query($link, $sql, $typeDef = false, $params = false, $asGenerator = false) {
+function mysqli_prep_query($link, $sql, $typeDef = false, $params = false, $asGenerator = false) {
     $executeQuery = function() use ($link, $sql, $typeDef, $params) {
         $result = false;
         $multiQuery = true;
