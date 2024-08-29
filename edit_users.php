@@ -195,6 +195,9 @@ function do_update($link)
   $userlevel       = $_POST['userlevel'];
   $advancelevel    = $_POST['advancelevel'];
   $gmpReviewerRole = $_POST['gmpReviewerRole'];
+  if ( $gmpReviewerRole == '' ) {
+    $gmpReviewerRole = 'NONE';
+  }
   $authenticatePAM = ( isset( $_POST['authenticatePAM'] ) && $_POST['authenticatePAM'] == 'on' ) ? 1 : 0;
   $userNamePAM     = $_POST['userNamePAM'];
   if ( empty( $userNamePAM ) ) {
@@ -390,6 +393,9 @@ function display_record($link)
   $userlevel             = $row['userlevel'];    // 0 translates to null
   $advancelevel          = $row['advancelevel']; // 0 translates to null
   $gmpReviewerRole       = $row['gmpReviewerRole'];
+  if ( $gmpReviewerRole == '' ) {
+    $gmpReviewerRole = 'NONE';
+  }
   $authenticatePAM       = $row['authenticatePAM'];
   $userNamePAM           = $row['userNamePAM'];
   $activated             = ( $row['activated'] == 1 ) ? "yes" : "no";
@@ -583,6 +589,9 @@ function edit_record($link)
   $advancelevel    =                                 $row['advancelevel'];
   $clusterAuth     =                                 $row['clusterAuthorizations'];
   $gmpReviewerRole =                                 $row['gmpReviewerRole'];
+  if ( $gmpReviewerRole == '' ) {
+    $gmpReviewerRole = 'NONE';
+  }
   $authenticatePAM =                                 $row['authenticatePAM'];
   $userNamePAM     =                                 $row['userNamePAM'];
 
