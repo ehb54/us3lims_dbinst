@@ -109,11 +109,16 @@ function get_setup_2( $link )
       $_SESSION['cells'][$rawDataID]['editedDataID'] = $editedDataID;
 
       // Get other things we need too
-      $query  = "SELECT filename, data FROM editedData " .
-                "WHERE editedDataID = $editedDataID ";
-      $result = mysqli_query( $link, $query )
-              or die("Query failed : $query<br />\n" . mysqli_error($link));
+      $query  = "SELECT filename, data FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
+          "JOIN experimentPerson p on p.experimentID = r.experimentID " .
+                "WHERE e.editedDataID = ? and p.personID = ? ";
+      $stmt = mysqli_prepare( $link, $query );
+      $stmt->bind_param( 'ii', $editedDataID, $_SESSION['id'] );
+      $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+      $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
       list( $editFilename, $editXML ) = mysqli_fetch_array( $result );
+      $stmt->close();
+      $result->close();
       $_SESSION['cells'][$rawDataID]['editFilename'] = $editFilename;
       getOtherEditInfo( $rawDataID, $editXML );
     }
@@ -146,11 +151,16 @@ function get_setup_2( $link )
 // Get edit profiles
 function get_editedData( $link, $rawDataID, $editedDataID = 0 )
 {
-  $query  = "SELECT editedDataID, label, filename " .
-            "FROM editedData " .
-            "WHERE rawDataID = $rawDataID ";
-  $result = mysqli_query( $link, $query )
-          or die("Query failed : $query<br />\n" . mysqli_error($link));
+  // language=MariaDB
+  $query  = "SELECT e.editedDataID, label, filename " .
+            "FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
+            "JOIN experimentPerson p on p.experimentID = r.experimentID " .
+            "WHERE e.rawDataID = ? and p.personID = ? ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'ii', $rawDataID, $_SESSION['id'] );
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
+
 
   $profile    = "<select name='editedDataID[$rawDataID]'" .
                 "  onchange='this.form.submit();' size='3'>\n" .
@@ -162,7 +172,8 @@ function get_editedData( $link, $rawDataID, $editedDataID = 0 )
     $selected = ( $editedDataID == $eID ) ? " selected='selected'" : "";
     $profile .= "  <option value='$eID'$selected>$label [$edit_txt]</option>\n";
   }
-
+  $result->close();
+  $stmt->close();
   $profile   .= "</select>\n";
 
   return( $profile );
@@ -174,20 +185,25 @@ function get_noise( $link, $rawDataID, $editedDataID, $noiseIDs )
   $noise  = "<select name='noiseIDs[$rawDataID][]' multiple='multiple'" .
             "  onchange='this.form.submit();' size='8'>\n" .
             "  <option value='null'>Select noise ...</option>\n";
-
+  // language=MariaDB
   $query  = "SELECT noiseID, modelID, noiseType, timeEntered " .
             "FROM noise " .
-            "WHERE editedDataID = $editedDataID " .
+            "join editedData e on e.editedDataID = noise.editedDataID JOIN rawData r on r.rawDataID = e.rawDataID " .
+            "JOIN experimentPerson p on p.experimentID = r.experimentID  WHERE editedDataID = ? and p.personID = ? " .
             "ORDER BY timeEntered DESC ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'ii', $editedDataID, $_SESSION['id'] );
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
 
-  $result = mysqli_query( $link, $query )
-          or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   while ( list( $nID, $modelID, $noiseType, $time ) = mysqli_fetch_array( $result ) )
   {
     $selected = ( in_array( $nID, $noiseIDs ) ) ? " selected='selected'" : "";
     $noise .= "  <option value='$nID'$selected>[$nID] $noiseType - $time</option>\n";
   }
+  $result->close();
+  $stmt->close();
 
   $noise   .= "</select>\n";
 
@@ -238,11 +254,16 @@ function get_latest_edits( $link )
   $count = 0;
   foreach( $_SESSION['cells'] as $rawDataID => $cell )
   {
+    // language=MariaDB
     $query  = "SELECT editedDataID, label, filename, data, " .
               " lastUpdated " .
-              "FROM editedData " .
-              "WHERE rawDataID = $rawDataID " .
+              "FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
+              "JOIN experimentPerson p on p.projectID = ex.projectID " .
+              "WHERE rawDataID = ? and p.personID = ?" .
               "ORDER BY label, lastUpdated DESC";
+    $stmt = $link->prepare( $query );
+    $stmt->bind_param( 'ii', $rawDataID, $_SESSION['id'] );
+    $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
     $result = mysqli_query( $link, $query )
             or die("Query failed : $query<br />\n" . mysqli_error($link));
 
@@ -256,15 +277,19 @@ function get_latest_edits( $link )
             return;
         }
     }
+    $result->close();
+    $stmt->close();
 
     $noiseIDs = array();
     $query  = "SELECT noiseID, noiseType, timeEntered " .
               "FROM noise " .
-              "WHERE editedDataID = $editedDataID " .
+              "WHERE editedDataID = ? " .
               "ORDER BY timeEntered DESC ";
+    $stmt = $link->prepare( $query );
+    $stmt->bind_param( 'i', $editedDataID );
+    $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+    $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
 
-    $result = mysqli_query( $link, $query )
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
 
     $knoise = 0;
     $prtype = "";
@@ -287,6 +312,8 @@ function get_latest_edits( $link )
         break;
       }
     }
+    $result->close();
+    $stmt->close();
 
     $cell = $_SESSION['cells'][$rawDataID];
     $_SESSION['request'][$count]['rawDataID']    = $rawDataID;

@@ -39,16 +39,22 @@ $pamActive = false;
 
 if ( $enable_PAM && PAM_name_is_valid( $loginname ) ) {
   // for PAM authentication
-  $query     = "SELECT * FROM people WHERE userNamePAM='$loginname'";
-
-  $result = mysqli_query($link, $query)
-          or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $query     = "SELECT * FROM people WHERE userNamePAM=?";
+  $args      = [ $loginname ];
+  $stmt      = $link->prepare( $query );
+  $stmt->bind_param( 's', ...$args );
+  $stmt->execute()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result()
+          or die( "Query failed : $query<br />\n" . $stmt->error );
   $row    = mysqli_fetch_assoc($result);
-  $count  = mysqli_num_rows($result);
+  $count  = $result->num_rows;
 
   if ( $count == 1 && $row['authenticatePAM'] == 1 ) {
      $pamActive = true;
   }
+  $result->close();
+  $stmt->close();
 }
 
 if ( !$pamActive ) {
@@ -59,12 +65,20 @@ if ( !$pamActive ) {
 
   // Find the id of the record with the same e-mail address:
 
-  $query  = "SELECT * FROM people WHERE email='$loginname'";
+  $query  = "SELECT * FROM people WHERE email=?";
+  $args   = [ $loginname ];
+  $stmt   = $link->prepare( $query );
+  $stmt->bind_param( 's', ...$args );
+  $stmt->execute()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
 
-  $result = mysqli_query($link, $query)
-          or die( "Query failed : $query<br />\n" . mysqli_error($link) );
   $row    = mysqli_fetch_assoc($result);
   $count  = mysqli_num_rows($result);
+
+  $result->close();
+  $stmt->close();
 }
 
 
@@ -174,8 +188,12 @@ if ( $row["activated"] != 1 )
 
 // Update last login time
 
-$query = "UPDATE people SET lastLogin=now() WHERE personID=$personID";
-mysqli_query($link, $query);
+$query = "UPDATE people SET lastLogin=now() WHERE personID=?";
+$args = [ $personID ];
+$stmt = $link->prepare( $query );
+$stmt->bind_param( 'i', ...$args );
+$stmt->execute()
+      or die( "Query failed : $query<br />\n" . $stmt->error );
 
 header("Location: https://$org_site/index.php");
 exit();

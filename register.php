@@ -27,10 +27,15 @@ if ( ! empty($message) )
 }
 
 // Ensure that the user's email address or username does not exist in the DB
-$query        = "SELECT count(*) FROM people WHERE email='$email'";
+$query        = "SELECT count(*) FROM people WHERE email=?";
+$stmt         = mysqli_prepare( $link, $query );
+$stmt->bind_param( 's', $email );
+$stmt->execute();
+$result       = $stmt->get_result();
 $result       = mysqli_query( $link, $query );
 list($count)  = mysqli_fetch_row( $result );
- 
+$result->close();
+$stmt->close();
 if ( $count > 0 )
 {
     $_SESSION['message'] = "Your email address is already registered.<br/>"  .
@@ -79,10 +84,15 @@ $query = "INSERT INTO people " .
          "activated       = 0, " .
          "userNamePAM     = '$email', " .
          "signup          = now() ";
-
-$result = mysqli_query( $link, $query ) 
-          or die( "Query failed : $query<br/>" . mysqli_error($link) );
-$userid = mysqli_insert_id( $link );
+$args = [ $uuid, $lname, $fname, $organization, $address, $city, $state, $zip, $country, $phone, $email,
+    $db_password, $email ];
+$args_type = 'sssssssssssss';
+$stmt = $link->prepare($query);
+$stmt->bind_param($args_type, ...$args);
+$stmt->execute()
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
+$userid = $stmt->insert_id;
+$stmt->close();
 
 if ( ! $result )
 {

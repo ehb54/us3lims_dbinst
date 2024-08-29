@@ -95,24 +95,26 @@ function experiment_select( $link, $select_name, $current_ID = NULL )
 // A function to retrieve information about that runID
 function runID_info( $link, $experimentID )
 {
-  $query  = "SELECT people.personID, personGUID, lname, fname, email " .
+  $query  = "SELECT experiment.experimentID, people.personID, personGUID, lname, fname, email " .
             "FROM experiment, projectPerson, people " .
-            "WHERE experiment.experimentID = ? " .
+            "WHERE experiment.experimentID = ? and people.personID = ?" .
             "AND experiment.projectID = projectPerson.projectID " .
             "AND projectPerson.personID = people.personID ";
 
   // Prepared statement
   if ($stmt = mysqli_prepare($link, $query)) {
-   $stmt->bind_param('i', $experimentID);
+   $stmt->bind_param('ii', $experimentID, $_SESSION['id']);
    $stmt->execute();
    $stmt->store_result();
    $num_of_rows = $stmt->num_rows;
-   $stmt->bind_result($ID, $GUID, $lname, $fname, $email);
+   $stmt->bind_result($experiementID,$ID, $GUID, $lname, $fname, $email);
    $stmt->fetch();
 
    $stmt->free_result();
    $stmt->close();
   }
+  if ($num_of_rows == 0)
+    return "No data found for this experiment";
 
   /* This code was replace by the prepared statement above
   $result = mysqli_query( $link, $query )
@@ -739,10 +741,19 @@ HTML;
 
 function HPCDetail( $link, $requestID )
 {
-  $query = "SELECT * FROM HPCAnalysisRequest WHERE HPCAnalysisRequestID=$requestID";
-  $result = mysqli_query( $link, $query )
-           or die( "Query failed : $query<br />\n" . mysqli_error($link));
+  $query = "SELECT * FROM HPCAnalysisRequest hpc 
+         LEFT OUTER JOIN experimentPErson ep ON hpc.experimentID = ep.experimentID
+            LEFT OUTER JOIN people p ON p.personGUID = hpc.investigatorGUID
+         LEFT OUTER JOIN people p2 ON p2.personGUID = hpc.submitterGUID
+         WHERE HPCAnalysisRequestID=? and (p.personID = ? or p2.personID = ? or ep.personID = ? or ? > 2)";
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param('iiiii', $requestID, $_SESSION['id'], $_SESSION['id'], $_SESSION['id'], $_SESSION['userlevel']);
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $stmt->close();
   $row = mysqli_fetch_assoc( $result );
+  $result->close();
+  $requestID = $row['HPCAnalysisRequestID'];
   $row['requestXMLFile'] = '<pre>' . htmlentities( $row['requestXMLFile'] ) . '</pre>';
 
   // Save for later

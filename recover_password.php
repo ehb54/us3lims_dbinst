@@ -31,10 +31,13 @@ if ( ! $email_address )
 // Quick check to see if record exists  
 
 $query = "SELECT personID, activated FROM people " .
-         "WHERE email='$email_address'";
+         "WHERE email=?";
+$stmt = mysqli_prepare( $link, $query );
+mysqli_stmt_bind_param( $stmt, 's', $email_address );
+mysqli_stmt_execute( $stmt );
+$result = $stmt->get_result();
 
-$result    = mysqli_query( $link, $query );
-$row_count = mysqli_num_rows( $result );
+$row_count = $result->num_rows;
 $row       = mysqli_fetch_row( $result );
 
 if ( $row_count == 0 )
@@ -45,6 +48,8 @@ if ( $row_count == 0 )
 }
 
 list($personID, $activated) = $row;
+$result->close();
+$stmt->close();
 
 // Sometimes users come here before account is activated, and a new
 //   password will break the activation, so...

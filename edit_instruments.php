@@ -154,22 +154,34 @@ function do_delete($link)
   // Add checks here to prevent deleting records that can't be deleted
 
   $query  = "SELECT COUNT(*) FROM experiment " .
-            "WHERE instrumentID = $instrumentID ";
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+            "WHERE instrumentID = ? ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $instrumentID );
+  $stmt->execute()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
   list( $count ) = mysqli_fetch_array( $result );
+  $result->close();
+  $stmt->close();
   if ( $count == 0 )
   {
     // Ok to delete
     $query  = "DELETE FROM permits " .
-              "WHERE instrumentID = $instrumentID ";
-    mysqli_query($link, $query)
-      or die("Query failed : $query<br />\n" . mysqli_error($link));
+              "WHERE instrumentID = ? ";
+    $stmt = $link->prepare( $query );
+    $stmt->bind_param( 'i', $instrumentID );
+    $stmt->execute()
+          or die( "Query failed : $query<br />\n" . $stmt->error );
+    $stmt->close();
 
     $query = "DELETE FROM instrument " .
-             "WHERE instrumentID = $instrumentID ";
-    mysqli_query($link, $query)
-      or die("Query failed : $query<br />\n" . mysqli_error($link));
+             "WHERE instrumentID = ? ";
+    $stmt = $link->prepare( $query );
+    $stmt->bind_param( 'i', $instrumentID );
+    $stmt->execute()
+          or die( "Query failed : $query<br />\n" . $stmt->error );
+    $stmt->close();
   }
 
   header("Location: $_SERVER[PHP_SELF]");
@@ -184,15 +196,20 @@ function do_update($link)
   $labID               =                                $_POST['labID'];
   $name                =        addslashes(htmlentities($_POST['name']));
   $serialNumber        =        addslashes(htmlentities($_POST['serialNumber']));
+  // language=MariaDB
   $query = "UPDATE instrument " .
-           "SET labID  = $labID, " .
-           "name  = '$name', " .
-           "serialNumber  = '$serialNumber', " .
+           "SET labID  = ?, " .
+           "name  = ?, " .
+           "serialNumber  = ?, " .
            "dateUpdated  = NOW() " .
-           "WHERE instrumentID = $instrumentID ";
+           "WHERE instrumentID = ? ";
+  $args = [ $labID, $name, $serialNumber, $instrumentID ];
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'issi', ...$args );
+  $stmt->execute()
+        or die("Query failed : $query<br />\n" . $stmt->error);
+  $stmt->close();
 
-  mysqli_query($link, $query)
-    or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   header("Location: $_SERVER[PHP_SELF]?ID=$instrumentID");
   exit();
@@ -206,14 +223,17 @@ function do_create($link)
   $name                =        addslashes(htmlentities($_POST['name']));
   $serialNumber        =        addslashes(htmlentities($_POST['serialNumber']));
   $query = "INSERT INTO instrument " .
-           "SET labID  = $labID, " .
-           "name  = '$name', " .
-           "serialNumber  = '$serialNumber', " .
+           "SET labID  = ?, " .
+           "name  = ?, " .
+           "serialNumber  = ?, " .
            "dateUpdated  = NOW() ";
-
-  mysqli_query($link, $query)
-        or die("Query failed : $query<br />\n" . mysqli_error($link));
-  $new = mysqli_insert_id($link);
+  $args = [ $labID, $name, $serialNumber ];
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'iss', ...$args );
+  $stmt->execute()
+        or die("Query failed : $query<br />\n" . $stmt->error);
+  $new = $stmt->insert_id;
+  $stmt->close();
 
   header("Location: {$_SERVER['PHP_SELF']}?ID=$new");
 }
@@ -229,7 +249,7 @@ function display_record($link)
   // Anything other than a number here is a security risk
   if (!(is_numeric($instrumentID)))
     return;
-
+  // language=MariaDB
   $query  = "SELECT i.labID, i.name, lab.name, i.serialNumber " .
             "FROM instrument i, lab " .
             "WHERE instrumentID = ? " .
@@ -364,14 +384,20 @@ function edit_record($link)
     echo "<p>There was a problem with the edit request.</p>\n";
     return;
   }
-
+  // language=MariaDB
   $query  = "SELECT labID, name, serialNumber  " .
             "FROM instrument " .
             "WHERE instrumentID = $instrumentID ";
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $instrumentID );
+  $stmt->execute()
+        or die("Query failed : $query<br />\n" . $stmt->error);
+  $result = $stmt->get_result()
+        or die("Query failed : $query<br />\n" . $stmt->error);
 
   $row = mysqli_fetch_array($result);
+  $result->close();
+  $stmt->close();
 
   $labID               =                                   $row['labID'];
   $name                = html_entity_decode( stripslashes( $row['name'] ) );

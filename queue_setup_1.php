@@ -350,12 +350,18 @@ function get_cell_text($link)
     {
       foreach( $_POST['expIDs'] as $experimentID )
       { // First accumulate arrays of rawDataID,runID,filename
+        // language=MariaDB
         $query  = "SELECT rawDataID, runID, filename " .
-                  "FROM   rawData, experiment " .
-                  "WHERE  rawData.experimentID = $experimentID " .
+                  "FROM   rawData, experiment, projectPerson, project " .
+                  "WHERE  rawData.experimentID = ? AND projectPerson.personID = ? " .
+                  "AND      project.projectID = projectPerson.projectID " .
+                  "AND      experiment.projectID = project.projectID " .
                   "AND    rawData.experimentID = experiment.experimentID ";
-        $result = mysqli_query( $link, $query )
-                  or die("Query failed : $query<br />\n" . mysqli_error($link));
+        $args = [ $experimentID, $_SESSION['id'] ];
+        $stmt = $link->prepare( $query );
+        $stmt->bind_param( 'ii', ...$args );
+        $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+        $result = $stmt->get_result() or die( "Error in get_result: $query" . $stmt->error );
 
         while ( list( $rawDataID, $runID, $filename ) = mysqli_fetch_array( $result ) )
         {
@@ -364,6 +370,8 @@ function get_cell_text($link)
           $rrfiles[ $rawDataID ] = $filename;
           $kraw++;
         }
+        $result->close();
+        $stmt->close();
       }
     }
 //$time2=microtime(true)-$time0;
@@ -381,10 +389,14 @@ function get_cell_text($link)
 
       $query  = "SELECT COUNT(*) ".
                 "FROM editedData " .
-                "WHERE rawDataID = $rawDataID";
-      $result = mysqli_query( $link, $query )
-                or die("Query failed : $query<br />\n" . mysqli_error($link));
+                "WHERE rawDataID = ?";
+      $stmt = $link->prepare( $query );
+      $stmt->bind_param( 'i', $rawDataID );
+      $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+      $result = $stmt->get_result() or die( "Error in get_result: $query" . $stmt->error );
       list( $count ) = mysqli_fetch_array( $result );
+      $result->close();
+      $stmt->close();
 
       if ( $count > 0 )
         $rawData_list .= "  <option value='$rawDataID:$filename'>$filename</option>\n";

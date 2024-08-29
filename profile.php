@@ -77,29 +77,38 @@ function do_update($link)
 
   if ( empty($message) )
   {
+    // language=MariaDB
     $query = "UPDATE people " .
-             "SET lname      = '$lname',       " .
-             "fname          = '$fname',      " .
-             "organization   = '$organization',   " .
-             "address        = '$address',        " .
-             "city           = '$city',           " .
-             "state          = '$state',          " .
-             "zip            = '$zip',            " .
-             "country        = '$country',        " .
-             "phone          = '$phone',          " .
-             "email          = '$email'           ";
-
+             "SET lname      = ?, " .
+             "fname          = ?, " .
+             "organization   = ?, " .
+             "address        = ?, " .
+             "city           = ?, " .
+             "state          = ?, " .
+             "zip            = ?, " .
+             "country        = ?, " .
+             "phone          = ?, " .
+             "email          = ?  ";
+    $args = [ 'lname', 'fname', 'organization', 'address', 'city', 'state',
+              'zip', 'country', 'phone', 'email' ];
+    $args_type = 'ssssssssss';
     // See if password has changed
     if ( $pw1 )
     {
       $pw = md5($pw1);
-      $query .= ", password = '$pw' ";
+      $query .= ", password = ? ";
+      $args[] = $pw;
+      $args_type .= 's';
     }
 
-    $query .= "WHERE personID = $ID ";
-
-    mysqli_query($link, $query)
-      or die("Query failed : $query<br />\n" . mysqli_error($link));
+    $query .= "WHERE personID = ? ";
+    $args[] = $ID;
+    $args_type .= 'i';
+    $stmt = mysqli_prepare($link, $query);
+    $stmt->bind_param($args_type, ...$args);
+    $stmt->execute()
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
+    $stmt->close();
 
     // Now update the session variables
     $_SESSION['firstname']    = $fname;
