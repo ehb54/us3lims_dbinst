@@ -259,22 +259,24 @@ function get_latest_edits( $link )
 
   $_SESSION['request'] = array();
   $count = 0;
+  // language=MariaDB
+  $query  = "SELECT e.editedDataID, e.label, e.filename, e.data, " .
+      " e.lastUpdated " .
+      "FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
+      "LEFT OUTER JOIN experimentPerson ep on ep.experimentID = r.experimentID " .
+      "LEFT OUTER JOIN experiment ex on ex.experimentID = r.experimentID " .
+      "LEFT OUTER JOIN projectPerson pp on pp.projectID = ex.projectID " .
+      "WHERE e.rawDataID = ? and (ep.personID = ? or pp.personID = ?) " .
+      "ORDER BY e.label, e.lastUpdated DESC";
+  $stmt = $link->prepare( $query );
   foreach( $_SESSION['cells'] as $rawDataID => $cell )
   {
-    // language=MariaDB
-    $query  = "SELECT e.editedDataID, e.label, e.filename, e.data, " .
-              " e.lastUpdated " .
-              "FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
-              "LEFT OUTER JOIN experimentPerson ep on ep.experimentID = r.experimentID " .
-              "LEFT OUTER JOIN experiment ex on ex.experimentID = r.experimentID " .
-              "LEFT OUTER JOIN projectPerson pp on pp.projectID = ex.projectID " .
-              "WHERE e.rawDataID = ? and (ep.personID = ? or pp.personID = ?) " .
-              "ORDER BY e.label, e.lastUpdated DESC";
-    $stmt = $link->prepare( $query );
+
     $stmt->bind_param( 'iii', $rawDataID, $_SESSION['id'], $_SESSION['id'] );
     $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
     $result = mysqli_query( $link, $query )
             or die("Query failed : $query<br />\n" . mysqli_error($link));
+    $result->close();
 
     list( $editedDataID, $label, $filename, $editXML ) = mysqli_fetch_array( $result );
     getOtherEditInfo( $rawDataID, $editXML );
@@ -286,24 +288,23 @@ function get_latest_edits( $link )
             return;
         }
     }
-    $result->close();
-    $stmt->close();
+
 
     $noiseIDs = array();
-    $query  = "SELECT noiseID, noiseType, timeEntered " .
+    $query2  = "SELECT noiseID, noiseType, timeEntered " .
               "FROM noise " .
               "WHERE editedDataID = ? " .
               "ORDER BY timeEntered DESC ";
-    $stmt = $link->prepare( $query );
-    $stmt->bind_param( 'i', $editedDataID );
-    $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
-    $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
+    $stmt2 = $link->prepare( $query2 );
+    $stmt2->bind_param( 'i', $editedDataID );
+    $stmt2->execute() or die( "Query failed : $query2<br />\n" . $stmt2->error );
+    $result2 = $stmt2->get_result() or die( "Query failed : $query2<br />\n" . $stmt2->error );
 
 
     $knoise = 0;
     $prtype = "";
     $prtime = 0;
-    while ( list( $noiseID, $noiseType, $time ) = mysqli_fetch_array( $result ) )
+    while ( list( $noiseID, $noiseType, $time ) = mysqli_fetch_array( $result2 ) )
     {
       if ( $knoise == 0 )
       {
@@ -321,8 +322,8 @@ function get_latest_edits( $link )
         break;
       }
     }
-    $result->close();
-    $stmt->close();
+    $result2->close();
+    $stmt2->close();
 
     $cell = $_SESSION['cells'][$rawDataID];
     $_SESSION['request'][$count]['rawDataID']    = $rawDataID;
@@ -340,4 +341,5 @@ function get_latest_edits( $link )
     $_SESSION['cells'][$rawDataID]['noiseIDs']      = $noiseIDs;
     $count++;
   }
+  $stmt->close();
 }
