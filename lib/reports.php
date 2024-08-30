@@ -330,9 +330,9 @@ HTML;
               "FROM documentLink, reportDocument " .
               "WHERE documentLink.reportTripleID = ? " .
               "AND documentLink.reportDocumentID = reportDocument.reportDocumentID " .
-              "AND analysis = ? and documentType IN (" . $bind_clause . ")" .
+              "AND analysis = ? and documentType IN (" . $bind_clause . ") " .
               "ORDER BY subAnalysis ";
-    $args = [$tripleID, $atype] + $docTypes2;
+    $args = array_merge([$tripleID, $atype],$docTypes2);
     $stmt = mysqli_prepare( $link, $query );
     $stmt->bind_param( "is".$bind_string, ...$args );
     $stmt->execute();
