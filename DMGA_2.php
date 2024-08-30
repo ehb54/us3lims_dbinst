@@ -113,9 +113,9 @@ else
     // Update the HPCAnalysisRequest record
     // language=MariaDB
     $query  = "UPDATE HPCAnalysisRequest " .
-              "SET requestXMLfile = '$xml_content', " .
-              "editXMLFilename = '$edit_filename' " .
-              "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
+              "SET requestXMLfile = ?, " .
+              "editXMLFilename = ? " .
+              "WHERE HPCAnalysisRequestID = ? ";
     $stmt = mysqli_prepare( $link, $query );
     $args = [ $xml_content, $edit_filename, $HPCAnalysisRequestID ];
     $stmt->bind_param( 'ssi', ...$args );

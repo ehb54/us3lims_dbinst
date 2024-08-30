@@ -19,6 +19,7 @@ if ( ($_SESSION['userlevel'] != 2) &&   // data analyst can see own runID's
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+global $class_dir, $link;
 include_once $class_dir . 'experiment_status.php';
 // ini_set('display_errors', 'On');
 
@@ -95,36 +96,45 @@ function experiment_select( $link, $select_name, $current_ID = NULL )
 // A function to retrieve information about that runID
 function runID_info( $link, $experimentID )
 {
+  // language=MariaDB
   $query  = "SELECT experiment.experimentID, people.personID, personGUID, lname, fname, email " .
             "FROM experiment, projectPerson, people " .
-            "WHERE experiment.experimentID = ? and people.personID = ?" .
+            "WHERE experiment.experimentID = ? and people.personID = ? " .
             "AND experiment.projectID = projectPerson.projectID " .
             "AND projectPerson.personID = people.personID ";
 
   // Prepared statement
-  if ($stmt = mysqli_prepare($link, $query)) {
-   $stmt->bind_param('ii', $experimentID, $_SESSION['id']);
-   $stmt->execute();
-   $stmt->store_result();
-   $num_of_rows = $stmt->num_rows;
-   $stmt->bind_result($experiementID,$ID, $GUID, $lname, $fname, $email);
-   $stmt->fetch();
-
-   $stmt->free_result();
-   $stmt->close();
-  }
+  $stmt = mysqli_prepare($link, $query);
+  $stmt->bind_param('ii', $experimentID, $_SESSION['id']);
+  $stmt->execute();
+  $stmt->store_result();
+  $num_of_rows = $stmt->num_rows;
   if ($num_of_rows == 0)
-    return "No data found for this experiment";
+      return "No data found for this experiment";
+  $stmt->bind_result($experiementID,$ID, $GUID, $lname, $fname, $email);
+  $stmt->fetch();
+
+  $stmt->free_result();
+  $stmt->close();
+
+
 
   /* This code was replace by the prepared statement above
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
   list( $ID, $GUID, $lname, $fname, $email ) = mysqli_fetch_array( $result );
   */
+  $toc = <<<HTML
+  <h2 id='top'>Content</h2>
+  <ul>
+HTML;
+
+  $toc_end = "\n</ul>\n";
 
   $text = <<<HTML
+  <div id='Investigator'>
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Investigator Information</caption>
+  <caption>Investigator Information&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
   <tr><th>ID:</th>
       <td>$ID</td></tr>
 
@@ -138,7 +148,9 @@ function runID_info( $link, $experimentID )
       <td>$email</td></tr>
 
   </table>
+  </div>
 HTML;
+  $toc .= "<li><a href='#Investigator'>Investigator Information</a></li>\n";
 
   $query  = "SELECT experimentGUID, coeff1, coeff2, type, runType " .
             "FROM experiment, rotorCalibration " .
@@ -151,21 +163,26 @@ HTML;
    $stmt->execute();
    $stmt->store_result();
    $num_of_rows = $stmt->num_rows;
+
    $stmt->bind_result($experimentGUID, $coeff1, $coeff2, $type, $runType);
    $stmt->fetch();
 
    $stmt->free_result();
    $stmt->close();
-  }
+
 
   /* This code was replace by the prepared statement above
   $result = mysqli_query( $link, $query )
             or die( "Query failed : ".htmlentities($query)."<br />\n" . mysqli_error($link) );
   list( $GUID, $coeff1, $coeff2, $type, $runType ) = mysqli_fetch_array( $result );
   */
+    if ($num_of_rows == 0) {
+        return $toc . $toc_end . $text;
+    }
   $text .= <<<HTML
+<div id='Runinfo'>
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Run Information</caption>
+  <caption>Run Information&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
   <tr><th>GUID:</th>
       <td>$GUID</td></tr>
 
@@ -182,7 +199,12 @@ HTML;
       <td>$runType</td></tr>
 
   </table>
+</div>
 HTML;
+    $toc .= <<<HTML
+<li><a href='#Runinfo'>Run Information</a></li>
+HTML;
+  }
 
   $query  = "SELECT rawDataID, rawDataGUID, filename, solutionID " .
             "FROM rawData " .
@@ -190,6 +212,8 @@ HTML;
             "ORDER BY filename ";
 
   // Prepared statement
+  $rawIDs      = array();
+  $solutionIDs = array();
   if ($stmt = mysqli_prepare($link, $query)) {
    $stmt->bind_param('i', $experimentID);
    $stmt->execute();
@@ -203,13 +227,13 @@ HTML;
   */
 
   if ( $num_of_rows == 0 )
-    return $text;
+    return $toc . $toc_end . $text;
 
-  $rawIDs      = array();
-  $solutionIDs = array();
+
   $text .= <<<HTML
+  <div id='Rawdata'>
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Raw Data</caption>
+  <caption>Raw Data&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -223,7 +247,7 @@ HTML;
 
   while ($stmt->fetch())
   {
-    $rawIDs[]      = $rawDataID;
+    $rawIDs[] = $rawDataID;
     $solutionIDs[] = $solutionID;
 
     $text .= <<<HTML
@@ -239,10 +263,11 @@ HTML;
 
   $stmt->free_result();
   $stmt->close();
+  $text .= "</tbody>\n\n</table>\n</div>\n";
+  $toc .= "<li><a href='#Rawdata'>Raw Data</a></li>\n";
  }
 
-  $text .= "</tbody>\n\n" .
-           "</table>\n";
+
 
   $rawIDs_csv = implode( ", ", $rawIDs );
   $query  = "SELECT editedDataID, rawDataID, editGUID, filename " .
@@ -253,11 +278,12 @@ HTML;
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
   if ( mysqli_num_rows( $result ) == 0 )
-    return $text;
+    return $toc . $toc_end . $text;
 
   $text .= <<<HTML
+<div id='Edits'>
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Edit Profiles</caption>
+  <caption>Edit Profiles&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -286,7 +312,9 @@ HTML;
   }
 
   $text .= "</tbody>\n\n" .
-           "</table>\n";
+           "</table>\n</div>\n";
+  $toc .= "<li><a href='#Edits'>Edit Profiles</a></li>\n";
+
 
   $editIDs_csv = implode( ", ", $editIDs );
   $query  = "SELECT model.modelID, editedDataID, modelGUID, variance, meniscus, personID " .
@@ -296,12 +324,13 @@ HTML;
             "ORDER BY modelID ";
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
-
+  $modelIDs = array();
   if ( mysqli_num_rows( $result ) != 0 )
   {
     $text .= <<<HTML
+    <div id='Models'>
     <table cellspacing='0' cellpadding='0' class='admin'>
-    <caption>Models</caption>
+    <caption>Models&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
     <thead>
       <tr><th>ID</th>
           <th>GUID</th>
@@ -316,7 +345,7 @@ HTML;
 
 HTML;
 
-    $modelIDs = array();
+
     while ( list ( $modelID, $editID, $GUID, $variance, $meniscus, $personID ) = mysqli_fetch_array( $result ) )
     {
       $modelIDs[] = $modelID;
@@ -334,7 +363,9 @@ HTML;
     }
 
     $text .= "</tbody>\n\n" .
-             "</table>\n";
+             "</table>\n</div>\n";
+    $toc .= "<li><a href='#Models'>Models</a></li>\n";
+
   }
 
   if ( count( $modelIDs ) > 0 )
@@ -350,8 +381,9 @@ HTML;
     if ( mysqli_num_rows( $result ) != 0 )
     {
       $text .= <<<HTML
+    <div id='Noiselinksmodel'>
       <table cellspacing='0' cellpadding='0' class='admin'>
-      <caption>Noise Linked to Models</caption>
+      <caption>Noise Linked to Models&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
       <thead>
         <tr><th>ID</th>
             <th>GUID</th>
@@ -381,7 +413,9 @@ HTML;
       }
 
       $text .= "</tbody>\n\n" .
-               "</table>\n";
+               "</table>\n</div>\n";
+      $toc .= "<li><a href='#Noiselinksmodel'>Noise Linked to Models</a></li>\n";
+
     }
   }
 
@@ -395,8 +429,9 @@ HTML;
   if ( mysqli_num_rows( $result ) != 0 )
   {
     $text .= <<<HTML
+    <div id='Noiselinksedit'>
     <table cellspacing='0' cellpadding='0' class='admin'>
-    <caption>Noise Linked to Edit Profiles</caption>
+    <caption>Noise Linked to Edit Profiles&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
     <thead>
       <tr><th>ID</th>
           <th>GUID</th>
@@ -426,7 +461,9 @@ HTML;
     }
 
     $text .= "</tbody>\n\n" .
-             "</table>\n";
+             "</table>\n</div>\n";
+    $toc .= "<li><a href='#Noiselinksedit'>Noise Linked to Edit Profiles</a></li>\n";
+
   }
 
   $reportIDs = array();
@@ -441,8 +478,9 @@ HTML;
   if ( mysqli_num_rows( $result ) != 0 )
   {
     $text .= <<<HTML
+    <div id='Reportexperiment'>
     <table cellspacing='0' cellpadding='0' class='admin'>
-    <caption>Reports Related to This Experiment</caption>
+    <caption>Reports Related to This Experiment&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
     <thead>
       <tr><th>ID</th>
           <th>GUID</th>
@@ -467,10 +505,13 @@ HTML;
     }
 
     $text .= "</tbody>\n\n" .
-             "</table>\n";
+             "</table>\n</div>\n";
+    $toc .= "<li><a href='#Reportexperiment'>Reports Related to This Experiment</a></li>\n";
+
   }
 
   $reportTripleIDs = array();
+  $requestIDs = array();
   if ( ! empty( $reportIDs ) )
   {
     $reportIDs_csv = implode( ",", $reportIDs );
@@ -485,8 +526,9 @@ HTML;
     if ( mysqli_num_rows( $result ) != 0 )
     {
       $text .= <<<HTML
+      <div id='Reporttriples'>
       <table cellspacing='0' cellpadding='0' class='admin'>
-      <caption>Report Triples Related to Reports</caption>
+      <caption>Report Triples Related to Reports&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
       <thead>
         <tr><th>ID</th>
             <th>GUID</th>
@@ -518,7 +560,9 @@ HTML;
       }
   
       $text .= "</tbody>\n\n" .
-               "</table>\n";
+               "</table>\n</div>\n";
+      $toc .= "<li><a href='#Reporttriples'>Report Triples Related to Reports</a></li>\n";
+
     }
   }
 
@@ -538,8 +582,9 @@ HTML;
     if ( mysqli_num_rows( $result ) != 0 )
     {
       $text .= <<<HTML
+      <div id='Reports'>
       <table cellspacing='0' cellpadding='0' class='admin'>
-      <caption>Report Documents Related to Triples</caption>
+      <caption>Report Documents Related to Triples&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
       <thead>
         <tr><th>ID</th>
             <th>GUID</th>
@@ -571,7 +616,9 @@ HTML;
       }
   
       $text .= "</tbody>\n\n" .
-               "</table>\n";
+               "</table>\n</div>\n";
+        $toc .= "<li><a href='#Reports'>Report Documents Related to Triples</a></li>\n";
+
     }
   }
 
@@ -584,12 +631,12 @@ HTML;
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
   if ( mysqli_num_rows( $result ) == 0 )
-    return $text;
+    return $toc . $toc_end . $text;
 
-  $requestIDs = array();
   $text .= <<<HTML
+  <div id='HPCrequests'>
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>HPC Requests</caption>
+  <caption>HPC Requests&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -619,9 +666,10 @@ HTML;
 HTML;
 
   }
-  
+
   $text .= "</tbody>\n\n" .
-           "</table>\n";
+           "</table>\n</div>\n";
+  $toc .= "<li><a href='#HPCrequests'>HPC Requests</a></li>\n";
 
   $requestIDs_csv = implode( ", ", $requestIDs );
   $query  = "SELECT HPCAnalysisResultID, HPCAnalysisRequestID, gfacID, queueStatus, updateTime " .
@@ -630,12 +678,13 @@ HTML;
             "ORDER BY HPCAnalysisResultID ";
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
-
+  $incomplete = array();
   if ( mysqli_num_rows( $result ) != 0 )
   {
     $text .= <<<HTML
+    <div id='HPCresults'>
     <table cellspacing='0' cellpadding='0' class='admin'>
-    <caption>HPC Results</caption>
+    <caption>HPC Results&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
     <thead>
       <tr><th>ID</th>
           <th>Request ID</th>
@@ -648,7 +697,7 @@ HTML;
     <tbody>
 HTML;
 
-    $incomplete = array();
+
     while ( list( $ID, $requestID, $gfacID, $status, $updated ) = mysqli_fetch_array( $result ) )
     {
       if ( $status != 'completed' )
@@ -665,14 +714,15 @@ HTML;
 HTML;
 
     }
-  
-  $text .= "</tbody>\n\n" .
-           "</table>\n";
 
+  $text .= "</tbody>\n\n" .
+           "</table>\n</div>\n";
+
+  $toc .= "<li><a href='#HPCresults'>HPC Results</a></li>";
   }
 
   if ( empty( $incomplete ) )
-    return $text;
+    return $toc . $toc_end . $text;
 
   // Now switch over to the global db
   global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
@@ -682,12 +732,13 @@ HTML;
   if ( ! $globaldb )
   {
     $text .= "<p>Cannot open global database on $globaldbhost $globaldbname mysqli_error($globaldb) </p>\n";
-    return $text;
+    return $toc.$toc_end.$text;
   }
 
   $text .= <<<HTML
+  <div id='GFAC'>
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>GFAC Status</caption>
+  <caption>GFAC Status&emsp;&emsp;&emsp;<a href='#top'>Top</a></caption>
   <thead>
     <tr><th>gfacID</th>
         <th>Cluster</th>
@@ -732,15 +783,19 @@ HTML;
      $text .= "<tr><td colspan='6'>No local jobs currently in the queue</td></tr>\n";
 
   $text .= "</tbody>\n\n" .
-           "</table>\n";
+           "</table>\n</div>\n";
+  $toc .= <<<HTML
+    <li><a href='#GFAC'>GFAC Status</a></li>
+HTML;
 
   mysqli_close( $globaldb );
 
-  return $text;
+  return $toc . $toc_end . $text;
 }
 
 function HPCDetail( $link, $requestID )
 {
+  global $thr_clust_excls, $thr_clust_incls;
   $query = "SELECT * FROM HPCAnalysisRequest hpc 
          LEFT OUTER JOIN experimentPErson ep ON hpc.experimentID = ep.experimentID
             LEFT OUTER JOIN people p ON p.personGUID = hpc.investigatorGUID
@@ -802,6 +857,7 @@ HTML;
 
   $msg_filename = "$submit_dir$requestGUID/$dbname-$requestID-messages.txt";
   $queue_msgs = false;
+  $len_msgs   = 0;
   if ( file_exists( $msg_filename ) )
   {
     $queue_msgs   = file_get_contents( $msg_filename );
@@ -813,8 +869,7 @@ HTML;
   if ( ! empty( $resultID ) )
   {
     $resultID = $row['HPCAnalysisResultID'];
-    $models   = array();
-    $noise    = array();
+
     $query  = "SELECT resultID FROM HPCAnalysisResultData " .
               "WHERE HPCAnalysisResultID = $resultID " .
               "AND HPCAnalysisResultType = 'model' ";

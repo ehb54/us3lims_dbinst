@@ -387,7 +387,7 @@ function edit_record($link)
   // language=MariaDB
   $query  = "SELECT labID, name, serialNumber  " .
             "FROM instrument " .
-            "WHERE instrumentID = $instrumentID ";
+            "WHERE instrumentID = ? ";
   $stmt = $link->prepare( $query );
   $stmt->bind_param( 'i', $instrumentID );
   $stmt->execute()

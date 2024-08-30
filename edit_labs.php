@@ -396,7 +396,7 @@ function edit_record($link)
   // language=MariaDB
   $query  = "SELECT name, building AS contact " .
             "FROM lab " .
-            "WHERE labID = $labID ";
+            "WHERE labID = ? ";
   $stmt = $link->prepare( $query );
   $stmt->bind_param( 'i', $labID );
   $stmt->execute()

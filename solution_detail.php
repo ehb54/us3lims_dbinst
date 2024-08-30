@@ -118,6 +118,7 @@ function get_header_info( $link, $type, $experimentID, $triple )
 function get_document_content( $link, $type, $experimentID, $triple )
 {
   // First we want to find the solutionID based on the experiment and triple
+  // language=MariaDB
   $query  = "SELECT filename, solutionID AS sID " .
             "FROM rawData " .
             "WHERE experimentID = ? ";
@@ -171,6 +172,7 @@ function get_solutionInfo( $link, $solutionID )
   $stmt->close();
 
   $analyte_list = array();
+  // language=MariaDB
   $query  = "SELECT description, amount " .
             "FROM solutionAnalyte, analyte " .
             "WHERE solutionAnalyte.solutionID = ? " .
@@ -193,6 +195,7 @@ function get_solutionInfo( $link, $solutionID )
   $analyte_text .= "</table>\n";
 
   $buffer_list = array();
+  // language=MariaDB
   $query  = "SELECT description " .
             "FROM solutionBuffer, buffer " .
             "WHERE solutionBuffer.solutionID = ? " .
@@ -227,6 +230,7 @@ function get_analyteInfo( $link, $solutionID )
 {
   // First get a list of the analytes in the solution
   $analyte_list = array();
+  // language=MariaDB
   $query  = "SELECT sa.analyteID " .
             "FROM solutionAnalyte sa, analyte " .
             "WHERE solutionID = ? " .
@@ -236,8 +240,6 @@ function get_analyteInfo( $link, $solutionID )
   $stmt->bind_param('i', $solutionID);
   $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
   $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
-  $result = mysqli_query( $link, $query )
-           or die( "Query failed : $query<br />\n" . mysqli_error($link) );
   while ( list( $analyteID ) = mysqli_fetch_array( $result ) )
     $analyte_list[] = $analyteID;
   $result->close();
@@ -320,7 +322,7 @@ function get_bufferInfo( $link, $solutionID )
   // First get the buffer in the solution
   $query  = "SELECT bufferID " .
             "FROM solutionBuffer " .
-            "WHERE solutionID = $solutionID ";
+            "WHERE solutionID = ? ";
   $stmt = mysqli_prepare( $link, $query );
   $stmt->bind_param('i', $solutionID);
   $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );

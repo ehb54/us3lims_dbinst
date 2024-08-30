@@ -162,9 +162,9 @@ $missit_msg = "<br/>filenames[0]=" . $filenames[0];
     // Update the HPCAnalysisRequest record
     // language=MariaDB
     $query  = "UPDATE HPCAnalysisRequest " .
-              "SET requestXMLfile = '$xml_content', " .
-              "editXMLFilename = '$edit_filename' " .
-              "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
+              "SET requestXMLfile = ?, " .
+              "editXMLFilename = ? " .
+              "WHERE HPCAnalysisRequestID = ? ";
     $args = [$xml_content, $edit_filename, $HPCAnalysisRequestID];
     $stmt = $link->prepare( $query );
     $stmt->bind_param( 'ssi', ...$args );
