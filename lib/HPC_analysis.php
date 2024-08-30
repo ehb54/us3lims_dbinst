@@ -92,17 +92,6 @@ abstract class HPC_analysis
           or die( "Query failed : $query<br />" . print_r($args, true) . "<br />"  . $stmt->error);
     $insert_id = $stmt->insert_id;
     $stmt->close();
-    echo $stmt->insert_id . "|". $insert_id;
-    if (!isset($stmt->insert_id) && $insert_id)
-    {
-      die("INSERT FAILED apparently:" . print_r($stmt->insert_id, true));
-      $stmt = mysqli_prepare($link, "SELECT HPCAnalysisRequestID from HPCAnalysisRequest where HPCAnalysisRequestGUID = ?");
-      $stmt->bind_param("s", $guid);
-      $stmt->execute();
-      $result = $stmt->get_result() or die("Query fauled:");
-      $result->close();
-      $stmt->close();
-    }
 
     // Return the generated ID
     return  $insert_id ;
