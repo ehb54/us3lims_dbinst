@@ -322,7 +322,7 @@ function get_bufferInfo( $link, $solutionID )
   // First get the buffer in the solution
   $query  = "SELECT bufferID " .
             "FROM solutionBuffer " .
-            "WHERE solutionID = $solutionID ";
+            "WHERE solutionID = ? ";
   $stmt = mysqli_prepare( $link, $query );
   $stmt->bind_param('i', $solutionID);
   $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
