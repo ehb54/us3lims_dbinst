@@ -12,6 +12,7 @@ $message = '';
 
 include 'config.php';
 include 'db.php';
+global $link;
 // ini_set('display_errors', 'On');
 
 // Update permits table if we submitted some data
@@ -149,7 +150,7 @@ include 'header.php';
 
   }
 ?>
-  </div>
+  </table>
 
   <p><input type='hidden' name='count' value='<?php echo $count;?>' />
      <input type="submit" value="Update Settings"/></p>
