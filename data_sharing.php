@@ -53,12 +53,16 @@ if ( isset( $_POST['count'] ) )
 // Let's get a list of everyone in the database
 $names = array();
 $IDs   = array();
-$query  = "SELECT personID, lname, fname FROM people " .
+$query  = "SELECT personID, lname, fname FROM people where personID != ?" .
           "ORDER BY lname, fname ";
-$result = mysqli_query($link, $query)
-          or die( "Query failed : $query<br/>\n" . mysqli_error($link) );
+$stmt = $link->prepare( $query );
+$stmt->bind_param( 'i', $loginID );
+$stmt->execute()
+      or die ("Query failed : $query<br/>" . $stmt->error);
+$result = $stmt->get_result()
+          or die( "Query failed : $query<br/>\n" . $stmt->error );
 
-$count  = mysqli_num_rows( $result );
+$count  = $result->num_rows;
 for ( $i = 0; $i < $count; $i++ )
 {
   list( $iID, $lname, $fname ) = mysqli_fetch_array( $result );
@@ -68,6 +72,8 @@ for ( $i = 0; $i < $count; $i++ )
     $IDs  [ $i ] = $iID;
   }
 }
+$result->close();
+$stmt->close();
 
 // Let's get a current list of collaborators
 $collaborators = array();
@@ -109,7 +115,6 @@ include 'header.php';
   <table class='noborder'>
 
 <?php
-  $count--;     // Accounting for ourself
   $rows  = (int) ceil($count / 3.0);
   $extra = $count % 3;
 
@@ -144,7 +149,7 @@ include 'header.php';
 
   }
 ?>
-  </table>
+  </div>
 
   <p><input type='hidden' name='count' value='<?php echo $count;?>' />
      <input type="submit" value="Update Settings"/></p>
