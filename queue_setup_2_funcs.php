@@ -110,10 +110,12 @@ function get_setup_2( $link )
 
       // Get other things we need too
       $query  = "SELECT e.filename, e.data FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
-          "JOIN experimentPerson p on p.experimentID = r.experimentID " .
-                "WHERE e.editedDataID = ? and p.personID = ? ";
+                "LEFT OUTER JOIN experimentPerson ep on ep.experimentID = r.experimentID  ".
+                "LEFT OUTER JOIN experiment ex on r.experimentID = ex.experimentID ".
+                "LEFT OUTER JOIN projectPerson pp on pp.projectID = ex.projectID " .
+                "WHERE e.editedDataID = ? and (ep.personID = ? or pp.personID = ?) ";
       $stmt = mysqli_prepare( $link, $query );
-      $stmt->bind_param( 'ii', $editedDataID, $_SESSION['id'] );
+      $stmt->bind_param( 'iii', $editedDataID, $_SESSION['id'], $_SESSION['id'] );
       $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
       $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
       list( $editFilename, $editXML ) = mysqli_fetch_array( $result );
@@ -154,10 +156,12 @@ function get_editedData( $link, $rawDataID, $editedDataID = 0 )
   // language=MariaDB
   $query  = "SELECT e.editedDataID, e.label, e.filename " .
             "FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
-            "JOIN experimentPerson p on p.experimentID = r.experimentID " .
-            "WHERE e.rawDataID = ? and p.personID = ? ";
+            "LEFT OUTER JOIN experimentPerson ep on ep.experimentID = r.experimentID  ".
+            "LEFT OUTER JOIN experiment ex on r.experimentID = ex.experimentID ".
+            "LEFT OUTER JOIN projectPerson pp on pp.projectID = ex.projectID " .
+            "WHERE e.rawDataID = ? and (ep.personID = ? or pp.personID = ?) ";
   $stmt = $link->prepare( $query );
-  $stmt->bind_param( 'ii', $rawDataID, $_SESSION['id'] );
+  $stmt->bind_param( 'iii', $rawDataID, $_SESSION['id'], $_SESSION['id'] );
   $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
   $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
 
@@ -189,10 +193,13 @@ function get_noise( $link, $rawDataID, $editedDataID, $noiseIDs )
   $query  = "SELECT n.noiseID, n.modelID, n.noiseType, n.timeEntered " .
             "FROM noise n " .
             "join editedData e on e.editedDataID = n.editedDataID JOIN rawData r on r.rawDataID = e.rawDataID " .
-            "JOIN experimentPerson p on p.experimentID = r.experimentID  WHERE e.editedDataID = ? and p.personID = ? " .
-            "ORDER BY timeEntered DESC ";
+            "LEFT OUTER JOIN experimentPerson ep on ep.experimentID = r.experimentID  ".
+            "LEFT OUTER JOIN experiment ex on r.experimentID = ex.experimentID ".
+            "LEFT OUTER JOIN projectPerson pp on pp.projectID = ex.projectID " .
+            "WHERE e.editedDataID = ? and (ep.personID = ? or pp.personID = ?) " .
+            "ORDER BY n.timeEntered DESC ";
   $stmt = $link->prepare( $query );
-  $stmt->bind_param( 'ii', $editedDataID, $_SESSION['id'] );
+  $stmt->bind_param( 'iii', $editedDataID, $_SESSION['id'], $_SESSION['id'] );
   $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
   $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
 
@@ -258,11 +265,13 @@ function get_latest_edits( $link )
     $query  = "SELECT e.editedDataID, e.label, e.filename, e.data, " .
               " e.lastUpdated " .
               "FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
-              "JOIN experimentPerson p on p.projectID = ex.projectID " .
-              "WHERE e.rawDataID = ? and p.personID = ?" .
+              "LEFT OUTER JOIN experimentPerson ep on ep.experimentID = r.experimentID " .
+              "LEFT OUTER JOIN experiment ex on ex.experimentID = r.experimentID " .
+              "LEFT OUTER JOIN projectPerson pp on pp.projectID = ex.projectID " .
+              "WHERE e.rawDataID = ? and (ep.personID = ? or pp.personID = ?) " .
               "ORDER BY e.label, e.lastUpdated DESC";
     $stmt = $link->prepare( $query );
-    $stmt->bind_param( 'ii', $rawDataID, $_SESSION['id'] );
+    $stmt->bind_param( 'iii', $rawDataID, $_SESSION['id'], $_SESSION['id'] );
     $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
     $result = mysqli_query( $link, $query )
             or die("Query failed : $query<br />\n" . mysqli_error($link));
