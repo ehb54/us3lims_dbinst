@@ -53,7 +53,7 @@ if ( isset( $_POST['count'] ) )
 // Let's get a list of everyone in the database
 $names = array();
 $IDs   = array();
-$query  = "SELECT personID, lname, fname FROM people where personID != ?" .
+$query  = "SELECT personID, lname, fname FROM people where personID != ? " .
           "ORDER BY lname, fname ";
 $stmt = $link->prepare( $query );
 $stmt->bind_param( 'i', $loginID );
