@@ -109,7 +109,7 @@ function get_setup_2( $link )
       $_SESSION['cells'][$rawDataID]['editedDataID'] = $editedDataID;
 
       // Get other things we need too
-      $query  = "SELECT e.filename, e.data FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
+      $query  = "SELECT e.filename, e.data, r.experimentID FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
                 "LEFT OUTER JOIN experimentPerson ep on ep.experimentID = r.experimentID  ".
                 "LEFT OUTER JOIN experiment ex on r.experimentID = ex.experimentID ".
                 "LEFT OUTER JOIN projectPerson pp on pp.projectID = ex.projectID " .
@@ -118,10 +118,11 @@ function get_setup_2( $link )
       $stmt->bind_param( 'iii', $editedDataID, $_SESSION['id'], $_SESSION['id'] );
       $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
       $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
-      list( $editFilename, $editXML ) = mysqli_fetch_array( $result );
+      list( $editFilename, $editXML, $expID ) = mysqli_fetch_array( $result );
       $stmt->close();
       $result->close();
       $_SESSION['cells'][$rawDataID]['editFilename'] = $editFilename;
+      $_SESSION['cells'][$rawDataID]['experimentID']      = $expID;
       getOtherEditInfo( $rawDataID, $editXML );
     }
   }
@@ -261,7 +262,7 @@ function get_latest_edits( $link )
   $count = 0;
   // language=MariaDB
   $query  = "SELECT e.editedDataID, e.label, e.filename, e.data, " .
-      " e.lastUpdated " .
+      " e.lastUpdated, r.experimentID " .
       "FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
       "LEFT OUTER JOIN experimentPerson ep on ep.experimentID = r.experimentID " .
       "LEFT OUTER JOIN experiment ex on ex.experimentID = r.experimentID " .
@@ -278,7 +279,7 @@ function get_latest_edits( $link )
             or die("Query failed : $query<br />\n" . $stmt->error);
 
 
-    list( $editedDataID, $label, $filename, $editXML ) = mysqli_fetch_array( $result );
+    list( $editedDataID, $label, $filename, $editXML, $expID ) = mysqli_fetch_array( $result );
     $result->close();
     getOtherEditInfo( $rawDataID, $editXML );
     if ( isset( $is_cli ) && $is_cli ) {
@@ -328,7 +329,7 @@ function get_latest_edits( $link )
 
     $cell = $_SESSION['cells'][$rawDataID];
     $_SESSION['request'][$count]['rawDataID']    = $rawDataID;
-    $_SESSION['request'][$count]['experimentID'] = $cell['experimentID'];
+    $_SESSION['request'][$count]['experimentID'] = $cell['experimentID']??$expID;
     $_SESSION['request'][$count]['path']         = $cell['path'];
     $_SESSION['request'][$count]['filename']     = $cell['filename'];
     $_SESSION['request'][$count]['editedDataID'] = $editedDataID;
