@@ -109,7 +109,7 @@ function get_setup_2( $link )
       $_SESSION['cells'][$rawDataID]['editedDataID'] = $editedDataID;
 
       // Get other things we need too
-      $query  = "SELECT filename, data FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
+      $query  = "SELECT e.filename, e.data FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
           "JOIN experimentPerson p on p.experimentID = r.experimentID " .
                 "WHERE e.editedDataID = ? and p.personID = ? ";
       $stmt = mysqli_prepare( $link, $query );
@@ -152,7 +152,7 @@ function get_setup_2( $link )
 function get_editedData( $link, $rawDataID, $editedDataID = 0 )
 {
   // language=MariaDB
-  $query  = "SELECT e.editedDataID, label, filename " .
+  $query  = "SELECT e.editedDataID, e.label, e.filename " .
             "FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
             "JOIN experimentPerson p on p.experimentID = r.experimentID " .
             "WHERE e.rawDataID = ? and p.personID = ? ";
@@ -186,10 +186,10 @@ function get_noise( $link, $rawDataID, $editedDataID, $noiseIDs )
             "  onchange='this.form.submit();' size='8'>\n" .
             "  <option value='null'>Select noise ...</option>\n";
   // language=MariaDB
-  $query  = "SELECT noiseID, modelID, noiseType, timeEntered " .
-            "FROM noise " .
-            "join editedData e on e.editedDataID = noise.editedDataID JOIN rawData r on r.rawDataID = e.rawDataID " .
-            "JOIN experimentPerson p on p.experimentID = r.experimentID  WHERE editedDataID = ? and p.personID = ? " .
+  $query  = "SELECT n.noiseID, n.modelID, n.noiseType, n.timeEntered " .
+            "FROM noise n " .
+            "join editedData e on e.editedDataID = n.editedDataID JOIN rawData r on r.rawDataID = e.rawDataID " .
+            "JOIN experimentPerson p on p.experimentID = r.experimentID  WHERE e.editedDataID = ? and p.personID = ? " .
             "ORDER BY timeEntered DESC ";
   $stmt = $link->prepare( $query );
   $stmt->bind_param( 'ii', $editedDataID, $_SESSION['id'] );
@@ -255,12 +255,12 @@ function get_latest_edits( $link )
   foreach( $_SESSION['cells'] as $rawDataID => $cell )
   {
     // language=MariaDB
-    $query  = "SELECT editedDataID, label, filename, data, " .
-              " lastUpdated " .
+    $query  = "SELECT e.editedDataID, e.label, e.filename, e.data, " .
+              " e.lastUpdated " .
               "FROM editedData e JOIN rawData r on r.rawDataID = e.rawDataID " .
               "JOIN experimentPerson p on p.projectID = ex.projectID " .
-              "WHERE rawDataID = ? and p.personID = ?" .
-              "ORDER BY label, lastUpdated DESC";
+              "WHERE e.rawDataID = ? and p.personID = ?" .
+              "ORDER BY e.label, e.lastUpdated DESC";
     $stmt = $link->prepare( $query );
     $stmt->bind_param( 'ii', $rawDataID, $_SESSION['id'] );
     $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
