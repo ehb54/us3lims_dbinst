@@ -19,6 +19,7 @@ if ( ($_SESSION['userlevel'] != 2) &&   // data analyst can see own runID's
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+global $class_dir, $link;
 include_once $class_dir . 'experiment_status.php';
 // ini_set('display_errors', 'On');
 
@@ -95,26 +96,28 @@ function experiment_select( $link, $select_name, $current_ID = NULL )
 // A function to retrieve information about that runID
 function runID_info( $link, $experimentID )
 {
+  // language=MariaDB
   $query  = "SELECT experiment.experimentID, people.personID, personGUID, lname, fname, email " .
             "FROM experiment, projectPerson, people " .
-            "WHERE experiment.experimentID = ? and people.personID = ?" .
+            "WHERE experiment.experimentID = ? and people.personID = ? " .
             "AND experiment.projectID = projectPerson.projectID " .
             "AND projectPerson.personID = people.personID ";
 
   // Prepared statement
-  if ($stmt = mysqli_prepare($link, $query)) {
-   $stmt->bind_param('ii', $experimentID, $_SESSION['id']);
-   $stmt->execute();
-   $stmt->store_result();
-   $num_of_rows = $stmt->num_rows;
-   $stmt->bind_result($experiementID,$ID, $GUID, $lname, $fname, $email);
-   $stmt->fetch();
-
-   $stmt->free_result();
-   $stmt->close();
-  }
+  $stmt = mysqli_prepare($link, $query);
+  $stmt->bind_param('ii', $experimentID, $_SESSION['id']);
+  $stmt->execute();
+  $stmt->store_result();
+  $num_of_rows = $stmt->num_rows;
   if ($num_of_rows == 0)
-    return "No data found for this experiment";
+      return "No data found for this experiment";
+  $stmt->bind_result($experiementID,$ID, $GUID, $lname, $fname, $email);
+  $stmt->fetch();
+
+  $stmt->free_result();
+  $stmt->close();
+
+
 
   /* This code was replace by the prepared statement above
   $result = mysqli_query( $link, $query )
@@ -151,18 +154,22 @@ HTML;
    $stmt->execute();
    $stmt->store_result();
    $num_of_rows = $stmt->num_rows;
+
    $stmt->bind_result($experimentGUID, $coeff1, $coeff2, $type, $runType);
    $stmt->fetch();
 
    $stmt->free_result();
    $stmt->close();
-  }
+
 
   /* This code was replace by the prepared statement above
   $result = mysqli_query( $link, $query )
             or die( "Query failed : ".htmlentities($query)."<br />\n" . mysqli_error($link) );
   list( $GUID, $coeff1, $coeff2, $type, $runType ) = mysqli_fetch_array( $result );
   */
+    if ($num_of_rows == 0) {
+        return $text;
+    }
   $text .= <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
   <caption>Run Information</caption>
@@ -183,6 +190,7 @@ HTML;
 
   </table>
 HTML;
+  }
 
   $query  = "SELECT rawDataID, rawDataGUID, filename, solutionID " .
             "FROM rawData " .
@@ -190,6 +198,8 @@ HTML;
             "ORDER BY filename ";
 
   // Prepared statement
+  $rawIDs      = array();
+  $solutionIDs = array();
   if ($stmt = mysqli_prepare($link, $query)) {
    $stmt->bind_param('i', $experimentID);
    $stmt->execute();
@@ -205,8 +215,7 @@ HTML;
   if ( $num_of_rows == 0 )
     return $text;
 
-  $rawIDs      = array();
-  $solutionIDs = array();
+
   $text .= <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
   <caption>Raw Data</caption>
@@ -296,7 +305,7 @@ HTML;
             "ORDER BY modelID ";
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
-
+  $modelIDs = array();
   if ( mysqli_num_rows( $result ) != 0 )
   {
     $text .= <<<HTML
@@ -316,7 +325,7 @@ HTML;
 
 HTML;
 
-    $modelIDs = array();
+
     while ( list ( $modelID, $editID, $GUID, $variance, $meniscus, $personID ) = mysqli_fetch_array( $result ) )
     {
       $modelIDs[] = $modelID;
@@ -741,6 +750,7 @@ HTML;
 
 function HPCDetail( $link, $requestID )
 {
+  global $thr_clust_excls, $thr_clust_incls;
   $query = "SELECT * FROM HPCAnalysisRequest hpc 
          LEFT OUTER JOIN experimentPErson ep ON hpc.experimentID = ep.experimentID
             LEFT OUTER JOIN people p ON p.personGUID = hpc.investigatorGUID
@@ -802,6 +812,7 @@ HTML;
 
   $msg_filename = "$submit_dir$requestGUID/$dbname-$requestID-messages.txt";
   $queue_msgs = false;
+  $len_msgs   = 0;
   if ( file_exists( $msg_filename ) )
   {
     $queue_msgs   = file_get_contents( $msg_filename );
@@ -813,8 +824,7 @@ HTML;
   if ( ! empty( $resultID ) )
   {
     $resultID = $row['HPCAnalysisResultID'];
-    $models   = array();
-    $noise    = array();
+
     $query  = "SELECT resultID FROM HPCAnalysisResultData " .
               "WHERE HPCAnalysisResultID = $resultID " .
               "AND HPCAnalysisResultType = 'model' ";
