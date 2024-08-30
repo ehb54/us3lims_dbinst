@@ -274,11 +274,12 @@ function get_latest_edits( $link )
 
     $stmt->bind_param( 'iii', $rawDataID, $_SESSION['id'], $_SESSION['id'] );
     $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
-    $result = mysqli_query( $link, $query )
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
-    $result->close();
+    $result = $stmt->get_result()
+            or die("Query failed : $query<br />\n" . $stmt->error);
+
 
     list( $editedDataID, $label, $filename, $editXML ) = mysqli_fetch_array( $result );
+    $result->close();
     getOtherEditInfo( $rawDataID, $editXML );
     if ( isset( $is_cli ) && $is_cli ) {
         if ( !strlen( $editedDataID ) ) {
