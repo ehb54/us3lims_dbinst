@@ -94,7 +94,7 @@ abstract class HPC_analysis
     echo $stmt->insert_id;
     if (!isset($stmt->insert_id))
     {
-      die("INSERT FAILED apparently:" . print_r($stmt->insert_id, true);
+      die("INSERT FAILED apparently:" . print_r($stmt->insert_id, true));
       $stmt = mysqli_prepare($link, "SELECT HPCAnalysisRequestID from HPCAnalysisRequest where HPCAnalysisRequestGUID = ?");
       $stmt->bind_param("s", $guid);
       $stmt->execute();
