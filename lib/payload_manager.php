@@ -125,7 +125,7 @@ abstract class Payload_manager
       $chanindex     = 0;
       $query  = "SELECT coeff1, coeff2, filename, rawData.experimentID " .
                 "FROM rawData, experiment, rotorCalibration " .
-                "WHERE rawData.rawDataID =  ?" .
+                "WHERE rawData.rawDataID =  ? " .
                 "AND rawData.experimentID = experiment.experimentID " .
                 "AND experiment.rotorCalibrationID = rotorCalibration.rotorCalibrationID ";
       $stmt   = mysqli_prepare( $link, $query );
