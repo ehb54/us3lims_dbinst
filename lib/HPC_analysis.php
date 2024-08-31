@@ -90,10 +90,11 @@ abstract class HPC_analysis
     $stmt->bind_param("ssssisss", ...$args );
     $stmt->execute()
           or die( "Query failed : $query<br />" . print_r($args, true) . "<br />"  . $stmt->error);
+    $insert_id = $stmt->insert_id;
     $stmt->close();
 
     // Return the generated ID
-    return ( $stmt->insert_id );
+    return  $insert_id ;
   }
 
   // Function to create the HPCDataset and HPCRequestData table entries

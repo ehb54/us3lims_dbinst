@@ -797,7 +797,7 @@ function HPCDetail( $link, $requestID )
 {
   global $thr_clust_excls, $thr_clust_incls;
   $query = "SELECT * FROM HPCAnalysisRequest hpc 
-         LEFT OUTER JOIN experimentPErson ep ON hpc.experimentID = ep.experimentID
+         LEFT OUTER JOIN experimentPerson ep ON hpc.experimentID = ep.experimentID
             LEFT OUTER JOIN people p ON p.personGUID = hpc.investigatorGUID
          LEFT OUTER JOIN people p2 ON p2.personGUID = hpc.submitterGUID
          WHERE HPCAnalysisRequestID=? and (p.personID = ? or p2.personID = ? or ep.personID = ? or ? > 2)";
