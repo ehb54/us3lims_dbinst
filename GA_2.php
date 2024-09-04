@@ -169,7 +169,7 @@ echo <<<HTML
     <form enctype="multipart/form-data" action="{$_SERVER['PHP_SELF']}" method="post">
       <fieldset style="background: #eeeeee">
         <legend>Select File to Upload $soluteFile</legend>
-        <input type="file" name="file-upload" size="30" accept=".gadistro.dat"/>
+        <input type="file" name="file-upload" size="30" accept=".dat"/>
         <input type="submit" name="upload_submit" value="Load Values"/>
       </fieldset>
     </form>
