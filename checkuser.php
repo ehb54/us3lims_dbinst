@@ -109,8 +109,9 @@ if ( $count == 1 )
   $_SESSION['instance']         = $dbname;
   $_SESSION['user_id' ]         = $fname . "_" . $lname . "_" . $personGUID;
   $_SESSION['advancelevel']     = $advancelevel;
-  $_SESSION['userNamePAM']      = $userNamePAM;
-  $_SESSION['authenticatePAM']  = $authenticatePAM;
+  $_SESSION['userNamePAM']      = $userNamePAM??$email;
+  $_SESSION['authenticatePAM']  = $authenticatePAM??0;
+  $_SESSION['gmpReviewerRole']  = $gmpReviewerRole??'NONE';
 
   // Set cluster authorizations
   $clusterAuth = array();

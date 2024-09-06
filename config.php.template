@@ -57,6 +57,10 @@ $last_update        = '2020/05/01'; # the date the website was last updated
 $copyright_date     = '2020'; # copyright date
 $current_year       = date( 'Y' );
 
+// Feature flags
+$enable_GMP         = false;  # Enable GMP related features
+$enable_PAM         = false;  # Enable PAM login
+
 //////////// End of user specific configuration
 
 // ensure a trailing slash
