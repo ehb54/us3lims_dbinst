@@ -145,7 +145,7 @@ function do_captcha( $msg = "" )
   $message = ( empty( $msg ) ) ? "" : "<p style='color:red;'>$msg</p>";
   $act     = htmlentities($_SERVER['PHP_SELF']);
   // Let's just use the random password function we already have
-  $pw      = makeRandomPassword();
+  $pw      = makeRandomPassword(6);
   $_SESSION['captcha'] = $pw;
 
 echo<<<HTML
