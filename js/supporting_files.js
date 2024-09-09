@@ -84,6 +84,7 @@ function handle_mode(item) {
   doc_blob.type = null;
   display_document(null);
 
+  document.getElementById('sf_subclass_item').classList.remove('active');
   if (item === element_view) {
     set_view_mode();
   } else if (item === element_new) {
@@ -162,6 +163,7 @@ function select_class(input) {
   let option = input.options[input.selectedIndex];
   let value = option.value;
 
+  document.getElementById('sf_subclass_item').classList.add('active');
   if (value === "solution"){
     fill_sel_class("sf_sel_subclass", solutions);
   } else if (value === "buffer"){
@@ -170,6 +172,7 @@ function select_class(input) {
     fill_sel_class("sf_sel_subclass", analytes);
   } else {
     fill_sel_class("sf_sel_subclass", null);
+    document.getElementById('sf_subclass_item').classList.remove('active');
   }
 }
 
@@ -180,6 +183,8 @@ function select_project(input) {
   if (document.getElementById("sf_edit").checked){
     return;
   }
+  document.getElementById('sf_subclass_item').classList.remove('active');
+
   let option = input.options[input.selectedIndex];
   let value = option.value;
 
@@ -211,6 +216,7 @@ async function select_document() {
   let value = option.value;
   doc_blob.url = null;
   doc_blob.type = null;
+  document.getElementById('sf_subclass_item').classList.remove('active');
 
   if (value == "EMPTY" || value == "SELECT") {
     document.getElementById("sf_desc").value = "";
@@ -229,6 +235,7 @@ async function select_document() {
 
     let class_txt, subclass_txt;
     let class_sel, subclass_sel;
+    document.getElementById('sf_subclass_item').classList.add('active');
     if (solutionID != null){
       class_txt = "Solution";
       subclass_txt = solutions[solutionID];
@@ -248,11 +255,12 @@ async function select_document() {
       class_sel = "analyte";
       subclass_sel = analyteID;
     } else {
-      class_txt = "--- Uncategorized ---";
-      subclass_txt = "--- Uncategorized ---";
+      class_txt = "Others";
+      subclass_txt = "";
       fill_sel_class("sf_sel_subclass", null);
       class_sel = null;
       subclass_sel = null;
+      document.getElementById('sf_subclass_item').classList.remove('active');
     }
 
     document.getElementById("sf_desc").value = description;
@@ -575,7 +583,12 @@ function fill_sel_class(tag_id, options) {
   select_element.innerHTML = "";
   let flag = false;
   let value = "SELECT";
-  let text = "--- Select One ---";
+  let text;
+  if (tag_id == "sf_sel_class"){
+    text = "Others";
+  } else {
+    text = "--- Select One ---";
+  }
   if (options == null){
     flag = true;
     value = "EMPTY";
