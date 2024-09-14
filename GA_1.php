@@ -41,13 +41,10 @@ include 'lib/payload_manager.php';
 include 'lib/controls.php';
 
 // Make sure the advancement level is set
-$advanceLevel = ( isset($_SESSION['advancelevel']) )
-              ? $_SESSION['advancelevel'] : 0;
+$advanceLevel = $_SESSION['advancelevel'] ?? 0;
 
-$separate_datasets = ( isset( $_SESSION['separate_datasets'] ) )
-                   ? $_SESSION['separate_datasets'] : 1;
-$advanced_review   = ( isset( $_SESSION['advanced_review'] ) )
-                   ? $_SESSION['advanced_review'] : 0;
+$separate_datasets = $_SESSION['separate_datasets'] ?? 1;
+$advanced_review   = $_SESSION['advanced_review'] ?? 0;
 
 // To support multiple datasets, let's keep track of which one we're on
 $num_datasets = sizeof( $_SESSION['request'] );

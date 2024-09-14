@@ -36,12 +36,8 @@ function get_setup_1( $link )
       $new_submitter .= ",$owner_email";
   }
 
-  // Get experiment ID
-  $new_experimentID = 0;
-  if ( isset( $_SESSION['new_expID'] ) )
-  {
-    $new_experimentID = $_SESSION['new_expID'];
-  }
+  // Get experiment ID or default to 0
+  $new_experimentID = $_SESSION['new_expID'] ?? 0;
 
   if ( $new_experimentID == 0 )
   {
@@ -50,11 +46,7 @@ function get_setup_1( $link )
   }
 
   // Now check for cells (at least one should be selected)
-  $new_cell_array = array();
-  if ( isset( $_SESSION['new_cells'] ) )
-  {
-    $new_cell_array = $_SESSION['new_cells'];
-  }
+  $new_cell_array = $_SESSION['new_cells'] ?? array();
 
   if ( count( $new_cell_array ) < 1 )
   {

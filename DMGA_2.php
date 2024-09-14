@@ -39,8 +39,7 @@ include $class_dir . 'submit_airavata.php';
 include_once $class_dir . 'priority.php';
 
 // Make sure the advancement level is set
-$advanceLevel = ( isset($_SESSION['advancelevel']) )
-              ? $_SESSION['advancelevel'] : 0;
+$advanceLevel = $_SESSION['advancelevel'] ?? 0;
 
 // Create the payload manager and restore the data
 $payload = new Payload_DMGA( $_SESSION );

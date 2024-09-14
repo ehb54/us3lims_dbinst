@@ -69,9 +69,7 @@ abstract class HPC_analysis
     $result->close();
     $stmt->close();
     $guid = uuid();
-    $analType = $job['method'];
-    if ( isset( $job['analType'] ) )
-      $analType = $job['analType'];
+    $analType = $job['analType'] ?? $job['method'];
     // What about $job['cluster']['shortname'] and $job['cluster']['queue']?
     $query  = "INSERT INTO HPCAnalysisRequest SET " .
               "HPCAnalysisRequestGUID = ?, " .

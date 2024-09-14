@@ -33,8 +33,7 @@ include 'lib/utility.php';
 include 'lib/payload_manager.php';
 
 // Make sure the advancement level is set
-$advanceLevel = ( isset($_SESSION['advancelevel']) )
-              ? $_SESSION['advancelevel'] : 0;
+$advanceLevel = $_SESSION['advancelevel'] ?? 0;
 
 // Create the payload manager and place to gather bucket data
 $payload = new Payload_GA( $_SESSION );
@@ -48,9 +47,7 @@ if ( isset($_POST['TIGRE']) )
   if ( isset($_POST['cluster']) )
   {
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
-    $gwhostid   = 'uslims3';
-    if ( isset( $_SESSION[ 'gwhostid' ] ) )
-      $gwhostid   = $_SESSION[ 'gwhostid' ];
+    $gwhostid   = $_SESSION[ 'gwhostid' ] ?? 'uslims3';
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
     if ( preg_match( "/alamo/", $gwhostid )  &&  $cluster_shortname == 'alamo' )
     {  // alamo-to-alamo uses alamo-local as cluster
@@ -247,10 +244,10 @@ HTML;
 
   for ( $i = 1; $i <= $count; $i++ )
   {
-    $x_min = ( isset( $buckets[$i][$xlo] ) ) ? $buckets[$i][$xlo] : '';
-    $x_max = ( isset( $buckets[$i][$xhi] ) ) ? $buckets[$i][$xhi] : '';
-    $y_min = ( isset( $buckets[$i][$ylo] ) ) ? $buckets[$i][$ylo] : 1;
-    $y_max = ( isset( $buckets[$i][$yhi] ) ) ? $buckets[$i][$yhi] : 4;
+    $x_min = $buckets[$i][$xlo] ?? '';
+    $x_max = $buckets[$i][$xhi] ?? '';
+    $y_min = $buckets[$i][$ylo] ?? 1;
+    $y_max = $buckets[$i][$yhi] ?? 4;
 
     $solute_text .= <<<HTML
       <div id='solutes{$i}'>
