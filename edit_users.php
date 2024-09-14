@@ -453,9 +453,9 @@ function display_record($link)
 
   $userlevel             = $row['userlevel'];    // 0 translates to null
   $advancelevel          = $row['advancelevel']; // 0 translates to null
-  $gmpReviewerRole       = $row['gmpReviewerRole']??'NONE';
-  $authenticatePAM       = $row['authenticatePAM']??0;
-  $userNamePAM           = $row['userNamePAM']??'';
+  $gmpReviewerRole       = $row['gmpReviewerRole'] ?? 'NONE';
+  $authenticatePAM       = $row['authenticatePAM'] ?? 0;
+  $userNamePAM           = $row['userNamePAM'] ?? '';
   $activated             = ( $row['activated'] == 1 ) ? "yes" : "no";
   $clusterAuth           = explode( ":", $row['clusterAuthorizations'] );
   $clusterAuthorizations = implode( ", ", $clusterAuth );
@@ -662,9 +662,9 @@ function edit_record($link)
   $userlevel       =                                 $row['userlevel'];
   $advancelevel    =                                 $row['advancelevel'];
   $clusterAuth     =                                 $row['clusterAuthorizations'];
-  $gmpReviewerRole =                                 $row['gmpReviewerRole']??'NONE';
-  $authenticatePAM =                                 $row['authenticatePAM']??0;
-  $userNamePAM     =                                 $row['userNamePAM']??$email;
+  $gmpReviewerRole =                                 $row['gmpReviewerRole'] ?? 'NONE';
+  $authenticatePAM =                                 $row['authenticatePAM'] ?? 0;
+  $userNamePAM     =                                 $row['userNamePAM'] ?? $email;
   $result->close();
   $stmt->close();
 
