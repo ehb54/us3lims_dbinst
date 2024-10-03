@@ -375,21 +375,21 @@ function do_create($link)
              "userlevel        = ?, " .
              "advancelevel     = 0, " .
              "activated        = 1, " .
-             "password         = '__invalid__',      " .
+             "userNamePAM      = ?, " .
+             "password         = '__invalid__', " .
              "signup           = NOW()  ";    // use the default cluster auths
     $args = [ $lname, $fname, $guid, $organization, $address, $city, $state, $zip, $country, $phone, $email,
-        $userlevel ];
-    $args_type = 'sssssssssssi';
+        $userlevel, $email ];
+    $args_type = 'sssssssssssis';
     if ( isset( $enable_GMP ) && $enable_GMP ) {
       $query .= ", gmpReviewerRole = ? ";
       $args[] = $gmpReviewerRole;
       $args_type .= 's';
     }
     if ( isset( $enable_PAM ) && $enable_PAM ) {
-        $query .= ", authenticatePAM = ? , userNamePAM = ? ";
+        $query .= ", authenticatePAM = ? ";
         $args[] = $authenticatePAM;
-        $args[] = $userNamePAM;
-        $args_type .= 'is';
+        $args_type .= 'i';
     }
     $stmt = $link->prepare( $query );
     $stmt->bind_param( $args_type, ...$args );

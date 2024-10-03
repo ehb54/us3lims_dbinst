@@ -82,16 +82,11 @@ $query = "INSERT INTO people " .
          "password        = ? , " .
          "userlevel       = 1 , " .
          "activated       = 0 , " .
+         "userNamePAM     = ? , " .
          "signup          = now() ";
 $args = [ $uuid, $lname, $fname, $organization, $address, $city, $state, $zip, $country, $phone, $email,
-    $db_password ];
-$args_type = 'ssssssssssss';
-if ( isset( $enable_PAM ) && $enable_PAM )
-{
-    $query .= ", userNamePAM = ? ";
-    $args[] = $email;
-    $args_type .= 's';
-}
+    $db_password, $email ];
+$args_type = 'sssssssssssss';
 if ( isset( $enable_GMP ) && $enable_GMP )
 {
     $query .= ", gmpReviewerRole = ? ";
