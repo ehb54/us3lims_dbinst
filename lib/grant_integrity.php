@@ -147,7 +147,7 @@ function grant_integrity( $user, $authenticatePAM, $userlevel ) {
     global $dbhost;
     global $configs;
 
-    $db_handle = mysqli_connect( $dbhost, 'root', $configs[ 'superuser' ][ 'password' ] );
+    $db_handle = mysqli_connect( $dbhost, $configs[ 'grants' ][ 'user' ], $configs[ 'grants' ][ 'password' ] );
     if ( !$db_handle ) {
         return "Error contacting the database when trying to check GRANT permissions!";
     }
