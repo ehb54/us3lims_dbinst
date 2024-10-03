@@ -7,7 +7,7 @@
  * Requires session to be started already
  */
 
-$userlevel = ( isset( $_SESSION['userlevel'] ) ) ? $_SESSION['userlevel'] : -1;
+$userlevel = $_SESSION['userlevel'] ?? -1;
 
 $home_menu = <<<HTML
             <li><a href="http://$org_site/index.php">Home</a></li>

@@ -796,13 +796,23 @@ HTML;
 function HPCDetail( $link, $requestID )
 {
   global $thr_clust_excls, $thr_clust_incls;
+  // Check if the user has access to this request by either being the investigator, submitter,
+  // an entry in the experimentPerson table, an entry in the projectPerson table, or an user level of greater 2
+  // language=MariaDB
   $query = "SELECT * FROM HPCAnalysisRequest hpc 
-         LEFT OUTER JOIN experimentPerson ep ON hpc.experimentID = ep.experimentID
+            LEFT OUTER JOIN experimentPerson ep ON hpc.experimentID = ep.experimentID
+            LEFT OUTER JOIN experiment e ON hpc.experimentID = e.experimentID
+            LEFT OUTER JOIN projectPerson pp ON e.projectID = pp.projectID
             LEFT OUTER JOIN people p ON p.personGUID = hpc.investigatorGUID
-         LEFT OUTER JOIN people p2 ON p2.personGUID = hpc.submitterGUID
-         WHERE HPCAnalysisRequestID=? and (p.personID = ? or p2.personID = ? or ep.personID = ? or ? > 2)";
+            LEFT OUTER JOIN people p2 ON p2.personGUID = hpc.submitterGUID
+            WHERE HPCAnalysisRequestID=? and 
+                  (p.personID = ? or 
+                   p2.personID = ? or 
+                   ep.personID = ? or 
+                   pp.personID = ? or
+                   ? > 2)";
   $stmt = mysqli_prepare( $link, $query );
-  $stmt->bind_param('iiiii', $requestID, $_SESSION['id'], $_SESSION['id'], $_SESSION['id'], $_SESSION['userlevel']);
+  $stmt->bind_param('iiiiii', $requestID, $_SESSION['id'], $_SESSION['id'], $_SESSION['id'], $_SESSION['id'], $_SESSION['userlevel']);
   $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
   $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
   $stmt->close();

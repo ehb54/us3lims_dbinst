@@ -941,9 +941,9 @@ class Payload_GA extends Payload_manager
   // Function to get the posted bucket data on the screen
   function getBuckets( $count, &$buckets )
   {
-    $xtype = ( isset($_POST['x-type']) ) ? $_POST['x-type'] : 's';
-    $ytype = ( isset($_POST['y-type']) ) ? $_POST['y-type'] : 'ff0';
-    $ztype = ( isset($_POST['z-type']) ) ? $_POST['z-type'] : 'vbar';
+    $xtype = $_POST['x-type'] ?? 's';
+    $ytype = $_POST['y-type'] ?? 'ff0';
+    $ztype = $_POST['z-type'] ?? 'vbar';
     $xtlo  = 'x_min';
     $xthi  = 'x_max';
     $ytlo  = 'y_min';
@@ -958,8 +958,7 @@ class Payload_GA extends Payload_manager
       $buckets[$i][$ythi] = $_POST[$i.'_ymax'];
     }
 
-    $parameters['bucket_fixed'] =
-       ( isset($_POST['z-fixed']) ) ? $_POST['z-fixed'] : '0.0';
+    $parameters['bucket_fixed'] = $_POST['z-fixed'] ?? '0.0';
     $parameters['x-type'] = $xtype;
     $parameters['y-type'] = $ytype;
     $parameters['z-type'] = $ztype;

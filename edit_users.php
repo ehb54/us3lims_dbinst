@@ -21,7 +21,7 @@ include 'db.php';
 include 'lib/utility.php';
 include 'lib/selectboxes.php';
 include 'lib/grant_integrity.php';
-
+global $link;
 // ini_set('display_errors', 'On');
 
 if ( !isset( $enable_GMP ) ) {
@@ -203,11 +203,18 @@ function do_update($link)
   $activated       = ( $_POST['activated'] == 'on' ) ? 1 : 0;
   $userlevel       = $_POST['userlevel'];
   $advancelevel    = $_POST['advancelevel'];
-  $gmpReviewerRole = $_POST['gmpReviewerRole'];
-  $authenticatePAM = ( isset( $_POST['authenticatePAM'] ) && $_POST['authenticatePAM'] == 'on' ) ? 1 : 0;
-  $userNamePAM     = $_POST['userNamePAM'];
-  if ( empty( $userNamePAM ) ) {
-     $userNamePAM = $_POST['email'];
+  if ( isset( $enable_GMP ) && $enable_GMP ) {
+    $gmpReviewerRole = $_POST['gmpReviewerRole'];
+  }
+  else {
+    $gmpReviewerRole = '';
+  }
+  if ( isset( $enable_PAM ) && $enable_PAM ) {
+      $authenticatePAM = ( isset( $_POST['authenticatePAM'] ) && $_POST['authenticatePAM'] == 'on' ) ? 1 : 0;
+      $userNamePAM     = $_POST['userNamePAM'];
+      if ( empty( $userNamePAM ) ) {
+         $userNamePAM = $_POST['email'];
+      }
   }
 
   if ( $enable_PAM ) {
@@ -269,15 +276,26 @@ function do_update($link)
              "activated             = ?,   " .
              "userlevel             = ?,   " .
              "advancelevel          = ?,   " .
-             "clusterAuthorizations = ?,   " .
-             "gmpReviewerRole       = ?,  " .
-             "authenticatePAM       = ?,   " .
-             "userNamePAM           = ?   " .
-             "WHERE personID  =  ?         ";
+             "clusterAuthorizations = ?    ";
     $args = [ $lname, $fname, $organization, $address, $city, $state, $zip, $country, $phone, $email, $activated,
-        $userlevel, $advancelevel, $clusterAuth, $gmpReviewerRole, $authenticatePAM, $userNamePAM, $personID ];
+        $userlevel, $advancelevel, $clusterAuth ];
+    $arg_types = 'ssssssssssiiis';
+    if ( isset( $enable_GMP ) && $enable_GMP ) {
+      $query .= ", gmpReviewerRole = ? ";
+      $args[] = $gmpReviewerRole;
+      $arg_types .= 's';
+    }
+    if ( isset( $enable_PAM ) && $enable_PAM ) {
+        $query .= ", authenticatePAM = ?, userNamePAM = ? ";
+        $args[] = $authenticatePAM;
+        $args[] = $userNamePAM;
+        $arg_types .= 'is';
+    }
+    $query .= "WHERE personID = ? ";
+    $arg_types .= 'i';
+    $args[] = $personID;
     $stmt = $link->prepare( $query );
-    $stmt->bind_param( 'ssssssssssiiissisi', ...$args );
+    $stmt->bind_param( $arg_types, ...$args );
     $stmt->execute()
           or die( "Query failed : $query<br />\n" . $stmt->error );
     $stmt->close();
@@ -357,15 +375,24 @@ function do_create($link)
              "userlevel        = ?, " .
              "advancelevel     = 0, " .
              "activated        = 1, " .
-             "gmpReviewerRole  = ?, " .
-             "authenticatePAM  = ?," .
-             "userNamePAM      = ?, " .
              "password         = '__invalid__',      " .
-             "signup           = NOW()               ";    // use the default cluster auths
-    $args = [ $lname, $fname, $guid, $organization, $address, $city, $state, $zip, $country, $phone, $email, $userlevel,
-        $gmpReviewerRole, $authenticatePAM, $userNamePAM ];
+             "signup           = NOW()  ";    // use the default cluster auths
+    $args = [ $lname, $fname, $guid, $organization, $address, $city, $state, $zip, $country, $phone, $email,
+        $userlevel ];
+    $args_type = 'sssssssssssi';
+    if ( isset( $enable_GMP ) && $enable_GMP ) {
+      $query .= ", gmpReviewerRole = ? ";
+      $args[] = $gmpReviewerRole;
+      $args_type .= 's';
+    }
+    if ( isset( $enable_PAM ) && $enable_PAM ) {
+        $query .= ", authenticatePAM = ? , userNamePAM = ? ";
+        $args[] = $authenticatePAM;
+        $args[] = $userNamePAM;
+        $args_type .= 'is';
+    }
     $stmt = $link->prepare( $query );
-    $stmt->bind_param( 'sssssssssssisss', ...$args );
+    $stmt->bind_param( $args_type, ...$args );
     $stmt->execute()
           or die("Query failed : $query<br />\n" . $stmt->error);
     $new = $stmt->insert_id;
@@ -400,10 +427,14 @@ function display_record($link)
 
   $query  = "SELECT lname, fname, organization, " .
             "address, city, state, zip, country, phone, email, " .
-            "activated, userlevel, advancelevel, clusterAuthorizations, " .
-            "gmpReviewerRole, authenticatePAM, userNamePAM " .
-            "FROM people " .
-            "WHERE personID = ? ";
+            "activated, userlevel, advancelevel, clusterAuthorizations ";
+  if ( $enable_GMP ) {
+      $query .= ", gmpReviewerRole, ";
+  }
+  if ( $enable_PAM ) {
+      $query .= ", authenticatePAM, userNamePAM ";
+  }
+  $query .= "FROM people WHERE personID = ? ";
   $stmt = $link->prepare( $query );
   $stmt->bind_param( 'i', $personID );
   $stmt->execute()
@@ -422,9 +453,9 @@ function display_record($link)
 
   $userlevel             = $row['userlevel'];    // 0 translates to null
   $advancelevel          = $row['advancelevel']; // 0 translates to null
-  $gmpReviewerRole       = $row['gmpReviewerRole'];
-  $authenticatePAM       = $row['authenticatePAM'];
-  $userNamePAM           = $row['userNamePAM'];
+  $gmpReviewerRole       = $row['gmpReviewerRole'] ?? 'NONE';
+  $authenticatePAM       = $row['authenticatePAM'] ?? 0;
+  $userNamePAM           = $row['userNamePAM'] ?? '';
   $activated             = ( $row['activated'] == 1 ) ? "yes" : "no";
   $clusterAuth           = explode( ":", $row['clusterAuthorizations'] );
   $clusterAuthorizations = implode( ", ", $clusterAuth );
@@ -597,12 +628,17 @@ function edit_record($link)
   // Get the record we need to edit
   $personID = $_POST['personID'];
 
+
   $query  = "SELECT lname, fname, organization, " .
-            "address, city, state, zip, country, phone, email, " .
-            "activated, userlevel, advancelevel, clusterAuthorizations, " .
-            "gmpReviewerRole, authenticatePAM, userNamePAM " .
-            "FROM people " .
-            "WHERE personID = ? ";
+      "address, city, state, zip, country, phone, email, " .
+      "activated, userlevel, advancelevel, clusterAuthorizations ";
+  if ( $enable_GMP ) {
+      $query .= ", gmpReviewerRole, ";
+  }
+  if ( $enable_PAM ) {
+      $query .= ", authenticatePAM, userNamePAM ";
+  }
+  $query .= "FROM people WHERE personID = ? ";
   $stmt = $link->prepare( $query );
   $stmt->bind_param( 'i', $personID );
 
@@ -626,9 +662,9 @@ function edit_record($link)
   $userlevel       =                                 $row['userlevel'];
   $advancelevel    =                                 $row['advancelevel'];
   $clusterAuth     =                                 $row['clusterAuthorizations'];
-  $gmpReviewerRole =                                 $row['gmpReviewerRole'];
-  $authenticatePAM =                                 $row['authenticatePAM'];
-  $userNamePAM     =                                 $row['userNamePAM'];
+  $gmpReviewerRole =                                 $row['gmpReviewerRole'] ?? 'NONE';
+  $authenticatePAM =                                 $row['authenticatePAM'] ?? 0;
+  $userNamePAM     =                                 $row['userNamePAM'] ?? $email;
   $result->close();
   $stmt->close();
 

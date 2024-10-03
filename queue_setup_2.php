@@ -41,8 +41,7 @@ include 'config.php';
 include 'db.php';
 include_once 'queue_setup_2_funcs.php';
 
-$advancelevel   = ( isset($_SESSION['advancelevel']) )
-                ? $_SESSION['advancelevel'] : 0;
+$advancelevel   = $_SESSION['advancelevel'] ?? 0;
 
 // Save queue information if Save Queue Information posted
 $data_missing = false;

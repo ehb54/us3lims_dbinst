@@ -27,7 +27,7 @@ if ( ! empty($message) )
 }
 
 // Ensure that the user's email address or username does not exist in the DB
-$query        = "SELECT count(*) FROM people WHERE email=?";
+$query        = "SELECT count(*) FROM people WHERE email = ?";
 $stmt         = mysqli_prepare( $link, $query );
 $stmt->bind_param( 's', $email );
 $stmt->execute();
@@ -68,25 +68,38 @@ $uuid = uuid();
 // Enter info into the Database.
 // Experimentally setting the default userlevel to 1
 $query = "INSERT INTO people " .
-         "SET personGUID  = '$uuid', " .
-         "lname           = '$lname', " .
-         "fname           = '$fname', " .
-         "organization    = '$organization', " .
-         "address         = '$address', " .
-         "city            = '$city', " .
-         "state           = '$state', " .
-         "zip             = '$zip', " .
-         "country         = '$country', " .
-         "phone           = '$phone', " .
-         "email           = '$email', " .
-         "password        = '$db_password', " .
-         "userlevel       = 1, " .
-         "activated       = 0, " .
-         "userNamePAM     = '$email', " .
+         "SET personGUID  = ? , " .
+         "lname           = ? , " .
+         "fname           = ? , " .
+         "organization    = ? , " .
+         "address         = ? , " .
+         "city            = ? , " .
+         "state           = ? , " .
+         "zip             = ? , " .
+         "country         = ? , " .
+         "phone           = ? , " .
+         "email           = ? , " .
+         "password        = ? , " .
+         "userlevel       = 1 , " .
+         "activated       = 0 , " .
          "signup          = now() ";
 $args = [ $uuid, $lname, $fname, $organization, $address, $city, $state, $zip, $country, $phone, $email,
-    $db_password, $email ];
-$args_type = 'sssssssssssss';
+    $db_password ];
+$args_type = 'ssssssssssss';
+if ( isset( $enable_PAM ) && $enable_PAM )
+{
+    $query .= ", userNamePAM = ? ";
+    $args[] = $email;
+    $args_type .= 's';
+}
+if ( isset( $enable_GMP ) && $enable_GMP )
+{
+    $query .= ", gmpReviewerRole = ? ";
+    $args[] = "NONE";
+    $args_type .= 's';
+}
+
+
 $stmt = $link->prepare($query);
 $stmt->bind_param($args_type, ...$args);
 $stmt->execute()

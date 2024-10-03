@@ -34,10 +34,8 @@ if ( isset( $_POST['delete'] ) )
 }
 
 // define( 'DEBUG', true );
-
-$sort_order = 'submitTime';
-if ( isset( $_SESSION['queue_viewer_sort_order'] ) )
-  $sort_order = $_SESSION['queue_viewer_sort_order'];
+// Get sort order from session or default to submitTime
+$sort_order = $_SESSION['queue_viewer_sort_order'] ?? 'submitTime';
 
 // Start displaying page
 $page_title = "Queue Viewer";

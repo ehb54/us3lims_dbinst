@@ -114,8 +114,7 @@ else
   $separate_datasets = 1;
 
 $_SESSION['separate_datasets'] = $separate_datasets;
-$advancelevel   = ( isset($_SESSION['advancelevel']) )
-                ? $_SESSION['advancelevel'] : 0;
+$advancelevel   = $_SESSION['advancelevel'] ?? 0;
 
 // Set up some web stuff
 $button_message = ( $separate_datasets )
