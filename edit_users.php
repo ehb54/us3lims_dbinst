@@ -429,7 +429,7 @@ function display_record($link)
             "address, city, state, zip, country, phone, email, " .
             "activated, userlevel, advancelevel, clusterAuthorizations ";
   if ( $enable_GMP ) {
-      $query .= ", gmpReviewerRole, ";
+      $query .= ", gmpReviewerRole ";
   }
   if ( $enable_PAM ) {
       $query .= ", authenticatePAM, userNamePAM ";
@@ -633,7 +633,7 @@ function edit_record($link)
       "address, city, state, zip, country, phone, email, " .
       "activated, userlevel, advancelevel, clusterAuthorizations ";
   if ( $enable_GMP ) {
-      $query .= ", gmpReviewerRole, ";
+      $query .= ", gmpReviewerRole ";
   }
   if ( $enable_PAM ) {
       $query .= ", authenticatePAM, userNamePAM ";
