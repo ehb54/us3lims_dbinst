@@ -195,9 +195,9 @@ function do_delete($link)
 // Function to update the current record
 function do_update($link)
 {
-  include 'get_user_info.php';
-
   global $enable_PAM;
+  global $enable_GMP;
+  include 'get_user_info.php';
 
   $personID        = $_POST['personID'];
   $activated       = ( $_POST['activated'] == 'on' ) ? 1 : 0;
