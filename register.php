@@ -32,7 +32,6 @@ $stmt         = mysqli_prepare( $link, $query );
 $stmt->bind_param( 's', $email );
 $stmt->execute();
 $result       = $stmt->get_result();
-$result       = mysqli_query( $link, $query );
 list($count)  = mysqli_fetch_row( $result );
 $result->close();
 $stmt->close();
