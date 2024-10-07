@@ -56,7 +56,7 @@ exit();
 
 function enter_record( $message = '' )
 {
-  if ( isset($message) )
+  if ( isset($message) && isset($_SESSION['POST']) )
   {
     // Get posted information from register.php
     $lname        = $_SESSION['POST']['lname'];
