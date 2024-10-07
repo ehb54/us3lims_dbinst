@@ -141,9 +141,18 @@
   display: block;
 }
 
-#sf_class_item, #sf_subclass_item {
+#sf_class_item {
   display: flex;
   align-items:center;
+}
+
+#sf_subclass_item {
+  display: none;
+  align-items:center;
+}
+
+#sf_subclass_item.active {
+  display: flex;
 }
 
 #sf_status_button_item {

@@ -203,18 +203,19 @@ function do_update($link)
   $activated       = ( $_POST['activated'] == 'on' ) ? 1 : 0;
   $userlevel       = $_POST['userlevel'];
   $advancelevel    = $_POST['advancelevel'];
+  
   if ( isset( $enable_GMP ) && $enable_GMP ) {
     $gmpReviewerRole = $_POST['gmpReviewerRole'];
   }
   else {
-    $gmpReviewerRole = '';
+    $gmpReviewerRole = 'NONE';
+  }
+  if ( $gmpReviewerRole == '' ) {
+    $gmpReviewerRole = 'NONE';
   }
   if ( isset( $enable_PAM ) && $enable_PAM ) {
       $authenticatePAM = ( isset( $_POST['authenticatePAM'] ) && $_POST['authenticatePAM'] == 'on' ) ? 1 : 0;
-      $userNamePAM     = $_POST['userNamePAM'];
-      if ( empty( $userNamePAM ) ) {
-         $userNamePAM = $_POST['email'];
-      }
+      $userNamePAM     = $_POST['userNamePAM'] ?? $_POST['email'];
   }
 
   if ( $enable_PAM ) {
@@ -455,7 +456,7 @@ function display_record($link)
   $advancelevel          = $row['advancelevel']; // 0 translates to null
   $gmpReviewerRole       = $row['gmpReviewerRole'] ?? 'NONE';
   $authenticatePAM       = $row['authenticatePAM'] ?? 0;
-  $userNamePAM           = $row['userNamePAM'] ?? '';
+  $userNamePAM           = $row['userNamePAM'] ?? $row['email'];
   $activated             = ( $row['activated'] == 1 ) ? "yes" : "no";
   $clusterAuth           = explode( ":", $row['clusterAuthorizations'] );
   $clusterAuthorizations = implode( ", ", $clusterAuth );
@@ -662,6 +663,7 @@ function edit_record($link)
   $userlevel       =                                 $row['userlevel'];
   $advancelevel    =                                 $row['advancelevel'];
   $clusterAuth     =                                 $row['clusterAuthorizations'];
+
   $gmpReviewerRole =                                 $row['gmpReviewerRole'] ?? 'NONE';
   $authenticatePAM =                                 $row['authenticatePAM'] ?? 0;
   $userNamePAM     =                                 $row['userNamePAM'] ?? $email;
