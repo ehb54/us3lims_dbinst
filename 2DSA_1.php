@@ -5,6 +5,8 @@
  * A place to start entering submission parameters for the 2DSA analysis
  *
  */
+global $link;
+global $is_cli;
 include_once 'checkinstance.php';
 elogrsp( __FILE__ );
 
@@ -265,6 +267,7 @@ exit();
 function display( $dataset_id, $num_datasets )
 {
   // Get edited data profile
+  global $separate_datasets;
   $parts = explode( ".", $_SESSION['request'][$dataset_id]['editFilename'] );
   $edit_text = $parts[1];
   echo "  <fieldset>" .

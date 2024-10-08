@@ -11,7 +11,7 @@ if ( !isset( $enable_PAM ) ) {
   $enable_PAM = false;
 }
 
-$userlevel = ( isset( $_SESSION['userlevel'] ) ) ? $_SESSION['userlevel'] : -1;
+$userlevel = $_SESSION['userlevel'] ?? -1;
 
 $change_my_info_if_not_PAM =
   $enable_PAM && $_SESSION['authenticatePAM'] == true

@@ -82,10 +82,8 @@ HTML;
 
       while ( list( $reqID, $time, $cluster, $method ) = mysqli_fetch_array( $result ) )
       {
-         if ( isset( $last_msgs[ $reqID ] ) )
-            $lastMessage = $last_msgs[ $reqID ];
-         else
-            $lastMessage = "????";
+         $lastMessage = $last_msgs[ $reqID ] ?? "????";
+
          $link = "<a href='{$_SERVER['PHP_SELF']}?RequestID=$reqID'>$reqID</a>";
 
          $table .= "<tr><td>$link</td><td>$time</td><td>$cluster</td><td>$method</td><td>$lastMessage</td></tr>\n";

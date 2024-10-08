@@ -85,10 +85,8 @@ foreach ( $global_info as $l_gfacID => $db )
 }
 mysqli_close( $globaldb );
 
-// Sort $display_info according to preferred sort_order
-$sort_order = 'submitTime';
-if ( isset( $_SESSION['queue_viewer_sort_order'] ) )
-  $sort_order = $_SESSION['queue_viewer_sort_order'];
+// Sort $display_info according to preferred sort_order or default to submitTime
+$sort_order = $_SESSION['queue_viewer_sort_order'] ?? 'submitTime';
 uasort( $display_info, 'cmp' );
 
 $content = "<div class='queue_content'>\n";

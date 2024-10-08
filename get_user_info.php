@@ -18,7 +18,9 @@ $zip                = trim(substr(addslashes(htmlentities($_POST['zip'])), 0,16)
 $country            = trim(substr(addslashes(htmlentities($_POST['country'])), 0,64));
 $phone              = trim(substr(addslashes(htmlentities($_POST['phone'])), 0,64));
 $email              = trim(substr(addslashes(htmlentities($_POST['email'])), 0,64));
-$gmpReviewerRole    = trim(substr(addslashes(htmlentities($_POST['gmpReviewerRole'])), 0, 12));
+if ( isset( $enable_GMP ) && $enable_GMP ) {
+    $gmpReviewerRole = trim(substr(addslashes(htmlentities($_POST['gmpReviewerRole'])), 0, 12));
+}
 if ( isset( $enable_PAM ) && $enable_PAM ) {
     $authenticatePAM = trim(substr(addslashes(htmlentities($_POST['authenticatePAM'])), 0, 4)) == "on" ? 1 : 0;
     $userNamePAM     = trim(substr(addslashes(htmlentities($_POST['userNamePAM'])), 0,64));

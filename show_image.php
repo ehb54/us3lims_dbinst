@@ -47,15 +47,19 @@ function do_getImage( $link, $imageID )
 
   $query  = "SELECT filename, gelPicture " .
             "FROM image " .
-            "WHERE imageID = '$imageID' ";
-  $result = mysqli_query( $link, $query )
-            or die("Query failed : $query<br />" . mysqli_error($link));
+            "WHERE imageID = ? ";
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param('i', $imageID);
+  $stmt->execute() or die("Query failed: $query<br />" . $stmt->error);
+  $result = $stmt->get_result() or die("Query failed: $query<br />" . $stmt->error);
 
   // Get the image
   $row      = mysqli_fetch_array( $result );
   $data     = $row['gelPicture'];
   $filename = $row['filename'];
   $csize    = mb_strlen( $data, '8bit' );
+  $result->close();
+  $stmt->close();
 
   // Check to see if there was anything
   if ( ! $data )

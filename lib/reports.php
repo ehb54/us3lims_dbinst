@@ -17,9 +17,10 @@ function people_select( $link, $select_name, $personID = NULL )
   if ( $_SESSION['userlevel'] < 3 )
   {
      // First of all, make an array of all people we are authorized to view
+     // language=MariaDB
      $query  = "SELECT people.personID, lname, fname "  .
                "FROM permits, people " .
-               "WHERE collaboratorID = $myID " .
+               "WHERE collaboratorID = ? " .
                "AND permits.personID = people.personID " .
                "ORDER BY lname, fname ";
   }
@@ -27,15 +28,17 @@ function people_select( $link, $select_name, $personID = NULL )
   else
   {
      // We are admin, so we can view all of them
+     // language=MariaDB
      $query  = "SELECT personID, lname, fname "  .
                "FROM people " .
-               "WHERE personID != $myID " .
+               "WHERE personID != ? " .
                "ORDER BY lname, fname ";
   }
-
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />" . mysqli_error($link) );
-
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param( "i", $myID );
+  $stmt->execute();
+  $result = $stmt->get_result()
+            or die( "Query failed : $query<br />" . $stmt->error );
   // Create the list box
   $myName = "{$_SESSION['lastname']}, {$_SESSION['firstname']}";
   $text  = "<h3>Investigator:</h3>\n";
@@ -46,7 +49,8 @@ function people_select( $link, $select_name, $personID = NULL )
     $selected = ( $ID == $personID ) ? " selected='selected'" : "";
     $text .= "    <option value='$ID'$selected>$lname, $fname</option>\n";
   }
-
+  $result->close();
+  $stmt->close();
   $text .= "  </select>\n";
 
   return $text;
@@ -63,13 +67,18 @@ function run_select( $link, $select_name, $current_ID = NULL, $personID = NULL )
   // Check the permits table to be sure user is authorized to view this report
   if ( ( $personID != $myID ) && ( $_SESSION['userlevel'] < 3 ) )
   {
+     // language=MariaDB
      $query  = "SELECT COUNT(*) FROM permits " .
-               "WHERE personID = $personID " .
-               "AND collaboratorID = $myID ";
-     $result = mysqli_query( $link, $query )
-               or die( "Query failed : $query<br />" . mysqli_error($link) );
+               "WHERE personID = ? " .
+               "AND collaboratorID = ? ";
+     $stmt = mysqli_prepare( $link, $query );
+     $stmt->bind_param( "ii", $personID, $myID );
+     $stmt->execute();
+     $result = $stmt->get_result()
+         or die( "Query failed : $query<br />" . $stmt->error );
      list( $count ) = mysqli_fetch_array( $result );
-
+     $result->close();
+     $stmt->close();
      if ( $count == 0 )
      {
         // Ok, user was not authorized
@@ -79,16 +88,19 @@ function run_select( $link, $select_name, $current_ID = NULL, $personID = NULL )
 
   // Account for user selecting the Please select... choice
   $current_ID = ( $current_ID == -1 ) ? NULL : $current_ID;
-
+  // language=MariaDB
   $query  = "SELECT report.reportID, runID " .
             "FROM reportPerson, report " .
-            "WHERE reportPerson.personID = $personID " .
+            "WHERE reportPerson.personID = ? " .
             "AND reportPerson.reportID = report.reportID " .
             "ORDER BY runID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param( "i", $personID );
+  $stmt->execute();
+  $result = $stmt->get_result()
+          or die( "Query failed : $query<br />" . $stmt->error );
 
-  if ( mysqli_num_rows( $result ) == 0 ) return "";
+  if ( $result->num_rows == 0 ) return "";
 
   $text  = "<h3>Run ID:</h3>\n";
   $text .= "<select name='$select_name' id='$select_name' size='1'>\n" .
@@ -98,6 +110,8 @@ function run_select( $link, $select_name, $current_ID = NULL, $personID = NULL )
     $selected = ( $current_ID == $reportID ) ? " selected='selected'" : "";
     $text .= "    <option value='$reportID'$selected>$runID</option>\n";
   }
+  $result->close();
+  $stmt->close();
 
   $text .= "  </select>\n";
 
@@ -117,16 +131,20 @@ function tripleList( $link, $current_ID = NULL )
     // We have a legit runID, so let's get a list of triples
     //  associated with the run
     $text .= "<h3>Reports for Individual Samples:</h3>\n";
-
+    // language=MariaDB
     $query  = "SELECT reportTripleID, triple, dataDescription, runType " .
               "FROM reportTriple, report, experiment " .
-              "WHERE reportTriple.reportID = $current_ID " .
+              "WHERE reportTriple.reportID = ? " .
               "AND triple NOT LIKE '0%' " .           // Combined triples look like 0/Z/9999
               "AND reportTriple.reportID = report.reportID " .
               "AND report.experimentID = experiment.experimentID " .
               "ORDER BY triple ";
-    $result = mysqli_query( $link, $query )
-              or die("Query failed : $query<br />\n" . mysqli_error($link));
+    $stmt = mysqli_prepare( $link, $query );
+    $stmt->bind_param( "i", $current_ID );
+    $stmt->execute();
+
+    $result = $stmt->get_result()
+            or die( "Query failed : $query<br />" . $stmt->error );
 
     $text .= "<ul>\n";
     while ( list( $tripleID, $tripleDesc, $dataDesc, $runType ) = mysqli_fetch_array( $result ) )
@@ -139,7 +157,8 @@ function tripleList( $link, $current_ID = NULL )
                : "Cell: $cell; Channel: $channel; Wavelength: $wl$description";
       $text .= "  <li><a href='view_reports.php?triple=$tripleID'>$display</a></li>\n";
     }
-
+    $result->close();
+    $stmt->close();
     $text .= "</ul>\n";
   }
 
@@ -158,16 +177,20 @@ function combo_info( $link, $current_ID )
   {
     // We have a legit runID, so let's get a list of triples
     //  associated with the run
+    // language=MariaDB
     $query  = "SELECT reportTripleID, dataDescription " .
               "FROM reportTriple " .
-              "WHERE reportID = $current_ID " .
+              "WHERE reportID = ? " .
               "AND triple LIKE '0%' " .               // Combined triples look like 0/Z/9999
               "ORDER BY triple ";
-    $result = mysqli_query( $link, $query )
-              or die("Query failed : $query<br />\n" . mysqli_error($link));
+    $stmt = mysqli_prepare( $link, $query );
+    $stmt->bind_param( "i", $current_ID );
+    $stmt->execute();
+    $result = $stmt->get_result()
+            or die( "Query failed : $query<br />" . $stmt->error );
 
     // In this case we might not have any
-    if ( mysqli_num_rows( $result ) > 0 )
+    if ( $result->num_rows > 0 )
     {
       $text .= "<h3>Combination Plots:</h3>\n";
 
@@ -180,6 +203,8 @@ function combo_info( $link, $current_ID )
 
       $text .= "</ul><br /><br />\n";
     }
+    $result->close();
+    $stmt->close();
   }
 
   return $text;
@@ -189,15 +214,19 @@ function combo_info( $link, $current_ID )
 function tripleDetail( $link, $tripleID, $selected_docTypes = array() )
 {
   // Let's start with header information
+  // language=MariaDB
   $query  = "SELECT personID, report.reportID, report.runID, " .
             "triple, dataDescription, runType " .
             "FROM reportTriple, report, reportPerson, experiment " .
-            "WHERE reportTripleID = $tripleID " .
+            "WHERE reportTripleID = ? " .
             "AND reportTriple.reportID = report.reportID " .
             "AND report.reportID = reportPerson.reportID " .
             "AND report.experimentID = experiment.experimentID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param( "i", $tripleID );
+  $stmt->execute();
+  $result = $stmt->get_result()
+          or die( "Query failed : $query<br />" . $stmt->error );
   list ( $personID, $reportID, $runID, $tripleDesc, $dataDesc, $runType )
        = mysqli_fetch_array( $result );
   list ( $cell, $channel, $wl ) = explode( "/", $tripleDesc );
@@ -207,6 +236,8 @@ function tripleDetail( $link, $tripleID, $selected_docTypes = array() )
   $text .= ( $runType == "WA" )
          ? "<h4>Cell: $cell; Channel: $channel; Radius: $radius$description</h4>\n"
          : "<h4>Cell: $cell; Channel: $channel; Wavelength: $wl$description</h4>\n";
+  $result->close();
+  $stmt->close();
 
   // Figure out which document types to display in a flexible way, so it will still
   //  work when new ones are added
@@ -261,18 +292,24 @@ HTML;
 
   // Now create a list of available analysis types
   $atypes = array();
+  // language=MariaDB
   $query  = "SELECT DISTINCT analysis, label " .
             "FROM documentLink, reportDocument " .
-            "WHERE documentLink.reportTripleID = $tripleID " .
+            "WHERE documentLink.reportTripleID = ? " .
             "AND documentLink.reportDocumentID = reportDocument.reportDocumentID " .
             "ORDER BY analysis ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param( "i", $tripleID );
+  $stmt->execute();
+  $result = $stmt->get_result()
+            or die( "Query failed : $query<br />\n" . $stmt->error );
   while ( list( $atype, $label ) = mysqli_fetch_array( $result ) )
   {
     $parts = explode( ":", $label );
     $atypes[$atype] = $parts[0];      // The analysis part of the label
   }
+  $result->close();
+  $stmt->close();
 
   // Make a little link bar
   $links = array();
@@ -284,20 +321,25 @@ HTML;
 
   // Figure out which types of documents to display
   $select_docs = "AND documentType IN ('" . implode( "','", $docTypes2 ) . "') ";
-
+  $bind_clause = implode(',', array_fill(0, count($docTypes2), '?'));
+  $bind_string = str_repeat('s', count($docTypes2));
   foreach ( $atypes as $atype => $alabel )
   {
+    // language=MariaDB
     $query  = "SELECT reportDocument.reportDocumentID, label, documentType " .
               "FROM documentLink, reportDocument " .
-              "WHERE documentLink.reportTripleID = $tripleID " .
+              "WHERE documentLink.reportTripleID = ? " .
               "AND documentLink.reportDocumentID = reportDocument.reportDocumentID " .
-              "AND analysis = '$atype' " .
-              $select_docs .
+              "AND analysis = ? and documentType IN (" . $bind_clause . ") " .
               "ORDER BY subAnalysis ";
-    $result = mysqli_query( $link, $query )
-              or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+    $args = array_merge([$tripleID, $atype],$docTypes2);
+    $stmt = mysqli_prepare( $link, $query );
+    $stmt->bind_param( "is".$bind_string, ...$args );
+    $stmt->execute();
+    $result = $stmt->get_result()
+              or die( "Query failed : $query<br />\n" . $stmt->error );
 
-    if ( mysqli_num_rows( $result ) < 1 ) continue;
+    if ( $result->num_rows < 1 ) continue;
 
     $text .= "<p class='reporthead'><a name='$atype'></a>$alabel</p>\n" .
              "<ul>\n";
@@ -362,17 +404,25 @@ HTML;
          $linkbar</p>
     </form>
 HTML;
+
+    $result->close();
+    $stmt->close();
   }
 
   // Now let's get information about the solution in this cell
+  // language=MariaDB
   $query  = "SELECT experimentID, triple " .
             "FROM report, reportTriple " .
-            "WHERE reportTripleID = $tripleID " .
+            "WHERE reportTripleID = ? " .
             "AND report.reportID = reportTriple.reportID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param( "i", $tripleID );
+  $stmt->execute();
+  $result = $stmt->get_result()
+            or die( "Query failed : $query<br />\n" . $stmt->error );
   list ( $experimentID, $triple_desc ) = mysqli_fetch_array( $result );
-
+  $result->close();
+  $stmt->close();
   $text .= <<<HTML
     <p class='reporthead'><a name='solution'></a>Solution Data</p>
     <ul>
@@ -407,42 +457,57 @@ HTML;
 function comboDetail( $link, $tripleID )
 {
   // Let's start with header information
+  // language=MariaDB
   $query  = "SELECT personID, report.reportID, dataDescription " .
             "FROM reportTriple, report, reportPerson " .
-            "WHERE reportTripleID = $tripleID " .
+            "WHERE reportTripleID = ? " .
             "AND reportTriple.reportID = report.reportID " .
             "AND report.reportID = reportPerson.reportID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param( "i", $tripleID );
+  $stmt->execute();
+  $result = $stmt->get_result()
+          or die( "Query failed : $query<br />" . $stmt->error );
   list ( $personID, $reportID, $dataDesc )
        = mysqli_fetch_array( $result );
+  $result->close();
+  $stmt->close();
   $text = "<h3>Combinations:</h3>\n" .
           "<h4>$dataDesc</h4>\n";
 
   // Now create a list of available analysis types
   $atypes = array();
+  // language=MariaDB
   $query  = "SELECT DISTINCT analysis, label " .
             "FROM documentLink, reportDocument " .
-            "WHERE documentLink.reportTripleID = $tripleID " .
+            "WHERE documentLink.reportTripleID = ? " .
             "AND documentLink.reportDocumentID = reportDocument.reportDocumentID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param( "i", $tripleID );
+  $stmt->execute();
+  $result = $stmt->get_result()
+          or die( "Query failed : $query<br />\n" . $stmt->error );
   while ( list( $atype, $label ) = mysqli_fetch_array( $result ) )
   {
     $parts = explode( ":", $label );
     $atypes[$atype] = $parts[0];      // The analysis part of the label
   }
-
+  $result->close();
+  $stmt->close();
+  // language=MariaDB
+  $query  = "SELECT reportDocument.reportDocumentID, label " .
+      "FROM documentLink, reportDocument " .
+      "WHERE documentLink.reportTripleID = ? " .
+      "AND documentLink.reportDocumentID = reportDocument.reportDocumentID " .
+      "AND analysis = ? " .
+      "ORDER BY subAnalysis ";
+  $stmt = mysqli_prepare( $link, $query );
   foreach ( $atypes as $atype => $alabel )
   {
-    $query  = "SELECT reportDocument.reportDocumentID, label " .
-              "FROM documentLink, reportDocument " .
-              "WHERE documentLink.reportTripleID = $tripleID " .
-              "AND documentLink.reportDocumentID = reportDocument.reportDocumentID " .
-              "AND analysis = '$atype' " .
-              "ORDER BY subAnalysis ";
-    $result = mysqli_query( $link, $query )
-              or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+    $stmt->bind_param( "is", $tripleID, $atype );
+    $stmt->execute();
+    $result = $stmt->get_result()
+              or die( "Query failed : $query<br />\n" . $stmt->error );
 
     $text .= "<p class='reporthead'><a name='$atype'></a>$alabel</p>\n" .
              "<ul>\n";
@@ -451,7 +516,7 @@ function comboDetail( $link, $tripleID )
       list( $anal, $subanal, $doctype ) = explode( ":", $label );
       $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>$subanal ($doctype)</a></li>\n";
     }
-
+    $result->close();
     $text .= "</ul>\n";
   }
 

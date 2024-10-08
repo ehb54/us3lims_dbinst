@@ -27,10 +27,14 @@ if ( ! empty($message) )
 }
 
 // Ensure that the user's email address or username does not exist in the DB
-$query        = "SELECT count(*) FROM people WHERE email='$email'";
-$result       = mysqli_query( $link, $query );
+$query        = "SELECT count(*) FROM people WHERE email = ?";
+$stmt         = mysqli_prepare( $link, $query );
+$stmt->bind_param( 's', $email );
+$stmt->execute();
+$result       = $stmt->get_result();
 list($count)  = mysqli_fetch_row( $result );
- 
+$result->close();
+$stmt->close();
 if ( $count > 0 )
 {
     $_SESSION['message'] = "Your email address is already registered.<br/>"  .
@@ -63,26 +67,39 @@ $uuid = uuid();
 // Enter info into the Database.
 // Experimentally setting the default userlevel to 1
 $query = "INSERT INTO people " .
-         "SET personGUID  = '$uuid', " .
-         "lname           = '$lname', " .
-         "fname           = '$fname', " .
-         "organization    = '$organization', " .
-         "address         = '$address', " .
-         "city            = '$city', " .
-         "state           = '$state', " .
-         "zip             = '$zip', " .
-         "country         = '$country', " .
-         "phone           = '$phone', " .
-         "email           = '$email', " .
-         "password        = '$db_password', " .
-         "userlevel       = 1, " .
-         "activated       = 0, " .
-         "userNamePAM     = '$email', " .
+         "SET personGUID  = ? , " .
+         "lname           = ? , " .
+         "fname           = ? , " .
+         "organization    = ? , " .
+         "address         = ? , " .
+         "city            = ? , " .
+         "state           = ? , " .
+         "zip             = ? , " .
+         "country         = ? , " .
+         "phone           = ? , " .
+         "email           = ? , " .
+         "password        = ? , " .
+         "userlevel       = 1 , " .
+         "activated       = 0 , " .
+         "userNamePAM     = ? , " .
          "signup          = now() ";
+$args = [ $uuid, $lname, $fname, $organization, $address, $city, $state, $zip, $country, $phone, $email,
+    $db_password, $email ];
+$args_type = 'sssssssssssss';
+if ( isset( $enable_GMP ) && $enable_GMP )
+{
+    $query .= ", gmpReviewerRole = ? ";
+    $args[] = "NONE";
+    $args_type .= 's';
+}
 
-$result = mysqli_query( $link, $query ) 
-          or die( "Query failed : $query<br/>" . mysqli_error($link) );
-$userid = mysqli_insert_id( $link );
+
+$stmt = $link->prepare($query);
+$stmt->bind_param($args_type, ...$args);
+$stmt->execute()
+      or die("Query failed : $query<br />\n" . mysqli_error($link));
+$userid = $stmt->insert_id;
+$stmt->close();
 
 if ( ! $result )
 {

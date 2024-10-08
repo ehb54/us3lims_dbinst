@@ -136,11 +136,7 @@ function start_year_menu()
   $current_year  = date( 'Y' );
 
   // Keep previously-selected year, if possible
-  if ( isset( $_POST['start_year'] ) )
-    $start_year = $_POST['start_year'];
-
-  else
-    $start_year = $current_year - 1;
+  $start_year = $_POST['start_year'] ?? $current_year - 1;
 
   $menu = "<select name='start_year' size='1'>\n";
   for ( $year = $earliest_year; $year <= $current_year; $year++ )
@@ -298,11 +294,7 @@ function by_quarter()
   $end_year  = date( 'Y' );
 
   // Keep selected year, if possible
-  if ( isset( $_POST['start_year'] ) )
-    $start_year = $_POST['start_year'];
-
-  else
-    $start_year = $end_year - 1;
+  $start_year = $_POST['start_year'] ?? $end_year - 1;
 
   $cluster_comma_list = "'" . implode( "', '", array_keys( $selected_clusters ) ) . "'";
 

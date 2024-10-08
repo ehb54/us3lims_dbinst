@@ -23,7 +23,7 @@ if ( $infoType == 'p' )
 {
   // Return some dynamic text about people
   //  who have granted user permission to view reports
-  $personID  = ( isset( $_GET['pID'] ) ) ? $_GET['pID'] : $_SESSION['id'];
+  $personID  = $_GET['pID'] ?? $_SESSION['id'];
 
   $text = people_select( $link, 'people_select', $personID );
 
@@ -34,8 +34,8 @@ if ( $infoType == 'p' )
 else if ( $infoType == 'r' )
 {
   // Return some dynamic text about available runs
-  $personID  = ( isset( $_GET['pID'] ) ) ? $_GET['pID'] : $_SESSION['id'];
-  $currentID = ( isset( $_GET['rID'] ) ) ? $_GET['rID'] : -1;
+  $personID  = $_GET['pID'] ?? $_SESSION['id'];
+  $currentID = $_GET['rID'] ?? -1;
 
   $text = run_select( $link, 'run_select', $currentID, $personID );
 
@@ -46,7 +46,7 @@ else if ( $infoType == 'r' )
 else if ( $infoType == 't' )
 {
   // Return a dynamic list of associated triples
-  $currentID = ( isset( $_GET['rID'] ) ) ? $_GET['rID'] : -1;
+  $currentID = $_GET['rID'] ?? -1;
 
   $text = tripleList( $link, $currentID );
 
@@ -57,7 +57,7 @@ else if ( $infoType == 't' )
 else if ( $infoType == 'c' )
 {
   // Return a dynamic list of associated combinations
-  $currentID = ( isset( $_GET['rID'] ) ) ? $_GET['rID'] : -1;
+  $currentID = $_GET['rID'] ?? -1;
 
   $text = combo_info( $link, $currentID );
 

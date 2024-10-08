@@ -40,15 +40,13 @@ include 'db.php';
 include 'lib/utility.php';
 include 'lib/payload_manager.php';
 include 'lib/controls.php';
+global $link;
 
 // Make sure the advancement level is set
-$advanceLevel = ( isset($_SESSION['advancelevel']) )
-              ? $_SESSION['advancelevel'] : 0;
+$advanceLevel = $_SESSION['advancelevel'] ?? 0;
 
-$separate_datasets = ( isset( $_SESSION['separate_datasets'] ) )
-                   ? $_SESSION['separate_datasets'] : 1;
-$advanced_review   = ( isset( $_SESSION['advanced_review'] ) )
-                   ? $_SESSION['advanced_review'] : 0;
+$separate_datasets = $_SESSION['separate_datasets'] ?? 1;
+$advanced_review   = $_SESSION['advanced_review'] ?? 0;
 
 // To support multiple datasets, let's keep track of which one we're on
 $num_datasets = sizeof( $_SESSION['request'] );
@@ -216,7 +214,7 @@ exit();
 // A function to display controls for one dataset
 function display( $dataset_id, $num_datasets )
 {
-  global $link;
+  global $link, $separate_datasets;
   // Get edited data profile
   $parts = explode( ".", $_SESSION['request'][$dataset_id]['editFilename'] );
   $edit_text = $parts[1];

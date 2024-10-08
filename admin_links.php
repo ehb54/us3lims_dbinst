@@ -19,7 +19,7 @@ if ( !isset( $_SESSION['userlevel'] ) ||
 
 include 'config.php';
 
-$userlevel = ( isset( $_SESSION['userlevel'] ) ) ? $_SESSION['userlevel'] : -1;
+$userlevel = $_SESSION['userlevel'] ?? -1;
 
 $admin5_menu = <<<HTML
     <li><a href='https://$org_site/mysql_admin.php'>MySQL</a></li>

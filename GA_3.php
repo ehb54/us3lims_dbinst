@@ -73,15 +73,18 @@ if ( $_SESSION[ 'separate_datasets' ] )
       $xml_content = mysqli_real_escape_string( $link, file_get_contents( $filenames[ $ii ] ) );
       $edit_filename = $single[ 'dataset' ][ 0 ][ 'edit' ];
       $experimentID  = $_SESSION['request'][$ii]['experimentID'];
-
+      // language=MariaDB
       $query  = "UPDATE HPCAnalysisRequest " .
-                "SET requestXMLfile = '$xml_content', " .
-                "experimentID = '$experimentID', " .
-                "editXMLFilename = '$edit_filename' " .
-                "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-      
-      mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+                "SET requestXMLfile = ?, " .
+                "experimentID = ?, " .
+                "editXMLFilename = ? " .
+                "WHERE HPCAnalysisRequestID = ? ";
+      $args = [ $xml_content, $experimentID, $edit_filename, $HPCAnalysisRequestID ];
+      $stmt = $link->prepare( $query );
+      $stmt->bind_param( 'sisi', ...$args );
+      $stmt->execute()
+            or die( "Query failed : $query<br />\n" . $stmt->error );
+      $stmt->close();
     }
   }
 }
@@ -109,14 +112,17 @@ else
     // Write the xml file content to the db
     $xml_content = mysqli_real_escape_string( $link, file_get_contents( $filenames[ 0 ] ) );
     $edit_filename = $globalfit['dataset'][0]['edit'];
-
+    // language=MariaDB
     $query  = "UPDATE HPCAnalysisRequest " .
-              "SET requestXMLfile = '$xml_content', " .
-              "editXMLFilename = '$edit_filename' " .
-              "WHERE HPCAnalysisRequestID = $HPCAnalysisRequestID ";
-    
-    mysqli_query( $link, $query )
+              "SET requestXMLfile = ?, " .
+              "editXMLFilename = ? " .
+              "WHERE HPCAnalysisRequestID = ? ";
+    $args = [ $xml_content, $edit_filename, $HPCAnalysisRequestID ];
+    $stmt = mysqli_prepare( $link, $query );
+    $stmt->bind_param( 'ssi', ...$args );
+    $stmt->execute()
           or die("Query failed : $query<br />\n" . mysqli_error($link));
+    $stmt->close();
     
   }
 }

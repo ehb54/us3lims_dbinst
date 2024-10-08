@@ -128,11 +128,15 @@ function display_record($link)
   $query  = "SELECT lname, fname, organization, " .
             "address, city, state, zip, country, phone, email " .
             "FROM people " .
-            "WHERE personID = $personID ";
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+            "WHERE personID = ? ";
+  $stmt = mysqli_prepare($link, $query);
+  $stmt->bind_param('i', $personID);
+  $stmt->execute() or die("Query failed : $query<br />\n" . $stmt->error);
+  $result = $stmt->get_result() or die("Query failed : $query<br />\n" . $stmt->error);
 
   $row    = mysqli_fetch_array($result, MYSQLI_ASSOC);
+  $stmt->close();
+  $result->close();
 
   foreach ($row as $key => $value)
   {

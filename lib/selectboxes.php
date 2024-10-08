@@ -85,6 +85,7 @@ function advancelevel_select( $level = 0 )
 // Function to create a dropdown for available labs
 function lab_select( $link, $select_name, $current_lab = NULL )
 {
+  // language=MariaDB
   $query  = "SELECT labID, name " .
             "FROM lab " .
             "ORDER BY name ";
@@ -108,14 +109,12 @@ function lab_select( $link, $select_name, $current_lab = NULL )
 // Function to create a dropdown for available personIDs
 function person_select( $link, $select_name, $current_ID = NULL )
 {
-  $querywhere = "";
+  // language=MariaDB
+  $query  = "SELECT personID, lname, fname FROM people ";
   if ( $_SESSION['userlevel'] < 4 ) {
-      $querywhere = "WHERE userlevel <= 3 ";
+      $query .= "WHERE userlevel <= 3 ";
   }
-
-  $query  = "SELECT personID, lname, fname " .
-            "FROM people $querywhere" .
-            "ORDER BY lname, fname ";
+  $query .= "ORDER BY lname, fname ";
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />" . mysqli_error($link) );
 

@@ -88,11 +88,15 @@ function get_header_info( $link, $type, $experimentID, $triple )
   // Let's start with header information
   $query  = "SELECT runID, runType " .
             "FROM experiment " .
-            "WHERE experimentID = $experimentID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+            "WHERE experimentID = ? ";
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param('i', $experimentID);
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
   list ( $runID, $runType ) = mysqli_fetch_array( $result );
   list ( $cell, $channel, $wl ) = explode( "/", $triple );
+  $result->close();
+  $stmt->close();
   $radius      = $wl / 1000.0;    // If WA data
 
   // Create header information
@@ -114,11 +118,14 @@ function get_header_info( $link, $type, $experimentID, $triple )
 function get_document_content( $link, $type, $experimentID, $triple )
 {
   // First we want to find the solutionID based on the experiment and triple
+  // language=MariaDB
   $query  = "SELECT filename, solutionID AS sID " .
             "FROM rawData " .
-            "WHERE experimentID = $experimentID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+            "WHERE experimentID = ? ";
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param('i', $experimentID);
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
 
   $solutionID = -1;
   while ( list( $filename, $sID ) = mysqli_fetch_array( $result ) )
@@ -131,6 +138,8 @@ function get_document_content( $link, $type, $experimentID, $triple )
        break;
     }
   }
+  $result->close();
+  $stmt->close();
 
   // Check to see if there was anything
   if ( $solutionID == -1 )
@@ -153,21 +162,30 @@ function get_solutionInfo( $link, $solutionID )
 {
   $query  = "SELECT solutionGUID, description, commonVbar20, storageTemp, notes " .
             "FROM solution " .
-            "WHERE solutionID = $solutionID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+            "WHERE solutionID = ? ";
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param('i', $solutionID);
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
   list( $guid, $desc, $vbar, $temp, $notes ) = mysqli_fetch_array( $result );
+  $result->close();
+  $stmt->close();
 
   $analyte_list = array();
+  // language=MariaDB
   $query  = "SELECT description, amount " .
             "FROM solutionAnalyte, analyte " .
-            "WHERE solutionAnalyte.solutionID = $solutionID " .
+            "WHERE solutionAnalyte.solutionID = ? " .
             "AND solutionAnalyte.analyteID = analyte.analyteID " .
             "ORDER BY description ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param('i', $solutionID);
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
   while ( list( $analyte_desc, $am ) = mysqli_fetch_array( $result ) )
     $analyte_list[$analyte_desc] = $am;
+  $result->close();
+  $stmt->close();
 
   $analyte_text = "<table cellspacing='0' cellpadding='3px'>\n" .
                   "  <tr><th>Analyte Description</th>\n" .
@@ -177,13 +195,18 @@ function get_solutionInfo( $link, $solutionID )
   $analyte_text .= "</table>\n";
 
   $buffer_list = array();
+  // language=MariaDB
   $query  = "SELECT description " .
             "FROM solutionBuffer, buffer " .
-            "WHERE solutionBuffer.solutionID = $solutionID " .
+            "WHERE solutionBuffer.solutionID = ? " .
             "AND solutionBuffer.bufferID = buffer.bufferID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param('i', $solutionID);
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
   list( $buffer_desc ) = mysqli_fetch_array( $result );
+  $result->close();
+  $stmt->close();
 
   // Now display it
   $text = <<<HTML
@@ -207,15 +230,20 @@ function get_analyteInfo( $link, $solutionID )
 {
   // First get a list of the analytes in the solution
   $analyte_list = array();
+  // language=MariaDB
   $query  = "SELECT sa.analyteID " .
             "FROM solutionAnalyte sa, analyte " .
-            "WHERE solutionID = $solutionID " .
+            "WHERE solutionID = ? " .
             "AND sa.analyteID = analyte.analyteID " .
             "ORDER BY description ";
-  $result = mysqli_query( $link, $query )
-           or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param('i', $solutionID);
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
   while ( list( $analyteID ) = mysqli_fetch_array( $result ) )
     $analyte_list[] = $analyteID;
+  $result->close();
+  $stmt->close();
 
   // Initialize some stuff
   $text = '';
@@ -294,10 +322,14 @@ function get_bufferInfo( $link, $solutionID )
   // First get the buffer in the solution
   $query  = "SELECT bufferID " .
             "FROM solutionBuffer " .
-            "WHERE solutionID = $solutionID ";
-  $result = mysqli_query( $link, $query )
-           or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+            "WHERE solutionID = ? ";
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param('i', $solutionID);
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
   list( $bufferID ) = mysqli_fetch_array( $result );
+  $result->close();
+  $stmt->close();
 
   // Initialize some stuff
   $text = '';
