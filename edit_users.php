@@ -380,7 +380,7 @@ function do_create($link)
              "password         = '__invalid__', " .
              "signup           = NOW()  ";    // use the default cluster auths
     $args = [ $lname, $fname, $guid, $organization, $address, $city, $state, $zip, $country, $phone, $email,
-        $userlevel, $email ];
+        $userlevel, $userNamePAM ];
     $args_type = 'sssssssssssis';
     if ( isset( $enable_GMP ) && $enable_GMP ) {
       $query .= ", gmpReviewerRole = ? ";
