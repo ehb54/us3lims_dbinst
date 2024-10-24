@@ -280,7 +280,7 @@ function get_experiment_text($link)
 
 //$time0=microtime(true);
   // Get a list of experiments
-  $query  = "SELECT   experimentID, DATE( dateUpdated ) AS udate, runID " .
+  $query  = "SELECT   experimentID, DATE( dateUpdated ) AS udate, runID, label " .
             "FROM     projectPerson, project, experiment " .
             "WHERE    projectPerson.personID = {$_SESSION['id']} " .
             "AND      project.projectID = projectPerson.projectID " .
@@ -293,12 +293,12 @@ function get_experiment_text($link)
                      "  onchange='this.form.submit();'>\n" .
                      "  <option value='null'>run ID not selected...</option>\n";
 
-  while ( list( $expID, $udate, $runID ) = mysqli_fetch_array( $result ) )
+  while ( list( $expID, $udate, $runID, $label ) = mysqli_fetch_array( $result ) )
   {
     $selected = ( $expID == $experimentID )
               ? " selected='selected'"
               : "";
-    $experiment_list .= "  <option value='$expID'$selected>$udate $runID</option>\n";
+    $experiment_list .= "  <option value='$expID'$selected>$udate $runID $label</option>\n";
   }
 //$time1=microtime(true)-$time0;
 //$experiment_list .= "  <option value=time1>$time1</option>\n";
@@ -387,7 +387,7 @@ function get_cell_text($link)
       list( $count ) = mysqli_fetch_array( $result );
 
       if ( $count > 0 )
-        $rawData_list .= "  <option value='$rawDataID:$filename'>$runID $filename</option>\n";
+        $rawData_list .= "  <option value='$rawDataID:$filename'>$filename</option>\n";
     }
 //$time3=microtime(true)-$time0;
 //$rawData_list .= "  <option value='time1time2time3'>$time1 $time2 $time3</option>\n";
