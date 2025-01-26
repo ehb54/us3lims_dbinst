@@ -142,6 +142,13 @@ function collect_config_info() {
             $error_msg( " cluster details missing 'name' for cluster $k" );
             continue;
         }
+        if ( array_key_exists( 'clusters', $v ) ) {
+            $v['queue'] = 'n/a';
+            if ( count( $v['clusters'] ) == 0 ) {
+                $error_msg( " metascheduling clusters is empty for cluster $k" );
+                continue;
+            }
+        }
         if ( !array_key_exists( 'queue', $v ) ) {
             $error_msg( "cluster details missing 'queue' for cluster $k" );
             continue;

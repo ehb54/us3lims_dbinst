@@ -30,8 +30,8 @@ if ( ! $globaldb )
 
 $is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
 
-$query  = "SELECT gfacID, us3_db, cluster, status FROM analysis ";
-if ( $_SESSION['userlevel'] < 4 ) {
+$query  = "SELECT gfacID, us3_db, cluster, status, metaschedulerClusterExecuting FROM analysis ";
+if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 ) {
   $query .= "WHERE us3_db = '$dbname' ";
 }
 
@@ -57,7 +57,7 @@ if ( mysqli_num_rows( $result ) == 0 )
             echo "<p>You have no <b>$dbname</b> jobs currently queued, running or completing.</p>\n";
         } else {
             echo "<p>No <b>$dbname</b> jobs are currently queued, running or completing.</p>\n";
-        }            
+        }
     } else {
         echo "<p>No jobs are currently queued, running or completing.</p>\n";
     }
@@ -67,10 +67,12 @@ if ( mysqli_num_rows( $result ) == 0 )
 // Get all the info from the global db at once to avoid switching more than necessary
 $global_info = array();
 $global_clusters = [];
-while ( list( $gfacID, $us3_db, $cluster, $status ) = mysqli_fetch_array( $result ) ) {
-    $global_info[ $gfacID ]        = $us3_db;
-    $global_clusters[ $gfacID ]    = $cluster;
-    $global_gfac_status[ $gfacID ] = $status;
+$global_clusters_executing = [];
+while ( list( $gfacID, $us3_db, $cluster, $status, $clusterExecuting ) = mysqli_fetch_array( $result ) ) {
+    $global_info[ $gfacID ]               = $us3_db;
+    $global_clusters[ $gfacID ]           = $cluster;
+    $global_clusters_executing[ $gfacID ] = $clusterExecuting;
+    $global_gfac_status[ $gfacID ]        = $status;
 }
 
 // Now get the info we need from each of the local databases
@@ -131,6 +133,11 @@ foreach( $display_info as $display )
             display_buttons( $database, $cluster, $gfacID, $jobEmail ) .
             "</td></tr>\n";
 
+  if ( isset( $display['cluster_executing'] ) &&
+       strlen( $display['cluster_executing'] ) ) {
+      $clusterName = "metascheduler:" . $display['cluster_executing'];
+  }
+
   $content .= <<<HTML
   <tr><th>Owner:</th>
       <td colspan='3'>$jobEmail</td></tr>
@@ -168,6 +175,7 @@ function get_status( $gfacID, $us3_db )
 {
   global $globaldbhost, $configs;
   global $global_clusters;
+  global $global_clusters_executing;
   global $global_gfac_status;
   global $globaldb;
   // Using credentials that will work for all databases
@@ -202,6 +210,7 @@ function get_status( $gfacID, $us3_db )
   $status['triple'] = $triple;
 
   $status['cluster']              = $global_clusters[ $gfacID ];
+  $status['cluster_executing']    = $global_clusters_executing[ $gfacID ];
   $status['gfac_analysis_status'] = $global_gfac_status[ $gfacID ];
 
   if ( !strncmp( $global_gfac_status[ $gfacID ], 'CANCEL', 6 ) ) {
