@@ -194,37 +194,6 @@ HTML;
 
 motd_submit();
 
-// Add rss information from TACC
-require_once 'lib/rss_fetch.inc';
-
-//$time8=microtime(true) - $time0;
-$url = 'http://www.tacc.utexas.edu/rss/TACCUserNews.xml';
-$num_items = 3;
-$rss = fetch_rss($url);
-$items = array_slice($rss->items, 0, $num_items);
-//  $items = array();
-
-echo "<h3>{$rss->channel['title']}</h3>\n";
-
-// Generate table
-echo "<table cellpadding='7' cellspacing='0'>\n";
-foreach ( $items as $item )
-{
-  $title       = $item['title'];
-  $url         = $item['link'];
-  $description = $item['description'];
-
-  echo <<<HTML
-  <tr><td><a href=$url>$title</a></td>
-      <td>$description</td></tr>
-
-HTML;
-}
-echo "</table>\n";
-//$time9=microtime(true) - $time0;
-//echo "  <p>time8 = $time8 </p>";
-//echo "  <p>time9 = $time9 </p>";
-
 ?>
 
 </div>
