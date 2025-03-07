@@ -8,6 +8,8 @@
 
 include 'config.php';
 include 'db.php';
+global $link;
+global $admin, $admin_email, $admin_phone;
 
 // These variables should be in the URL string
 if (! isset($_GET['id']) || ! isset($_GET['code'] ) )
@@ -23,17 +25,27 @@ settype( $userid, 'int' );       // Removes any remaining characters in URL
 $code   = $_GET['code'];
 
 $query = "UPDATE people SET activated = 1 " .
-         "WHERE personID=$userid AND password='$code'";
-mysqli_query( $link, $query )
-      or die ("Query failed : $query<br/>" . mysqli_error($link));
+         "WHERE personID=? AND password=?";
+$args = [$userid, $code];
+$stmt = $link->prepare( $query );
+$stmt->bind_param( 'is', ...$args );
+$stmt->execute()
+      or die ("Query failed : $query<br/>" . $stmt->error);
+$stmt->close();
 
 $query = "SELECT count(*) FROM people " .
-         "WHERE personID='$userid' "    .
-         "AND password='$code' AND activated = 1";
-$result = mysqli_query( $link, $query ) 
-          or die ( "Query failed : $query<br />" . mysqli_error($link) );
-list( $doublecheck ) = mysqli_fetch_row( $result );
-
+         "WHERE personID=? "    .
+         "AND password=? AND activated = 1";
+$args = [$userid, $code];
+$stmt = $link->prepare( $query );
+$stmt->bind_param( 'is', ...$args );
+$stmt->execute()
+      or die ("Query failed : $query<br/>" . $stmt->error);
+$result = $stmt->get_result()
+          or die ( "Query failed : $query<br />" . $stmt->error );
+list( $doublecheck ) = $result->fetch_row( );
+$result->close();
+$stmt->close();
 if ( $doublecheck == 0 )
 {
     $message = "Your account could not be activated.";

@@ -31,8 +31,8 @@ include 'header.php';
 <?php
 if ( isset( $_POST['change_cell'] ) )
 {
-   $personID = isset( $_POST['personID'] ) ? $_POST['personID'] : $myID;
-   $reportID = isset( $_POST['reportID'] ) ? $_POST['reportID'] : -1;
+   $personID = $_POST['personID'] ?? $myID;
+   $reportID = $_POST['reportID'] ?? -1;
 
    $person_info = people_select( $link, 'people_select', $personID );
    $run_info    = run_select( $link, 'run_select', $reportID, $personID );

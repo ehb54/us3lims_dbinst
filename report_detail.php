@@ -78,26 +78,33 @@ function get_header_info( $link, $documentID )
   // Let's start with header information
   $query  = "SELECT report.runID, triple, runType " .
             "FROM documentLink, reportTriple, report, experiment " .
-            "WHERE reportDocumentID = $documentID " .
+            "WHERE reportDocumentID = ? " .
             "AND documentLink.reportTripleID = reportTriple.reportTripleID " .
             "AND reportTriple.reportID = report.reportID " .
             "AND report.experimentID = experiment.experimentID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  mysqli_stmt_bind_param( $stmt, "i", $documentID );
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
   list ( $runID, $tripleDesc, $runType ) = mysqli_fetch_array( $result );
   list ( $cell, $channel, $wl ) = explode( "/", $tripleDesc );
   $radius      = $wl / 1000.0;    // If WA data
-
+  $result->close();
+  $stmt->close();
   // Now the information we need from the document table
   $query  = "SELECT reportDocument.label, reportDocument.filename, editedData.filename, " .
             "documentType " .
             "FROM reportDocument, editedData " .
-            "WHERE reportDocumentID = $documentID " .
+            "WHERE reportDocumentID = ? " .
             "AND reportDocument.editedDataID = editedData.editedDataID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+  $stmt = mysqli_prepare( $link, $query );
+  mysqli_stmt_bind_param( $stmt, "i", $documentID );
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
   list( $label, $rfilename, $efilename, $doctype ) = mysqli_fetch_array( $result );
   list( $anal, $subanal, $doctype_text ) = explode( ":", $label );
+  $result->close();
+  $stmt->close();
   $parts = explode( ".", $efilename );
   $edit_profile = $parts[1];
   $triple = ( $runType == "WA" )
@@ -129,10 +136,15 @@ function get_document_content( $link, $documentID )
   // First the document and the document type
   $query  = "SELECT documentType, filename, contents " .
             "FROM reportDocument " .
-            "WHERE reportDocumentID = $documentID ";
-  $result = mysqli_query( $link, $query )
-            or die( "Query failed : $query<br />\n" . mysqli_error($link) );
+            "WHERE reportDocumentID = ? ";
+  $stmt = mysqli_prepare( $link, $query );
+  $stmt->bind_param( "i", $documentID );
+  $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
+
   $row = mysqli_fetch_array( $result );
+  $result->close();
+  $stmt->close();
   $doctype  = $row['documentType'];
   $filename = $row['filename'];
   $contents = $row['contents'];

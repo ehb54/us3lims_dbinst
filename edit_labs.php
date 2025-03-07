@@ -147,32 +147,54 @@ function do_delete($link)
   // Tests to see if the current lab can be deleted
   $found  = false;
   $query  = "SELECT COUNT(*) FROM instrument " .
-            "WHERE labID = $labID ";
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+            "WHERE labID = ? ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $labID );
+  $stmt->execute()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
+
   list( $count ) = mysqli_fetch_array( $result );
+  $result->close();
+  $stmt->close();
   if ( $count > 0 ) $found = true;
 
   $query  = "SELECT COUNT(*) FROM experiment " .
-            "WHERE labID = $labID ";
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+            "WHERE labID = ? ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $labID );
+  $stmt->execute()
+        or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result()
+          or die( "Query failed : $query<br />\n" . $stmt->error );
   list( $count ) = mysqli_fetch_array( $result );
+  $result->close();
+  $stmt->close();
   if ( $count > 0 ) $found = true;
 
   $query  = "SELECT COUNT(*) FROM rotor " .
-            "WHERE labID = $labID ";
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+            "WHERE labID = ? ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $labID );
+  $stmt->execute()
+         or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result()
+            or die( "Query failed : $query<br />\n" . $stmt->error );
   list( $count ) = mysqli_fetch_array( $result );
+  $result->close();
+  $stmt->close();
   if ( $count > 0 ) $found = true;
 
   if ( ! $found )
   {
     $query  = "DELETE FROM lab " .
-              "WHERE labID = $labID ";
-    mysqli_query($link, $query)
-      or die("Query failed : $query<br />\n" . mysqli_error($link));
+              "WHERE labID = ? ";
+    $stmt = $link->prepare( $query );
+    $stmt->bind_param( 'i', $labID );
+    $stmt->execute()
+           or die( "Query failed : $query<br />\n" . $stmt->error );
+    $stmt->close();
   }
 
   else
@@ -188,14 +210,18 @@ function do_update($link)
   $labID       =                         $_POST['labID'];
   $name        = addslashes(htmlentities($_POST['name']));
   $contact     = addslashes(htmlentities($_POST['contact']));
+  // language=MariaDB
   $query = "UPDATE lab " .
-           "SET name  = '$name', " .
-           "building  = '$contact', " .
+           "SET name  = ?, " .
+           "building  = ?, " .
            "dateUpdated  = NOW() " .
-           "WHERE labID = $labID ";
-
-  mysqli_query($link, $query)
-    or die("Query failed : $query<br />\n" . mysqli_error($link));
+           "WHERE labID = ? ";
+  $args = [ $name, $contact, $labID ];
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'ssi', ...$args );
+  $stmt->execute()
+        or die("Query failed : $query<br />\n" . $stmt->error);
+  $stmt->close();
 
   header("Location: $_SERVER[PHP_SELF]?ID=$labID");
   exit();
@@ -209,14 +235,17 @@ function do_create($link)
   $name        = addslashes(htmlentities($_POST['name']));
   $contact     = addslashes(htmlentities($_POST['contact']));
   $query = "INSERT INTO lab " .
-           "SET labGUID = '$guid', " .
-           "name  = '$name', " .
-           "building  = '$contact', " .
+           "SET labGUID = ?, " .
+           "name  = ?, " .
+           "building  = ?, " .
            "dateUpdated  = NOW() ";
-
-  mysqli_query($link, $query)
-        or die("Query failed : $query<br />\n" . mysqli_error($link));
-  $new = mysqli_insert_id($link);
+  $args = [ $guid, $name, $contact ];
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'sss', ...$args );
+  $stmt->execute()
+        or die("Query failed : $query<br />\n" . $stmt->error);
+  $new = $stmt->insert_id;
+  $stmt->close();
 
   header("Location: {$_SERVER['PHP_SELF']}?ID=$new");
 }
@@ -232,7 +261,7 @@ function display_record($link)
   // Anything other than a number here is a security risk
   if (!(is_numeric($labID)))
     return;
-
+  // language=MariaDB
   $query  = "SELECT name, building AS contact " .
             "FROM lab " .
             "WHERE labID = ? ";
@@ -364,14 +393,20 @@ function edit_record($link)
     echo "<p>There was a problem with the edit request.</p>\n";
     return;
   }
-
+  // language=MariaDB
   $query  = "SELECT name, building AS contact " .
             "FROM lab " .
-            "WHERE labID = $labID ";
-  $result = mysqli_query($link, $query)
-            or die("Query failed : $query<br />\n" . mysqli_error($link));
+            "WHERE labID = ? ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( 'i', $labID );
+  $stmt->execute()
+          or die( "Query failed : $query<br />\n" . $stmt->error );
+  $result = $stmt->get_result()
+          or die( "Query failed : $query<br />\n" . $stmt->error );
 
   $row = mysqli_fetch_array($result);
+  $result->close();
+  $stmt->close();
 
 
   $name    = html_entity_decode( stripslashes( $row['name'] ) );

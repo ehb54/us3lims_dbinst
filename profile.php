@@ -67,39 +67,58 @@ exit();
 // Function to update the current record
 function do_update($link)
 {
+  global $message;
   $ID  = $_SESSION['id'];
   include 'get_user_info.php';
-  $pw1 = trim(substr(addslashes(htmlentities($_POST['pw1'])), 0,128));
-  $pw2 = trim(substr(addslashes(htmlentities($_POST['pw2'])), 0,128));
+
+  // Check password length
+  if ( !empty($_POST['pw1']) && strlen($_POST['pw1']) > 127 ){
+    $message .= "--password must be less than 128 characters long.<br />";
+  }
+  elseif ( !empty($_POST['pw2']) && strlen($_POST['pw2']) > 127 ){
+    $message .= "--password must be less than 128 characters long.<br />";
+  }
+  // We can't use any sanitization here, because it would alter the password potentially
+  $pw1 = $_POST['pw1'];
+  $pw2 = $_POST['pw2'];
 
   if ( $pw1 != $pw2 )
     $message .= "--passwords do not match.";
 
   if ( empty($message) )
   {
+    // language=MariaDB
     $query = "UPDATE people " .
-             "SET lname      = '$lname',       " .
-             "fname          = '$fname',      " .
-             "organization   = '$organization',   " .
-             "address        = '$address',        " .
-             "city           = '$city',           " .
-             "state          = '$state',          " .
-             "zip            = '$zip',            " .
-             "country        = '$country',        " .
-             "phone          = '$phone',          " .
-             "email          = '$email'           ";
-
+             "SET lname      = ?, " .
+             "fname          = ?, " .
+             "organization   = ?, " .
+             "address        = ?, " .
+             "city           = ?, " .
+             "state          = ?, " .
+             "zip            = ?, " .
+             "country        = ?, " .
+             "phone          = ?, " .
+             "email          = ?  ";
+    $args = [ $lname, $fname, $organization, $address, $city, $state,
+              $zip, $country, $phone, $email ];
+    $args_type = 'ssssssssss';
     // See if password has changed
     if ( $pw1 )
     {
       $pw = md5($pw1);
-      $query .= ", password = '$pw' ";
+      $query .= ", password = ? ";
+      $args[] = $pw;
+      $args_type .= 's';
     }
 
-    $query .= "WHERE personID = $ID ";
-
-    mysqli_query($link, $query)
-      or die("Query failed : $query<br />\n" . mysqli_error($link));
+    $query .= "WHERE personID = ? ";
+    $args[] = $ID;
+    $args_type .= 'i';
+    $stmt = mysqli_prepare($link, $query);
+    $stmt->bind_param($args_type, ...$args);
+    $stmt->execute()
+          or die("Query failed : $query<br />\n" . mysqli_error($link));
+    $stmt->close();
 
     // Now update the session variables
     $_SESSION['firstname']    = $fname;

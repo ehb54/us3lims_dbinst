@@ -114,8 +114,7 @@ else
   $separate_datasets = 1;
 
 $_SESSION['separate_datasets'] = $separate_datasets;
-$advancelevel   = ( isset($_SESSION['advancelevel']) )
-                ? $_SESSION['advancelevel'] : 0;
+$advancelevel   = $_SESSION['advancelevel'] ?? 0;
 
 // Set up some web stuff
 $button_message = ( $separate_datasets )
@@ -394,11 +393,16 @@ function get_editedData_qs3( $link, $editedDataID )
 {
   $query  = "SELECT label, filename " .
             "FROM editedData " .
-            "WHERE editedDataID = $editedDataID ";
-  $result = mysqli_query( $link, $query )
-          or die("Query failed : $query<br />\n" . mysqli_error($link));
-
+            "WHERE editedDataID = ? ";
+  $stmt = $link->prepare( $query );
+  $stmt->bind_param( "i", $editedDataID );
+  $stmt->execute()
+        or die("Query failed : $query<br />\n" . $stmt->error);
+  $result = $stmt->get_result()
+        or die("Query failed : $query<br />\n" . $stmt->error);
   list( $label, $fn ) = mysqli_fetch_array( $result );
+  $stmt->close();
+  $result->close();
   $parts    = explode( ".", $fn ); // runID, editID, runType, c,c,w, xml
   $edit_txt  = $parts[1];
   $profile = "<span>$label [$edit_txt]</span>";

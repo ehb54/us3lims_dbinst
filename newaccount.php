@@ -56,7 +56,7 @@ exit();
 
 function enter_record( $message = '' )
 {
-  if ( isset($message) )
+  if ( isset($message) && isset($_SESSION['POST']) )
   {
     // Get posted information from register.php
     $lname        = $_SESSION['POST']['lname'];
@@ -145,7 +145,7 @@ function do_captcha( $msg = "" )
   $message = ( empty( $msg ) ) ? "" : "<p style='color:red;'>$msg</p>";
   $act     = htmlentities($_SERVER['PHP_SELF']);
   // Let's just use the random password function we already have
-  $pw      = makeRandomPassword();
+  $pw      = makeRandomPassword(6);
   $_SESSION['captcha'] = $pw;
 
 echo<<<HTML
