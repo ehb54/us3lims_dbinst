@@ -34,6 +34,7 @@ $css = 'css/view_database_info.css';
 include 'header.php';
 ?>
 <!-- Begin page content -->
+<script src="./js/copyButton.js"></script>
 <div id='content'>
 
   <h1 class="title">Database Login Info</h1>
@@ -47,8 +48,9 @@ include "config.php";
 
 if ( $_SESSION['authenticatePAM'] ) {
   $userNamePAM = $_SESSION['userNamePAM'];
+  $connectionUrl = "mysql://{$userNamePAM}:@{$hostaddr}/{$dbname}|{$_SESSION['email']}";
 
-  echo <<<HTML
+    echo <<<HTML
 
 <div id='main'>
 
@@ -87,7 +89,10 @@ which can be opened by selecting:</p>
       <td>Not used for this database</td></tr>
 
 </table>
-
+<!-- Button to copy the connection url -->
+<button id="copyButton" data-url="{$connectionUrl}">
+  Copy Details
+</button>
 </div>
 
 </div>
@@ -95,6 +100,7 @@ which can be opened by selecting:</p>
 HTML;
 
 } else {
+    $connectionUrl = "mysql://{$secure_user}:{$secure_pw}@{$hostaddr}/{$dbname}|{$_SESSION['email']}";
     echo <<<HTML
 
 <div id='main'>
@@ -134,6 +140,10 @@ which can be opened by selecting:</p>
       <td>The password you logged in here with</td></tr>
 
 </table>
+<!-- Button to copy the connection url -->
+<button id="copyButton" data-url="{$connectionUrl}">
+  Copy Details
+</button>
 
 </div>
 
