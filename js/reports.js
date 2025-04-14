@@ -17,7 +17,7 @@ function show_report_detail( ID )
 // Function to display solution details in a new window
 function show_solution_detail( compType, eID, triple )
 {
-   var properType = compType.charAt(0).toUpperCase() +
+   const properType = compType.charAt(0).toUpperCase() +
                     compType.substr(1);
 
    window.open("solution_detail.php?type=" + compType + "&expID=" + eID + "&triple=" + triple,
@@ -28,16 +28,17 @@ function show_solution_detail( compType, eID, triple )
 }
 
 // jQuery format controls
-var change_person = function ()
+const change_person = function ()
 {
-   var ID = $('#people_select').val();
-   // If pID or rID are falsy, read them from the URL.
+   let $peopleSelect = $('#people_select')
+   let ID = $peopleSelect.val();
+   // If personID or reportID are falsy, read them from the URL.
    const urlParams = new URLSearchParams(window.location.search);
    if (!ID) {
        ID = urlParams.get('personID') || "";
    }
-   $('#people_select').unbind('change');
-   // Update the URL with the current pID and rID selections.
+   $peopleSelect.unbind('change');
+   // Update the URL with the current personID and reportID selections.
    const newUrl = new URL(window.location.href);
    newUrl.searchParams.set('personID', ID);
    newUrl.searchParams.delete('reportID');
@@ -62,11 +63,12 @@ var change_person = function ()
    $('#tripleID').html( '' );
 }
 
-var change_run_select = function ()
+const change_run_select = function ()
 {
-   var pID = $('#people_select').val();
-   var rID = $('#run_select').val();
-   // If pID or rID are falsy, read them from the URL.
+   const $runSelect = $('#run_select');
+   let pID = $('#people_select').val();
+   let rID = $runSelect.val();
+   // If personID or reportID are falsy, read them from the URL.
    const urlParams = new URLSearchParams(window.location.search);
    if (!pID) {
        pID = urlParams.get('personID') || "";
@@ -75,12 +77,12 @@ var change_run_select = function ()
        rID = urlParams.get('reportID') || "";
    }
 
-   $('#run_select').unbind('change');
+    $runSelect.unbind('change');
 
-   // Update the URL with the current pID and rID selections.
+   // Update the URL with the current personID and reportID selections.
    const newUrl = new URL(window.location.href);
    newUrl.searchParams.set('personID', pID);
-   if (`${rID}` !== '-1' && `${rID}` !== "") {
+   if (rID && String(rID) !== '-1') {
        newUrl.searchParams.set('reportID', rID);
    }
    else {
@@ -101,27 +103,25 @@ var change_run_select = function ()
      });
 }
 
-var change_docType = function ()
-{
-   // Get a list of all the checked boxes
-   var imageIDs = $("input:checked").toArray();
-   var docTypes = [];
-   var tripleID = 0;
+const change_docType = function () {
+    // Get a list of all the checked boxes
+    const imageIDs = $("input:checked").toArray();
+    const docTypes = [];
+    let tripleID = 0;
 
-   // Now make a list of the document types, which are contained as text in the element
-   for ( var i = 0; i < imageIDs.length; i++ )
-   {
-       var id = imageIDs[i].getAttribute('ID');
-       var a  = id.split("_");
-       tripleID = a[1];
-       var docType  = a[2];
+    // Now make a list of the document types, which are contained as text in the element
+    for (let i = 0; i < imageIDs.length; i++) {
+        const id = imageIDs[i].getAttribute('ID');
+        const a = id.split("_");
+        tripleID = a[1];
+        const docType = a[2];
 
-       docTypes.push( docType );
-   }
+        docTypes.push(docType);
+    }
 
-   // Make a comma-separated list
-   var types = docTypes.join(",");
+    // Make a comma-separated list
+    const types = docTypes.join(",");
 
-   location.href = 'view_reports.php?triple=' + tripleID + '&a=' + types;
-}
+    location.href = 'view_reports.php?triple=' + tripleID + '&a=' + types;
+};
 
