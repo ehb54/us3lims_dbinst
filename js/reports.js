@@ -31,8 +31,18 @@ function show_solution_detail( compType, eID, triple )
 var change_person = function ()
 {
    var ID = $('#people_select').val();
-
+   // If pID or rID are falsy, read them from the URL.
+   const urlParams = new URLSearchParams(window.location.search);
+   if (!ID) {
+       ID = urlParams.get('personID') || "";
+   }
    $('#people_select').unbind('change');
+   // Update the URL with the current pID and rID selections.
+   const newUrl = new URL(window.location.href);
+   newUrl.searchParams.set('personID', ID);
+   newUrl.searchParams.delete('reportID');
+   history.replaceState(null, "", newUrl.toString());
+
    $('#personID').load( 'report_getInfo.php?type=p&pID=' + ID,
      function()
      {
@@ -56,8 +66,29 @@ var change_run_select = function ()
 {
    var pID = $('#people_select').val();
    var rID = $('#run_select').val();
+   // If pID or rID are falsy, read them from the URL.
+   const urlParams = new URLSearchParams(window.location.search);
+   if (!pID) {
+       pID = urlParams.get('personID') || "";
+   }
+   if (!rID) {
+       rID = urlParams.get('reportID') || "";
+   }
 
-   $('#run_select').unbind('change');    
+   $('#run_select').unbind('change');
+
+   // Update the URL with the current pID and rID selections.
+   const newUrl = new URL(window.location.href);
+   newUrl.searchParams.set('personID', pID);
+   if (`${rID}` !== '-1' && `${rID}` !== "") {
+       newUrl.searchParams.set('reportID', rID);
+   }
+   else {
+       newUrl.searchParams.delete('reportID');
+   }
+
+   history.replaceState(null, "", newUrl.toString());
+
    $('#tripleID').load( 'report_getInfo.php?type=t&rID=' + rID );
    $('#combos').load( 'report_getInfo.php?type=c&rID=' + rID );
    $('#runID').load( 'report_getInfo.php?type=r&pID=' + pID +
