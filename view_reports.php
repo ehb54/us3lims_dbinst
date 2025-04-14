@@ -11,6 +11,7 @@ $myID = $_SESSION['id'];
 
 include 'config.php';
 include 'db.php';
+global $link;
 include 'lib/utility.php';
 include 'lib/reports.php';
 ini_set('display_errors', 'On');
