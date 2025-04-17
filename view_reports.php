@@ -11,6 +11,7 @@ $myID = $_SESSION['id'];
 
 include 'config.php';
 include 'db.php';
+global $link;
 include 'lib/utility.php';
 include 'lib/reports.php';
 ini_set('display_errors', 'On');
@@ -87,15 +88,24 @@ else if ( isset( $_GET['combo'] ) )
 
 else
 {
-  $person_info = people_select( $link, 'people_select', $myID );
-  $run_info    = run_select( $link, 'run_select' );
+  $personID = $_GET['personID'] ?? $myID;
+  $reportID = $_GET['reportID'] ?? -1;
+  $person_info = people_select( $link, 'people_select', $personID );
+  $run_info    = run_select( $link, 'run_select', $reportID, $personID );
+  $triple_list = "";
+  $combo_info  = "";
+  if ("$reportID" != "-1")
+  {
+      $triple_list = tripleList( $link, $reportID );
+      $combo_info  = combo_info( $link, $reportID );
+  }
 
   $text =<<<HTML
   <div id='personID'>$person_info</div>
   <div id='report_content'>
     <div id='runID'>$run_info</div>
-    <div id='tripleID'></div>
-    <div id='combos'></div>
+    <div id='tripleID'>$triple_list</div>
+    <div id='combos'>$combo_info</div>
   </div>
 
   <script>

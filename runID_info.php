@@ -44,6 +44,10 @@ global $uses_thrift;
     if ( $_POST['experimentID'] != -1 )               // -1 is Please select...
        $text .= runID_info( $link, $_POST['experimentID'] );
   }
+  else if ( isset( $_GET['experimentID'] ) && $_GET['experimentID'] != -1){
+      $text = experiment_select( $link, 'experimentID', $_GET['experimentID'] );
+      $text .= runID_info( $link, $_GET['experimentID'] );
+  }
 
   else if ( isset( $_GET['RequestID'] ) )
     $text = HPCDetail( $link, $_GET['RequestID'] );
@@ -78,7 +82,7 @@ function experiment_select( $link, $select_name, $current_ID = NULL )
 
   if ( mysqli_num_rows( $result ) == 0 ) return "";
 
-  $text = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n" .
+  $text = "<form action='{$_SERVER['PHP_SELF']}' method='get'>\n" .
           "  <select name='$select_name' size='1' onchange='form.submit();'>\n" .
           "    <option value=-1>Please select...</option>\n";
   while ( list( $experimentID, $runID, $lname ) = mysqli_fetch_array( $result ) )
