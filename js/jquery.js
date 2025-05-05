@@ -1,1 +1,1 @@
-../../../common/js/jquery-1.7.2.min.js
+../../../common/js/jquery.js
