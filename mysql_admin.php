@@ -43,13 +43,13 @@ if (isset($_POST['do_sql']))
   {
     // The result of an UPDATE, DELETE, DROP, INSERT, etc.
     $rows = mysqli_affected_rows();
-    echo "<p style='margin:2em 0em 20em;'>$rows rows affected</p>\n";
+    echo "<p class='margin_c_2em_0em_20em_s_'>$rows rows affected</p>\n";
   }
     
   // Only SELECT, DESCRIBE, etc. here
   else if (mysqli_num_rows($result) < 1)
   {
-    echo "<p style='margin:2em 0em 20em;'>No rows returned</p>\n";
+    echo "<p class='margin_c_2em_0em_20em_s_'>No rows returned</p>\n";
   }
 
   else

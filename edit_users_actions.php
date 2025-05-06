@@ -802,7 +802,7 @@ function display_record($link)
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
-                  "        onchange='get_person(this);' >" .
+                  "class='onchange-get-person' >" .
                   "  <option value='null'>None selected...</option>\n";
   $querywhere = "";
   if ( $_SESSION['userlevel'] == 0 ) {
@@ -1104,7 +1104,7 @@ function edit_record($link)
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"
-        onsubmit="return validate(this);">
+        class='onsubmit-return-validate-this' >
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
       <tr><th colspan='2'>Edit Profile</th></tr>
@@ -1208,7 +1208,7 @@ function do_new($link)
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"
-        onsubmit="return validate(this);">
+        class='onsubmit-return-validate-this' >
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
       <tr><th colspan='2'>Create a New Profile</th></tr>

@@ -138,12 +138,12 @@ $experiment_text = get_experiment_text($link);
 //$time5=microtime(true) - $time0;
 $cell_text       = get_cell_text($link);
 //$time6=microtime(true) - $time0;
-$submit_text     = "<p style='padding-bottom:3em;'></p>\n";  // a spacer
+$submit_text     = "<p class='padding_d_bottom_c_3em_s_'></p>\n";  // a spacer
 if ( $experimentID != 0 )
 {
   $submit_text = <<<HTML
   <p><input type='button' value='Select Different Experiment'
-            onclick='window.location="{$_SERVER['PHP_SELF']}?reset=true";' />
+             class='onclick-window-location-arg' data-arg="{$_SERVER['PHP_SELF']}?reset=true" >
      <input type='submit' name='next' value='Add to Queue'/>
   </p>
 
@@ -171,7 +171,7 @@ echo <<<HTML
       $experiment_text
       $cell_text
 
-<button  type="button" onclick="SelectAllCells()">Select all cells</button>
+<button  type="button" class='onclick-SelectAllCells'>Select all cells</button>
 
         <script>
             function SelectAllCells(){
@@ -224,7 +224,7 @@ function get_email_text($link)
   if ( $_SESSION['loginID'] != $_SESSION['id'] )
   {
     $copy_owner = "Add e-mail address of data owner?" .
-                  "<input type='checkbox' name='add_owner'$checked style='width:5em;'/>";
+                  "<input type='checkbox' name='add_owner'$checked class='width_c_5em_s_'/>";
   }
 
   $text = <<<HTML
@@ -259,7 +259,7 @@ function get_experiment_text($link)
             or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   $experiment_list = "<select id='expIDs' name='expIDs[]' multiple='multiple' size='15' " .
-                     "  onchange='this.form.submit();'>\n" .
+                     "  class='onchange-form-submit' >\n" .
                      "  <option value='null'>run ID not selected...</option>\n";
 
   while ( list( $expID, $udate, $runID, $label ) = mysqli_fetch_array( $result ) )
