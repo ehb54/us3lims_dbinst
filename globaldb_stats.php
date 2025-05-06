@@ -311,7 +311,7 @@ function by_quarter()
 
     <tfoot>
       <tr><td colspan='$column_count'><input type='button' value='Export'
-                     onclick='export_file();' />
+                     class='onclick-export-file' />
           </td></tr>
     </tfoot>
 
@@ -326,7 +326,7 @@ HTML;
   for ( $year = $start_year; $year <= $end_year; $year++ )
   {
     // Column headings
-    echo "  <tr style='background-color:#9CC4E4;'><th>Quarter/<br />\n" .
+    echo "  <tr class='background_d_color_c__h_9CC4E4_s_'><th>Quarter/<br />\n" .
          "          $year</th>\n";
     $export[$counter]['Quarter'] = $year;
     foreach ( $selected_clusters as $cluster => $shortname )

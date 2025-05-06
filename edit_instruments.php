@@ -283,7 +283,7 @@ function display_record($link)
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
-                  "        onchange='get_lab(this);' >" .
+                  "        class='onchange-get-lab' >" .
                   "  <option value='null'>None selected...</option>\n";
   $query  = "SELECT instrumentID, name FROM instrument ORDER BY name";
   $result = mysqli_query($link, $query)

@@ -63,7 +63,7 @@ function create_table($link)
             or die("Query failed : $query<br />\n" . mysqli_error($link));
 
   $table = <<<HTML
-  <table cellspacing='0' cellpadding='7' class='style1 sortable' style='width:95%;'>
+  <table cellspacing='0' cellpadding='7' class='style1 sortable width_c_95_p__s_' >
     <thead>
       <tr>
           <th>Name</th>
@@ -74,7 +74,8 @@ function create_table($link)
     </thead>
     <tfoot>
       <tr><td colspan='5'><input type='button' value='Print Version'
-                                 onclick='print_version();' /></td></tr>
+                                 data-test-1='xyz'
+                                 class='onclick-print-version' /></td></tr>
     </tfoot>
 
     <tbody>

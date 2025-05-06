@@ -400,7 +400,7 @@ function display_record( $link )
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
-                  "        onchange='get_project(this);' >" .
+                  "        class='onchange-get-project' >" .
                   "  <option value='null'>None selected...</option>\n";
   $query  = "SELECT j.projectID, description " .
             "FROM project j, projectPerson p " .
@@ -421,7 +421,7 @@ echo<<<HTML
   <table cellspacing='0' cellpadding='10' class='style1'id='fixed'>
     <thead>
       <tr>
-        <th style="width: 16%;"></th>
+        <th class='width_c__16_p__s_'></th>
         <th>Edit My Project</th>
       </tr>
     </thead>

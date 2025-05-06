@@ -98,20 +98,20 @@ function create_table( $mysqli_con )
 
   $table = <<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post" >
-  <table cellspacing='0' cellpadding='7' class='style1 sortable' id='fixed' style='width:95%;'>
+  <table cellspacing='0' cellpadding='7' class='style1 sortable width_c_95_p__s_' id='fixed' >
     <thead>
       <tr>
-          <th style="width: 15%;">Description</th>
-          <th style="width: 70%;">Goals</th>
-          <th style="width: 11%;">Status</th>
-          <th style="width: 12%;">Last Updated</th>
+          <th class='width_c__15_p__s_'>Description</th>
+          <th class='width_c__70_p__s_'>Goals</th>
+          <th class='width_c__11_p__s_'>Status</th>
+          <th class='width_c__12_p__s_'>Last Updated</th>
       </tr>
     </thead>
 
     <tfoot>
       <tr><td colspan='5'><input type='submit' name='new' value = 'New' />
                           <input type='button' value='Print Version'
-                                 onclick='print_version();' /></td></tr>
+                                 class='onclick-print-version' /></td></tr>
     </tfoot>
 
     <tbody>

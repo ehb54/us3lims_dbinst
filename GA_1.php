@@ -137,10 +137,9 @@ if ( isset($_SESSION['edit_select_type'])  &&
 
 <div>
 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"
-      onsubmit="return validate(this, 
-                <?php echo $advanceLevel; ?>, 
-                <?php echo $num_datasets; ?>);" >
-
+      class='onsubmit-return-validate-this-args'
+      data-args='[$advanceLevel,$num_datasets]'
+      >
 
 <?php
 //  if ( isset($error) ) echo $error;
@@ -209,10 +208,10 @@ function display( $dataset_id, $num_datasets )
             }
       ?>
 
-      <p><button onclick="return toggle('advanced');" id='show'>
-        Show Advanced Options</button></p>
+    <p><button class='onclick-return-toggle-advanced' id='show'>
+      Show Advanced Options</button></p>
 
-      <div id='advanced' style='display:none'>
+      <div id='advanced' class='display_c_none'>
 
 <?php
   if ( $dataset_id == 0 )
@@ -257,11 +256,11 @@ function display( $dataset_id, $num_datasets )
   echo<<<HTML
     </div>
 
-    <input class="submit" type="button" 
-            onclick='window.location="queue_setup_2.php"' 
+    <input class="submit onclick-window-location-arg" type="button" 
+            data-arg='queue_setup_2.php'
             value="Edit Profiles"/>
-    <input class="submit" type="button" 
-            onclick='window.location="queue_setup_1.php"' 
+    <input class="submit onclick-window-location-arg" type="button" 
+            data-arg='queue_setup_1.php'
             value="Change Experiment"/>
   </fieldset>
 HTML;

@@ -160,7 +160,7 @@ function get_editedData( $link, $rawDataID, $editedDataID = 0 )
 
 
   $profile    = "<select name='editedDataID[$rawDataID]'" .
-                "  onchange='this.form.submit();' size='3'>\n" .
+                "  class='onchange-form-submit' size='3'>\n" .
                 "  <option value='null'>Select edit profile...</option>\n";
   while ( list( $eID, $label, $fn ) = mysqli_fetch_array( $result ) )
   {
@@ -180,7 +180,7 @@ function get_editedData( $link, $rawDataID, $editedDataID = 0 )
 function get_noise( $link, $rawDataID, $editedDataID, $noiseIDs )
 {
   $noise  = "<select name='noiseIDs[$rawDataID][]' multiple='multiple'" .
-            "  onchange='this.form.submit();' size='8'>\n" .
+            "  class='onchange-form-submit' size='8'>\n" .
             "  <option value='null'>Select noise ...</option>\n";
   // language=MariaDB
   $query  = "SELECT n.noiseID, n.modelID, n.noiseType, n.timeEntered " .
