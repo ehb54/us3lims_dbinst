@@ -113,7 +113,7 @@ function person_project_select( $link, $select_name, $current_ID = NULL )
   if ( mysqli_num_rows( $result ) == 0 ) return "";
 
   $text = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n" .
-          "  <select name='$select_name' size='1' onchange='form.submit();'>\n" .
+          "  <select name='$select_name' size='1' class='onchange-form-submit' >\n" .
           "    <option value='-1'>Please select...</option>\n";
   while ( list( $personID, $lname, $fname ) = mysqli_fetch_array( $result ) )
   {
@@ -148,20 +148,20 @@ function project_info( $link, $personID )
 
   $table = <<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post" >
-  <table cellspacing='0' cellpadding='7' class='style1 sortable' id='fixed' style='width:95%;'>
+  <table cellspacing='0' cellpadding='7' class='style1 sortable width_c_95_p__s_' id='fixed' >
     <thead>
       <tr>
-          <th style="width: 15%;">Description</th>
-          <th style="width: 70%;">Goals</th>
-          <th style="width: 11%;">Status</th>
-          <th style="width: 12%;">Last Updated</th>
+          <th class='width_c__15_p__s_'>Description</th>
+          <th class='width_c__70_p__s_'>Goals</th>
+          <th class='width_c__11_p__s_'>Status</th>
+          <th class='width_c__12_p__s_'>Last Updated</th>
       </tr>
     </thead>
 
     <tfoot>
       <tr><td colspan='5'><input type='submit' name='new' value = 'New' />
                           <input type='button' value='Print Version'
-                                 onclick='print_version();' /></td></tr>
+                                 class='onclick-print-version' /></td></tr>
     </tfoot>
 
     <tbody>

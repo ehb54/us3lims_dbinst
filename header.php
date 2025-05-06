@@ -77,10 +77,10 @@ echo<<<HTML
 <body $onload>
 
 <!-- begin header -->
-<div id="header" style='text-align:center;'>
+<div id="header" class='text_d_align_c_center_s_'>
    <table class='noborder'>
    <tr><td><img src='images/USLIMS3-banner.png' alt='USLims 3 banner' /></td>
-       <td style='vertical-align:middle;width:400px;'>
+       <td class='vertical_d_align_c_middle_s_width_c_400px_s_'>
 
 <!--
        <div id="cse-search-form">Loading</div>
@@ -102,7 +102,7 @@ echo<<<HTML
        </td>
    </tr>
    </table>
-   <span style='font-size:20px;font-weight:bold;color:white;padding:0 1em;'>
+   <span class='font_d_size_c_20px_s_font_d_weight_c_bold_s_color_c_white_s_padding_c_0_1em_s_'>
     $org_name ($dbname)$title_devel</span>
 
 HTML;

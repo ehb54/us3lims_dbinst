@@ -153,9 +153,9 @@ if ( $separate_datasets != 0 )
   {
     $GA_opt_text = <<<HTML
   <p><input type="button" value="Setup GA Control"
-            onclick='window.location="GA_1.php"'$GA_disabled />
+            class='onclick-window-location-arg' data-arg='GA_1.php' $GA_disabled >
      <input type="button" value="Setup Discrete Model GA Control"
-            onclick='window.location="DMGA_1.php"'$GA_disabled /></p>
+            class='onclick-window-location-arg' data-arg='DMGA_1.php' $GA_disabled ></p>
 HTML;
   }
 }
@@ -169,9 +169,9 @@ else
   $button_message    = "Click here to proceed as separate jobs";
   $GA_opt_text = <<<HTML
   <p><input type="button" value="Setup GA Control"
-            onclick='window.location="GA_1.php"'$GA_disabled />
+            class='onclick-window-location-arg' data-arg='GA_1.php' $GA_disabled />
      <input type="button" value="Setup Discrete Model GA Control"
-            onclick='window.location="DMGA_1.php"'$GA_disabled /></p>
+            class='onclick-window-location-arg' data-arg='DMGA_1.php' $GA_disabled ></p>
 HTML;
 }
 
@@ -201,7 +201,7 @@ if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] ) > 0 )
 
     $out_text .= <<<HTML
     <fieldset>
-      <legend style='font-size:110%;font-weight:bold;'>{$cellinfo['filename']}
+      <legend class='font_d_size_c_110_p__s_font_d_weight_c_bold_s_'>{$cellinfo['filename']}
               <a href='{$_SERVER['PHP_SELF']}?removeID=$removeID'>Remove?</a></legend>
 
       <table cellpadding='3' cellspacing='0'>
@@ -238,17 +238,17 @@ HTML;
           <tr><td><label>
                   <input type='radio' name='separate_datasets'
                          value='separate'$separate_checked
-                         onclick='this.form.submit();' />
+                         class='onclick-form-submit' >
                          Proceed as separate jobs</label></td></tr>
           <tr><td><label>
                   <input type='radio' name='separate_datasets'
                          value='global'$global_checked
-                         onclick='this.form.submit();' />
+                         class='onclick-form-submit' >
                          Proceed as a global fit</label></td></tr>
           <tr><td><label>
                   <input type='radio' name='separate_datasets'
                          value='composite'$composite_checked
-                         onclick='this.form.submit();' />
+                         class='onclick-form-submit' >
                          Proceed as composite job(s)</label></td></tr>
           </table>
           </form></li>
@@ -260,13 +260,13 @@ HTML;
           <tr><td><label>
                   <input type='radio' name='advanced_review'
                          value='adv_disabled'$adv_disabled_cked
-                         onclick='this.form.submit();' />
+                         class='onclick-form-submit' >
                          Apply controls to all datasets
                   </label></td></tr>
           <tr><td><label>
                   <input type='radio' name='advanced_review'
                          value='adv_enabled'$adv_enabled_cked
-                         onclick='this.form.submit();' />
+                         class='onclick-form-submit' >
                          Review advanced controls for each cell
                   </label></td></tr>
           </table>
@@ -293,12 +293,12 @@ HTML;
           <tr><td><label>
                   <input type='radio' name='separate_datasets'
                          value='separate'$separate_checked
-                         onclick='this.form.submit();' />
+                         class='onclick-form-submit' >
                          Proceed as separate jobs</label></td></tr>
           <tr><td><label>
                   <input type='radio' name='separate_datasets'
                          value='global'$global_checked
-                         onclick='this.form.submit();' />
+                         class='onclick-form-submit' >
                          Proceed as a global fit</label></td></tr>
           </table>
           </form></li>
@@ -317,28 +317,32 @@ HTML;
   <form action="queue_setup_2.php" method="post">
 
   <p><input type='button' value='Select Different Experiment'
-            onclick='window.location="queue_setup_1.php";' /> 
+            class='onclick-window-location-arg' data-arg='queue_setup_1.php' > 
+
      <input type="submit" name='setup_2' value="Edit Profile Information"/></p>
 
   <p><input type="button" value="Setup 2DSA Control"
-            onclick='window.location="2DSA_1.php"' />
+            class='onclick-window-location-arg' data-arg='2DSA_1.php' > 
+
      <input type="button" value="Setup 2DSA Control with Custom Grid"
-            onclick='window.location="2DSA-CG_1.php"' /></p>
+            class='onclick-window-location-arg' data-arg='2DSA-CG_1.php' > </p>
 
   $GA_opt_text
 
   <p><input type="button" value="Setup PCSA Control"
-            onclick='window.location="PCSA_1.php"' />
+            class='onclick-window-location-arg' data-arg='PCSA_1.php' > 
+
      <input type="button" value="Clear Queue"
-            onclick='window.location="{$_SERVER['PHP_SELF']}?clear=clear"'/></p>
+            class='onclick-window-location-arg' data-arg="{$_SERVER['PHP_SELF']}?clear=clear" ></p>
+
   <!--
      <input type="button" value="Setup 2DSA Control with MW Constraint"
-            onclick='window.location="2DSA-MW_1.php"' disabled='disabled' /></p>
+            class='onclick-window-location-arg' data-arg='2DSA-MW_1.php' disabled='disabled' > </p>
      <input type="button" value="Setup GA Control with MW Constraint"
-            onclick='window.location="GA-MW_1.php"' disabled='disabled' /></p>
+            class='onclick-window-location-arg' data-arg='GA-MW_1.php' disabled='disabled' > </p>
 
   <p><input type="button" value="Nonlinear Model GA Control"
-            onclick='window.location="GA_SC_1.php"' disabled='disabled' $disabled />
+            class='onclick-window-location-arg' data-arg='GA_SC_1.php' disabled='disabled' > </p>
   -->
   $GA_notes
 
@@ -371,7 +375,7 @@ else
   <p>Your Queue is currently empty</p>
   <p>Please go back to add one or more experiments into the queue.</p>
   <p><input type='button' value='Select Experiment'
-            style='width:12em;' onclick='window.location="queue_setup_1.php";'/>
+            class='width_c_12em_s_ onclick-window-location-arg' data-arg='queue_setup_1.php' >
   </p>
 HTML;
 }

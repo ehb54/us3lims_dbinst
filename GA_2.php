@@ -164,7 +164,7 @@ echo <<<HTML
        $file_info</p>
 
     <form enctype="multipart/form-data" action="{$_SERVER['PHP_SELF']}" method="post">
-      <fieldset style="background: #eeeeee">
+      <fieldset class='background_c___h_eeeeee'>
         <legend>Select File to Upload $soluteFile</legend>
         <input type="file" name="file-upload" size="30" accept=".dat"/>
         <input type="submit" name="upload_submit" value="Load Values"/>
@@ -177,7 +177,7 @@ echo <<<HTML
       <legend>Set Number of Solutes</legend>
       <br/>
       Value: <input type='text' name='sol' id='sol'
-                    onchange='javascript:get_solute_count(this);' 
+                    class='onchange-get-solute-count' 
                     value="$solute_count" size='10'/>
                     Range: (Minimum:1 ~ Maximum:$max_buckets) 
     </fieldset>
@@ -186,7 +186,8 @@ echo <<<HTML
 HTML;
 
   echo "<form name='Solutes' action='GA_2.php' method='post' " .
-       "      onsubmit='return validate_solutes( $solute_count );'>\n";
+       "      class='onsubmit-return-solutes-args' " .
+       "      data-args='[$solute_count]' >\n";
 
   echo solute_setup( $buckets, $solute_count );
 
@@ -266,7 +267,7 @@ HTML;
 
   $solute_text .= <<<HTML
     <input class='submit' type='button'
-           onclick="window.location='GA_1.php'" value='Setup GA Control'/>
+           class='onclick-window-location-arg' data-arg='GA_1.php' value='Setup GA Control'/>
     <input type='hidden' name='solute-value' value="$count"/>
     <input type='hidden' name='x-type' value="$xtype"/>
     <input type='hidden' name='y-type' value="$ytype"/>

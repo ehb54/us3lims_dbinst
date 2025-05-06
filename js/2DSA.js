@@ -191,6 +191,17 @@ function toggle(area)
   return false;
 }
 
+console.log( "2DSA.js" );
+if ( 0 ) {
+document.addEventListener('DOMContentLoaded', function() {
+    console.log( "show DOMContentLoaded" );
+    document.getElementById('show').addEventListener('change', function() {
+        console.log( "show change" );
+        toggle('advanced');
+    });
+});
+}
+
 function validate( f, advanceLevel, dataset_num, count_datasets, separate_datasets,
                       meniscus_radius, data_left )
 {

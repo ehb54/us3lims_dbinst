@@ -146,8 +146,9 @@ function display_record($link)
   $userlevel = $row['userlevel']; // 0 translates to null
 
   // Populate a list box to allow user to jump to another record
+
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
-                  "        onchange='get_person(this);' >" .
+                  "class='onchange-get-person' >" .
                   "  <option value='null'>None selected...</option>\n";
 
   $querywhere = "";
