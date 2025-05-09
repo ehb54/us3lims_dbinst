@@ -82,7 +82,7 @@ function order_select( $current_order = NULL )
 
   $text  = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n";
   $text .= "<select name='sort_order' size='1'
-                    onchange='this.form.submit();' >\n";
+                    class='onchange-form-submit' >\n";
   foreach ( $sortorder as $order => $display )
   {
     $selected = ( $current_order == $order ) ? " selected='selected'" : "";
@@ -273,7 +273,9 @@ function page_content2()
   // Print queue status timestamp
   $content .= "<h5>$aData[0]:\n" .
               "  <input type='button' value='Refresh'\n" .
-              "  onclick='window.location.href=window.location.href;' /></h5>\n";
+              // why set window.location.href to window.location.href ?
+              // "  onclick='window.location.href=window.location.href;' 
+              "></h5>\n";
 
   // Check if there are any jobs in the queue
   if (sizeof( $aData ) == 3 and $aData[2] == "No jobs are currently queued, running, or completing.")
@@ -411,7 +413,9 @@ HTML;
     // Print queue status timestamp a second time, if there are jobs listed
     $content .= "<h5>$aData[0]:\n" .
                 "  <input type='button' value='Refresh'\n" .
-                "  onclick='window.location.href=window.location.href;' /></h5>\n";
+                // why set window.location.href to window.location.href ?
+                // "  onclick='window.location.href=window.location.href;' 
+                "></h5>\n";
   }
 
   return $content;
@@ -470,7 +474,7 @@ HTML;
   {
     $content .= <<<HTML
     $moreinfo_box
-    <button id='more_info$jobid' onclick='return show_info( $jobid );'>
+    <button id='more_info$jobid' class='onclick-show-info-arg' data-arg='$jobid' >
             More Info</button>
 HTML;
   }

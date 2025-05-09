@@ -83,7 +83,7 @@ function experiment_select( $link, $select_name, $current_ID = NULL )
   if ( mysqli_num_rows( $result ) == 0 ) return "";
 
   $text = "<form action='{$_SERVER['PHP_SELF']}' method='get'>\n" .
-          "  <select name='$select_name' size='1' onchange='form.submit();'>\n" .
+          "  <select class='onchange-form-submit' name='$select_name' size='1'>\n" .
           "    <option value=-1>Please select...</option>\n";
   while ( list( $experimentID, $runID, $lname ) = mysqli_fetch_array( $result ) )
   {

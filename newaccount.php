@@ -88,7 +88,7 @@ function enter_record( $message = '' )
        mail information to you.</p>
 
     <form action="register.php" method="post"
-          onsubmit='return validate( this );'>
+          class='onsubmit-return-validate-this'>
     <table cellspacing='0' cellpadding='10'>
       <thead>
         <tr><th colspan='2'>Personal Information</th></tr>
@@ -142,7 +142,7 @@ HTML;
 // Function to display a captcha and request human input
 function do_captcha( $msg = "" )
 {
-  $message = ( empty( $msg ) ) ? "" : "<p style='color:red;'>$msg</p>";
+  $message = ( empty( $msg ) ) ? "" : "<p class='text-red'>$msg</p>";
   $act     = htmlentities($_SERVER['PHP_SELF']);
   // Let's just use the random password function we already have
   $pw      = makeRandomPassword(6);
