@@ -69,9 +69,9 @@ function motd_block()
   {
     // Display message
     if ($message)
-      echo "<p class='message padding_d_bottom_c_30em_s_' >$message</p>\n";
+      echo "<p class='message pb-30em' >$message</p>\n";
     else
-      echo "<p class='message padding_d_bottom_c_40em_s_' >Job submission is blocked.</p>\n";
+      echo "<p class='message pb-40em' >Job submission is blocked.</p>\n";
 
     echo "</div>\n";
     include 'footer.php';
