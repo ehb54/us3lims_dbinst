@@ -156,7 +156,7 @@ foreach ( $_SESSION['cells'] as $rawDataID => $cell )
 
   <a name='anchor_$count_anchors'></a>
   <fieldset>
-    <legend class='font_d_size_c_110_p__s_font_d_weight_c_bold_s_'>{$cell['filename']}</legend>
+    <legend class='font-bold-110'>{$cell['filename']}</legend>
 
     <table cellpadding='3' cellspacing='0'>
     <tr><th>Edit Profile</th>
@@ -227,7 +227,7 @@ if ( $advancelevel != 0 )
 echo <<<HTML
 
  <fieldset>
- <legend class='font_d_size_c_110_p__s_font_d_weight_c_bold_s_'>Edit and Noise Selection</legend>
+ <legend class='font-bold-110'>Edit and Noise Selection</legend>
  <ul class='edit_select'>
    <li><form action='$_SERVER[PHP_SELF]' method='post'>
        By default, all the latest edits for chosen cells will be

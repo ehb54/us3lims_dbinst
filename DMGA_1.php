@@ -206,7 +206,7 @@ if ( isset($_SESSION['edit_select_type'])  &&
   if ( $dataset_id == $max_dset_id )
   {
     echo '<div id="clusters-nopmg">' . tigre() . '</div>';
-    echo '<div id="clusters-pmg" class="display_c_none">' . tigre( true ) . '</div>';
+    echo '<div id="clusters-pmg" class="d-none">' . tigre( true ) . '</div>';
   }
 ?>
 
@@ -250,7 +250,7 @@ function display( $dataset_id, $num_datasets )
       <p><button class='onclick-return-toggle-advanced' id='show'>
         Show Advanced Options</button></p>
 
-      <div id='advanced' class='display_c_none'>
+      <div id='advanced' class='d-none'>
 
 <?php
   if ( $dataset_id == 0 )

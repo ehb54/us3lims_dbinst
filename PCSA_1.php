@@ -278,7 +278,7 @@ function display( $dataset_id, $num_datasets )
     <p><button class='onclick-return-toggle-advanced' id='show'>
       Show Advanced Options</button></p>
 
-    <div id='advanced' class='display_c_none_s_'>
+    <div id='advanced' class='d-none'>
 
 HTML;
 
