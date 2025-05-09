@@ -421,7 +421,7 @@ echo<<<HTML
   <table cellspacing='0' cellpadding='10' class='style1'id='fixed'>
     <thead>
       <tr>
-        <th class='width_c__16_p__s_'></th>
+        <th class='w-16p'></th>
         <th>Edit My Project</th>
       </tr>
     </thead>
