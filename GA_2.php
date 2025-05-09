@@ -164,7 +164,7 @@ echo <<<HTML
        $file_info</p>
 
     <form enctype="multipart/form-data" action="{$_SERVER['PHP_SELF']}" method="post">
-      <fieldset class='background_c___h_eeeeee'>
+      <fieldset class='bg-gray'>
         <legend>Select File to Upload $soluteFile</legend>
         <input type="file" name="file-upload" size="30" accept=".dat"/>
         <input type="submit" name="upload_submit" value="Load Values"/>

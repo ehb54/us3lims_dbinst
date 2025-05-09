@@ -26,7 +26,7 @@ include 'header.php';
 echo <<< HTML
 <!-- Begin page content -->
 <div id="sf_content">
-  <div class='clear_c__both'></div>
+  <div class='clear-both'></div>
 
   <div id="sf_navbar" class="sf_item">
     <div class="sf_navbar_item" id="sf_view" onclick="handle_mode(this)"> View / Edit</div>

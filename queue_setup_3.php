@@ -201,7 +201,7 @@ if ( isset( $_SESSION['request'] ) && sizeof( $_SESSION['request'] ) > 0 )
 
     $out_text .= <<<HTML
     <fieldset>
-      <legend class='font_d_size_c_110_p__s_font_d_weight_c_bold_s_'>{$cellinfo['filename']}
+      <legend class='font-bold-110'>{$cellinfo['filename']}
               <a href='{$_SERVER['PHP_SELF']}?removeID=$removeID'>Remove?</a></legend>
 
       <table cellpadding='3' cellspacing='0'>
@@ -375,7 +375,7 @@ else
   <p>Your Queue is currently empty</p>
   <p>Please go back to add one or more experiments into the queue.</p>
   <p><input type='button' value='Select Experiment'
-            class='width_c_12em_s_ onclick-window-location-arg' data-arg='queue_setup_1.php' >
+            class='w-12em onclick-window-location-arg' data-arg='queue_setup_1.php' >
   </p>
 HTML;
 }

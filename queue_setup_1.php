@@ -138,7 +138,7 @@ $experiment_text = get_experiment_text($link);
 //$time5=microtime(true) - $time0;
 $cell_text       = get_cell_text($link);
 //$time6=microtime(true) - $time0;
-$submit_text     = "<p class='padding_d_bottom_c_3em_s_'></p>\n";  // a spacer
+$submit_text     = "<p class='pb-3em'></p>\n";  // a spacer
 if ( $experimentID != 0 )
 {
   $submit_text = <<<HTML
@@ -224,7 +224,7 @@ function get_email_text($link)
   if ( $_SESSION['loginID'] != $_SESSION['id'] )
   {
     $copy_owner = "Add e-mail address of data owner?" .
-                  "<input type='checkbox' name='add_owner'$checked class='width_c_5em_s_'/>";
+                  "<input type='checkbox' name='add_owner'$checked class='w-5em'/>";
   }
 
   $text = <<<HTML

@@ -390,8 +390,8 @@ echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1' id='fixed'>
     <thead>
-      <tr><th class='width_c__16_p__s_'></th>
-      <th class='width_c__98_p__s_'>Edit User Projects</th></tr>
+      <tr><th class='w-16p'></th>
+      <th class='w-98p'>Edit User Projects</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>Jump to: $nav_listbox

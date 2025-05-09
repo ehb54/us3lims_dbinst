@@ -54,7 +54,7 @@ HTML;
 
 <!-- begin header -->
 <div id="header">
-  <h3 class='text_d_align_c_left_s_'>UltraScan III LIMS Portal</h3>
+  <h3 class='text-left'>UltraScan III LIMS Portal</h3>
 </div>
 
 <?php
@@ -72,7 +72,7 @@ HTML;
   $today  = date("Y\-m\-d");
 echo<<<HTML
   <!-- end content -->
-  <div class='clear_c__both_s_'></div>
+  <div class='clear-both'></div>
 
 <!-- end page -->
 <div id="footer">
