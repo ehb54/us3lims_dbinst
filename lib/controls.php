@@ -35,7 +35,7 @@ function PMGC_option()
 {
     global $global_cluster_details;
 
-    $cluster_msg = "<tr><th>Cluster</th><th class='text_d_align_c_center_s_'>Time limit</th></tr>";
+    $cluster_msg = "<tr><th>Cluster</th><th class='text-center'>Time limit</th></tr>";
 
 ##          <p>
 ##          Note: The actual group count number is dependent on the capacity and the 
@@ -60,7 +60,7 @@ function PMGC_option()
         }
         $cluster_msg .=
             "<tr><td>$k</td>"
-            . "<td class='text_d_align_c_center_s_'>"
+            . "<td class='text-center'>"
             . sprintf( "%d h", $v['maxtime'] / 60 )
             . "</td></tr>"
             ;
@@ -83,9 +83,9 @@ function PMGC_option()
           increase significantly before you get a sufficient amount of free compute
           resources.
 
-          <br><br><span class='color_c_darkRed'>N.B. Monte Carlo iterations should be a multiple of the number of threads. e.g. if you select 32 threads, iterations should be 64 or 96.</span>
+          <br><br><span class='text-darkred'>N.B. Monte Carlo iterations should be a multiple of the number of threads. e.g. if you select 32 threads, iterations should be 64 or 96.</span>
           </p>                                        
-          <table class='noborder margin_c_0px_auto_s_' >
+          <table class='noborder mx-auto' >
             $cluster_msg                                        
           </table>
         </div>
@@ -96,7 +96,7 @@ function PMGC_option()
         <input type='checkbox' name='PMGC_enable' id='PMGC_enable' /> 
           Use Parallel Threads
         <br/>
-        <fieldset name='PMGC_count' id='PMGC_count' class='display_c_none_s_'>
+        <fieldset name='PMGC_count' id='PMGC_count' class='d-none'>
           <legend>Threads</legend>
             <select name="req_mgroupcount" id='req_mgroupcount'>
               <option value='1' selected='selected'>1</option>
@@ -486,7 +486,7 @@ echo<<<HTML
         <input type="radio" name="meniscus_option" value="1" class='onclick-show-ctl-arg' data-arg=9 > On<br/>
         <input type="radio" name="meniscus_option" value="0" class='onclick-hide-arg' data-arg=5
                checked='checked'/> Off<br/>
-        <div class='display_c_none' id="mag9">
+        <div class='d-none' id="mag9">
           <br/>
           <input type="number" step="any" name="meniscus_range_9" value="0.03"/>Meniscus Fit Range (cm)<br/>
           <br/>
@@ -524,7 +524,7 @@ echo<<<HTML
             <option value="2" class='onclick-show-ctl-arg' data-arg=1 >Fit Bottom</option>
             <option value="3" class='onclick-show-ctl-arg' data-arg=1 >Fit Meniscus and Bottom</option>
           </select>
-        <div class='display_c_none' id="mag1">
+        <div class='d-none' id="mag1">
           <br/>
           <input type="number" step="any" value="0.03" name="meniscus_range"/>Fit Range (cm)<br/>
           <br/>
@@ -558,7 +558,7 @@ echo<<<HTML
                class='onclick-show-ctl-arg' data-arg=2 > On<br/>
         <input type="radio" name="iterations_option" value="0" 
                class='onclick-hide-arg' data-arg=2 checked='checked'/> Off<br/>
-        <div class='display_c_none' id="mag2">
+        <div class='d-none' id="mag2">
           <br/>
           <fieldset>
             <legend>Maximum Number of Iterations</legend>
@@ -601,14 +601,14 @@ function demes_setup()
             continue;
         }
         $demes_msg .=
-            "<tr><td>$k</td><td class='text_d_align_c_center_s_'>"
+            "<tr><td>$k</td><td class='text-center'>"
             . sprintf( "%d", ( $v['maxproc'] / $v['ppbj'] ) - 1 )
             . "</td></tr>"
             ;
     }
 
 echo<<<HTML
-      <fieldset class='option_value display_c_none' >
+      <fieldset class='option_value d-none' >
         <legend>Demes</legend>
 
         <div class='newslider' id='demes-slider'></div>
@@ -631,7 +631,7 @@ echo<<<HTML
           selected back end system.  
           Generally, demes + 1 will be adjusted upward in units of 8, 12, or 16, but limited
           to the capacity of the system. Currently, the maximum demes values are as follows:
-          <table class='noborder margin_c_0px_auto_s_' >
+          <table class='noborder mx-auto' >
             $demes_msg
           </table>
         </p>
@@ -1084,7 +1084,7 @@ echo<<<HTML
       <input type="number" step="any" value="4" name="y_max"/> Y Maximum<br/>
       <input type="number" step="any" value="0" name="z_value"/> Z Value / Coefficients (Z=0 -> dataset vbar)<br/>
     </fieldset>
-    <div class='display_c_block' id="mag3">
+    <div class='d-block' id="mag3">
     <fieldset name='vars_count' id='vars_count'>
       <legend>Variations Count</legend>
         <div class='newslider' id='varcount-slider'></div>
@@ -1101,7 +1101,7 @@ echo<<<HTML
                         disabled="disabled" />
     </fieldset>
     </div>
-    <div class='display_c_none' id="mag4">
+    <div class='d-none' id="mag4">
     <fieldset name='hlvs_count' id='hlvs_count'>
       <legend>Variations Count (HL)</legend>
         <div class='newslider' id='hlvcount-slider'></div>
@@ -1165,7 +1165,7 @@ echo<<<HTML
                    value="1" />&nbsp; On (specified alpha)<br/>
       <input type="radio" name="tikreg_option" class='onclick-hide-arg' data-arg=5
                    value="2" />&nbsp; On (auto-computed alpha)<br/>
-      <div class='display_c_none' id="mag5">
+      <div class='d-none' id="mag5">
         <br/>
         <input type="number" step="any" name="tikreg_alpha" value="0.275" size='6'/>&nbsp;&nbsp; Regularization Alpha Parameter<br/>
       </div>
