@@ -48,10 +48,7 @@ if ( isset( $_POST['change_cell'] ) )
     <div id='combos'>$combo_info</div>
   </div>
 
-  <script>
-    $('#people_select').on( 'change', change_person );
-    $('#run_select')   .on( 'change', change_run_select );
-  </script>
+  <script src='js/reports_install_change_handlers.js' type='text/javascript'></script>
 HTML;
 }
 
@@ -108,10 +105,7 @@ else
     <div id='combos'>$combo_info</div>
   </div>
 
-  <script>
-    $('#people_select').on( 'change', change_person );
-    $('#run_select')   .on( 'change', change_run_select );
-  </script>
+  <script src='js/reports_install_change_handlers.js' type='text/javascript'></script>
 HTML;
 }
 
@@ -124,3 +118,4 @@ include 'footer.php';
 exit();
 
 ?>
+ 
