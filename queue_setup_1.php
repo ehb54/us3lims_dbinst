@@ -173,16 +173,7 @@ echo <<<HTML
 
 <button  type="button" class='onclick-SelectAllCells'>Select all cells</button>
 
-        <script>
-            function SelectAllCells(){
-                options = document.getElementById("cells");
-                options[0].selected = false;
-                for (i=1; i < options.length; i++)
-                {
-                    options[i].selected = true;
-                }
-            }
-        </script>
+        <script src='js/queue_setup_1_selectallcells.js' type='text/javascript'></script>
 
     </fieldset>
 
