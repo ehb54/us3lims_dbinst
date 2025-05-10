@@ -103,8 +103,7 @@ echo <<< HTML
 
 </div>
 
-<script>init_setup()</script>
-<script>handle_mode(element_view)</script>
+<script src='js/supporting_files_setup.js' type='text/javascript'></script>
 
 HTML;
 
