@@ -284,10 +284,7 @@ function tripleDetail( $link, $tripleID, $selected_docTypes = array() )
       $checkboxes
     </div>
 
-    <script>
-      $(":checkbox").click( change_docType );
-    </script>
-
+    <script src='../js/reports_lib_changedoctype.js' type='text/javascript'></script>
 HTML;
 
   // Now create a list of available analysis types
@@ -388,7 +385,7 @@ HTML;
       }
 
       // Add the entry for a document
-      $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>" .
+      $text .= "  <li><a href='#$atype' class='onclick-show-report-detail-arg' data-arg='$docID'>" .
                "$subanal{$include_doctype}</a></li>\n";
     }
 
@@ -427,13 +424,13 @@ HTML;
     <p class='reporthead'><a name='solution'></a>Solution Data</p>
     <ul>
         <li><a href='#solution'
-               onclick="show_solution_detail( 'solution', $experimentID, '$triple_desc' );">
+               class='onclick-show-solution-detail-args' data-args='["solution","$experimentID","$triple_desc"]' >
                Solution Information</a></li>
         <li><a href='#solution'
-               onclick="show_solution_detail( 'analyte', $experimentID, '$triple_desc' );">
+               class='onclick-show-solution-detail-args' data-args='["analyte","$experimentID","$triple_desc"]' >
                Analyte Information</a></li>
         <li><a href='#solution'
-               onclick="show_solution_detail( 'buffer', $experimentID, '$triple_desc' );">
+               class='onclick-show-solution-detail-args' data-args='["buffer","$experimentID","$triple_desc"]' >
                Buffer Information</a></li>
 
     </ul>
@@ -514,7 +511,7 @@ function comboDetail( $link, $tripleID )
     while ( list( $docID, $label ) = mysqli_fetch_array( $result ) )
     {
       list( $anal, $subanal, $doctype ) = explode( ":", $label );
-      $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>$subanal ($doctype)</a></li>\n";
+      $text .= "  <li><a href='#$atype' class='onclick-show-report-detail-arg' data-arg='$docID'>$subanal ($doctype)</a></li>\n";
     }
     $result->close();
     $text .= "</ul>\n";

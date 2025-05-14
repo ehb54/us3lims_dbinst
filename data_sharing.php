@@ -126,7 +126,7 @@ include 'header.php';
     $inv     = $IDs[$e];
     $checked = ( in_array( $inv, $collaborators ) ) ? " checked='checked'" : "";
     echo "<tr><td><input type='checkbox' name='cb[$inv]'$checked " .
-         "         onclick='reset_message();' /> $names[$e]</td>\n";
+         "         class='onclick-reset-message' /> $names[$e]</td>\n";
   /////////
 
     $e       = $rows + $i;
@@ -134,7 +134,7 @@ include 'header.php';
     $checked = ( in_array( $inv, $collaborators ) ) ? " checked='checked'" : "";
     if ( $i < $rows-1  ||  $extra != 1 )
     echo "<td><input type='checkbox' name='cb[$inv]'$checked " .
-         "     onclick='reset_message();' /> $names[$e]</td>\n";
+         "     class='onclick-reset-message' /> $names[$e]</td>\n";
   /////////
 
     $e = $rows * 2 + $i;
@@ -144,7 +144,7 @@ include 'header.php';
 
     if ( $i < $rows-1  || $extra == 0 )
     echo "<td><input type='checkbox' name='cb[$inv]'$checked " .
-         "     onclick='reset_message();' /> $names[$e]</td>\n";
+         "     class='onclick-reset-message' /> $names[$e]</td>\n";
 
     echo "</tr>\n";
 
