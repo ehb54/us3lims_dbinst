@@ -15,6 +15,10 @@ if ( !isset( $enable_PAM ) ) {
   $enable_PAM = false;
 }
 
+if ( !isset( $use_PAM_HELPER ) ) {
+  $use_PAM_HELPER = false;
+}
+
 if ( ! $loginname || ! $passwd )
 {
   remove_session();
@@ -170,7 +174,13 @@ if ( !$pamActive && $row["password"] != $md5pass ) {
   exit();
 }
 
-if ( $pamActive && !pam_auth( $loginname, $passwd, $error ) ) {
+if ( $pamActive && 
+     (
+        ( !$use_PAM_HELPER && !pam_auth( $loginname, $passwd, $error ) )
+        ||
+        ( $use_PAM_HELPER && !pam_auth_helper( $loginname, $passwd, $error ) )
+     )
+    ) {
   remove_session();
   $message = "Error: Password failed for $loginname.\n$error";
   include 'login.php';
@@ -205,4 +215,42 @@ function remove_session()
   if ( isset($_COOKIE[session_name()]) )
       setcookie(session_name(), '', time()-42000, '/');
   session_destroy();
+}
+
+function pam_auth_helper( $user, $pass, &$error ) {
+    $env = [
+        'PAM_USER'    => $user,
+        'PAM_AUTHTOK' => $pass,
+        'RECURSION_GUARD' => '1',
+        ];
+
+    $descriptorspec = [
+        0 => ["pipe", "r"], ## stdin
+        1 => ["pipe", "w"], ## stdout
+        2 => ["pipe", "w"], ## stderr
+        ];
+
+    $process = proc_open( '/usr/local/bin/pam_auth_helper', $descriptorspec, $pipes, null, $env );
+
+    if ( !is_resource( $process ) ) {
+        $error = "Could not start PAM authentication helper.";
+        return false;
+    }
+
+    fclose( $pipes[0] );  ## We don't use stdin
+
+    $stdout = stream_get_contents( $pipes[1] );
+    fclose( $pipes[1] );
+
+    $stderr = stream_get_contents( $pipes[2] );
+    fclose( $pipes[2] );
+
+    $status = proc_close( $process );
+
+    if ( $status === 0 ) {
+        return true;
+    } else {
+        $error = trim( $stderr ) ?: "Unknown PAM authentication error.";
+        return false;
+    }
 }
