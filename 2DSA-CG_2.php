@@ -24,7 +24,7 @@ if ( ($_SESSION['userlevel'] != 2) &&
 } 
 
 // Verify that job submission is ok now
-include 'lib/motd.php';
+include_once 'lib/motd.php';
 if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
   header("Location: index.php");
@@ -39,15 +39,15 @@ if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 
 // define( 'DEBUG', true );
 
-include 'config.php';
-include 'db.php';
-include 'lib/utility.php';
-include 'lib/payload_manager.php';
-include 'lib/HPC_analysis.php';
-include 'lib/file_writer.php';
-include $class_dir . 'submit_local.php';
-include $class_dir . 'submit_gfac.php';
-include $class_dir . 'submit_airavata.php';
+include_once 'config.php';
+include_once 'db.php';
+include_once 'lib/utility.php';
+include_once 'lib/payload_manager.php';
+include_once 'lib/HPC_analysis.php';
+include_once 'lib/file_writer.php';
+include_once $class_dir . 'submit_local.php';
+include_once $class_dir . 'submit_gfac.php';
+include_once $class_dir . 'submit_airavata.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
 

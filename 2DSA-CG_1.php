@@ -26,7 +26,7 @@ if ( ($_SESSION['userlevel'] != 2) &&
 } 
 
 // Verify that job submission is ok now
-include 'lib/motd.php';
+include_once 'lib/motd.php';
 if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
   header("Location: index.php");
@@ -54,11 +54,11 @@ if ( ! isset( $_SESSION['request'] ) || sizeof( $_SESSION['request'] ) < 1 )
 
 // define( 'DEBUG', true );
 
-include 'config.php';
-include 'db.php';
-include 'lib/utility.php';
-include 'lib/payload_manager.php';
-include 'lib/controls.php';
+include_once 'config.php';
+include_once 'db.php';
+include_once 'lib/utility.php';
+include_once 'lib/payload_manager.php';
+include_once 'lib/controls.php';
 global $link;
 
 // Make sure the advancement level is set
