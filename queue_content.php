@@ -138,16 +138,19 @@ foreach ( $summary_data as $runID => $run_info ) {
         $first_anal = true;
         ksort( $anal_info['statuses'] );
         foreach ( $anal_info['statuses'] as $status => $count ) {
+            $runIDEsc     = htmlspecialchars( (string) $runID, ENT_QUOTES, 'UTF-8' );
+            $analTypeEsc  = htmlspecialchars( (string) $analType, ENT_QUOTES, 'UTF-8' );
+            $statusEsc    = htmlspecialchars( (string) $status, ENT_QUOTES, 'UTF-8' );
             $content .= "<tr>";
             if ( $first_run ) {
-                $content .= "<td rowspan='$run_rowspan'><input type='checkbox' class='select_runID' data-runid='$runID' onchange='toggle_runid_selection(this, \"$runID\")' /> $runID <span class='count_runID' data-runid='$runID'>(0/{$run_info['count']})</span></td>";
+                $content .= "<td rowspan='$run_rowspan'><input type='checkbox' class='select_runID' data-runid='$runIDEsc' onchange='toggle_runid_selection(this, \"$runIDEsc\")' /> $runIDEsc <span class='count_runID' data-runid='$runIDEsc'>(0/{$run_info['count']})</span></td>";
                 $first_run = false;
             }
             if ( $first_anal ) {
-                $content .= "<td rowspan='$anal_rowspan'><input type='checkbox' class='select_runID_anal' data-runid='$runID' data-analtype='$analType' onchange='toggle_runid_anal_selection(this, \"$runID\", \"$analType\")' /> $analType <span class='count_runID_anal' data-runid='$runID' data-analtype='$analType'>(0/{$anal_info['count']})</span></td>";
+                $content .= "<td rowspan='$anal_rowspan'><input type='checkbox' class='select_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc' onchange='toggle_runid_anal_selection(this, \"$runIDEsc\", \"$analTypeEsc\")' /> $analTypeEsc <span class='count_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc'>(0/{$anal_info['count']})</span></td>";
                 $first_anal = false;
             }
-            $content .= "<td><input type='checkbox' class='select_runID_anal_status' data-runid='$runID' data-analtype='$analType' data-status='$status' onchange='toggle_runid_anal_status_selection(this, \"$runID\", \"$analType\", \"$status\")' /> $status <span class='count_runID_anal_status' data-runid='$runID' data-analtype='$analType' data-status='$status'>(0/$count)</span></td>";
+            $content .= "<td><input type='checkbox' class='select_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc' onchange='toggle_runid_anal_status_selection(this, \"$runIDEsc\", \"$analTypeEsc\", \"$statusEsc\")' /> $statusEsc <span class='count_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc'>(0/$count)</span></td>";
             $content .= "</tr>\n";
         }
     }

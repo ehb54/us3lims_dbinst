@@ -110,12 +110,13 @@ function do_delete()
       }
       return;
   }
-
-  $gfacID   = $_POST['gfacID'];
-  if ( !in_array($gfacID, $authorized_gfacIDs, true)) {
-      return;
+  if ( isset( $_POST['gfacID'] )) {
+      $gfacID   = $_POST['gfacID'];
+      if ( !in_array($gfacID, $authorized_gfacIDs, true)) {
+          return;
+      }
+      delete_single_job( $gfacID );
   }
-  delete_single_job( $gfacID );
 }
 
 function delete_single_job( $gfacID )
@@ -129,9 +130,16 @@ function delete_single_job( $gfacID )
 
   $query = "SELECT cluster, metaschedulerClusterExecuting FROM analysis WHERE gfacID = ?";
   $stmt = mysqli_prepare( $gLink, $query );
+  if ( ! $stmt )
+  {
+      // Failed to prepare statement; close connection and abort deletion for this job
+      mysqli_close( $gLink );
+      return;
+  }
   mysqli_stmt_bind_param( $stmt, 's', $gfacID );
   mysqli_stmt_execute( $stmt );
   $result = mysqli_stmt_get_result( $stmt );
+  mysqli_stmt_close( $stmt );
   if ( $row = mysqli_fetch_assoc( $result ) )
   {
       $cluster = $row['cluster'];
@@ -144,6 +152,7 @@ function delete_single_job( $gfacID )
            || !array_key_exists( 'airavata',  $global_cluster_details[ $cluster ] )
            ) {
                elog( "delete_single_job cluster $cluster not in \$global_config:\$cluster_details or missing keys" );
+               mysqli_close( $gLink );
                return;
       }
       
@@ -541,7 +550,7 @@ function get_gfacIDs_authorized()
     if ( ! $globaldb )
     {
         echo "<p>Cannot open global database on $globaldbhost  mysqli_error($globaldb)</p>\n";
-        return;
+        return array();
     }
 
     $is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
@@ -564,7 +573,7 @@ function get_gfacIDs_authorized()
 
     $query .= " ORDER BY time ";
     $result = mysqli_query( $globaldb, $query )
-    or die( "Query failed : $query<br />" . mysqli_error($globaldb));
+    or die( "Query failed : $query<br />");
     $authorized_gfacIDs = array();
     if ( mysqli_num_rows( $result ) == 0 )
     {
@@ -575,6 +584,7 @@ function get_gfacIDs_authorized()
     {
         $authorized_gfacIDs[] = $row['gfacID'];
     }
+    mysqli_close( $globaldb );
     return $authorized_gfacIDs;
 }
 

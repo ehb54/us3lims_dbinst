@@ -245,7 +245,12 @@ function bulk_delete_jobs() {
         var form = $('<form action="queue_viewer.php" method="post"></form>');
         form.append('<input type="hidden" name="delete" value="1" />');
         selected_gfacIDs.forEach(function(gfacID) {
-            form.append('<input type="hidden" name="gfacIDs[]" value="' + gfacID + '" />');
+            var input = $('<input>', {
+                type: 'hidden',
+                name: 'gfacIDs[]',
+                value: gfacID
+            });
+            form.append(input);
         });
         $('body').append(form);
         form.submit();
