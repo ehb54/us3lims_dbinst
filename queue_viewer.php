@@ -98,30 +98,64 @@ function order_select( $current_order = NULL )
 // A function to delete the selected job
 function do_delete()
 {
-  global $global_cluster_details;
-  global $clusters, $uses_thrift;               // From utility.php
-  global $info;
-//  var_dump($uses_thrift);
-  $cluster  = $_POST['cluster'];
-  $gfacID   = $_POST['gfacID'];
-  $jobEmail = $_POST['jobEmail'];
+  $authorized_gfacIDs = get_gfacIDs_authorized();
+  if ( isset( $_POST['gfacIDs'] ) && is_array( $_POST['gfacIDs'] ) )
+  {
+      foreach ( $_POST['gfacIDs'] as $gfacID )
+      {
+          if ( !in_array($gfacID, $authorized_gfacIDs, true)) {
+              continue;
+          }
+          delete_single_job( $gfacID );
+      }
+      return;
+  }
 
-    if ( !array_key_exists( $cluster, $global_cluster_details )
-         || !array_key_exists( 'airavata',  $global_cluster_details[ $cluster ] )
-         ) {
-             ## should message somehow
-             elog( "do_delete cluster $cluster not in \$global_config:\$cluster_details or missing keys" );
-             return;
-    }
-    
+  $gfacID   = $_POST['gfacID'];
+  if ( !in_array($gfacID, $authorized_gfacIDs, true)) {
+      return;
+  }
+  delete_single_job( $gfacID );
+}
+
+function delete_single_job( $gfacID )
+{
+  global $global_cluster_details;
+  global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
+
+  // We need cluster and other info for this gfacID
+  $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+  if ( ! $gLink ) return;
+
+  $query = "SELECT cluster, metaschedulerClusterExecuting FROM analysis WHERE gfacID = ?";
+  $stmt = mysqli_prepare( $gLink, $query );
+  mysqli_stmt_bind_param( $stmt, 's', $gfacID );
+  mysqli_stmt_execute( $stmt );
+  $result = mysqli_stmt_get_result( $stmt );
+  if ( $row = mysqli_fetch_assoc( $result ) )
+  {
+      $cluster = $row['cluster'];
+      if ( !empty( $row['metaschedulerClusterExecuting'] ) )
+      {
+          $cluster = $row['metaschedulerClusterExecuting'];
+      }
+
+      if ( !array_key_exists( $cluster, $global_cluster_details )
+           || !array_key_exists( 'airavata',  $global_cluster_details[ $cluster ] )
+           ) {
+               elog( "delete_single_job cluster $cluster not in \$global_config:\$cluster_details or missing keys" );
+               return;
+      }
+      
     if( $global_cluster_details[ $cluster ][ 'airavata' ] ?
         cancelAiravataJob( $gfacID ) :
         cancelLocalJob( $gfacID, $cluster ) ) {
             ## Let's update what user sees until canceled
-            updateLimsStatus( $gfacID, 'aborted',  "Job has been canceled"  );
-            updateGFACStatus( $gfacID, 'CANCELED', "Job has been canceled"  );
-    }
-
+              updateLimsStatus( $gfacID, 'aborted',  "Job has been canceled"  );
+              updateGFACStatus( $gfacID, 'CANCELED', "Job has been canceled"  );
+      }
+  }
+  mysqli_close( $gLink );
 }
 
 // Function to cancel a local job
@@ -494,6 +528,54 @@ function is_authorized($jobowner)
     $authorized = true;
 
   return ($authorized);
+}
+
+function get_gfacIDs_authorized()
+{
+  global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
+  global $ipaddr, $dbname;
+    // Start by getting info from global db
+    $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname )
+    or die( "Connect failed :  $globaldbhost  $globaldbuser $globaldbpasswd  $globaldbname " );
+
+    if ( ! $globaldb )
+    {
+        echo "<p>Cannot open global database on $globaldbhost  mysqli_error($globaldb)</p>\n";
+        return;
+    }
+
+    $is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
+
+    $submitterGUID = preg_replace( '/^.*_/', '', $_SESSION["user_id"] );
+    $query =
+            "SELECT analysis.gfacID as gfacID, analysis.us3_db, analysis.cluster, analysis.status"
+            . " FROM gfac.analysis";
+
+    if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 ) {
+
+        $query .= " INNER JOIN $dbname.HPCAnalysisResult ON $dbname.HPCAnalysisResult.gfacID = analysis.gfacID"
+        . " INNER JOIN $dbname.HPCAnalysisRequest ON $dbname.HPCAnalysisResult.HPCAnalysisRequestID = $dbname.HPCAnalysisRequest.HPCAnalysisRequestID"
+        . " WHERE analysis.us3_db = '$dbname'";
+    }
+
+    if ( $_SESSION['userlevel'] == 2 ){
+        $query .= " AND ($dbname.HPCAnalysisRequest.submitterGUID = '$submitterGUID' or $dbname.HPCAnalysisRequest.investigatorGUID = '$submitterGUID')";
+    }
+
+    $query .= " ORDER BY time ";
+    $result = mysqli_query( $globaldb, $query )
+    or die( "Query failed : $query<br />" . mysqli_error($globaldb));
+    $authorized_gfacIDs = array();
+    if ( mysqli_num_rows( $result ) == 0 )
+    {
+        return $authorized_gfacIDs;
+    }
+
+    while ( $row = mysqli_fetch_assoc( $result ) )
+    {
+        $authorized_gfacIDs[] = $row['gfacID'];
+    }
+    return $authorized_gfacIDs;
 }
 
 ?>

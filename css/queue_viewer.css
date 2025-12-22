@@ -65,3 +65,49 @@ div.more_info div.moreinfo_hdr
 {
   background-color : red;
 }
+
+#content table.summary_table
+{
+  margin-bottom    : 20px;
+  width            : auto; /* Changed from 100% to auto to allow columns to wrap content */
+  min-width        : 60%;
+}
+
+#content table.summary_table th, #content table.summary_table td
+{
+  text-align       : left;
+  vertical-align   : middle;
+  padding          : 8px; /* Increased padding */
+}
+
+#selection_controls input[type="checkbox"]
+{
+  vertical-align   : middle;
+  margin-right     : 5px;
+  margin-top       : 0;
+  margin-bottom    : 0;
+}
+
+#selection_controls span
+{
+  font-weight      : normal;
+  font-size        : 0.9em;
+  color            : #555;
+}
+
+#content table.summary_table th input[type="checkbox"],
+#content table.summary_table td input[type="checkbox"]
+{
+  vertical-align   : middle;
+  margin-right     : 5px;
+  margin-top       : 0;
+  margin-bottom    : 0;
+}
+
+#content table.summary_table th span, #content table.summary_table td span
+{
+  font-weight      : normal;
+  font-size        : 0.9em;
+  color            : #555;
+  margin-left      : 5px;
+}

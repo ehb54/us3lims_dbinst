@@ -82,8 +82,28 @@ foreach ( $global_info as $l_gfacID => $db )
 {
   $info = get_status( $l_gfacID, $db );
   #elog( "info:\n" . json_encode( $info, JSON_PRETTY_PRINT ) );
-  if ( $info !== false )
+  if ( $info !== false ) {
     $display_info[$l_gfacID] = $info;
+
+    $runID       = $info['runID'];
+    $analType    = $info['analType'];
+    $queueStatus = $info['queueStatus'];
+
+    if ( !isset( $summary_data[ $runID ] ) ) {
+        $summary_data[ $runID ] = array( 'count' => 0, 'analTypes' => array() );
+    }
+    $summary_data[ $runID ]['count']++;
+
+    if ( !isset( $summary_data[ $runID ]['analTypes'][ $analType ] ) ) {
+        $summary_data[ $runID ]['analTypes'][ $analType ] = array( 'count' => 0, 'statuses' => array() );
+    }
+    $summary_data[ $runID ]['analTypes'][ $analType ]['count']++;
+
+    if ( !isset( $summary_data[ $runID ]['analTypes'][ $analType ]['statuses'][ $queueStatus ] ) ) {
+        $summary_data[ $runID ]['analTypes'][ $analType ]['statuses'][ $queueStatus ] = 0;
+    }
+    $summary_data[ $runID ]['analTypes'][ $analType ]['statuses'][ $queueStatus ]++;
+  }
 }
 mysqli_close( $globaldb );
 
@@ -92,6 +112,47 @@ $sort_order = $_SESSION['queue_viewer_sort_order'] ?? 'submitTime';
 uasort( $display_info, 'cmp' );
 
 $content = "<div class='queue_content'>\n";
+
+// Add summary table
+$content .= "<h3>Queue Summary</h3>\n";
+$content .= "<div id='selection_controls' style='margin-bottom: 10px; display: flex; align-items: center; gap: 20px;'>\n";
+$content .= "  <input type='checkbox' id='select_all_jobs' onchange='toggle_all_selection(this)' /> Select All <span id='count_all'>(0/0)</span>\n";
+$content .= "  <span id='global_select_count'>Selected Jobs: 0</span>\n";
+$content .= "  <input type='button' id='bulk_delete_button' value='Delete Selected Jobs' onclick='bulk_delete_jobs()' style='display: none;' />\n";
+$content .= "</div>\n";
+$content .= "<table class='summary_table'>\n";
+$content .= "<tr><th>Run ID</th><th>Analysis Type</th><th>Status</th></tr>\n";
+
+ksort( $summary_data );
+$total_jobs = count($display_info);
+foreach ( $summary_data as $runID => $run_info ) {
+    $run_rowspan = 0;
+    foreach ( $run_info['analTypes'] as $analType => $anal_info ) {
+        $run_rowspan += count( $anal_info['statuses'] );
+    }
+
+    $first_run = true;
+    ksort( $run_info['analTypes'] );
+    foreach ( $run_info['analTypes'] as $analType => $anal_info ) {
+        $anal_rowspan = count( $anal_info['statuses'] );
+        $first_anal = true;
+        ksort( $anal_info['statuses'] );
+        foreach ( $anal_info['statuses'] as $status => $count ) {
+            $content .= "<tr>";
+            if ( $first_run ) {
+                $content .= "<td rowspan='$run_rowspan'><input type='checkbox' class='select_runID' data-runid='$runID' onchange='toggle_runid_selection(this, \"$runID\")' /> $runID <span class='count_runID' data-runid='$runID'>(0/{$run_info['count']})</span></td>";
+                $first_run = false;
+            }
+            if ( $first_anal ) {
+                $content .= "<td rowspan='$anal_rowspan'><input type='checkbox' class='select_runID_anal' data-runid='$runID' data-analtype='$analType' onchange='toggle_runid_anal_selection(this, \"$runID\", \"$analType\")' /> $analType <span class='count_runID_anal' data-runid='$runID' data-analtype='$analType'>(0/{$anal_info['count']})</span></td>";
+                $first_anal = false;
+            }
+            $content .= "<td><input type='checkbox' class='select_runID_anal_status' data-runid='$runID' data-analtype='$analType' data-status='$status' onchange='toggle_runid_anal_status_selection(this, \"$runID\", \"$analType\", \"$status\")' /> $status <span class='count_runID_anal_status' data-runid='$runID' data-analtype='$analType' data-status='$status'>(0/$count)</span></td>";
+            $content .= "</tr>\n";
+        }
+    }
+}
+$content .= "</table><br/>\n";
 
 $count_jobs = count( $display_info );
 $is_are     = "are";
@@ -127,7 +188,7 @@ foreach( $display_info as $display )
 
   $db_info = ( $_SESSION['userlevel'] >= 2 ) ? "$database (ID: $HPCAnalysisRequestID)" : "";
 
-  $content .= "<tr><th>Run ID:</th>\n" .
+  $content .= "<tr><th><input type='checkbox' class='select_job' data-gfacid='$gfacID' data-runid='$runID' data-analtype='$analType' data-status='$queueStatus' onchange='toggle_job_selection(this, \"$gfacID\")' /> Run ID:</th>\n" .
             "<td colspan='3'>$runID $triple $db_info</td>\n" .
             "<td rowspan='6'>\n" .
             display_buttons( $database, $cluster, $gfacID, $jobEmail ) .
