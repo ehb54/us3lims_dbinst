@@ -156,7 +156,7 @@ foreach ( $_SESSION['cells'] as $rawDataID => $cell )
 
   <a name='anchor_$count_anchors'></a>
   <fieldset>
-    <legend style='font-size:110%;font-weight:bold;'>{$cell['filename']}</legend>
+    <legend class='font-bold-110'>{$cell['filename']}</legend>
 
     <table cellpadding='3' cellspacing='0'>
     <tr><th>Edit Profile</th>
@@ -227,7 +227,7 @@ if ( $advancelevel != 0 )
 echo <<<HTML
 
  <fieldset>
- <legend style='font-size:110%;font-weight:bold;'>Edit and Noise Selection</legend>
+ <legend class='font-bold-110'>Edit and Noise Selection</legend>
  <ul class='edit_select'>
    <li><form action='$_SERVER[PHP_SELF]' method='post'>
        By default, all the latest edits for chosen cells will be
@@ -238,13 +238,13 @@ echo <<<HTML
        <tr><td><label>
                <input type='radio' name='edit_select_type'
                       value='autoedits'$edauto_checked
-                      onclick='this.form.submit();' />
+                      class='onclick-form-submit' >
                  Use latest edits and noises
                </label></td></tr>
        <tr><td><label>
                <input type='radio' name='edit_select_type'
                       value='manualedits'$edmanu_checked
-                      onclick='this.form.submit();' />
+                      class='onclick-form-submit' >
                  Make individual manual selections
                </label></td></tr>
        </table>

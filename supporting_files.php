@@ -26,7 +26,7 @@ include 'header.php';
 echo <<< HTML
 <!-- Begin page content -->
 <div id="sf_content">
-  <div style="clear: both"></div>
+  <div class='clear-both'></div>
 
   <div id="sf_navbar" class="sf_item">
     <div class="sf_navbar_item" id="sf_view" onclick="handle_mode(this)"> View / Edit</div>
@@ -34,20 +34,20 @@ echo <<< HTML
   </div>
 
   <div id="sf_edit_item">
-    <input type="checkbox" id="sf_edit" onchange="set_edit_mode(this)">
+    <input type="checkbox" id="sf_edit" class='onchange-set-edit-mode' >
     <span id="sf_edit_label">Edit Document </span>
   </div>
 
   <fieldset id="sf_sel_proj_item" class="sf_item">
     <label for="sf_sel_proj">Project:</label>
-    <select id="sf_sel_proj" onchange="select_project(this)">
+    <select id="sf_sel_proj" class='onchange-select-project' >
       <option value="EMPTY">--- Empty ---</option>
     </select>
   </fieldset>
 
   <fieldset id="sf_sel_file_item" class="sf_item">
     <label for="sf_sel_file">Document:</label>
-    <select id="sf_sel_file" onchange="select_document()">
+    <select id="sf_sel_file" class='onchange-select-document' >
       <option value="EMPTY">--- Empty ---</option>
     </select>
     <button id="sf_prev" type="button" onclick="sf_prev_doc()"> Previous </button>
@@ -62,12 +62,12 @@ echo <<< HTML
   <div class="sf_item">
     <label for="sf_filename"> Filename: </label>
     <input type="text" name="sf_filename" id="sf_filename" value="" readonly>
-    <input type="file" name="sf_browse" id="sf_browse" onchange="browse_document(this)">
+    <input type="file" name="sf_browse" id="sf_browse" class='onchange-browse-document' >
   </div>
 
   <div class="sf_item" id="sf_class_item">
     <label for="sf_sel_class">Category:</label>
-    <select id="sf_sel_class" onchange="select_class(this)">
+    <select id="sf_sel_class" class='onchange-select-class' >
       <option value="EMPTY">--- Empty ---</option>
     </select>
     <input type="text" id="sf_txt_class" value="" readonly>
@@ -103,8 +103,7 @@ echo <<< HTML
 
 </div>
 
-<script>init_setup()</script>
-<script>handle_mode(element_view)</script>
+<script src='js/supporting_files_setup.js' type='text/javascript'></script>
 
 HTML;
 
