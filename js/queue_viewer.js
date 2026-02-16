@@ -28,12 +28,20 @@ function update_queue_content()
 }
 
 function restore_selection() {
+    var present_gfacIDs = new Set([]);
     $('.select_job').each(function() {
         var gfacID = String($(this).data('gfacid'));
+        present_gfacIDs.add(gfacID);
         if (selected_gfacIDs.has(gfacID)) {
             $(this).prop('checked', true);
         } else {
             $(this).prop('checked', false);
+        }
+    });
+    // remove all gfacIDs from selected_gfacIDs, which are not present in present_gfacIDs
+    selected_gfacIDs.forEach(function(gfacID) {
+        if (!present_gfacIDs.has(gfacID)) {
+            selected_gfacIDs.delete(gfacID);
         }
     });
     update_ui_from_selection();
