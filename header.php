@@ -80,26 +80,7 @@ echo<<<HTML
 <div id="header" style='text-align:center;'>
    <table class='noborder'>
    <tr><td><img src='images/USLIMS3-banner.png' alt='USLims 3 banner' /></td>
-       <td style='vertical-align:middle;width:400px;'>
-
-<!--
-       <div id="cse-search-form">Loading</div>
-       <script src="https://www.google.com/jsapi" type="text/javascript"></script>
-       <script type="text/javascript"> 
-       // <![CDATA[     // escape validation errors
-         google.load('search', '1', {language : 'en', style : google.loader.themes.MINIMALIST});
-         google.setOnLoadCallback(function() {
-           var customSearchControl = new google.search.CustomSearchControl('007201445830912588415:jg05a0rix7y');
-           customSearchControl.setResultSetSize(google.search.Search.FILTERED_CSE_RESULTSET);
-           var options = new google.search.DrawOptions();
-           options.enableSearchboxOnly("https://$org_site/search.php");    
-           customSearchControl.draw('cse-search-form', options);
-         }, true);
-       // ]]>
-       </script>
--->
-
-       </td>
+       <td style='vertical-align:middle;width:400px;'></td>
    </tr>
    </table>
    <span style='font-size:20px;font-weight:bold;color:white;padding:0 1em;'>
