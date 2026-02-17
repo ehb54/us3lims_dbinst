@@ -7,6 +7,7 @@
  *
  */
 include_once 'checkinstance.php';
+global $is_cli;
 elogrs( __FILE__ );
 
 if ( ($_SESSION['userlevel'] != 2) &&
@@ -15,14 +16,26 @@ if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 5) )    // only data analyst and up
 {
   header('Location: index.php');
+  if ( $is_cli ) {
+    $errstr = "ERROR: " . __FILE__ . " user level is insufficient";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
+  }
   exit();
 } 
 
 // Verify that job submission is ok now
-include 'lib/motd.php';
+include_once 'lib/motd.php';
 if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
   header("Location: index.php");
+  if ( $is_cli ) {
+    $errstr =  "ERROR: " . __FILE__ . " Job submission is blocked";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
+  }
   exit();
 }
 
@@ -30,16 +43,22 @@ if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 if ( ! isset( $_SESSION['request'] ) || sizeof( $_SESSION['request'] ) < 1 )
 {
   header("Location: queue_setup_1.php");
+  if ( $is_cli ) {
+    $errstr = "ERROR: " . __FILE__ . " empty queue";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
+  }
   exit();
 }
 
 // define( 'DEBUG', true );
 
-include 'config.php';
-include 'db.php';
-include 'lib/utility.php';
-include 'lib/payload_manager.php';
-include 'lib/controls.php';
+include_once 'config.php';
+include_once 'db.php';
+include_once 'lib/utility.php';
+include_once 'lib/payload_manager.php';
+include_once 'lib/controls.php';
 global $link;
 
 // Make sure the advancement level is set
@@ -98,7 +117,14 @@ if ( isset($_POST['TIGRE']) )
     ; //    check_filesize();
 
 //  $payload->show();
-  header("Location: 2DSA-CG_2.php");
+  if ( $is_cli ) {
+    $_REQUEST = [];
+    $_POST    = [];
+    include "2DSA-CG_2.php";
+    return;
+  } else {
+    header("Location: 2DSA-CG_2.php");
+  }
   exit();
 }
 
@@ -209,6 +235,9 @@ if ( isset($_SESSION['edit_select_type'])  &&
 
 <?php
 include 'footer.php';
+if ( $is_cli ) {
+  echo __FILE__ . " exiting 4\n";
+}
 exit();
 
 // A function to display controls for one dataset

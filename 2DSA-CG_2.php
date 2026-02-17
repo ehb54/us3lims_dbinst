@@ -14,28 +14,40 @@ if ( ($_SESSION['userlevel'] != 2) &&
      ($_SESSION['userlevel'] != 5) )    // only data analyst and up
 {
   header('Location: index.php');
+  if ( $is_cli ) {
+    $errstr = "ERROR: " . __FILE__ . " user level is insufficient";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
+  }
   exit();
 } 
 
 // Verify that job submission is ok now
-include 'lib/motd.php';
+include_once 'lib/motd.php';
 if ( motd_isblocked() && ($_SESSION['userlevel'] < 4) )
 {
   header("Location: index.php");
+  if ( $is_cli ) {
+    $errstr =  "ERROR: " . __FILE__ . " Job submission is blocked";
+    echo "$errstr\n";
+    $cli_errors[] = $errstr;
+    return;
+  }
   exit();
 }
 
 // define( 'DEBUG', true );
 
-include 'config.php';
-include 'db.php';
-include 'lib/utility.php';
-include 'lib/payload_manager.php';
-include 'lib/HPC_analysis.php';
-include 'lib/file_writer.php';
-include $class_dir . 'submit_local.php';
-include $class_dir . 'submit_gfac.php';
-include $class_dir . 'submit_airavata.php';
+include_once 'config.php';
+include_once 'db.php';
+include_once 'lib/utility.php';
+include_once 'lib/payload_manager.php';
+include_once 'lib/HPC_analysis.php';
+include_once 'lib/file_writer.php';
+include_once $class_dir . 'submit_local.php';
+include_once $class_dir . 'submit_gfac.php';
+include_once $class_dir . 'submit_airavata.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
 
@@ -205,6 +217,23 @@ HTML;
         $output_msg .= "<br /><span class='message'>Message from the queue...</span><br />\n" .
                         print_r( $retval, true ) . " <br />\n";
       }
+else {
+$output_msg .= "<br /><span class='message'>Message from the queue...filename=$filename</span><br/>\n";
+$output_msg .= "</pre>\n";
+echo <<<HTML
+<!-- Begin page content -->
+<div id='content'>
+ <h1 class="title">$page_title</h1>
+ <!-- Place page content here -->
+ $message
+ <p>$output_msg</p>
+</div>
+HTML;
+  if ( $is_cli ) {
+    echo __FILE__ . " exiting 3\n";
+  }
+exit(0);
+}
     }
 
     $job->close_transport();
@@ -250,6 +279,9 @@ echo <<<HTML
 HTML;
 
 include 'footer.php';
+if ( $is_cli ) {
+  return;
+}
 exit();
 
 ?>
