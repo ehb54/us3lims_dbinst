@@ -20,7 +20,6 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 global $class_dir, $link;
-include_once $class_dir . 'experiment_status.php';
 // ini_set('display_errors', 'On');
 
 // Start displaying page
@@ -28,7 +27,6 @@ $page_title = "Info by Run ID";
 $css = 'css/admin.css';
 include 'header.php';
 
-global $uses_thrift;
 
 ?>
 <!-- Begin page content -->
@@ -799,7 +797,6 @@ HTML;
 
 function HPCDetail( $link, $requestID )
 {
-  global $thr_clust_excls, $thr_clust_incls;
   // Check if the user has access to this request by either being the investigator, submitter,
   // an entry in the experimentPerson table, an entry in the projectPerson table, or an user level of greater 2
   // language=MariaDB
@@ -848,22 +845,8 @@ HTML;
   $row = mysqli_fetch_assoc( $result );
   $row['jobfile'] = '<pre>' . htmlentities( $row['jobfile'] ) . '</pre>';
 
-  // Get GFAC job status
-  global $uses_thrift;
-  $clus_thrift   = $uses_thrift;
-  if ( in_array( $cluster, $thr_clust_excls ) )
-    $clus_thrift   = false;
-  if ( in_array( $cluster, $thr_clust_incls ) )
-    $clus_thrift   = true;
-
-  if ( $clus_thrift === true )
-  {
-    $row['gfacStatus'] = nl2br( getExperimentStatus( $row['gfacID'] ) );
-  }
-  else
-  {
-    $row['gfacStatus'] = nl2br( getJobstatus( $row['gfacID'] ) );
-  }
+  // GFAC/Airavata status is no longer available; use LIMS job status.
+  $row['gfacStatus'] = htmlspecialchars( $row['queueStatus'] ?? 'n/a' );
 
   // Get queue messages from disk directory, if it still exists
   global $submit_dir;

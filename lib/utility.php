@@ -161,11 +161,8 @@ function collect_config_info() {
 collect_config_info();
 
 if ( !isset( $admin_list ) || count( $admin_list ) == 0 ) {
-    ## revert to hard coded defaults
-    $admin_list = array( 'gegorbet@gmail.com',
-                         'demeler@umontana.edu',
-                         'alexsav.science@gmail.com',
-                         'emre.brookes@umontana.edu' );
+    ## admin_list must be set in global_config.php or cluster_config.php
+    error_log( "ERROR: lib/utility.php: \$admin_list is not set or empty — check global_config.php" );
 }
 
 function emailsyntax_is_valid($email)
@@ -267,34 +264,12 @@ class cluster_info
 }
 
 if ( !isset( $clusters ) || count( $clusters ) == 0 ) {
-    ## fall back to hard coded defaults
-    $clusters = array( 
-        new cluster_info( "dev1-linux",               "us3iab-devel",   "normal"  )
-        ,new cluster_info( "ls5.tacc.utexas.edu",      "lonestar5",      "normal"  )
-        ,new cluster_info( "stampede2.tacc.xsede.org", "stampede2",      "skx-normal" )
-        ,new cluster_info( "comet.sdsc.xsede.org",     "comet",          "compute" )
-        ,new cluster_info( "bridges2.psc.edu",         "bridges2",       "RM-shared"  )
-        ,new cluster_info( "expanse.sdsc.edu",         "expanse",        "shared"  )
-        ,new cluster_info( "expanse.sdsc.edu",         "expanse-gamc",   "compute" )
-        ,new cluster_info( "juwels.fz-juelich.de",     "juwels",         "batch"   )
-        ,new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" )
-        ,new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" )
-        ,new cluster_info( "taito.csc.fi",             "taito-local",    "serial"  )
-        ,new cluster_info( "puhti.csc.fi",             "puhti-local",    "serial"  )
-        ,new cluster_info( "chinook.hs.umt.edu",       "chinook-local",  "batch"   )
-        ,new cluster_info( "login.gscc.umt.edu",       "umontana-local", "griz_partition" )
-        ,new cluster_info( "demeler9.uleth.ca",        "demeler9-local", "batch"   )
-        ,new cluster_info( "demeler1.uleth.ca",        "demeler1-local", "batch"   )
-        ,new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",   "batch"   )
-        ,new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",   "normal"  )
-        );
+    ## $clusters must be populated by collect_config_info() from global_config.php
+    ## If empty, config failed — log loudly so the problem is visible
+    error_log( "ERROR: lib/utility.php: \$clusters is empty after collect_config_info() — check global_config.php and cluster_config.php" );
+    ## Do not fall back to a hardcoded list; a stale list masks config failures
 }
 
-global $svcport;
-$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:" . $svcport . "/ogce-rest/job";
-
-// Change for sandbox testing
-//global $globaldbname;
 global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
 
 if ( file_exists('../down_clusters.php') ) include '../down_clusters.php';
@@ -685,62 +660,6 @@ function uuid() {
     ); 
 }
 
-// Function to get the jobstatus xml and parse for important items
-function getJobstatus( $gfacID )
-{
-  global $gfac_serviceURL;
-
-  $url = "$gfac_serviceURL/jobstatus/$gfacID";
-
-  $hex = "[0-9a-fA-F]";
-  if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
-       ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) )
-     return "Not a GFAC ID";
-
-  $r = new HttpRequest( $url, HttpRequest::METH_GET );
-
-  $time   = date( "F d, Y H:i:s", time() );
-
-  try
-  {
-     $result = $r->send();
-     $xml    = $result->getBody();
-  }
-  catch ( HttpException $e )
-  {
-    return "Job status unavailable at $time\n" .
-           " ( $e )\n" .
-           "URL: $url\n";
-  }
-
-  $status  = "GFAC status request submitted at $time\n";
-  $status .= "<table>\n";
-
-  $parser = new XMLReader();
-  $parser->xml( $xml );
-
-  while( $parser->read() )
-  {
-     $type = $parser->nodeType;
-
-     if ( $type == XMLReader::ELEMENT )
-        $name = $parser->name;
-
-     else if ( $type == XMLReader::TEXT )
-     {
-        if ( $name == "status" )
-           $status .= "<tr><th>status:</th><td>$parser->value</td></tr>\n";
-        else if ( $name = "message" )
-           $status .= "<tr><th>message:</th><td>" . wordwrap( $parser->value ) . "</td></tr>\n";
-     }
-  }
-  $status .= "</table>\n";
-
-  $parser->close();
-  return $status;
-
-}
-
 // Function to send out an arbitrary email message
 function LIMS_mailer( $email, $subject, $message )
 {
@@ -748,10 +667,6 @@ function LIMS_mailer( $email, $subject, $message )
 
   $now = time();
   $servname = $_SERVER['SERVER_NAME'];
-  if ( preg_match( "/novalo/", $servname ) )
-     $servname = "uslims3.aucsolutions.com";
-  else if ( preg_match( "/scyld/", $servname ) )
-     $servname = "alamo.uthscsa.edu";
 
   //$headers = "From: $org_name Admin<$admin_email>"     . "\n";
   //$headers = "From: us3@uslims3.aucsolutions.com"     . "\n";       
