@@ -45,9 +45,7 @@ include_once 'lib/utility.php';
 include_once 'lib/payload_manager.php';
 include_once 'lib/HPC_analysis.php';
 include_once 'lib/file_writer.php';
-include_once $class_dir . 'submit_local.php';
-include_once $class_dir . 'submit_gfac.php';
-include_once $class_dir . 'submit_airavata.php';
+include_once $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
 
@@ -191,21 +189,8 @@ HTML;
     $cluster     = $_SESSION['cluster']['shortname'];
     unset( $_SESSION['cluster'] );
 
-    if ( isset( $global_cluster_details )
-         && is_array( $global_cluster_details )
-         && array_key_exists( $cluster, $global_cluster_details ) 
-         && array_key_exists( 'airavata', $global_cluster_details[$cluster] ) ) {
-           if ( $global_cluster_details[$cluster]['airavata' ] ) {
-               $job = new submit_airavata();
-           } else {
-               $job = new submit_local();
-           }
-    } else {
-        error_log( "$cluster not properly setup\n" );
-        $msg = "<br /><span class='message'>Configuration error: Unsupported cluster $cluster</span><br />\n";
-        echo $msg;
-        exit;
-    }
+    ## Phase 4: submit_slurm handles all Slurm submission via SSH
+    $job = new submit_slurm();
 
     $save_cwd = getcwd();         // So we can come back to the current 
                                   // working directory later

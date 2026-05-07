@@ -28,10 +28,20 @@ if ( ! $globaldb )
   return;
 }
 
-$is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
+## Phase 4: use localhost config flag instead of IP address detection
+## If any active cluster is localhost, this is a single-tenant USiaB deployment
+$is_local_deploy = false;
+if ( isset( $global_cluster_details ) && is_array( $global_cluster_details ) ) {
+    foreach ( $global_cluster_details as $cd ) {
+        if ( !empty( $cd['localhost'] ) ) {
+            $is_local_deploy = true;
+            break;
+        }
+    }
+}
 
 $query  = "SELECT gfacID, us3_db, cluster, status, metaschedulerClusterExecuting FROM analysis ";
-if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 ) {
+if ( $is_local_deploy  ||  $_SESSION['userlevel'] < 4 ) {
   $query .= "WHERE us3_db = '$dbname' ";
 }
 
