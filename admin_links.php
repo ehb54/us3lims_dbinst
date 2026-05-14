@@ -62,6 +62,7 @@ $edituser_menu = <<<HTML
       <li><a href='https://$org_site/view_all.php'>View All Users</a></li>
       <li><a href='https://$org_site/admin_view_projects.php'>View Users&rsquo; Projects</a></li>
       <li><a href='https://$org_site/select_user.php'>Select Data from Another User</a></li>
+      <li><a href='https://$org_site/view_people_audit.php'>User Audit Log</a></li>
 
 HTML;
 
@@ -69,6 +70,7 @@ $edituser_menu_level_0 = <<<HTML
       <li><a href='https://$org_site/edit_users.php'>Edit User Info</a></li>
       <li><a href='https://$org_site/view_users.php'>View User Info</a></li>
       <li><a href='https://$org_site/view_all.php'>View All Users</a></li>
+      <li><a href='https://$org_site/view_people_audit.php'>People Audit Log</a></li>
 HTML;
 
 $hardware_menu = <<<HTML

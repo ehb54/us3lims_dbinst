@@ -309,12 +309,6 @@ while ( list( $cluster, $running, $queued, $status ) = mysqli_fetch_row( $result
 {
    if ( isset( $down_clusters ) && in_array( $cluster, $down_clusters ) )
      $status = 'down';
-//if($cluster == 'jureca')
-// $status = 'up';
-//if($cluster == 'alamo')
-// $status = 'up';
-//if($cluster == 'lonestar5')
-// $status = 'up';
 
    if ( isset( $draining_clusters ) && in_array( $cluster, $draining_clusters ) )
      $status = 'draining';
