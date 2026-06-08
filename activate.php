@@ -25,7 +25,7 @@ settype( $userid, 'int' );       // Removes any remaining characters in URL
 $code   = $_GET['code'];
 
 $query = "UPDATE people SET activated = 1 " .
-         "WHERE personID=? AND password=?";
+         "WHERE personID=? AND password=? AND activated = 0 AND account_enabled = 1";
 $args = [$userid, $code];
 $stmt = $link->prepare( $query );
 $stmt->bind_param( 'is', ...$args );
@@ -35,7 +35,7 @@ $stmt->close();
 
 $query = "SELECT count(*) FROM people " .
          "WHERE personID=? "    .
-         "AND password=? AND activated = 1";
+         "AND password=? AND activated = 1 AND account_enabled = 1";
 $args = [$userid, $code];
 $stmt = $link->prepare( $query );
 $stmt->bind_param( 'is', ...$args );
