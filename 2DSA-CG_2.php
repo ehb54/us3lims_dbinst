@@ -216,6 +216,16 @@ HTML;
       {
         $output_msg .= "<br /><span class='message'>Message from the queue...</span><br />\n" .
                         print_r( $retval, true ) . " <br />\n";
+
+        foreach ( $retval as $rmsg )
+        {
+          if ( is_string( $rmsg ) && preg_match( '/^ERROR:/', $rmsg ) )
+          {
+            $output_msg .= "<br /><span class='message' style='color:red;font-weight:bold;'>" .
+                            "WARNING: job submission failed - $rmsg</span><br />\n";
+            break;
+          }
+        }
       }
 else {
 $output_msg .= "<br /><span class='message'>Message from the queue...filename=$filename</span><br/>\n";
