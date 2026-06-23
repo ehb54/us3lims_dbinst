@@ -15,9 +15,10 @@ include 'header.php';
 ?>
 <div id='content'>
 
-  <h1 class="title">Welcome to the XSEDE Science Gateway for UltraScan!</h1>
+  <h1 class="title">Welcome to the UltraScan Science Gateway!</h1>
 
 <p>
+<p> 
 The UltraScan Laboratory Information Management System (USLIMS)
 provides web and database support for users of the
 <a href='http://ultrascan.aucsolutions.com'>UltraScan software</a>. You
@@ -31,19 +32,16 @@ workflows for optimization.
 <p> Funding for the UltraScan software development is provided through multiple sources:</p>
 
 <ul>
-
   <li><a href='http://www.nih.gov'>The National Institutes of Health</a>,
   Grants NCRR-R01RR022200 and NIGMS-R01GM120600</li>
   <li><a href='http://www.nsf.gov'>The National Science Foundation</a>, Grants
   DBI-9974819, ANI-228927, DBI-9724273, TG-MCB070038 (all to Borries Demeler)</li>
-
   <li>Canada Research Chairs program C150–2017-00015</li>
   <li>The Canadian Natural Science and Engineering Research Council, Discovery Grant DG-RGPIN-2019–05637</li>
   <li><a href='https://www.aucsolutions.com'>AUC Solutions</a></li>
   <li>San Antonio Life Science Institute Grant #10001642</li>
 
 </ul>
-
 
 </div>
 
