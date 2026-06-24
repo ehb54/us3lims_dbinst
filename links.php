@@ -39,7 +39,7 @@ $analysis_menu = <<<HTML
   <a href='https://$org_site/GA_1.php'>GA Analysis</a>
   <a href='https://$org_site/DMGA_1.php'>Discrete GA</a>
   <a href='https://$org_site/PCSA_1.php'>PCSA Analysis</a>
-  <a href='https://$org_site/runID_info.php'>RunID Info</a></li>
+  <a href='https://$org_site/runID_info.php'>RunID Info</a>
 
 HTML;
 
@@ -47,7 +47,7 @@ $monitor_menu = <<<HTML
   <h4>Status Monitor</h4>
   <a href='https://$org_site/queue_viewer.php'>Queue Status</a>
   <a href='https://$org_site/show_clusters.php'>Cluster Status</a>
-
+  <a href='https://$org_site/job_lifecycle.php'>Job Lifecycle Status</a>
 HTML;
 
 $general_menu = <<<HTML
