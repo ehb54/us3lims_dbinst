@@ -171,7 +171,7 @@ echo <<<HTML
       $experiment_text
       $cell_text
 
-<button  type="button" class='onclick-SelectAllCells'>Select all cells</button>
+<button  type="button" class='onclick-selectAllCells'>Select all cells</button>
 
         <script src='js/queue_setup_1_selectallcells.js' type='text/javascript'></script>
 
