@@ -178,7 +178,8 @@ echo <<<HTML
       <br/>
       Value: <input type='text' name='sol' id='sol'
                     class='onchange-get-solute-count' 
-                    value="$solute_count" size='10'/>
+                    value="$solute_count" data-rendered-count="$solute_count"
+                    size='10'/>
                     Range: (Minimum:1 ~ Maximum:$max_buckets) 
     </fieldset>
   </form>

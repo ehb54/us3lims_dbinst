@@ -29,8 +29,8 @@ echo <<< HTML
   <div class='clear-both'></div>
 
   <div id="sf_navbar" class="sf_item">
-    <div class="sf_navbar_item" id="sf_view" onclick="handle_mode(this)"> View / Edit</div>
-    <div class="sf_navbar_item" id="sf_new" onclick="handle_mode(this)"> New </div>
+    <div class="sf_navbar_item" id="sf_view"> View / Edit</div>
+    <div class="sf_navbar_item" id="sf_new"> New </div>
   </div>
 
   <div id="sf_edit_item">
@@ -50,13 +50,13 @@ echo <<< HTML
     <select id="sf_sel_file" class='onchange-select-document' >
       <option value="EMPTY">--- Empty ---</option>
     </select>
-    <button id="sf_prev" type="button" onclick="sf_prev_doc()"> Previous </button>
-    <button id="sf_next" type="button" onclick="sf_next_doc()"> Next </button>
+    <button id="sf_prev" type="button"> Previous </button>
+    <button id="sf_next" type="button"> Next </button>
   </fieldset>
 
   <div class="sf_item">
     <label for="sf_desc"> Description: </label>
-    <input type="text" name="sf_desc" id="sf_desc" value="" oninput="filter_text(this)">
+    <input type="text" name="sf_desc" id="sf_desc" value="">
   </div>
 
   <div class="sf_item">
@@ -87,10 +87,10 @@ echo <<< HTML
     </div>
 
     <div id="sf_button_item" class="sf_item">
-      <button id="sf_save" type="button" onclick="save_document()"> Save File </button>
-      <button id="sf_update" type="button" onclick="update_document()"> Update </button>
-      <button id="sf_delete" type="button" onclick="delete_document()"> Delete </button>
-      <button id="sf_upload" type="button" onclick="upload_document()"> Upload </button>
+      <button id="sf_save" type="button"> Save File </button>
+      <button id="sf_update" type="button"> Update </button>
+      <button id="sf_delete" type="button"> Delete </button>
+      <button id="sf_upload" type="button"> Upload </button>
     </div>
   </div>
 

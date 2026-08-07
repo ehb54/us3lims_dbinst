@@ -153,9 +153,9 @@ function update_ui_from_selection() {
     var total_selected = selected_gfacIDs.size;
     $('#global_select_count').text('Selected Jobs: ' + total_selected);
     if (total_selected > 0) {
-        $('#bulk_delete_button').show();
+        $('#bulk_delete_button').removeClass('d-none');
     } else {
-        $('#bulk_delete_button').hide();
+        $('#bulk_delete_button').addClass('d-none');
     }
 
     // Update "Select All" count
@@ -292,3 +292,49 @@ function show_info( jobid )
   return false;
 }
 
+
+// Kick off the polling loop once the DOM is ready.  This replaces the
+// onload='update_queue_content();' attribute queue_viewer.php used to inject
+// into <body> via header.php, which CSP blocks as an inline event handler.
+document.addEventListener( 'DOMContentLoaded', function() {
+    update_queue_content();
+});
+
+// Delegated handlers for the queue table.
+//
+// queue_content.php used to emit these as inline onchange= attributes, which
+// CSP blocks.  They have to be delegated from the document rather than bound
+// directly, because update_queue_content() replaces #queue_content wholesale
+// on every poll -- directly bound handlers would be discarded each refresh.
+//
+// Each checkbox already carries the values the old inline handlers passed as
+// arguments in its data-* attributes, so nothing extra had to be emitted.
+document.addEventListener( 'change', function( event ) {
+    const target = event.target;
+    if ( !target ) {
+        return;
+    }
+
+    if ( target.id === 'select_all_jobs' ) {
+        toggle_all_selection( target );
+    } else if ( target.classList.contains( 'select_runID_anal_status' ) ) {
+        toggle_runid_anal_status_selection( target,
+                                            target.dataset.runid,
+                                            target.dataset.analtype,
+                                            target.dataset.status );
+    } else if ( target.classList.contains( 'select_runID_anal' ) ) {
+        toggle_runid_anal_selection( target,
+                                     target.dataset.runid,
+                                     target.dataset.analtype );
+    } else if ( target.classList.contains( 'select_runID' ) ) {
+        toggle_runid_selection( target, target.dataset.runid );
+    } else if ( target.classList.contains( 'select_job' ) ) {
+        toggle_job_selection( target, target.dataset.gfacid );
+    }
+});
+
+document.addEventListener( 'click', function( event ) {
+    if ( event.target && event.target.id === 'bulk_delete_button' ) {
+        bulk_delete_jobs();
+    }
+});

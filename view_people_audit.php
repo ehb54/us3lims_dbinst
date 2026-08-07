@@ -809,73 +809,10 @@ function render_pagination( $page, $total_pages )
 // ---------------------------------------------------------------------------
 
 $page_title = 'User Audit Log';
+$css = 'css/view_people_audit.css';
 include 'header.php';
 ?>
 
-<style>
-/* Audit page styles — scoped to avoid touching global layout */
-
-/* Widen the content area for this table-heavy page and add right breathing room */
-#content                { width: auto; max-width: 940px; padding-right: 24px; box-sizing: border-box; }
-
-/* Scrollable wrapper so the list never pushes outside the viewport */
-.audit-scroll           { overflow-x: auto; width: 100%; }
-
-/* Filter form */
-.audit-filter th        { text-align: right; padding-right: 6px; font-weight: normal; white-space: nowrap; }
-.audit-filter td        { padding: 3px 10px 3px 0; }
-
-/* List table */
-.audit-list             { width: 100%; border-collapse: collapse; border: 1px solid #2B4E72; }
-.audit-list th          { background: #2B4E72; color: #fff; padding: 6px 8px; text-align: left;
-                          font-size: 12px; white-space: nowrap; }
-.audit-list td          { padding: 5px 8px; border-bottom: 1px solid #ddd; vertical-align: top;
-                          font-size: 12px; }
-.audit-list tr:hover td { background: #f0f4fb; }
-.audit-ts               { white-space: nowrap; color: #555; }
-.audit-subtext          { font-size: 10px; color: #777; }
-.audit-summary          { color: #333; }
-.audit-view             { white-space: nowrap; text-align: center; }
-
-/* Detail metadata table */
-.audit-back             { margin-bottom: 8px; }
-.audit-detail           { width: 100%; border-collapse: collapse;
-                          margin-bottom: 20px; }
-.audit-detail th        { text-align: right; padding: 6px 12px; white-space: nowrap; width: 180px;
-                          background: #f0f2f5; border: 1px solid #ccc;
-                          font-weight: normal; color: #333; }
-.audit-detail td        { padding: 6px 12px; border: 1px solid #ccc; }
-/* Section divider rows — dark blue, readable white text */
-.audit-section          { background: #2B4E72 !important; color: #fff !important;
-                          font-size: 0.78em; font-weight: bold;
-                          letter-spacing: 0.08em; text-transform: uppercase;
-                          padding: 5px 12px; text-align: left !important;
-                          border-color: #2B4E72 !important; }
-
-/* Before/after diff table */
-.audit-diff             { border-collapse: collapse; width: 100%; margin-top: 4px; }
-.audit-diff th          { background: #2B4E72; color: #fff; padding: 6px 10px; text-align: left;
-                          font-size: 12px; }
-.audit-diff td          { padding: 6px 10px; border-bottom: 1px solid #ddd; vertical-align: top;
-                          font-size: 12px; }
-.audit-diff tr.audit-changed td { background: #fffbe6; }
-/* Field label column — plain text, not monospace, matches site style */
-.audit-diff td:first-child { color: #333; font-weight: bold; white-space: nowrap; width: 200px; }
-
-/* Value state indicators */
-.audit-val-on           { color: #2a7a2a; font-weight: bold; }
-.audit-val-off          { color: #c0392b; font-weight: bold; }
-.audit-id               { color: #999; font-size: 10px; }
-
-/* Misc */
-.audit-null, .audit-absent { color: #999; font-style: italic; }
-.audit-empty            { color: #bbb; font-style: italic; }
-.audit-pagination       { margin: 12px 0; }
-.audit-pagination a     { margin: 0 6px; }
-.audit-count            { color: #666; font-size: 0.9em; margin: 6px 0; }
-.audit-none             { color: #999; font-style: italic; }
-.audit-raw              { background: #f8f8f8; padding: 8px; font-size: 0.85em; overflow-x: auto; }
-</style>
 
 <div id='content'>
   <h1 class="title">User Audit Log</h1>
