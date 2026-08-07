@@ -67,14 +67,11 @@ if ( isset( $js ) )
     echo "  <script src='$javascript' type='text/javascript'></script>\n";
 }
 
-if ( ! isset( $onload ) )
-  $onload = '';
-
 echo<<<HTML
 
 </head>
 
-<body $onload>
+<body>
 
 <!-- begin header -->
 <div id="header" class='text-center'>

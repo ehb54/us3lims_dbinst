@@ -150,10 +150,10 @@ uasort( $display_info, 'cmp' );
 $content = "<div class='queue_content'>\n";
 // Add summary table
 $content .= "<h3>Queue Summary</h3>\n";
-$content .= "<div id='selection_controls' style='margin-bottom: 10px; display: flex; align-items: center; gap: 20px;'>\n";
-$content .= "  <input type='checkbox' id='select_all_jobs' onchange='toggle_all_selection(this)' /> Select All <span id='count_all'>(0/0)</span>\n";
+$content .= "<div id='selection_controls'>\n";
+$content .= "  <input type='checkbox' id='select_all_jobs' /> Select All <span id='count_all'>(0/0)</span>\n";
 $content .= "  <span id='global_select_count'>Selected Jobs: 0</span>\n";
-$content .= "  <input type='button' id='bulk_delete_button' value='Delete Selected Jobs' onclick='bulk_delete_jobs()' style='display: none;' />\n";
+$content .= "  <input type='button' id='bulk_delete_button' class='d-none' value='Delete Selected Jobs' />\n";
 $content .= "</div>\n";
 $content .= "<table class='summary_table'>\n";
 $content .= "<tr><th>Run ID</th><th>Analysis Type</th><th>Status</th></tr>\n";
@@ -178,14 +178,14 @@ foreach ( $summary_data as $runID => $run_info ) {
             $statusEsc    = htmlspecialchars( (string) $status, ENT_QUOTES, 'UTF-8' );
             $content .= "<tr>";
             if ( $first_run ) {
-                $content .= "<td rowspan='$run_rowspan'><input type='checkbox' class='select_runID' data-runid='$runIDEsc' onchange='toggle_runid_selection(this, \"$runIDEsc\")' /> $runIDEsc <span class='count_runID' data-runid='$runIDEsc'>(0/{$run_info['count']})</span></td>";
+                $content .= "<td rowspan='$run_rowspan'><input type='checkbox' class='select_runID' data-runid='$runIDEsc' /> $runIDEsc <span class='count_runID' data-runid='$runIDEsc'>(0/{$run_info['count']})</span></td>";
                 $first_run = false;
             }
             if ( $first_anal ) {
-                $content .= "<td rowspan='$anal_rowspan'><input type='checkbox' class='select_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc' onchange='toggle_runid_anal_selection(this, \"$runIDEsc\", \"$analTypeEsc\")' /> $analTypeEsc <span class='count_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc'>(0/{$anal_info['count']})</span></td>";
+                $content .= "<td rowspan='$anal_rowspan'><input type='checkbox' class='select_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc' /> $analTypeEsc <span class='count_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc'>(0/{$anal_info['count']})</span></td>";
                 $first_anal = false;
             }
-            $content .= "<td><input type='checkbox' class='select_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc' onchange='toggle_runid_anal_status_selection(this, \"$runIDEsc\", \"$analTypeEsc\", \"$statusEsc\")' /> $statusEsc <span class='count_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc'>(0/$count)</span></td>";
+            $content .= "<td><input type='checkbox' class='select_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc' /> $statusEsc <span class='count_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc'>(0/$count)</span></td>";
             $content .= "</tr>\n";
         }
     }
@@ -225,7 +225,7 @@ foreach( $display_info as $display )
 
   $db_info = ( $_SESSION['userlevel'] >= 2 ) ? "$database (ID: $HPCAnalysisRequestID)" : "";
 
-  $content .= "<tr><th><input type='checkbox' class='select_job' data-gfacid='$gfacID' data-runid='$runID' data-analtype='$analType' data-status='$queueStatus' onchange='toggle_job_selection(this, \"$gfacID\")' />Run ID:</th>\n" .
+  $content .= "<tr><th><input type='checkbox' class='select_job' data-gfacid='$gfacID' data-runid='$runID' data-analtype='$analType' data-status='$queueStatus' />Run ID:</th>\n" .
             "<td colspan='3'>$runID $triple $db_info</td>\n" .
             "<td rowspan='6'>\n" .
             display_buttons( $database, $cluster, $gfacID, $jobEmail ) .

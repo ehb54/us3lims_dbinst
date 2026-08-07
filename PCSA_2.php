@@ -215,7 +215,7 @@ HTML;
         {
           if ( is_string( $rmsg ) && preg_match( '/^ERROR:/', $rmsg ) )
           {
-            $output_msg .= "<br /><span class='message' style='color:red;font-weight:bold;'>" .
+            $output_msg .= "<br /><span class='message text-red font-bold'>" .
                             "WARNING: job submission failed - $rmsg</span><br />\n";
             break;
           }

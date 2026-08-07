@@ -1,0 +1,17 @@
+/*
+ * edit_users.css
+ *
+ * Styles for edit_users.php / edit_users_actions.php.
+ * Extracted from inline style= attributes for CSP compliance.
+ */
+
+/* Section divider rows inside the user profile tables */
+.form-section-header {
+    background: #3a3a3a;
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.82em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 10px;
+}

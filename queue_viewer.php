@@ -40,7 +40,6 @@ $sort_order = $_SESSION['queue_viewer_sort_order'] ?? 'submitTime';
 // Start displaying page
 $page_title = "Queue Viewer";
 $js     = 'js/queue_viewer.js';
-$onload = "onload='update_queue_content();'";
 $css    = 'css/queue_viewer.css';
 include 'header.php';
 ?>

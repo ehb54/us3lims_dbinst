@@ -830,7 +830,7 @@ function display_record($link)
 
   $extrasPAM =
     $enable_PAM
-    ? "<tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Authentication</th></tr>"
+    ? "<tr><th colspan='2' class='form-section-header'>Authentication</th></tr>"
       . "<tr><th>Authenticate via PAM:</th>"
       . "<td>" . ( $authenticatePAM ? "yes" : "no" ) . "</td></tr>"
       . "<tr><th>User name (PAM):</th>"
@@ -855,7 +855,7 @@ echo<<<HTML
           </td></tr>
     </tfoot>
     <tbody>
-      <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Profile Information</th></tr>
+      <tr><th colspan='2' class='form-section-header'>Profile Information</th></tr>
       <tr><th>First Name:</th>
           <td>$fname</td></tr>
       <tr><th>Last Name:</th>
@@ -876,19 +876,19 @@ echo<<<HTML
           <td>$phone</td></tr>
       <tr><th>Email:</th>
           <td>$email</td></tr>
-      <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Account Access</th></tr>
+      <tr><th colspan='2' class='form-section-header'>Account Access</th></tr>
       <tr><th>Registration:</th>
           <td>$activated</td></tr>
       <tr><th>Account status:</th>
           <td>$account_enabled_disp</td></tr>
-      <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Authorization</th></tr>
+      <tr><th colspan='2' class='form-section-header'>Authorization</th></tr>
       <tr><th>User Level:</th>
           <td>$userlevel</td></tr>
       <tr><th>Advance Level:</th>
           <td>$advancelevel</td></tr>
       $extrasGMP
       $extrasPAM
-      <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>System Access</th></tr>
+      <tr><th colspan='2' class='form-section-header'>System Access</th></tr>
       <tr><th>Cluster Authorizations:</th>
           <td>$clusterAuthorizations</td></tr>
       <tr><th>Instrument Permissions:</th>
@@ -1093,7 +1093,7 @@ function edit_record($link)
 
   $extrasPAM =
     $enable_PAM
-    ? "<tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Authentication</th></tr>"
+    ? "<tr><th colspan='2' class='form-section-header'>Authentication</th></tr>"
       . "<tr><th>Authenticate via PAM:</th>"
       .  "<td>$authenticatePAM_text</td></tr>"
       .  "<tr><th>User name (PAM):</th>"
@@ -1116,7 +1116,7 @@ echo<<<HTML
     </tfoot>
     <tbody>
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Profile Information</th></tr>
+    <tr><th colspan='2' class='form-section-header'>Profile Information</th></tr>
     <tr><th>First Name:</th>
         <td><input type='text' name='fname' size='40'
                    maxlength='64' value='$fname' /></td></tr>
@@ -1148,13 +1148,13 @@ echo<<<HTML
         <td><input type='text' name='email' size='40'
                    maxlength='64' value='$email' /></td></tr>
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Account Access</th></tr>
+    <tr><th colspan='2' class='form-section-header'>Account Access</th></tr>
     <tr><th>Registration:</th>
         <td>$activated_text</td></tr>
     <tr><th>Account status:</th>
         <td>$acct_enabled_text</td></tr>
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Authorization</th></tr>
+    <tr><th colspan='2' class='form-section-header'>Authorization</th></tr>
     <tr><th>User Level:</th>
         <td>$userlevel_text</td></tr>
     <tr><th>Advance Level:</th>
@@ -1162,7 +1162,7 @@ echo<<<HTML
     $extrasGMP
     $extrasPAM
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>System Access</th></tr>
+    <tr><th colspan='2' class='form-section-header'>System Access</th></tr>
     <tr><th>Cluster Authorizations:</th>
         <td>$cluster_table</td></tr>
     <tr><th>Instrument Permissions:</th>
@@ -1219,7 +1219,7 @@ echo<<<HTML
     </tfoot>
     <tbody>
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Profile Information</th></tr>
+    <tr><th colspan='2' class='form-section-header'>Profile Information</th></tr>
     <tr><th>First Name:</th>
         <td><input type='text' name='fname' size='40'
                    maxlength='64' /></td></tr>
@@ -1251,7 +1251,7 @@ echo<<<HTML
         <td><input type='text' name='email' size='40'
                    maxlength='64' /></td></tr>
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Authentication</th></tr>
+    <tr><th colspan='2' class='form-section-header'>Authentication</th></tr>
     $extrasGMP
     $extrasPAM
 
