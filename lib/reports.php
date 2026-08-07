@@ -285,7 +285,7 @@ function tripleDetail( $link, $tripleID, $selected_docTypes = array() )
     </div>
 
     <script>
-      $(":checkbox").click( change_docType );
+      $(":checkbox").on( 'click', change_docType );
     </script>
 
 HTML;
