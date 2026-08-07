@@ -59,13 +59,14 @@ function do_getDoc( $link, $documentID )
 <head>
   <title>US Lims Database - Report Detail</title>
   <link rel="stylesheet" type="text/css" href="css/main.css" />
+  <script src="js/main.js" type="text/javascript"></script>
 </head>
 
 <body>
 
   $header
   $content
-  <p><a href='javascript:window.close();'>Close Window</a></p>
+  <p><a href='#' class='onclick-window-close'>Close Window</a></p>
 
 </body></html>
 HTML;
