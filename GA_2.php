@@ -186,7 +186,7 @@ echo <<<HTML
 HTML;
 
   echo "<form name='Solutes' action='GA_2.php' method='post' " .
-       "      class='onsubmit-return-solutes-args' " .
+       "      class='onsubmit-return-validate-solutes-args' " .
        "      data-args='[$solute_count]' >\n";
 
   echo solute_setup( $buckets, $solute_count );
