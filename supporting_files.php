@@ -26,48 +26,48 @@ include 'header.php';
 echo <<< HTML
 <!-- Begin page content -->
 <div id="sf_content">
-  <div style="clear: both"></div>
+  <div class='clear-both'></div>
 
   <div id="sf_navbar" class="sf_item">
-    <div class="sf_navbar_item" id="sf_view" onclick="handle_mode(this)"> View / Edit</div>
-    <div class="sf_navbar_item" id="sf_new" onclick="handle_mode(this)"> New </div>
+    <div class="sf_navbar_item" id="sf_view"> View / Edit</div>
+    <div class="sf_navbar_item" id="sf_new"> New </div>
   </div>
 
   <div id="sf_edit_item">
-    <input type="checkbox" id="sf_edit" onchange="set_edit_mode(this)">
+    <input type="checkbox" id="sf_edit" class='onchange-set-edit-mode' >
     <span id="sf_edit_label">Edit Document </span>
   </div>
 
   <fieldset id="sf_sel_proj_item" class="sf_item">
     <label for="sf_sel_proj">Project:</label>
-    <select id="sf_sel_proj" onchange="select_project(this)">
+    <select id="sf_sel_proj" class='onchange-select-project' >
       <option value="EMPTY">--- Empty ---</option>
     </select>
   </fieldset>
 
   <fieldset id="sf_sel_file_item" class="sf_item">
     <label for="sf_sel_file">Document:</label>
-    <select id="sf_sel_file" onchange="select_document()">
+    <select id="sf_sel_file" class='onchange-select-document' >
       <option value="EMPTY">--- Empty ---</option>
     </select>
-    <button id="sf_prev" type="button" onclick="sf_prev_doc()"> Previous </button>
-    <button id="sf_next" type="button" onclick="sf_next_doc()"> Next </button>
+    <button id="sf_prev" type="button"> Previous </button>
+    <button id="sf_next" type="button"> Next </button>
   </fieldset>
 
   <div class="sf_item">
     <label for="sf_desc"> Description: </label>
-    <input type="text" name="sf_desc" id="sf_desc" value="" oninput="filter_text(this)">
+    <input type="text" name="sf_desc" id="sf_desc" value="">
   </div>
 
   <div class="sf_item">
     <label for="sf_filename"> Filename: </label>
     <input type="text" name="sf_filename" id="sf_filename" value="" readonly>
-    <input type="file" name="sf_browse" id="sf_browse" onchange="browse_document(this)">
+    <input type="file" name="sf_browse" id="sf_browse" class='onchange-browse-document' >
   </div>
 
   <div class="sf_item" id="sf_class_item">
     <label for="sf_sel_class">Category:</label>
-    <select id="sf_sel_class" onchange="select_class(this)">
+    <select id="sf_sel_class" class='onchange-select-class' >
       <option value="EMPTY">--- Empty ---</option>
     </select>
     <input type="text" id="sf_txt_class" value="" readonly>
@@ -87,10 +87,10 @@ echo <<< HTML
     </div>
 
     <div id="sf_button_item" class="sf_item">
-      <button id="sf_save" type="button" onclick="save_document()"> Save File </button>
-      <button id="sf_update" type="button" onclick="update_document()"> Update </button>
-      <button id="sf_delete" type="button" onclick="delete_document()"> Delete </button>
-      <button id="sf_upload" type="button" onclick="upload_document()"> Upload </button>
+      <button id="sf_save" type="button"> Save File </button>
+      <button id="sf_update" type="button"> Update </button>
+      <button id="sf_delete" type="button"> Delete </button>
+      <button id="sf_upload" type="button"> Upload </button>
     </div>
   </div>
 
@@ -103,8 +103,7 @@ echo <<< HTML
 
 </div>
 
-<script>init_setup()</script>
-<script>handle_mode(element_view)</script>
+<script src='js/supporting_files_setup.js' type='text/javascript'></script>
 
 HTML;
 

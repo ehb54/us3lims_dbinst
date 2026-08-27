@@ -338,7 +338,7 @@ function showClusters()
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
 
-  $text = "    <fieldset style='margin-top:1em' id='clusters'>\n" .
+  $text = "    <fieldset class='mt-1em' id='clusters'>\n" .
           "      <legend>Available Clusters:</legend>\n";
 
   // Double check cluster authorizations
@@ -368,7 +368,7 @@ HTML;
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
-          $clstat   = "<td STYLE='color: green'>$cluster->status</td>";
+          $clstat   = "<td class='text-green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
@@ -392,12 +392,12 @@ HTML;
   
         else if ( $cluster->status == 'down' )
         {
-          $clstat   = "<td STYLE='color: red'>$cluster->status</td>";
+          $clstat   = "<td class='text-red'>$cluster->status</td>";
         }
   
         else if ( $cluster->status == 'draining' )
         {
-          $clstat   = "<td STYLE='color: DarkViolet'>$cluster->status</td>";
+          $clstat   = "<td class='text-darkviolet'>$cluster->status</td>";
         }
 
         $clname = $cluster->name;
@@ -471,7 +471,7 @@ function tigre( $force_pmg = false )
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
 
-  $text = "    <fieldset style='margin-top:1em' id='clusters'>\n" .
+  $text = "    <fieldset class='mt-1em' id='clusters'>\n" .
           "      <legend>Select Cluster</legend>\n";
 
   ## do we have mgroupcount && mc_iterations > 1?
@@ -535,7 +535,7 @@ HTML;
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
-          $clstat   = "<td STYLE='color: green'>$cluster->status</td>";
+          $clstat   = "<td class='text-green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
@@ -559,12 +559,12 @@ HTML;
   
         else if ( $cluster->status == 'down' )
         {
-          $clstat   = "<td STYLE='color: red'>$cluster->status</td>";
+          $clstat   = "<td class='text-red'>$cluster->status</td>";
         }
   
         else if ( $cluster->status == 'draining' )
         {
-          $clstat   = "<td STYLE='color: DarkViolet'>$cluster->status</td>";
+          $clstat   = "<td class='text-darkviolet'>$cluster->status</td>";
         }
 
         $clname = $cluster->name;
@@ -601,7 +601,7 @@ HTML;
 ##    if ( $ngamc > 0 )
 ##    {  // Add note about choosing "-gamc" cluster
 ##       $mctext .= <<<HTML
-##       </table><table><tr><td STYLE='color: DarkViolet'>
+##       </table><table><tr><td class='text-darkviolet'>
 ##<b>N.B.</b> For GA-MC jobs, select any existing "-gamc" variation of a chosen cluster.</td></tr>
 ## HTML;
 ##    }

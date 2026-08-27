@@ -111,3 +111,12 @@ div.more_info div.moreinfo_hdr
   color            : #555;
   margin-left      : 5px;
 }
+
+/* Selection / bulk-action bar above the queue table.
+   Was an inline style= on the div emitted by queue_content.php. */
+#selection_controls {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}

@@ -67,23 +67,20 @@ if ( isset( $js ) )
     echo "  <script src='$javascript' type='text/javascript'></script>\n";
 }
 
-if ( ! isset( $onload ) )
-  $onload = '';
-
 echo<<<HTML
 
 </head>
 
-<body $onload>
+<body>
 
 <!-- begin header -->
-<div id="header" style='text-align:center;'>
+<div id="header" class='text-center'>
    <table class='noborder'>
    <tr><td><img src='images/USLIMS3-banner.png' alt='USLims 3 banner' /></td>
-       <td style='vertical-align:middle;width:400px;'></td>
+       <td class='w-400px-valign-middle'></td>
    </tr>
    </table>
-   <span style='font-size:20px;font-weight:bold;color:white;padding:0 1em;'>
+   <span class='font-bold-white-20px'>
     $org_name ($dbname)$title_devel</span>
 
 HTML;
