@@ -238,6 +238,20 @@ unset( $utility_config_error, $utility_dbinst_config_file, $utility_global_confi
 
 collect_config_info();
 
+## Whether this install serves a single tenant (a USiaB appliance) or many
+## (a shared LIMS host). Governs whether the queue views scope rows to
+## $dbname or show every tenant's jobs to a level-4 admin.
+##
+## This is a deployment property, so it is declared once as
+## $single_tenant_deployment in global_config.php rather than inferred from
+## any cluster entry. Unset means multi-tenant.
+function is_single_tenant_deployment()
+{
+    global $single_tenant_deployment;
+
+    return isset( $single_tenant_deployment ) ? (bool) $single_tenant_deployment : false;
+}
+
 if ( !isset( $admin_list ) || count( $admin_list ) == 0 ) {
     ## admin_list must be set in global_config.php or cluster_config.php
     error_log( "ERROR: lib/utility.php: \$admin_list is not set or empty — check global_config.php" );
@@ -386,7 +400,6 @@ include "db.php";
 function showClusters()
 {
   global $clusters;
-  global $org_site;
 
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
@@ -454,12 +467,6 @@ HTML;
         }
 
         $clname = $cluster->name;
-        if ( preg_match( '/localhost/', $clname ) )
-        {  // Form local cluster name
-          $parts  = explode( "/", $org_site );
-          $lohost = $parts[ 0 ];
-          $clname = preg_replace( '/uslims3/', $cluster->short_name, $lohost );
-        }
         if ( preg_match( '/-gamc/', $cluster->short_name ) )
         {  // Keep track of "-gamc" type names
            if ( $ngamc == 0 )
@@ -518,7 +525,6 @@ HTML;
 function tigre( $force_pmg = false )
 {
   global $clusters;
-  global $org_site;
   global $global_cluster_details;
 
   if ( $_SESSION['userlevel'] < 2 )
@@ -621,12 +627,6 @@ HTML;
         }
 
         $clname = $cluster->name;
-        if ( preg_match( '/localhost/', $clname ) )
-        {  // Form local cluster name
-          $parts  = explode( "/", $org_site );
-          $lohost = $parts[ 0 ];
-          $clname = preg_replace( '/uslims3/', $cluster->short_name, $lohost );
-        }
         if ( preg_match( '/-gamc/', $cluster->short_name ) )
         {  // Keep track of "-gamc" type names
            if ( $ngamc == 0 )

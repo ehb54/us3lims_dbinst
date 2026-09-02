@@ -301,17 +301,8 @@ function get_gfacIDs_authorized()
         return array();
     }
 
-    ## Phase 4: use localhost config flag instead of IP address detection
-    ## If any active cluster is localhost, this is a single-tenant USiaB deployment
-    $is_local_deploy = false;
-    if ( isset( $global_cluster_details ) && is_array( $global_cluster_details ) ) {
-        foreach ( $global_cluster_details as $cd ) {
-            if ( !empty( $cd['localhost'] ) ) {
-                $is_local_deploy = true;
-                break;
-            }
-        }
-    }
+    ## Deployment-level, not per-cluster -- see lib/utility.php
+    $is_local_deploy = is_single_tenant_deployment();
 
     $submitterGUID = preg_replace( '/^.*_/', '', $_SESSION["user_id"] );
     $query =
