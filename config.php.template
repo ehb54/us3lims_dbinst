@@ -4,7 +4,12 @@
 
 */
 
-$cfgfile            = exec( "ls ~us3/lims/.us3lims.ini" );
+// Resolve the us3 user's home dir via posix_getpwnam() instead of shelling
+// out to `ls` -- SELinux's httpd_t domain is not permitted to execute a
+// shell (entrypoint on shell_exec_t), so exec() silently failed here under
+// an Enforcing appliance, leaving $cfgfile empty and breaking every login.
+$us3pwentry         = posix_getpwnam( 'us3' );
+$cfgfile            = $us3pwentry ? $us3pwentry['dir'] . '/lims/.us3lims.ini' : '';
 $configs            = parse_ini_file( $cfgfile, true );
 $org_name           = 'UltraScan3 LIMS portal';
 $org_site           = 'uslims.uleth.ca/uslims3_instance';
