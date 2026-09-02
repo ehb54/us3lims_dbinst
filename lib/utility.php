@@ -369,11 +369,33 @@ if ( file_exists('../down_clusters.php') ) include '../down_clusters.php';
 $gfac_link = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
 $result    = mysqli_select_db( $gfac_link, $globaldbname );
 
-$query     = "SELECT cluster, running, queued, status FROM cluster_status";
+## Age of each row matters as much as its value. cluster_status is written by
+## a cron probe, and cron jobs die -- so a row that has stopped being updated
+## is not evidence that its last recorded value still holds. Reading the value
+## without the timestamp is how a cluster that went down while the probe was
+## wedged stayed selectable in Queue Setup on the strength of a stale 'up'.
+global $global_cluster_status_max_age_seconds;
+$cluster_status_max_age = isset( $global_cluster_status_max_age_seconds )
+                          ? (int) $global_cluster_status_max_age_seconds : 900;
+
+$query     = "SELECT cluster, running, queued, status, "
+           . "TIMESTAMPDIFF(SECOND, time, NOW()) AS age FROM cluster_status";
 $result    = mysqli_query( $gfac_link, $query );
 
-while ( list( $cluster, $running, $queued, $status ) = mysqli_fetch_row( $result ) )
+while ( list( $cluster, $running, $queued, $status, $age ) = mysqli_fetch_row( $result ) )
 {
+   ## A stale row is downgraded to 'down' rather than trusted. Refusing a
+   ## submission to a cluster we have no current information about is
+   ## recoverable in seconds; accepting one for a cluster that is actually
+   ## unreachable costs the user a lost run and a support ticket.
+   if ( $cluster_status_max_age > 0 && $age !== null && (int) $age > $cluster_status_max_age )
+   {
+     error_log( "lib/utility.php: cluster_status row for '$cluster' is {$age}s old"
+                . " (limit {$cluster_status_max_age}s); treating as down."
+                . " Check that cluster_status.php is still running from cron." );
+     $status = 'down';
+   }
+
    if ( isset( $down_clusters ) && in_array( $cluster, $down_clusters ) )
      $status = 'down';
 
@@ -434,7 +456,14 @@ HTML;
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
-          $clstat   = "<td STYLE='color: green'>$cluster->status</td>";
+          // 'warn' means the health probe failed once. The cluster stays
+          // selectable -- one failed probe against a shared HPC site is
+          // routine -- but the user gets to see that it is not fully healthy
+          // before committing a run to it. A second consecutive failure
+          // escalates it to 'down' (see cluster_status.php).
+          $clstat   = ( $cluster->status == 'warn' )
+                    ? "<td STYLE='color: DarkOrange' title='last health check failed'>$cluster->status</td>"
+                    : "<td STYLE='color: green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
@@ -594,7 +623,14 @@ HTML;
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
-          $clstat   = "<td STYLE='color: green'>$cluster->status</td>";
+          // 'warn' means the health probe failed once. The cluster stays
+          // selectable -- one failed probe against a shared HPC site is
+          // routine -- but the user gets to see that it is not fully healthy
+          // before committing a run to it. A second consecutive failure
+          // escalates it to 'down' (see cluster_status.php).
+          $clstat   = ( $cluster->status == 'warn' )
+                    ? "<td STYLE='color: DarkOrange' title='last health check failed'>$cluster->status</td>"
+                    : "<td STYLE='color: green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
