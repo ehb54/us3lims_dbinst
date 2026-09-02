@@ -42,43 +42,16 @@ function collect_config_info() {
         return;
     }
 
-    ## dbinst specific configs
+    ## The configuration files are included at file scope, below this
+    ## function, so that everything they define is a real global. Take local
+    ## copies of the two maps here: the filtering below prunes entries, and
+    ## that pruning must not reach back into the loaded configuration.
 
-    $dbinst_config_file = '../cluster_config.php';
+    $cluster_details       = isset( $GLOBALS[ 'cluster_details' ] )
+                             ? $GLOBALS[ 'cluster_details' ] : null;
+    $cluster_configuration = isset( $GLOBALS[ 'cluster_configuration' ] )
+                             ? $GLOBALS[ 'cluster_configuration' ] : null;
 
-    if ( !file_exists( $dbinst_config_file ) ) {
-        $dbinst_config_file = '../uslims3_newlims/cluster_config.php';
-        if ( !file_exists( $dbinst_config_file ) ) {
-            $error_msg( "no cluster_config.php file found" );
-            return;
-        }
-    }
-
-    ## global configs
-
-    $global_config_file = "$class_dir/../global_config.php";
-
-    if ( !file_exists( $global_config_file ) ) {
-        $error_msg("\$global_config_file_dir [$global_config_file] does not exist");
-        return;
-    }
-        
-    ## read global config first, so dbinst overrides
-
-    try {
-        include( $global_config_file );
-    } catch ( Exception $e ) {
-        $error_msg( "including $global_config_file " . $e->getMessage() );
-        return;
-    }
-
-    try {
-        include( $dbinst_config_file );
-    } catch ( Exception $e ) {
-        $error_msg ( "including $dbinst_config_file " . $e->getMessage() );
-        return;
-    }
-        
     if ( !isset( $cluster_configuration ) || !is_array( $cluster_configuration ) ) {
         $error_msg( "\$cluster_configuration not set or is not an array" );
         return;
@@ -157,6 +130,111 @@ function collect_config_info() {
         $clusters[] = new cluster_info( $v['name'], $k, $v['queue'] );
     }
 }
+
+## ---------------------------------------------------------------- config load
+##
+## global_config.php and this instance's cluster_config.php are included HERE,
+## at file scope, so that every variable they define is a real global.
+##
+## They used to be included inside collect_config_info(). A PHP include takes
+## the scope of the line that runs it, so everything they defined became a
+## function-local that vanished when the function returned; only the four
+## values that function declares 'global' survived. That silently disabled
+## deployment settings such as $global_cluster_status_max_age_seconds and
+## $single_tenant_deployment. Each reads $GLOBALS or declares 'global', and
+## neither was ever set, so it fell back with no warning. The gridctl scripts
+## include the same file at file scope, which is why the same key took effect
+## there and not here. Remote execution mechanics are now code-owned policy,
+## not global configuration.
+##
+## Timing is unchanged: collect_config_info() is called immediately below,
+## still during this include, so a page that sets $class_dir after including
+## utility.php fails exactly as it did before.
+
+$utility_config_error = function( $msg ) {
+    $emsg = "ERROR: lib/utility.php : $msg";
+    echo "$emsg<br>";
+    error_log( $emsg );
+};
+
+## Cluster configuration comes from three levels, in this precedence order:
+##
+##   1. dbinst    $full_path/cluster_config.php
+##                this LIMS instance's own file, written per instance
+##   2. site      ../cluster_config.php
+##                a file one directory above the instances. Not one of the
+##                designed levels; kept as a candidate only so that a
+##                deployment which happens to have one does not silently lose
+##                it. No deployment is known to use it.
+##   3. newlims   ../uslims3_newlims/cluster_config.php
+##                the shared default that ships with the registration
+##                interface, used when an instance has no file of its own
+##
+## First file found wins outright; the levels do not merge, because each file
+## assigns $cluster_configuration whole.
+##
+## Level 1 used to be unreachable from here. This loader looked for
+## '../cluster_config.php' only, and PHP resolves a './'- or '../'-prefixed
+## include against the current working directory, which for both web requests
+## and CLI runs is the instance directory. So '../cluster_config.php' names the
+## instance directory's PARENT, never the instance itself, and the dbinst level
+## was always skipped in favour of the newlims default.
+##
+## class/jobsubmit.php resolves the same level correctly, from $full_path.
+## That disagreement meant an instance with its own cluster_config.php had it
+## honoured when a job was submitted and ignored when the queue-setup list was
+## built, which is the same class of split-brain as the filter divergence fixed
+## in that file. Both now resolve the levels identically.
+
+$utility_dbinst_config_file = null;
+$utility_global_config_file = null;
+
+if ( !isset( $class_dir ) ) {
+    $utility_config_error( "\$class_dir is not set" );
+} else if ( !is_dir( $class_dir ) ) {
+    $utility_config_error( "\$class_dir [$class_dir] is not a directory" );
+} else {
+    $utility_dbinst_config_candidates = array();
+
+    if ( isset( $full_path ) ) {
+        $utility_dbinst_config_candidates[] = rtrim( $full_path, '/' ) . '/cluster_config.php';
+    }
+
+    $utility_dbinst_config_candidates[] = '../cluster_config.php';
+    $utility_dbinst_config_candidates[] = '../uslims3_newlims/cluster_config.php';
+
+    foreach ( $utility_dbinst_config_candidates as $utility_candidate ) {
+        if ( file_exists( $utility_candidate ) ) {
+            $utility_dbinst_config_file = $utility_candidate;
+            break;
+        }
+    }
+
+    $utility_global_config_file = "$class_dir/../global_config.php";
+
+    if ( $utility_dbinst_config_file === null ) {
+        $utility_config_error( "no cluster_config.php file found" );
+    } else if ( !file_exists( $utility_global_config_file ) ) {
+        $utility_config_error( "\$global_config_file_dir [$utility_global_config_file] does not exist" );
+    } else {
+        ## read global config first, so the dbinst config overrides it
+
+        try {
+            include( $utility_global_config_file );
+        } catch ( Exception $e ) {
+            $utility_config_error( "including $utility_global_config_file " . $e->getMessage() );
+        }
+
+        try {
+            include( $utility_dbinst_config_file );
+        } catch ( Exception $e ) {
+            $utility_config_error( "including $utility_dbinst_config_file " . $e->getMessage() );
+        }
+    }
+}
+
+unset( $utility_config_error, $utility_dbinst_config_file, $utility_global_config_file,
+       $utility_dbinst_config_candidates, $utility_candidate );
 
 collect_config_info();
 
