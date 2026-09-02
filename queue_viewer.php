@@ -24,6 +24,7 @@ if ( isset( $_POST['sort_order'] ) )
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';       // Information about the clusters
+include_once $class_dir . 'cancel_result.php';   // CANCEL_* outcomes, used by do_delete()
 
 if ( isset( $_POST['delete'] ) )
 {
@@ -145,79 +146,106 @@ function delete_single_job( $gfacID )
   $cluster = $row['metaschedulerClusterExecuting'];
   }
 
-  if ( cancelLocalJob( $gfacID, $cluster ) ) {
-   ## Let's update what user sees until canceled
-     updateLimsStatus( $gfacID, 'aborted',  "Job has been canceled"  );
-  updateGFACStatus( $gfacID, 'CANCELED', "Job has been canceled"  );
+  $cancel = cancelLocalJob( $gfacID, $cluster );
+
+  if ( cancel_outcome_is_settled( $cancel[ 'outcome' ] ) )
+  {
+    ## The job is off the cluster, so the LIMS may say so.
+    updateLimsStatus( $gfacID, 'aborted',  $cancel[ 'message' ] );
+    updateGFACStatus( $gfacID, 'CANCELED', $cancel[ 'message' ] );
+  }
+  else
+  {
+    ## We could not confirm the job is gone. Record why, and leave the status
+    ## alone: claiming 'aborted' here is what would hide a still-running job.
+    updateLimsStatus( $gfacID, null, $cancel[ 'message' ] );
+    updateGFACStatus( $gfacID, null, $cancel[ 'message' ] );
   }
   }
   mysqli_close( $gLink );
 }
 
-// Function to cancel a local job
+/**
+ * Ask the cluster to cancel a job.
+ *
+ * Returns what cancel_result.php's cancel_outcome_from_result() returns:
+ * array( 'outcome' => one of the CANCEL_* constants, 'message' => a sentence
+ * fit to show the user ).
+ *
+ * WHY THIS IS NOT A BOOLEAN. It used to be, and it was hardcoded to true: the
+ * old code ran a bare exec( "ssh ... scancel" ), ignored the result, and
+ * returned true whether or not scancel had ever run. The caller then wrote
+ * queueStatus = 'aborted'. During an outage that is the original Expanse bug
+ * pointed the other way -- a transport failure becoming a statement about the
+ * job -- and it is worse here, because the job really is still running on the
+ * cluster while the LIMS shows it as cancelled and nobody goes looking.
+ *
+ * The old retry loop was also dead code: it matched ssh_exchange_identification
+ * in $result, then slept 2 + 4 + 8 seconds without ever re-running the command,
+ * so $result could not change and the one error it claimed to handle was
+ * retried zero times.
+ *
+ * Everything remote now goes through remote_exec, which supplies the connect
+ * timeout, BatchMode, exit-code classification, transport-only retry, and the
+ * circuit breaker. scancel is idempotent, so retrying a transport fault is
+ * safe. The budget is deliberately tighter than the batch paths use: a person
+ * is sitting in front of this waiting for the page to come back.
+ */
 function cancelLocalJob( $gfacID, $cluster )
 {
-   # elog( "cancel_local_job( $gfacID )" );
    global $global_cluster_details;
+   global $class_dir;
 
    $self = "queue_viewer.php::cancelLocalJob";
-   $ruser     = "us3"; 
 
-   if ( !array_key_exists( $cluster, $global_cluster_details ) ) {
-       elog( "$self cluster $cluster missing from global_config.php \$global_cluster_details" );
-       return false;
+   if ( ! class_exists( 'remote_exec' ) )
+      require_once $class_dir . 'remote_exec.php';
+
+   require_once $class_dir . 'cancel_result.php';
+
+   $rx = new remote_exec( $cluster, $global_cluster_details, 'elog' );
+
+   if ( ! $rx->is_configured() )
+   {
+      elog( "$self cluster $cluster missing or has no 'name' in global_config.php \$global_cluster_details" );
+
+      return array(
+         'outcome' => CANCEL_UNCONFIGURED,
+         'message' => "Cannot cancel: cluster $cluster is not configured on this LIMS."
+      );
    }
-       
-   if ( !array_key_exists( 'name', $global_cluster_details[$cluster] ) ) {
-       elog( "$self 'name' key missing from global_config.php \$global_cluster_details[$cluster]" );
-       return false;
-   }
-
-   $login = $global_cluster_details[$cluster]['name'];
-
-   if ( array_key_exists( 'login', $global_cluster_details[$cluster] ) ) {
-       $login = $global_cluster_details[$cluster]['login'];
-   }
-
-   $cmd_prefix = "ssh -x $login ";
-
-   if ( array_key_exists( 'localhost', $global_cluster_details[$cluster] ) 
-        && $global_cluster_details[$cluster]['localhost'] ) {
-       $cmd_prefix = "";
-   }
-
-   $cmd    = "$cmd_prefix scancel $gfacID 2>&1";
 
    elog( "$self gfacID $gfacID cluster $cluster" );
 
-   $result = exec( $cmd );
-   elog( "$self locstat: cmd=$cmd  result=$result" );
+   ## remote_exec quotes the command for the local ssh invocation, but the
+   ## login node's shell parses it again, so the id is escaped here too. It is
+   ## already checked against get_gfacIDs_authorized(); this is the second lock.
+   $res = $rx->run( 'scancel ' . escapeshellarg( $gfacID ), array(
+      'label'      => 'scancel',
+      'timeout'    => 15,
+      'retries'    => 1,
+      'retry_wait' => 2,
+   ) );
 
-   $secwait    = 2;
-   $num_try    = 0;
-   ## Sleep and retry up to 3 times if ssh has "ssh_exchange_identification" error
-   while ( preg_match( "/ssh_exchange_id/", $result )  &&  $num_try < 3 )
-   {
-      sleep( $secwait );
-      $num_try++;
-      $secwait   *= 2;
-      elog( "$self  num_try=$num_try  secwait=$secwait" );
-   }
+   $cancel = cancel_outcome_from_result( $res, $cluster );
 
-   ## should likely verify if canceled, perhaps via a call to get_local_status()
-   return true;
+   elog( "$self gfacID $gfacID {$cancel['outcome']} after {$res['attempts']} attempt(s)"
+         . " [{$res['class']} exit {$res['exit_code']}]: {$cancel['message']}" );
+
+   return $cancel;
 }
 
 // Function to update the status on an arbitrary lims database
 function updateLimsStatus( $gfacID, $status, $message )
 {
 
-  //include 'config.php';	
+  //include 'config.php';
   global $globaldbhost;
   global $globaldbuser;
   global $globaldbpasswd;
   global $globaldbname;
   global $configs;
+  global $dbhost;
 
   // Connect to the global GFAC database
   $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
@@ -240,16 +268,30 @@ function updateLimsStatus( $gfacID, $status, $message )
 
   // Using credentials that will work for all databases
   $upasswd = $configs[ 'us3php' ][ 'password' ];
-  $us3link = mysqli_connect( '127.0.0.1', 'us3php', $upasswd, $db );
+  $us3link = mysqli_connect( $dbhost, 'us3php', $upasswd, $db );
   if ( ! $us3link ) return false;
 
-  $query  = "UPDATE HPCAnalysisResult SET " .
-            "queueStatus = ?, " .
-            "lastMessage = ? " .
-            "WHERE gfacID = ? ";
-  $args = [$status, mysqli_real_escape_string($us3link,$message), $gfacID];
+  ## A null $status means "say what happened without claiming the job changed
+  ## state". Used when a cancel could not be confirmed: the user needs the
+  ## reason, but queueStatus must keep reflecting the job, not the click.
+  if ( $status === null )
+  {
+    $query = "UPDATE HPCAnalysisResult SET lastMessage = ? WHERE gfacID = ? ";
+    $args  = [ $message, $gfacID ];
+    $types = 'ss';
+  }
+  else
+  {
+    $query = "UPDATE HPCAnalysisResult SET " .
+             "queueStatus = ?, " .
+             "lastMessage = ? " .
+             "WHERE gfacID = ? ";
+    $args  = [ $status, $message, $gfacID ];
+    $types = 'sss';
+  }
+
   $stmt = mysqli_prepare( $us3link, $query );
-  $stmt->bind_param( 'sss', ...$args );
+  $stmt->bind_param( $types, ...$args );
   $stmt->execute()
         or die( "Query failed : $query<br />\n" . $stmt->error );
   $stmt->close();
@@ -270,17 +312,28 @@ function updateGFACStatus( $gfacID, $status, $message )
   if ( ! $gLink )
     return;
 
-  $status = strtoupper( $status );
-
-  // Update gfac status
+  // A null $status updates the message only; see updateLimsStatus(). It also
+  // keeps us out of analysis.status, which is an ENUM with no member meaning
+  // "we could not reach the cluster" -- writing one would be a truncation.
   // language=MariaDB
-  $query  = "UPDATE analysis " .
-            "SET status = ?, " .
-            "queue_msg = ? " .
-            "WHERE gfacID = ? ";
-  $args = [ $status, $message, $gfacID ];
+  if ( $status === null )
+  {
+    $query = "UPDATE analysis SET queue_msg = ? WHERE gfacID = ? ";
+    $args  = [ $message, $gfacID ];
+    $types = 'ss';
+  }
+  else
+  {
+    $query = "UPDATE analysis " .
+             "SET status = ?, " .
+             "queue_msg = ? " .
+             "WHERE gfacID = ? ";
+    $args  = [ strtoupper( $status ), $message, $gfacID ];
+    $types = 'sss';
+  }
+
   $stmt = mysqli_prepare( $gLink, $query );
-  $stmt->bind_param( 'sss', ...$args );
+  $stmt->bind_param( $types, ...$args );
   $stmt->execute()
         or die( "Query failed : $query<br />\n" . $stmt->error );
   $stmt->close();
