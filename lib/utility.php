@@ -467,6 +467,15 @@ HTML;
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
+          // cluster_info defaults running/queued to the placeholder string
+          // "*" until a live status row exists in gfac.cluster_status for
+          // this cluster. Under PHP 8, arithmetic on that non-numeric string
+          // ("*" * 100) throws an uncaught TypeError instead of the silent
+          // 0-coercion PHP 7 used to do -- guard on is_numeric() so a
+          // cluster with no reported status yet falls through to the
+          // existing "n/a" default instead of fataling the whole page.
+          if ( is_numeric( $cque )  &&  is_numeric( $crun ) )
+          {
           if ( $cque != 0  &&   $crun != 0 )
           {
             $qrrat     = (int)( ( $crun * 100 ) / $cque );
@@ -477,12 +486,13 @@ HTML;
             else
               $clload     = "<td width=70 BGCOLOR='yellow'>medium</td>";
           }
-  
+
           else if ( $cque == 0 )
             $clload     = "<td BGCOLOR='green'>short</td>";
-  
+
           else
             $clload     = "<td BGCOLOR='red'>long</td>";
+          }
         }
   
         else if ( $cluster->status == 'down' )
@@ -634,6 +644,15 @@ HTML;
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
+          // cluster_info defaults running/queued to the placeholder string
+          // "*" until a live status row exists in gfac.cluster_status for
+          // this cluster. Under PHP 8, arithmetic on that non-numeric string
+          // ("*" * 100) throws an uncaught TypeError instead of the silent
+          // 0-coercion PHP 7 used to do -- guard on is_numeric() so a
+          // cluster with no reported status yet falls through to the
+          // existing "n/a" default instead of fataling the whole page.
+          if ( is_numeric( $cque )  &&  is_numeric( $crun ) )
+          {
           if ( $cque != 0  &&   $crun != 0 )
           {
             $qrrat     = (int)( ( $crun * 100 ) / $cque );
@@ -644,12 +663,13 @@ HTML;
             else
               $clload     = "<td width=70 BGCOLOR='yellow'>medium</td>";
           }
-  
+
           else if ( $cque == 0 )
             $clload     = "<td BGCOLOR='green'>short</td>";
-  
+
           else
             $clload     = "<td BGCOLOR='red'>long</td>";
+          }
         }
   
         else if ( $cluster->status == 'down' )
