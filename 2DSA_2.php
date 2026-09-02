@@ -172,6 +172,29 @@ $missit_msg = "<br/>filenames[0]=" . $filenames[0];
   }
 }
 
+## A missing cluster means the submission block below is skipped in its
+## entirety, so the run has to stop being described as accepted.
+##
+## lib/utility.php's cluster fieldset lists only clusters named in the user's
+## clusterAuthorizations, and that per-cluster filter has no userlevel bypass.
+## An account authorized only for clusters that global_config.php does not
+## define therefore sees an empty fieldset, posts no 'cluster' field, and
+## 2DSA_1.php never sets $_SESSION['cluster']. Until this check existed the
+## page still said "your job was accepted and is currently processing" and
+## promised a completion email for a job that was never submitted.
+if ( $files_ok  &&  ! isset( $_SESSION['cluster'] ) )
+{
+  $files_ok    = false;
+  $missit_msg  = "<br/><b>No cluster was selected, so nothing was submitted.</b>";
+  $missit_msg .= "<br/>If no clusters were offered on the previous page, this "
+               . "account is not authorized for any configured cluster. Ask "
+               . "your administrator to check its cluster authorizations.";
+}
+
+## Set before the early exit further down, which renders $page_title too and
+## previously printed an empty heading because the assignment came after it.
+$page_title = $files_ok ? '2DSA Analysis Submitted' : '2DSA Analysis Not Submitted';
+
 if ( $files_ok )
 {
   $output_msg = <<<HTML
@@ -259,7 +282,6 @@ HTML;
 }
 
 // Start displaying page
-$page_title = '2DSA Analysis Submitted';
 include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";
