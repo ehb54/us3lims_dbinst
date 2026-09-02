@@ -80,10 +80,23 @@ if ( ! defined('HOME_DIR') )
   define('HOME_DIR', $full_path );
 }
 
-if ( ! defined('DEBUG') ) 
+if ( ! defined('DEBUG') )
 {
   define('DEBUG', false );
 }
 
-?>
+// $is_cli must be defined here, and the literal string "$is_cli" must appear
+// in this file. gridctl/submitctl.php greps every candidate instance's
+// config.php and queue_setup_1.php for it (submitctl.php:193) and refuses any
+// instance that lacks it -- "file .../config.php is not cli compliant" -- then
+// exits 255 when no instance qualifies. Without this line the submission
+// daemon crash-loops and GMP autoflow runs sit in the analysis stage forever
+// with no error surfaced in the desktop client, the web UI, or the job logs.
+//
+// The newlims flow (web/uslims3_newlims/makeconfig.php:162) emits these two
+// lines into every config.php it generates; this template is the host-native
+// installer's parallel path and was missing them. Keep the two in sync.
+$is_cli = php_sapi_name() == 'cli';
+
+include_once "elog.php";
 
