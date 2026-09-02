@@ -1,0 +1,36 @@
+<?php
+/*
+ * Shared dbinst configuration, schema v1.
+ *
+ * Install as /home/us3/lims/etc/config/dbinst-base.v1.php and customize for
+ * the host. Instance identity and credentials do not belong in this file.
+ */
+return array(
+  'schema_version' => 1,
+  'values' => array(
+    'org_name'        => 'UltraScan3 LIMS portal',
+    'site_author'     => 'Borries Demeler, University of Lethbridge',
+    'site_keywords'   => 'ultrascan analytical ultracentrifugation lims',
+    'site_desc'       => 'Website for the UltraScan3 LIMS portal',
+    'globaldbuser'    => 'gfac',
+    'globaldbname'    => 'gfac',
+    'globaldbhost'    => 'localhost',
+    'ipaddr'          => '127.0.0.1',
+    ## Documentation-range placeholder (RFC 5737). This is the host's own
+    ## external address and is deployment-specific, so every install must
+    ## override it in its instance overlay. A base default that happens to
+    ## work for one site is worse than one that is obviously not real.
+    'ipa_ext'         => '203.0.113.1',
+    'udpport'         => 12233,
+    'top_image'       => '#',
+    'top_banner'      => 'images/#',
+    'submit_dir'      => '/srv/www/htdocs/uslims3/uslims3_data/',
+    'class_dir'       => '/srv/www/htdocs/common/class/',
+    'disclaimer_file' => '',
+    'timezone'        => 'America/Chicago',
+    'dbinst_root'     => '/srv/www/htdocs/uslims3/',
+    'enable_GMP'      => false,
+    'enable_PAM'      => false
+  )
+);
+
