@@ -1,0 +1,22 @@
+<?php
+/*
+ * Compatibility entry point for a dbinst using external base + overlay
+ * configuration. Replace the instance name when installing this file as the
+ * dbinst's config.php.
+ *
+ * The foreach publishes into whatever scope included this file, matching what
+ * the legacy config.php's plain assignments did. Do not add a $GLOBALS export:
+ * see the note above us3_dbinst_config_shim_source() in
+ * lib/dbinst_config_loader.php.
+ */
+$is_cli = php_sapi_name() == 'cli';
+$lims_instance = 'uslims3_instance';
+
+require_once __DIR__ . '/lib/dbinst_config_loader.php';
+$dbinst_config_values = us3_dbinst_config_bootstrap( $lims_instance );
+foreach ( $dbinst_config_values as $dbinst_config_key => $dbinst_config_value )
+  ${$dbinst_config_key} = $dbinst_config_value;
+unset( $dbinst_config_key, $dbinst_config_value, $dbinst_config_values );
+
+include_once __DIR__ . '/elog.php';
+
