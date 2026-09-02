@@ -311,12 +311,22 @@ abstract class File_writer
 
     chdir( $current_dir );
 
-    $fileList = implode( " ", $files );
+    // Every name must be shell-quoted individually. Several of these come
+    // from user-supplied database text rather than generated identifiers --
+    // notably DC_model and CG_model, which are named after model.description
+    // -- and UltraScan model descriptions routinely contain spaces. Joining
+    // them raw let the shell split one filename into several nonexistent
+    // paths; tar skipped them and shell_exec() discarded the warning, so the
+    // constraints model silently never made it into the job's input tar and
+    // us_mpi_analysis then segfaulted on the cluster loading a model that
+    // wasn't there. Quoting also closes the command-injection hole this
+    // opened on the same user-supplied text.
+    $fileList = implode( " ", array_map( 'escapeshellarg', $files ) );
     $tarFilename = sprintf( "hpcinput-%s-%s-%05d.tar",
                              $job['database']['host'],
                              $job['database']['name'],
                              $HPCAnalysisRequestID );
-    shell_exec( "/bin/tar -cf $tarFilename " . $fileList );
+    shell_exec( "/bin/tar -cf " . escapeshellarg( $tarFilename ) . " " . $fileList );
 
     chdir( $save_cwd );
 

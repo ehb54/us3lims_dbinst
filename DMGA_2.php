@@ -95,6 +95,28 @@ else
 {
 //echo "not separate\n"; exit();
   $globalfit = $payload->get();
+
+  // The DMGA MPI worker accepts one dataset only.  A global DMGA request is
+  // currently serialized as an ordinary "DMGA" job (there is no -GL method
+  // suffix) and the worker dereferences the missing global-fit state, which
+  // reproducibly terminates mpirun with SIGSEGV.  Reject it at the boundary so
+  // users get a deterministic validation error instead of a crash and a job
+  // that can never produce a result.
+  $global_dataset_count = (int) $payload->get( 'datasetCount' );
+  if ( $global_dataset_count > 1 )
+  {
+    $files_ok = false;
+    $output_msg = <<<HTML
+  <pre>
+  Global DMGA fits are not supported by the DMGA MPI worker. Select one
+  dataset (separate datasets) or use a global 2DSA-IT prerequisite with a
+  supported analysis method.
+  </pre>
+HTML;
+    echo $output_msg;
+    include 'bottom.php';
+    exit();
+  }
   priority( "DMGA-GF", $payload->get( 'datasetCount' ), $payload->get( 'job_parameters' ) );
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
@@ -222,4 +244,3 @@ include 'footer.php';
 exit();
 
 ?>
-
