@@ -4,7 +4,12 @@
 
 */
 
-$cfgfile            = exec( "ls ~us3/lims/.us3lims.ini" );
+// Resolve the us3 user's home dir via posix_getpwnam() instead of shelling
+// out to `ls` -- SELinux's httpd_t domain is not permitted to execute a
+// shell (entrypoint on shell_exec_t), so exec() silently failed here under
+// an Enforcing appliance, leaving $cfgfile empty and breaking every login.
+$us3pwentry         = posix_getpwnam( 'us3' );
+$cfgfile            = $us3pwentry ? $us3pwentry['dir'] . '/lims/.us3lims.ini' : '';
 $configs            = parse_ini_file( $cfgfile, true );
 $org_name           = 'UltraScan3 LIMS portal';
 $org_site           = 'uslims.uleth.ca/uslims3_instance';
@@ -35,10 +40,6 @@ $globaldbhost       = 'localhost'; # the host on which MySQL runs, generally loc
 $ipaddr             = '127.0.0.1';      # the internal IP address of the host machine
 $ipa_ext            = '108.92.244.217'; # the external IP address of the host machine
 $udpport            = 12233; # the port to send udp messages to
-$svcport            = 8080;  # the port for GFAC services
-$uses_thrift        = true;  # flags use of Thrift rather than Gfac
-$thr_clust_excls    = array( 'juropa' ); # Never uses Thrift
-$thr_clust_incls    = array( 'alamo' ); # Always uses Thrift
 
 $top_image          = '#';  # name of the logo to use
 $top_banner         = 'images/#';  # name of the banner at the top
@@ -79,10 +80,23 @@ if ( ! defined('HOME_DIR') )
   define('HOME_DIR', $full_path );
 }
 
-if ( ! defined('DEBUG') ) 
+if ( ! defined('DEBUG') )
 {
   define('DEBUG', false );
 }
 
-?>
+// $is_cli must be defined here, and the literal string "$is_cli" must appear
+// in this file. gridctl/submitctl.php greps every candidate instance's
+// config.php and queue_setup_1.php for it (submitctl.php:193) and refuses any
+// instance that lacks it -- "file .../config.php is not cli compliant" -- then
+// exits 255 when no instance qualifies. Without this line the submission
+// daemon crash-loops and GMP autoflow runs sit in the analysis stage forever
+// with no error surfaced in the desktop client, the web UI, or the job logs.
+//
+// The newlims flow (web/uslims3_newlims/makeconfig.php:162) emits these two
+// lines into every config.php it generates; this template is the host-native
+// installer's parallel path and was missing them. Keep the two in sync.
+$is_cli = php_sapi_name() == 'cli';
+
+include_once "elog.php";
 
