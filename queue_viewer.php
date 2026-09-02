@@ -344,13 +344,28 @@ function get_gfacIDs_authorized()
 {
   global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
   global $ipaddr, $dbname;
-    // Start by getting info from global db
-    $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname )
-    or die( "Connect failed :  $globaldbhost  $globaldbuser $globaldbpasswd  $globaldbname " );
+    // Start by getting info from global db. See the note in queue_content.php:
+    // the credentials must not reach the response, and both a thrown
+    // mysqli_sql_exception and a false return have to be handled.
+    $globaldb       = false;
+    $globaldb_error = '';
+
+    try
+    {
+        $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+        if ( ! $globaldb )
+            $globaldb_error = mysqli_connect_error();
+    }
+    catch ( mysqli_sql_exception $e )
+    {
+        $globaldb_error = $e->getMessage();
+    }
 
     if ( ! $globaldb )
     {
-        echo "<p>Cannot open global database on $globaldbhost  mysqli_error($globaldb)</p>\n";
+        error_log( "queue_viewer.php: cannot connect to global database "
+                   . "$globaldbname on $globaldbhost as $globaldbuser: $globaldb_error" );
+        echo "<p>Cannot open the global database. See the server error log.</p>\n";
         return array();
     }
 

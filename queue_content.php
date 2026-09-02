@@ -18,13 +18,35 @@ $start_time = dt_now();
 include_once 'config.php';
 include_once 'lib/utility.php';
 
-// Start by getting info from global db
-$globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname )
-    or die( "Connect failed :  $globaldbhost  $globaldbuser $globaldbpasswd  $globaldbname " );
+// Start by getting info from global db.
+//
+// Never put $globaldbpasswd in anything this page can emit. The previous
+// "or die" printed the gfac password straight into the response on any connect
+// failure. Connection details belong in the server log; the browser gets a
+// message that says what happened and nothing more.
+//
+// Both outcomes are handled because both occur: with mysqli's PHP 8.1+ default
+// report mode a failed connect throws, while a deployment that sets
+// mysqli.report_mode=0 gets false back instead.
+$globaldb       = false;
+$globaldb_error = '';
+
+try
+{
+  $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+  if ( ! $globaldb )
+    $globaldb_error = mysqli_connect_error();
+}
+catch ( mysqli_sql_exception $e )
+{
+  $globaldb_error = $e->getMessage();
+}
 
 if ( ! $globaldb )
 {
-  echo "<p>Cannot open global database on $globaldbhost  mysqli_error($globaldb)</p>\n";
+  error_log( "queue_content.php: cannot connect to global database "
+             . "$globaldbname on $globaldbhost as $globaldbuser: $globaldb_error" );
+  echo "<p>Cannot open the global database. See the server error log.</p>\n";
   return;
 }
 
