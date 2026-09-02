@@ -28,17 +28,9 @@ if ( ! $globaldb )
   return;
 }
 
-## Phase 4: use localhost config flag instead of IP address detection
-## If any active cluster is localhost, this is a single-tenant USiaB deployment
-$is_local_deploy = false;
-if ( isset( $global_cluster_details ) && is_array( $global_cluster_details ) ) {
-    foreach ( $global_cluster_details as $cd ) {
-        if ( !empty( $cd['localhost'] ) ) {
-            $is_local_deploy = true;
-            break;
-        }
-    }
-}
+## Whether this install serves one tenant is a property of the deployment,
+## not of any cluster, so it is declared once in global_config.php.
+$is_local_deploy = is_single_tenant_deployment();
 
 $query  = "SELECT gfacID, us3_db, cluster, status, metaschedulerClusterExecuting FROM analysis ";
 if ( $is_local_deploy  ||  $_SESSION['userlevel'] < 4 ) {
