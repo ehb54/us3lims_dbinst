@@ -42,43 +42,16 @@ function collect_config_info() {
         return;
     }
 
-    ## dbinst specific configs
+    ## The configuration files are included at file scope, below this
+    ## function, so that everything they define is a real global. Take local
+    ## copies of the two maps here: the filtering below prunes entries, and
+    ## that pruning must not reach back into the loaded configuration.
 
-    $dbinst_config_file = '../cluster_config.php';
+    $cluster_details       = isset( $GLOBALS[ 'cluster_details' ] )
+                             ? $GLOBALS[ 'cluster_details' ] : null;
+    $cluster_configuration = isset( $GLOBALS[ 'cluster_configuration' ] )
+                             ? $GLOBALS[ 'cluster_configuration' ] : null;
 
-    if ( !file_exists( $dbinst_config_file ) ) {
-        $dbinst_config_file = '../uslims3_newlims/cluster_config.php';
-        if ( !file_exists( $dbinst_config_file ) ) {
-            $error_msg( "no cluster_config.php file found" );
-            return;
-        }
-    }
-
-    ## global configs
-
-    $global_config_file = "$class_dir/../global_config.php";
-
-    if ( !file_exists( $global_config_file ) ) {
-        $error_msg("\$global_config_file_dir [$global_config_file] does not exist");
-        return;
-    }
-        
-    ## read global config first, so dbinst overrides
-
-    try {
-        include( $global_config_file );
-    } catch ( Exception $e ) {
-        $error_msg( "including $global_config_file " . $e->getMessage() );
-        return;
-    }
-
-    try {
-        include( $dbinst_config_file );
-    } catch ( Exception $e ) {
-        $error_msg ( "including $dbinst_config_file " . $e->getMessage() );
-        return;
-    }
-        
     if ( !isset( $cluster_configuration ) || !is_array( $cluster_configuration ) ) {
         $error_msg( "\$cluster_configuration not set or is not an array" );
         return;
@@ -158,14 +131,130 @@ function collect_config_info() {
     }
 }
 
+## ---------------------------------------------------------------- config load
+##
+## global_config.php and this instance's cluster_config.php are included HERE,
+## at file scope, so that every variable they define is a real global.
+##
+## They used to be included inside collect_config_info(). A PHP include takes
+## the scope of the line that runs it, so everything they defined became a
+## function-local that vanished when the function returned; only the four
+## values that function declares 'global' survived. That silently disabled
+## deployment settings such as $global_cluster_status_max_age_seconds and
+## $single_tenant_deployment. Each reads $GLOBALS or declares 'global', and
+## neither was ever set, so it fell back with no warning. The gridctl scripts
+## include the same file at file scope, which is why the same key took effect
+## there and not here. Remote execution mechanics are now code-owned policy,
+## not global configuration.
+##
+## Timing is unchanged: collect_config_info() is called immediately below,
+## still during this include, so a page that sets $class_dir after including
+## utility.php fails exactly as it did before.
+
+$utility_config_error = function( $msg ) {
+    $emsg = "ERROR: lib/utility.php : $msg";
+    echo "$emsg<br>";
+    error_log( $emsg );
+};
+
+## Cluster configuration comes from three levels, in this precedence order:
+##
+##   1. dbinst    $full_path/cluster_config.php
+##                this LIMS instance's own file, written per instance
+##   2. site      ../cluster_config.php
+##                a file one directory above the instances. Not one of the
+##                designed levels; kept as a candidate only so that a
+##                deployment which happens to have one does not silently lose
+##                it. No deployment is known to use it.
+##   3. newlims   ../uslims3_newlims/cluster_config.php
+##                the shared default that ships with the registration
+##                interface, used when an instance has no file of its own
+##
+## First file found wins outright; the levels do not merge, because each file
+## assigns $cluster_configuration whole.
+##
+## Level 1 used to be unreachable from here. This loader looked for
+## '../cluster_config.php' only, and PHP resolves a './'- or '../'-prefixed
+## include against the current working directory, which for both web requests
+## and CLI runs is the instance directory. So '../cluster_config.php' names the
+## instance directory's PARENT, never the instance itself, and the dbinst level
+## was always skipped in favour of the newlims default.
+##
+## class/jobsubmit.php resolves the same level correctly, from $full_path.
+## That disagreement meant an instance with its own cluster_config.php had it
+## honoured when a job was submitted and ignored when the queue-setup list was
+## built, which is the same class of split-brain as the filter divergence fixed
+## in that file. Both now resolve the levels identically.
+
+$utility_dbinst_config_file = null;
+$utility_global_config_file = null;
+
+if ( !isset( $class_dir ) ) {
+    $utility_config_error( "\$class_dir is not set" );
+} else if ( !is_dir( $class_dir ) ) {
+    $utility_config_error( "\$class_dir [$class_dir] is not a directory" );
+} else {
+    $utility_dbinst_config_candidates = array();
+
+    if ( isset( $full_path ) ) {
+        $utility_dbinst_config_candidates[] = rtrim( $full_path, '/' ) . '/cluster_config.php';
+    }
+
+    $utility_dbinst_config_candidates[] = '../cluster_config.php';
+    $utility_dbinst_config_candidates[] = '../uslims3_newlims/cluster_config.php';
+
+    foreach ( $utility_dbinst_config_candidates as $utility_candidate ) {
+        if ( file_exists( $utility_candidate ) ) {
+            $utility_dbinst_config_file = $utility_candidate;
+            break;
+        }
+    }
+
+    $utility_global_config_file = "$class_dir/../global_config.php";
+
+    if ( $utility_dbinst_config_file === null ) {
+        $utility_config_error( "no cluster_config.php file found" );
+    } else if ( !file_exists( $utility_global_config_file ) ) {
+        $utility_config_error( "\$global_config_file_dir [$utility_global_config_file] does not exist" );
+    } else {
+        ## read global config first, so the dbinst config overrides it
+
+        try {
+            include( $utility_global_config_file );
+        } catch ( Exception $e ) {
+            $utility_config_error( "including $utility_global_config_file " . $e->getMessage() );
+        }
+
+        try {
+            include( $utility_dbinst_config_file );
+        } catch ( Exception $e ) {
+            $utility_config_error( "including $utility_dbinst_config_file " . $e->getMessage() );
+        }
+    }
+}
+
+unset( $utility_config_error, $utility_dbinst_config_file, $utility_global_config_file,
+       $utility_dbinst_config_candidates, $utility_candidate );
+
 collect_config_info();
 
+## Whether this install serves a single tenant (a USiaB appliance) or many
+## (a shared LIMS host). Governs whether the queue views scope rows to
+## $dbname or show every tenant's jobs to a level-4 admin.
+##
+## This is a deployment property, so it is declared once as
+## $single_tenant_deployment in global_config.php rather than inferred from
+## any cluster entry. Unset means multi-tenant.
+function is_single_tenant_deployment()
+{
+    global $single_tenant_deployment;
+
+    return isset( $single_tenant_deployment ) ? (bool) $single_tenant_deployment : false;
+}
+
 if ( !isset( $admin_list ) || count( $admin_list ) == 0 ) {
-    ## revert to hard coded defaults
-    $admin_list = array( 'gegorbet@gmail.com',
-                         'demeler@umontana.edu',
-                         'alexsav.science@gmail.com',
-                         'emre.brookes@umontana.edu' );
+    ## admin_list must be set in global_config.php or cluster_config.php
+    error_log( "ERROR: lib/utility.php: \$admin_list is not set or empty — check global_config.php" );
 }
 
 function emailsyntax_is_valid($email)
@@ -267,34 +356,12 @@ class cluster_info
 }
 
 if ( !isset( $clusters ) || count( $clusters ) == 0 ) {
-    ## fall back to hard coded defaults
-    $clusters = array( 
-        new cluster_info( "dev1-linux",               "us3iab-devel",   "normal"  )
-        ,new cluster_info( "ls5.tacc.utexas.edu",      "lonestar5",      "normal"  )
-        ,new cluster_info( "stampede2.tacc.xsede.org", "stampede2",      "skx-normal" )
-        ,new cluster_info( "comet.sdsc.xsede.org",     "comet",          "compute" )
-        ,new cluster_info( "bridges2.psc.edu",         "bridges2",       "RM-shared"  )
-        ,new cluster_info( "expanse.sdsc.edu",         "expanse",        "shared"  )
-        ,new cluster_info( "expanse.sdsc.edu",         "expanse-gamc",   "compute" )
-        ,new cluster_info( "juwels.fz-juelich.de",     "juwels",         "batch"   )
-        ,new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream",       "batch" )
-        ,new cluster_info( "js-169-137.jetstream-cloud.org", "jetstream-local", "batch" )
-        ,new cluster_info( "taito.csc.fi",             "taito-local",    "serial"  )
-        ,new cluster_info( "puhti.csc.fi",             "puhti-local",    "serial"  )
-        ,new cluster_info( "chinook.hs.umt.edu",       "chinook-local",  "batch"   )
-        ,new cluster_info( "login.gscc.umt.edu",       "umontana-local", "griz_partition" )
-        ,new cluster_info( "demeler9.uleth.ca",        "demeler9-local", "batch"   )
-        ,new cluster_info( "demeler1.uleth.ca",        "demeler1-local", "batch"   )
-        ,new cluster_info( "us3iab-node0.localhost",   "us3iab-node0",   "batch"   )
-        ,new cluster_info( "us3iab-node1.localhost",   "us3iab-node1",   "normal"  )
-        );
+    ## $clusters must be populated by collect_config_info() from global_config.php
+    ## If empty, config failed — log loudly so the problem is visible
+    error_log( "ERROR: lib/utility.php: \$clusters is empty after collect_config_info() — check global_config.php and cluster_config.php" );
+    ## Do not fall back to a hardcoded list; a stale list masks config failures
 }
 
-global $svcport;
-$gfac_serviceURL = "http://gridfarm005.ucs.indiana.edu:" . $svcport . "/ogce-rest/job";
-
-// Change for sandbox testing
-//global $globaldbname;
 global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
 
 if ( file_exists('../down_clusters.php') ) include '../down_clusters.php';
@@ -302,11 +369,33 @@ if ( file_exists('../down_clusters.php') ) include '../down_clusters.php';
 $gfac_link = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
 $result    = mysqli_select_db( $gfac_link, $globaldbname );
 
-$query     = "SELECT cluster, running, queued, status FROM cluster_status";
+## Age of each row matters as much as its value. cluster_status is written by
+## a cron probe, and cron jobs die -- so a row that has stopped being updated
+## is not evidence that its last recorded value still holds. Reading the value
+## without the timestamp is how a cluster that went down while the probe was
+## wedged stayed selectable in Queue Setup on the strength of a stale 'up'.
+global $global_cluster_status_max_age_seconds;
+$cluster_status_max_age = isset( $global_cluster_status_max_age_seconds )
+                          ? (int) $global_cluster_status_max_age_seconds : 900;
+
+$query     = "SELECT cluster, running, queued, status, "
+           . "TIMESTAMPDIFF(SECOND, time, NOW()) AS age FROM cluster_status";
 $result    = mysqli_query( $gfac_link, $query );
 
-while ( list( $cluster, $running, $queued, $status ) = mysqli_fetch_row( $result ) )
+while ( list( $cluster, $running, $queued, $status, $age ) = mysqli_fetch_row( $result ) )
 {
+   ## A stale row is downgraded to 'down' rather than trusted. Refusing a
+   ## submission to a cluster we have no current information about is
+   ## recoverable in seconds; accepting one for a cluster that is actually
+   ## unreachable costs the user a lost run and a support ticket.
+   if ( $cluster_status_max_age > 0 && $age !== null && (int) $age > $cluster_status_max_age )
+   {
+     error_log( "lib/utility.php: cluster_status row for '$cluster' is {$age}s old"
+                . " (limit {$cluster_status_max_age}s); treating as down."
+                . " Check that cluster_status.php is still running from cron." );
+     $status = 'down';
+   }
+
    if ( isset( $down_clusters ) && in_array( $cluster, $down_clusters ) )
      $status = 'down';
 
@@ -333,7 +422,6 @@ include "db.php";
 function showClusters()
 {
   global $clusters;
-  global $org_site;
 
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
@@ -368,10 +456,26 @@ HTML;
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
-          $clstat   = "<td STYLE='color: green'>$cluster->status</td>";
+          // 'warn' means the health probe failed once. The cluster stays
+          // selectable -- one failed probe against a shared HPC site is
+          // routine -- but the user gets to see that it is not fully healthy
+          // before committing a run to it. A second consecutive failure
+          // escalates it to 'down' (see cluster_status.php).
+          $clstat   = ( $cluster->status == 'warn' )
+                    ? "<td STYLE='color: DarkOrange' title='last health check failed'>$cluster->status</td>"
+                    : "<td STYLE='color: green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
+          // cluster_info defaults running/queued to the placeholder string
+          // "*" until a live status row exists in gfac.cluster_status for
+          // this cluster. Under PHP 8, arithmetic on that non-numeric string
+          // ("*" * 100) throws an uncaught TypeError instead of the silent
+          // 0-coercion PHP 7 used to do -- guard on is_numeric() so a
+          // cluster with no reported status yet falls through to the
+          // existing "n/a" default instead of fataling the whole page.
+          if ( is_numeric( $cque )  &&  is_numeric( $crun ) )
+          {
           if ( $cque != 0  &&   $crun != 0 )
           {
             $qrrat     = (int)( ( $crun * 100 ) / $cque );
@@ -382,12 +486,13 @@ HTML;
             else
               $clload     = "<td width=70 BGCOLOR='yellow'>medium</td>";
           }
-  
+
           else if ( $cque == 0 )
             $clload     = "<td BGCOLOR='green'>short</td>";
-  
+
           else
             $clload     = "<td BGCOLOR='red'>long</td>";
+          }
         }
   
         else if ( $cluster->status == 'down' )
@@ -401,12 +506,6 @@ HTML;
         }
 
         $clname = $cluster->name;
-        if ( preg_match( '/localhost/', $clname ) )
-        {  // Form local cluster name
-          $parts  = explode( "/", $org_site );
-          $lohost = $parts[ 0 ];
-          $clname = preg_replace( '/uslims3/', $cluster->short_name, $lohost );
-        }
         if ( preg_match( '/-gamc/', $cluster->short_name ) )
         {  // Keep track of "-gamc" type names
            if ( $ngamc == 0 )
@@ -465,7 +564,6 @@ HTML;
 function tigre( $force_pmg = false )
 {
   global $clusters;
-  global $org_site;
   global $global_cluster_details;
 
   if ( $_SESSION['userlevel'] < 2 )
@@ -535,10 +633,26 @@ HTML;
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
-          $clstat   = "<td STYLE='color: green'>$cluster->status</td>";
+          // 'warn' means the health probe failed once. The cluster stays
+          // selectable -- one failed probe against a shared HPC site is
+          // routine -- but the user gets to see that it is not fully healthy
+          // before committing a run to it. A second consecutive failure
+          // escalates it to 'down' (see cluster_status.php).
+          $clstat   = ( $cluster->status == 'warn' )
+                    ? "<td STYLE='color: DarkOrange' title='last health check failed'>$cluster->status</td>"
+                    : "<td STYLE='color: green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
+          // cluster_info defaults running/queued to the placeholder string
+          // "*" until a live status row exists in gfac.cluster_status for
+          // this cluster. Under PHP 8, arithmetic on that non-numeric string
+          // ("*" * 100) throws an uncaught TypeError instead of the silent
+          // 0-coercion PHP 7 used to do -- guard on is_numeric() so a
+          // cluster with no reported status yet falls through to the
+          // existing "n/a" default instead of fataling the whole page.
+          if ( is_numeric( $cque )  &&  is_numeric( $crun ) )
+          {
           if ( $cque != 0  &&   $crun != 0 )
           {
             $qrrat     = (int)( ( $crun * 100 ) / $cque );
@@ -549,12 +663,13 @@ HTML;
             else
               $clload     = "<td width=70 BGCOLOR='yellow'>medium</td>";
           }
-  
+
           else if ( $cque == 0 )
             $clload     = "<td BGCOLOR='green'>short</td>";
-  
+
           else
             $clload     = "<td BGCOLOR='red'>long</td>";
+          }
         }
   
         else if ( $cluster->status == 'down' )
@@ -568,12 +683,6 @@ HTML;
         }
 
         $clname = $cluster->name;
-        if ( preg_match( '/localhost/', $clname ) )
-        {  // Form local cluster name
-          $parts  = explode( "/", $org_site );
-          $lohost = $parts[ 0 ];
-          $clname = preg_replace( '/uslims3/', $cluster->short_name, $lohost );
-        }
         if ( preg_match( '/-gamc/', $cluster->short_name ) )
         {  // Keep track of "-gamc" type names
            if ( $ngamc == 0 )
@@ -679,62 +788,6 @@ function uuid() {
     ); 
 }
 
-// Function to get the jobstatus xml and parse for important items
-function getJobstatus( $gfacID )
-{
-  global $gfac_serviceURL;
-
-  $url = "$gfac_serviceURL/jobstatus/$gfacID";
-
-  $hex = "[0-9a-fA-F]";
-  if ( ! preg_match( "/^US3-Experiment/", $gfacID ) &&
-       ! preg_match( "/^US3-$hex{8}-$hex{4}-$hex{4}-$hex{4}-$hex{12}$/", $gfacID ) )
-     return "Not a GFAC ID";
-
-  $r = new HttpRequest( $url, HttpRequest::METH_GET );
-
-  $time   = date( "F d, Y H:i:s", time() );
-
-  try
-  {
-     $result = $r->send();
-     $xml    = $result->getBody();
-  }
-  catch ( HttpException $e )
-  {
-    return "Job status unavailable at $time\n" .
-           " ( $e )\n" .
-           "URL: $url\n";
-  }
-
-  $status  = "GFAC status request submitted at $time\n";
-  $status .= "<table>\n";
-
-  $parser = new XMLReader();
-  $parser->xml( $xml );
-
-  while( $parser->read() )
-  {
-     $type = $parser->nodeType;
-
-     if ( $type == XMLReader::ELEMENT )
-        $name = $parser->name;
-
-     else if ( $type == XMLReader::TEXT )
-     {
-        if ( $name == "status" )
-           $status .= "<tr><th>status:</th><td>$parser->value</td></tr>\n";
-        else if ( $name = "message" )
-           $status .= "<tr><th>message:</th><td>" . wordwrap( $parser->value ) . "</td></tr>\n";
-     }
-  }
-  $status .= "</table>\n";
-
-  $parser->close();
-  return $status;
-
-}
-
 // Function to send out an arbitrary email message
 function LIMS_mailer( $email, $subject, $message )
 {
@@ -742,10 +795,6 @@ function LIMS_mailer( $email, $subject, $message )
 
   $now = time();
   $servname = $_SERVER['SERVER_NAME'];
-  if ( preg_match( "/novalo/", $servname ) )
-     $servname = "uslims3.aucsolutions.com";
-  else if ( preg_match( "/scyld/", $servname ) )
-     $servname = "alamo.uthscsa.edu";
 
   //$headers = "From: $org_name Admin<$admin_email>"     . "\n";
   //$headers = "From: us3@uslims3.aucsolutions.com"     . "\n";       
