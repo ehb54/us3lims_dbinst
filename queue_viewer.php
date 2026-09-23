@@ -150,14 +150,13 @@ function delete_single_job( $gfacID )
 
   if ( cancel_outcome_is_settled( $cancel[ 'outcome' ] ) )
   {
-    ## The job is off the cluster, so the LIMS may say so.
+    // Record a settled cancellation in both databases.
     updateLimsStatus( $gfacID, 'aborted',  $cancel[ 'message' ] );
     updateGFACStatus( $gfacID, 'CANCELED', $cancel[ 'message' ] );
   }
   else
   {
-    ## We could not confirm the job is gone. Record why, and leave the status
-    ## alone: claiming 'aborted' here is what would hide a still-running job.
+    // Preserve job status when cancellation is unconfirmed; update the message.
     updateLimsStatus( $gfacID, null, $cancel[ 'message' ] );
     updateGFACStatus( $gfacID, null, $cancel[ 'message' ] );
   }
@@ -166,30 +165,12 @@ function delete_single_job( $gfacID )
 }
 
 /**
- * Ask the cluster to cancel a job.
+ * Cancel a job authorized by get_gfacIDs_authorized().
  *
- * Returns what cancel_result.php's cancel_outcome_from_result() returns:
- * array( 'outcome' => one of the CANCEL_* constants, 'message' => a sentence
- * fit to show the user ).
- *
- * WHY THIS IS NOT A BOOLEAN. It used to be, and it was hardcoded to true: the
- * old code ran a bare exec( "ssh ... scancel" ), ignored the result, and
- * returned true whether or not scancel had ever run. The caller then wrote
- * queueStatus = 'aborted'. During an outage that is the original Expanse bug
- * pointed the other way -- a transport failure becoming a statement about the
- * job -- and it is worse here, because the job really is still running on the
- * cluster while the LIMS shows it as cancelled and nobody goes looking.
- *
- * The old retry loop was also dead code: it matched ssh_exchange_identification
- * in $result, then slept 2 + 4 + 8 seconds without ever re-running the command,
- * so $result could not change and the one error it claimed to handle was
- * retried zero times.
- *
- * Everything remote now goes through remote_exec, which supplies the connect
- * timeout, BatchMode, exit-code classification, transport-only retry, and the
- * circuit breaker. scancel is idempotent, so retrying a transport fault is
- * safe. The budget is deliberately tighter than the batch paths use: a person
- * is sitting in front of this waiting for the page to come back.
+ * Returns an array with 'outcome' (a CANCEL_* constant) and 'message'
+ * (user-facing text), classified by cancel_outcome_from_result().
+ * remote_exec applies timeouts and transport-error retries. scancel is
+ * idempotent; the web request uses a 15-second timeout and one retry.
  */
 function cancelLocalJob( $gfacID, $cluster )
 {
@@ -217,9 +198,8 @@ function cancelLocalJob( $gfacID, $cluster )
 
    elog( "$self gfacID $gfacID cluster $cluster" );
 
-   ## remote_exec quotes the command for the local ssh invocation, but the
-   ## login node's shell parses it again, so the id is escaped here too. It is
-   ## already checked against get_gfacIDs_authorized(); this is the second lock.
+   // Escape the job ID for the remote shell, in addition to remote_exec's
+   // quoting of the local SSH command.
    $res = $rx->run( 'scancel ' . escapeshellarg( $gfacID ), array(
       'label'      => 'scancel',
       'timeout'    => 15,
@@ -271,9 +251,7 @@ function updateLimsStatus( $gfacID, $status, $message )
   $us3link = mysqli_connect( $dbhost, 'us3php', $upasswd, $db );
   if ( ! $us3link ) return false;
 
-  ## A null $status means "say what happened without claiming the job changed
-  ## state". Used when a cancel could not be confirmed: the user needs the
-  ## reason, but queueStatus must keep reflecting the job, not the click.
+  // A null status updates lastMessage while preserving queueStatus.
   if ( $status === null )
   {
     $query = "UPDATE HPCAnalysisResult SET lastMessage = ? WHERE gfacID = ? ";
@@ -312,10 +290,7 @@ function updateGFACStatus( $gfacID, $status, $message )
   if ( ! $gLink )
     return;
 
-  // A null $status updates the message only; see updateLimsStatus(). It also
-  // keeps us out of analysis.status, which is an ENUM with no member meaning
-  // "we could not reach the cluster" -- writing one would be a truncation.
-  // language=MariaDB
+  // A null status updates queue_msg while preserving the analysis status enum.
   if ( $status === null )
   {
     $query = "UPDATE analysis SET queue_msg = ? WHERE gfacID = ? ";
@@ -344,9 +319,8 @@ function get_gfacIDs_authorized()
 {
   global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
   global $ipaddr, $dbname;
-    // Start by getting info from global db. See the note in queue_content.php:
-    // the credentials must not reach the response, and both a thrown
-    // mysqli_sql_exception and a false return have to be handled.
+    // Handle both mysqli exception and false-return modes. Log connection
+    // diagnostics server-side and keep credentials out of the response.
     $globaldb       = false;
     $globaldb_error = '';
 
@@ -369,7 +343,7 @@ function get_gfacIDs_authorized()
         return array();
     }
 
-    ## Deployment-level, not per-cluster -- see lib/utility.php
+    // Apply the same tenant scope as queue_content.php.
     $is_local_deploy = is_single_tenant_deployment();
 
     $submitterGUID = preg_replace( '/^.*_/', '', $_SESSION["user_id"] );

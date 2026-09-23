@@ -311,22 +311,32 @@ abstract class File_writer
 
     chdir( $current_dir );
 
-    // Every name must be shell-quoted individually. Several of these come
-    // from user-supplied database text rather than generated identifiers --
-    // notably DC_model and CG_model, which are named after model.description
-    // -- and UltraScan model descriptions routinely contain spaces. Joining
-    // them raw let the shell split one filename into several nonexistent
-    // paths; tar skipped them and shell_exec() discarded the warning, so the
-    // constraints model silently never made it into the job's input tar and
-    // us_mpi_analysis then segfaulted on the cluster loading a model that
-    // wasn't there. Quoting also closes the command-injection hole this
-    // opened on the same user-supplied text.
+    // Payload filenames include user-supplied model descriptions. Quote each
+    // filename as one shell argument, preserving spaces and metacharacters.
     $fileList = implode( " ", array_map( 'escapeshellarg', $files ) );
     $tarFilename = sprintf( "hpcinput-%s-%s-%05d.tar",
                              $job['database']['host'],
                              $job['database']['name'],
                              $HPCAnalysisRequestID );
-    shell_exec( "/bin/tar -cf " . escapeshellarg( $tarFilename ) . " " . $fileList );
+
+    // Capture stderr and exit status for archive failure diagnostics.
+    $tar_output = [];
+    $tar_status = 0;
+    exec(
+        "/bin/tar -cf " . escapeshellarg( $tarFilename ) . " " . $fileList . " 2>&1",
+        $tar_output,
+        $tar_status
+    );
+
+    if ( $tar_status !== 0 )
+    {
+        $tar_msg = "ERROR: file_writer: tar failed (status $tar_status) for "
+                 . "$tarFilename: " . implode( '; ', $tar_output );
+        error_log( $tar_msg );
+        if ( function_exists( 'elog' ) ) elog( $tar_msg );
+        chdir( $save_cwd );
+        return false;
+    }
 
     chdir( $save_cwd );
 

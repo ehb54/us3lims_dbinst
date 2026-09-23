@@ -43,15 +43,8 @@ abstract class Payload_manager
     }
 
     /**
-     * get() for a key whose value is a list of datasets.
-     *
-     * get() returns false both when the payload has no 'payload' array yet and
-     * when the key is simply absent, and every caller below immediately
-     * indexes into what it gets back. On PHP 8.1 that indexing silently
-     * converts the false to an array and emits "Automatic conversion of false
-     * to array is deprecated"; on PHP 9 it is an error. The value the callers
-     * want in that case is an empty list, so say so here rather than in five
-     * places.
+     * Return an array-valued payload entry, or an empty array if absent or
+     * non-array, so callers can safely append datasets.
      */
     function get_array( $key )
     {

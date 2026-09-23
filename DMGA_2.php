@@ -96,12 +96,8 @@ else
 //echo "not separate\n"; exit();
   $globalfit = $payload->get();
 
-  // The DMGA MPI worker accepts one dataset only.  A global DMGA request is
-  // currently serialized as an ordinary "DMGA" job (there is no -GL method
-  // suffix) and the worker dereferences the missing global-fit state, which
-  // reproducibly terminates mpirun with SIGSEGV.  Reject it at the boundary so
-  // users get a deterministic validation error instead of a crash and a job
-  // that can never produce a result.
+  // The DMGA MPI worker supports one dataset per job. Reject global fits
+  // before creating the request record or writing submission files.
   $global_dataset_count = (int) $payload->get( 'datasetCount' );
   if ( $global_dataset_count > 1 )
   {
@@ -160,7 +156,6 @@ HTML;
     $cluster     = $_SESSION[ 'cluster' ][ 'shortname' ];
     unset( $_SESSION[ 'cluster' ] );
 
-    ## Phase 4: submit_slurm handles all Slurm submission via SSH
     $job = new submit_slurm();
 
     $save_cwd = getcwd();         // So we can come back to the current 
