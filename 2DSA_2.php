@@ -172,6 +172,20 @@ $missit_msg = "<br/>filenames[0]=" . $filenames[0];
   }
 }
 
+// Require a selected cluster before reporting acceptance. Accounts without
+// authorization for a configured cluster receive no cluster choices.
+if ( $files_ok  &&  ! isset( $_SESSION['cluster'] ) )
+{
+  $files_ok    = false;
+  $missit_msg  = "<br/><b>No cluster was selected, so nothing was submitted.</b>";
+  $missit_msg .= "<br/>If no clusters were offered on the previous page, this "
+               . "account is not authorized for any configured cluster. Ask "
+               . "your administrator to check its cluster authorizations.";
+}
+
+// The early error response also renders this title.
+$page_title = $files_ok ? '2DSA Analysis Submitted' : '2DSA Analysis Not Submitted';
+
 if ( $files_ok )
 {
   $output_msg = <<<HTML
@@ -258,7 +272,6 @@ HTML;
 }
 
 // Start displaying page
-$page_title = '2DSA Analysis Submitted';
 include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";

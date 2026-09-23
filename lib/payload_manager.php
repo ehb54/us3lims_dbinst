@@ -42,6 +42,17 @@ abstract class Payload_manager
         }
     }
 
+    /**
+     * Return an array-valued payload entry, or an empty array if absent or
+     * non-array, so callers can safely append datasets.
+     */
+    function get_array( $key )
+    {
+        $val = $this->get( $key );
+
+        return is_array( $val ) ? $val : array();
+    }
+
     function get_dataset( $index = 0 )
     {
         $dataset = $this->payload['queue']['payload'];
@@ -620,7 +631,7 @@ class Payload_2DSA extends Payload_manager
                                 = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
-    $dataset                    = $this->get('dataset');
+    $dataset                    = $this->get_array( 'dataset' );
     // Add new datasets
     $dataset[$dataset_id]       = $parameters;
     $this->add( 'dataset', $dataset );
@@ -774,7 +785,7 @@ class Payload_2DSA_CG extends Payload_manager
                                 = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
-    $dataset                    = $this->get('dataset');
+    $dataset                    = $this->get_array( 'dataset' );
     // Add new datasets
     $dataset[$dataset_id]       = $parameters;
     $this->add( 'dataset', $dataset );
@@ -931,7 +942,7 @@ class Payload_GA extends Payload_manager
                                 = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
-    $dataset                    = $this->get('dataset');
+    $dataset                    = $this->get_array( 'dataset' );
     // Add new datasets
     $dataset[$dataset_id]       = $parameters;
     $this->add( 'dataset', $dataset );
@@ -1096,7 +1107,7 @@ class Payload_DMGA extends Payload_manager
                                 = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
-    $dataset                    = $this->get('dataset');
+    $dataset                    = $this->get_array( 'dataset' );
     // Add new datasets
     $dataset[$dataset_id]       = $parameters;
     $this->add( 'dataset', $dataset );
@@ -1248,7 +1259,7 @@ class Payload_PCSA extends Payload_manager
                                 = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
-    $dataset                    = $this->get('dataset');
+    $dataset                    = $this->get_array( 'dataset' );
     // Add new datasets
     $dataset[$dataset_id]       = $parameters;
     $this->add( 'dataset', $dataset );
