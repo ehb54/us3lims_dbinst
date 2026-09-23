@@ -18,20 +18,35 @@ $start_time = dt_now();
 include_once 'config.php';
 include_once 'lib/utility.php';
 
-// Start by getting info from global db
-$globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname )
-    or die( "Connect failed :  $globaldbhost  $globaldbuser $globaldbpasswd  $globaldbname " );
+// Handle both mysqli exception and false-return modes. Log connection
+// diagnostics server-side and keep credentials out of the response.
+$globaldb       = false;
+$globaldb_error = '';
+
+try
+{
+  $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+  if ( ! $globaldb )
+    $globaldb_error = mysqli_connect_error();
+}
+catch ( mysqli_sql_exception $e )
+{
+  $globaldb_error = $e->getMessage();
+}
 
 if ( ! $globaldb )
 {
-  echo "<p>Cannot open global database on $globaldbhost  mysqli_error($globaldb)</p>\n";
+  error_log( "queue_content.php: cannot connect to global database "
+             . "$globaldbname on $globaldbhost as $globaldbuser: $globaldb_error" );
+  echo "<p>Cannot open the global database. See the server error log.</p>\n";
   return;
 }
 
-$is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
+// Single-tenant deployments restrict level-4 admins to the current database.
+$is_local_deploy = is_single_tenant_deployment();
 
 $query  = "SELECT gfacID, us3_db, cluster, status, metaschedulerClusterExecuting FROM analysis ";
-if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 ) {
+if ( $is_local_deploy  ||  $_SESSION['userlevel'] < 4 ) {
   $query .= "WHERE us3_db = '$dbname' ";
 }
 
