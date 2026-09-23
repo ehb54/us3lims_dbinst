@@ -138,7 +138,6 @@ HTML;
     $cluster     = $_SESSION[ 'cluster' ][ 'shortname' ];
     unset( $_SESSION[ 'cluster' ] );
 
-    ## Phase 4: submit_slurm handles all Slurm submission via SSH
     $job = new submit_slurm();
 
     $save_cwd = getcwd();         // So we can come back to the current 

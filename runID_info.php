@@ -845,7 +845,7 @@ HTML;
   $row = mysqli_fetch_assoc( $result );
   $row['jobfile'] = '<pre>' . htmlentities( $row['jobfile'] ) . '</pre>';
 
-  // GFAC/Airavata status is no longer available; use LIMS job status.
+  // Populate the status display from the recorded LIMS queue status.
   $row['gfacStatus'] = htmlspecialchars( $row['queueStatus'] ?? 'n/a' );
 
   // Get queue messages from disk directory, if it still exists
