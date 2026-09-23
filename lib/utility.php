@@ -42,10 +42,8 @@ function collect_config_info() {
         return;
     }
 
-    ## The configuration files are included at file scope, below this
-    ## function, so that everything they define is a real global. Take local
-    ## copies of the two maps here: the filtering below prunes entries, and
-    ## that pruning must not reach back into the loaded configuration.
+    // Filter local copies of the configuration maps loaded below, preserving
+    // the global maps for other consumers.
 
     $cluster_details       = isset( $GLOBALS[ 'cluster_details' ] )
                              ? $GLOBALS[ 'cluster_details' ] : null;
@@ -131,25 +129,8 @@ function collect_config_info() {
     }
 }
 
-## ---------------------------------------------------------------- config load
-##
-## global_config.php and this instance's cluster_config.php are included HERE,
-## at file scope, so that every variable they define is a real global.
-##
-## They used to be included inside collect_config_info(). A PHP include takes
-## the scope of the line that runs it, so everything they defined became a
-## function-local that vanished when the function returned; only the four
-## values that function declares 'global' survived. That silently disabled
-## deployment settings such as $global_cluster_status_max_age_seconds and
-## $single_tenant_deployment. Each reads $GLOBALS or declares 'global', and
-## neither was ever set, so it fell back with no warning. The gridctl scripts
-## include the same file at file scope, which is why the same key took effect
-## there and not here. Remote execution mechanics are now code-owned policy,
-## not global configuration.
-##
-## Timing is unchanged: collect_config_info() is called immediately below,
-## still during this include, so a page that sets $class_dir after including
-## utility.php fails exactly as it did before.
+// Load configuration at file scope so deployment settings are available
+// to functions through globals. Set $class_dir before including this file.
 
 $utility_config_error = function( $msg ) {
     $emsg = "ERROR: lib/utility.php : $msg";
@@ -157,34 +138,12 @@ $utility_config_error = function( $msg ) {
     error_log( $emsg );
 };
 
-## Cluster configuration comes from three levels, in this precedence order:
-##
-##   1. dbinst    $full_path/cluster_config.php
-##                this LIMS instance's own file, written per instance
-##   2. site      ../cluster_config.php
-##                a file one directory above the instances. Not one of the
-##                designed levels; kept as a candidate only so that a
-##                deployment which happens to have one does not silently lose
-##                it. No deployment is known to use it.
-##   3. newlims   ../uslims3_newlims/cluster_config.php
-##                the shared default that ships with the registration
-##                interface, used when an instance has no file of its own
-##
-## First file found wins outright; the levels do not merge, because each file
-## assigns $cluster_configuration whole.
-##
-## Level 1 used to be unreachable from here. This loader looked for
-## '../cluster_config.php' only, and PHP resolves a './'- or '../'-prefixed
-## include against the current working directory, which for both web requests
-## and CLI runs is the instance directory. So '../cluster_config.php' names the
-## instance directory's PARENT, never the instance itself, and the dbinst level
-## was always skipped in favour of the newlims default.
-##
-## class/jobsubmit.php resolves the same level correctly, from $full_path.
-## That disagreement meant an instance with its own cluster_config.php had it
-## honoured when a job was submitted and ignored when the queue-setup list was
-## built, which is the same class of split-brain as the filter divergence fixed
-## in that file. Both now resolve the levels identically.
+// Use the first existing cluster configuration, without merging candidates:
+//   1. $full_path/cluster_config.php (instance)
+//   2. ../cluster_config.php (site)
+//   3. ../uslims3_newlims/cluster_config.php (shared default)
+// Relative paths resolve against the working directory. Keep this precedence
+// consistent with class/jobsubmit.php.
 
 $utility_dbinst_config_file = null;
 $utility_global_config_file = null;
@@ -238,13 +197,8 @@ unset( $utility_config_error, $utility_dbinst_config_file, $utility_global_confi
 
 collect_config_info();
 
-## Whether this install serves a single tenant (a USiaB appliance) or many
-## (a shared LIMS host). Governs whether the queue views scope rows to
-## $dbname or show every tenant's jobs to a level-4 admin.
-##
-## This is a deployment property, so it is declared once as
-## $single_tenant_deployment in global_config.php rather than inferred from
-## any cluster entry. Unset means multi-tenant.
+// $single_tenant_deployment in global_config.php restricts queue views to
+// $dbname, including for level-4 admins. Defaults to false (multi-tenant).
 function is_single_tenant_deployment()
 {
     global $single_tenant_deployment;
@@ -356,10 +310,8 @@ class cluster_info
 }
 
 if ( !isset( $clusters ) || count( $clusters ) == 0 ) {
-    ## $clusters must be populated by collect_config_info() from global_config.php
-    ## If empty, config failed — log loudly so the problem is visible
+    // An empty cluster list indicates missing or invalid configuration.
     error_log( "ERROR: lib/utility.php: \$clusters is empty after collect_config_info() — check global_config.php and cluster_config.php" );
-    ## Do not fall back to a hardcoded list; a stale list masks config failures
 }
 
 global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
@@ -369,11 +321,8 @@ if ( file_exists('../down_clusters.php') ) include '../down_clusters.php';
 $gfac_link = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
 $result    = mysqli_select_db( $gfac_link, $globaldbname );
 
-## Age of each row matters as much as its value. cluster_status is written by
-## a cron probe, and cron jobs die -- so a row that has stopped being updated
-## is not evidence that its last recorded value still holds. Reading the value
-## without the timestamp is how a cluster that went down while the probe was
-## wedged stayed selectable in Queue Setup on the strength of a stale 'up'.
+// Maximum age of cron-generated cluster health records, in seconds.
+// Defaults to 900; a nonpositive value disables the age check.
 global $global_cluster_status_max_age_seconds;
 $cluster_status_max_age = isset( $global_cluster_status_max_age_seconds )
                           ? (int) $global_cluster_status_max_age_seconds : 900;
@@ -384,10 +333,7 @@ $result    = mysqli_query( $gfac_link, $query );
 
 while ( list( $cluster, $running, $queued, $status, $age ) = mysqli_fetch_row( $result ) )
 {
-   ## A stale row is downgraded to 'down' rather than trusted. Refusing a
-   ## submission to a cluster we have no current information about is
-   ## recoverable in seconds; accepting one for a cluster that is actually
-   ## unreachable costs the user a lost run and a support ticket.
+   // Treat expired health records as down to disable cluster selection.
    if ( $cluster_status_max_age > 0 && $age !== null && (int) $age > $cluster_status_max_age )
    {
      error_log( "lib/utility.php: cluster_status row for '$cluster' is {$age}s old"
@@ -456,24 +402,15 @@ HTML;
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
-          // 'warn' means the health probe failed once. The cluster stays
-          // selectable -- one failed probe against a shared HPC site is
-          // routine -- but the user gets to see that it is not fully healthy
-          // before committing a run to it. A second consecutive failure
-          // escalates it to 'down' (see cluster_status.php).
+          // A failed health probe reports 'warn'; the cluster remains selectable.
           $clstat   = ( $cluster->status == 'warn' )
                     ? "<td STYLE='color: DarkOrange' title='last health check failed'>$cluster->status</td>"
                     : "<td STYLE='color: green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
-          // cluster_info defaults running/queued to the placeholder string
-          // "*" until a live status row exists in gfac.cluster_status for
-          // this cluster. Under PHP 8, arithmetic on that non-numeric string
-          // ("*" * 100) throws an uncaught TypeError instead of the silent
-          // 0-coercion PHP 7 used to do -- guard on is_numeric() so a
-          // cluster with no reported status yet falls through to the
-          // existing "n/a" default instead of fataling the whole page.
+          // Missing counts use "*". Keep the default "n/a" load until both
+          // counts are numeric; placeholders cannot be used in arithmetic.
           if ( is_numeric( $cque )  &&  is_numeric( $crun ) )
           {
           if ( $cque != 0  &&   $crun != 0 )
@@ -633,24 +570,15 @@ HTML;
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
-          // 'warn' means the health probe failed once. The cluster stays
-          // selectable -- one failed probe against a shared HPC site is
-          // routine -- but the user gets to see that it is not fully healthy
-          // before committing a run to it. A second consecutive failure
-          // escalates it to 'down' (see cluster_status.php).
+          // A failed health probe reports 'warn'; the cluster remains selectable.
           $clstat   = ( $cluster->status == 'warn' )
                     ? "<td STYLE='color: DarkOrange' title='last health check failed'>$cluster->status</td>"
                     : "<td STYLE='color: green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
-          // cluster_info defaults running/queued to the placeholder string
-          // "*" until a live status row exists in gfac.cluster_status for
-          // this cluster. Under PHP 8, arithmetic on that non-numeric string
-          // ("*" * 100) throws an uncaught TypeError instead of the silent
-          // 0-coercion PHP 7 used to do -- guard on is_numeric() so a
-          // cluster with no reported status yet falls through to the
-          // existing "n/a" default instead of fataling the whole page.
+          // Missing counts use "*". Keep the default "n/a" load until both
+          // counts are numeric; placeholders cannot be used in arithmetic.
           if ( is_numeric( $cque )  &&  is_numeric( $crun ) )
           {
           if ( $cque != 0  &&   $crun != 0 )

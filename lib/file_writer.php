@@ -311,22 +311,15 @@ abstract class File_writer
 
     chdir( $current_dir );
 
-    ## Quote every member. These names are derived from user-supplied text --
-    ## a model's on-disk name comes from its description -- so any description
-    ## containing a space made the shell split one filename into two arguments.
-    ## tar then reported "Cannot stat" for each fragment on stderr, which
-    ## shell_exec discards, and the tar was written without the missing files.
-    ## The submission still went out, the job never produced a result, and the
-    ## request sat with no status: nothing anywhere said why.
+    // Payload filenames include user-supplied model descriptions. Quote each
+    // filename as one shell argument, preserving spaces and metacharacters.
     $fileList = implode( " ", array_map( 'escapeshellarg', $files ) );
     $tarFilename = sprintf( "hpcinput-%s-%s-%05d.tar",
                              $job['database']['host'],
                              $job['database']['name'],
                              $HPCAnalysisRequestID );
 
-    ## Check the exit status rather than discarding it. A tar that fails here
-    ## produces an incomplete payload, and every downstream symptom (no result,
-    ## no status) points away from this line.
+    // Capture stderr and exit status for archive failure diagnostics.
     $tar_output = [];
     $tar_status = 0;
     exec(
@@ -341,6 +334,8 @@ abstract class File_writer
                  . "$tarFilename: " . implode( '; ', $tar_output );
         error_log( $tar_msg );
         if ( function_exists( 'elog' ) ) elog( $tar_msg );
+        chdir( $save_cwd );
+        return false;
     }
 
     chdir( $save_cwd );

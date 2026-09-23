@@ -18,16 +18,8 @@ $start_time = dt_now();
 include_once 'config.php';
 include_once 'lib/utility.php';
 
-// Start by getting info from global db.
-//
-// Never put $globaldbpasswd in anything this page can emit. The previous
-// "or die" printed the gfac password straight into the response on any connect
-// failure. Connection details belong in the server log; the browser gets a
-// message that says what happened and nothing more.
-//
-// Both outcomes are handled because both occur: with mysqli's PHP 8.1+ default
-// report mode a failed connect throws, while a deployment that sets
-// mysqli.report_mode=0 gets false back instead.
+// Handle both mysqli exception and false-return modes. Log connection
+// diagnostics server-side and keep credentials out of the response.
 $globaldb       = false;
 $globaldb_error = '';
 
@@ -50,8 +42,7 @@ if ( ! $globaldb )
   return;
 }
 
-## Whether this install serves one tenant is a property of the deployment,
-## not of any cluster, so it is declared once in global_config.php.
+// Single-tenant deployments restrict level-4 admins to the current database.
 $is_local_deploy = is_single_tenant_deployment();
 
 $query  = "SELECT gfacID, us3_db, cluster, status, metaschedulerClusterExecuting FROM analysis ";
