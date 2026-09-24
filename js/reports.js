@@ -125,3 +125,7 @@ const change_docType = function () {
     location.href = 'view_reports.php?triple=' + tripleID + '&a=' + types;
 };
 
+// Report fragments are replaced by jQuery.load(). Bind once on the document
+// instead of loading a script from the fragment (jQuery evaluates it inline,
+// which script-src 'self' blocks).
+$(document).on('click', 'input[type="checkbox"][id^="image_"]', change_docType);

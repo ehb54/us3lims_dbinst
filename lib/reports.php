@@ -284,7 +284,6 @@ function tripleDetail( $link, $tripleID, $selected_docTypes = array() )
       $checkboxes
     </div>
 
-    <script src='js/reports_lib_changedoctype.js' type='text/javascript'></script>
 HTML;
 
   // Now create a list of available analysis types
