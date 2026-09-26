@@ -44,6 +44,11 @@ $size      = 60;
 /* Create Imagick object from background file*/
 $image = new Imagick( 'cap_bg.jpg' );
 
+/* Drop all metadata. ImageMagick >= 6.9.13-45 silently refuses to write an
+ * image that carries an empty EXIF profile (SyncExifProfile() rejects a TIFF
+ * body shorter than 16 bytes) and getImageBlob() then throws. */
+$image->stripImage();
+
 /* Create a drawing object and set the font size */
 $ImagickDraw = new ImagickDraw();
 $ImagickDraw->setFont( $font );
