@@ -186,7 +186,7 @@ if ( isset($_SESSION['edit_select_type'])  &&
 <div>
 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"
       class='onsubmit-return-validate-this-args'
-      data-args='[$advanceLevel,$dataset_id,$num_datasets,$separate_datasets,$editMeniscus,$dataLeft]'
+      data-args='<?php echo "[$advanceLevel,$dataset_id,$num_datasets,$separate_datasets,$editMeniscus,$dataLeft]"; ?>'
       >
 
 <?php
