@@ -571,9 +571,7 @@ function validate_single( f )
 
 function validate_multiple( f )
 {
-  // The previous body threw on its first line (advanceLevel was never
-  // passed in), which an inline onsubmit ignored, so multi-dataset
-  // submissions always went through without a prompt. Keep that.
+  // The previous body always threw, so it never blocked a submit.
   return( true );
 }
 
