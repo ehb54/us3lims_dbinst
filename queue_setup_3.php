@@ -171,7 +171,7 @@ else
   <p><input type="button" value="Setup GA Control"
             class='onclick-window-location-arg' data-arg='GA_1.php' $GA_disabled />
      <input type="button" value="Setup Discrete Model GA Control"
-            class='onclick-window-location-arg' data-arg='DMGA_1.php' $GA_disabled ></p>
+            class='onclick-alert-arg' data-arg='Global DMGA fits are not supported by the DMGA MPI worker. Select separate jobs or use another global-fit analysis.' /></p>
 HTML;
 }
 
