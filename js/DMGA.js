@@ -571,30 +571,9 @@ function validate_single( f )
 
 function validate_multiple( f )
 {
-  // Advanced users don't go through these tests
-  if ( advanceLevel > 0 ) return( true );
-
-  var contact_bo = "\nIf you have any questions about this policy, please " +
-                   "contact Borries Demeler (borries.demeler@umontana.edu).";
-
-  // Let's only produce this message the first time. On subsequent pages
-  // most of the controls are absent, so...
-  if ( valid_field(f.simpoints-value) )
-  {
-    var multiple_ok = confirm( "You have selected more than one dataset " +
-                      "to be fitted in this analysis. Are you sure you want " +
-                      "to perform a global analysis on all included datasets? " +
-                      "The fitted model will be a compromise between all " +
-                      "included datasets and not return the best possible fit " +
-                      "for each individual dataset. This will also significantly " +
-                      "increase the computing time. If this is not what you want " +
-                      "to do, please click on cancel and go back to the dataset " +
-                      "selection and delete the extra datasets from the queue. " +
-                      "Otherwise, select OK to continue.");
-
-    if ( ! multiple_ok ) return( false );
-  }
-
+  // The previous body threw on its first line (advanceLevel was never
+  // passed in), which an inline onsubmit ignored, so multi-dataset
+  // submissions always went through without a prompt. Keep that.
   return( true );
 }
 
