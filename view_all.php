@@ -74,7 +74,6 @@ function create_table($link)
     </thead>
     <tfoot>
       <tr><td colspan='5'><input type='button' value='Print Version'
-                                 data-test-1='xyz'
                                  class='onclick-print-version' /></td></tr>
     </tfoot>
 
