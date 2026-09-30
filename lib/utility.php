@@ -213,28 +213,7 @@ if ( !isset( $admin_list ) || count( $admin_list ) == 0 ) {
 
 function emailsyntax_is_valid($email)
 {
-  $array = explode("@", $email);
-  if ( count($array) != 2 ) {
-    return FALSE;
-  }
-
-  list($local, $domain) = $array;
-
-  $pattern_local  = '/^([0-9a-z]*([-|_]?[0-9a-z]+)*)' .
-                    '(([-|_]?)\.([-|_]?)[0-9a-z]*([-|_]?[0-9a-z]+)+)*([-|_]?)$/i';
-
-  $pattern_domain = '/^([0-9a-z]+([-]?[0-9a-z]+)*)' .
-                    '(([-]?)\.([-]?)[0-9a-z]*([-]?[0-9a-z]+)+)*\.[a-z]{2,4}$/i';
-
-  $match_local  = preg_match($pattern_local, $local);
-  $match_domain = preg_match($pattern_domain, $domain);
-
-  if ( $match_local && $match_domain )
-  {
-    return TRUE;
-  }
-
-  return FALSE;
+  return filter_var( $email, FILTER_VALIDATE_EMAIL ) !== false;
 }
 
 function PAM_name_is_valid($name)
