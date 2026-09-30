@@ -138,7 +138,7 @@ if ( isset($_SESSION['edit_select_type'])  &&
 <div>
 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"
       class='onsubmit-return-validate-this-args'
-      data-args='<?php echo "[$advanceLevel,$num_datasets]"; ?>'
+      data-args='<?php echo htmlspecialchars( json_encode( [ (int)$advanceLevel, (int)$num_datasets ] ), ENT_QUOTES ); ?>'
       >
 
 <?php

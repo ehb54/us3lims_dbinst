@@ -111,11 +111,7 @@ if ( $advanceLevel == 0 )
 $solute_count = 5;
 if ( isset($_GET['count']) )
 {
-  if ( $_GET['count'] < 1 ) $solute_count = 1;
-
-  else if ( $_GET['count'] > $max_buckets ) $solute_count = $max_buckets;
-
-  else $solute_count = $_GET['count'];
+  $solute_count = min( max( (int)$_GET['count'], 1 ), $max_buckets );
 }
   
 // Process initial bucket file upload, if present
@@ -188,7 +184,7 @@ HTML;
 
   echo "<form name='Solutes' action='GA_2.php' method='post' " .
        "      class='onsubmit-return-validate-solutes-args' " .
-       "      data-args='[$solute_count]' >\n";
+       "      data-args='" . htmlspecialchars( json_encode( [ (int)$solute_count ] ), ENT_QUOTES ) . "' >\n";
 
   echo solute_setup( $buckets, $solute_count );
 

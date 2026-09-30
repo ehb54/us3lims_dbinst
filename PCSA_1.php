@@ -200,7 +200,7 @@ if ( isset($_SESSION['edit_select_type'])  &&
 <div>
 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"
       class='onsubmit-return-validate-this-args'
-      data-args='<?php echo "[$advanceLevel,$dataset_id,$num_datasets,$separate_datasets,$editMeniscus,$dataLeft]"; ?>'
+      data-args='<?php echo htmlspecialchars( json_encode( [ (int)$advanceLevel, (int)$dataset_id, (int)$num_datasets, (int)$separate_datasets, (float)$editMeniscus, (float)$dataLeft ] ), ENT_QUOTES ); ?>'
       >
 
 <?php
