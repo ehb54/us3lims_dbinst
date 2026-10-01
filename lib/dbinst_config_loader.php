@@ -4,7 +4,7 @@
  *
  * This file is application code and travels with the dbinst checkout. Runtime
  * configuration remains outside the document root, under
- * /home/us3/lims/etc/config by default.
+ * ~us3/lims/etc/config by default.
  */
 
 /*
@@ -216,12 +216,20 @@ function us3_dbinst_config_validate_values( $values, $required_types,
   }
 }
 
+// The us3 account's home directory, or null when there is no us3 account
+function us3_dbinst_config_us3_home()
+{
+  $entry = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
+  return $entry ? $entry[ 'dir' ] : null;
+}
+
 function us3_dbinst_config_root()
 {
   if ( defined( 'US3_DBINST_CONFIG_ROOT' ) )
     return rtrim( US3_DBINST_CONFIG_ROOT, '/' );
 
-  return '/home/us3/lims/etc/config';
+  $home = us3_dbinst_config_us3_home();
+  return ( $home === null ? '/home/us3' : $home ) . '/lims/etc/config';
 }
 
 function us3_dbinst_config_credentials_file()
@@ -229,8 +237,8 @@ function us3_dbinst_config_credentials_file()
   if ( defined( 'US3_DBINST_CREDENTIALS_FILE' ) )
     return US3_DBINST_CREDENTIALS_FILE;
 
-  $entry = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
-  return $entry ? $entry[ 'dir' ] . '/lims/.us3lims.ini' : '';
+  $home = us3_dbinst_config_us3_home();
+  return $home === null ? '' : $home . '/lims/.us3lims.ini';
 }
 
 function us3_dbinst_config_path_with_slash( $path )
@@ -351,11 +359,28 @@ function us3_dbinst_config_load( $instance, $root = null,
 /* Publish the validated values using the variable interface legacy code uses. */
 function us3_dbinst_config_bootstrap( $instance, $root = null )
 {
-  if ( isset( $GLOBALS[ 'us3_dbinst_loaded_instance' ] ) &&
-       $GLOBALS[ 'us3_dbinst_loaded_instance' ] !== $instance )
-    us3_dbinst_config_fail( 'attempted to load two instances in one process' );
+  try
+  {
+    if ( isset( $GLOBALS[ 'us3_dbinst_loaded_instance' ] ) &&
+         $GLOBALS[ 'us3_dbinst_loaded_instance' ] !== $instance )
+      us3_dbinst_config_fail( 'attempted to load two instances in one process' );
 
-  $values = us3_dbinst_config_load( $instance, $root, true );
+    $values = us3_dbinst_config_load( $instance, $root, true );
+  }
+  catch ( Throwable $e )
+  {
+    // Message only: an uncaught exception's stack trace can hold secret values,
+    // and with display_errors on it shows server paths on the page
+    if ( php_sapi_name() === 'cli' )
+    {
+      fwrite( STDERR, $e->getMessage() . "\n" );
+      exit( 1 );
+    }
+    error_log( $e->getMessage() );
+    http_response_code( 500 );
+    exit( "Configuration error; see the server log.\n" );
+  }
+
   date_default_timezone_set( $values[ 'timezone' ] );
   unset( $values[ 'timezone' ] );
 

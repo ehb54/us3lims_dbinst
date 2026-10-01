@@ -26,8 +26,8 @@ function migration_usage()
   global $argv;
   $self = isset( $argv[0] ) ? $argv[0] : 'migrate_instance_config.php';
   return "Usage: php $self --instance=uslims3_NAME --legacy=/path/config.php "
-       . "[--config-root=/home/us3/lims/etc/config] "
-       . "[--credentials-file=/home/us3/lims/.us3lims.ini] "
+       . "[--config-root=~us3/lims/etc/config] "
+       . "[--credentials-file=~us3/lims/.us3lims.ini] "
        . "[--drop=name,name] [--write-candidate]\n";
 }
 

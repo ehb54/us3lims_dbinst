@@ -21,6 +21,7 @@
  *                             unmigrated-instance scan
  *   --deep                    also open each database with its real credentials
  *   --quiet                   print only WARN and FAIL lines
+ *   --help                    print this text
  */
 
 if ( php_sapi_name() !== 'cli' )
@@ -96,17 +97,19 @@ function check_condense_error( $text )
  */
 function check_subprocess( $source )
 {
-  $file = tempnam( sys_get_temp_dir(), 'us3-check-' );
-  if ( $file === false )
-    check_abort( 'could not create a temporary file' );
+  // The source goes in on stdin, so nothing is written to a shared temp directory
+  $process = proc_open( escapeshellarg( PHP_BINARY ) . ' 2>&1',
+                        array( 0 => array( 'pipe', 'r' ), 1 => array( 'pipe', 'w' ) ),
+                        $pipes );
+  if ( !is_resource( $process ) )
+    check_abort( 'could not start ' . PHP_BINARY );
 
-  file_put_contents( $file, $source );
-  $output = array();
-  $code   = 0;
-  exec( 'php ' . escapeshellarg( $file ) . ' 2>&1', $output, $code );
-  unlink( $file );
+  fwrite( $pipes[ 0 ], $source );
+  fclose( $pipes[ 0 ] );
+  $text = trim( stream_get_contents( $pipes[ 1 ] ) );
+  fclose( $pipes[ 1 ] );
+  $code = proc_close( $process );
 
-  $text = implode( "\n", $output );
   if ( $code !== 0 )
     return array( 'ok' => false, 'error' => check_condense_error( $text ) );
 
@@ -152,6 +155,23 @@ function check_secret_mode( $path, $label )
   return check_pass( "$label permissions", $printable );
 }
 
+/* The base holds no secrets, so only writability beyond the owner matters. */
+function check_writable_mode( $path, $label )
+{
+  $mode = check_mode( $path );
+  if ( $mode === null )
+    return check_fail( "$label permissions", "cannot stat $path" );
+
+  $printable = sprintf( '%04o owner=%s', $mode, check_owner( $path ) );
+
+  if ( $mode & 0002 )
+    return check_fail( "$label permissions", "world writable ($printable): $path" );
+  if ( $mode & 0020 )
+    return check_warn( "$label permissions", "group writable ($printable): $path" );
+
+  return check_pass( "$label permissions", $printable );
+}
+
 /* ---------------------------------------------------------------- options */
 
 $options = getopt( '', array(
@@ -161,7 +181,9 @@ $options = getopt( '', array(
 
 if ( isset( $options[ 'help' ] ) )
 {
-  readfile( __FILE__ );
+  // Print the header comment, not the source
+  preg_match( '~/\*(.*?)\*/~s', file_get_contents( __FILE__ ), $m );
+  echo preg_replace( '/^ ?\* ?/m', '', trim( $m[ 1 ] ) ) . "\n";
   exit( 0 );
 }
 
@@ -225,7 +247,7 @@ else
   else
   {
     check_pass( 'base file exists', $base_path );
-    check_secret_mode( $base_path, 'base file' );
+    check_writable_mode( $base_path, 'base file' );
 
     try
     {
@@ -260,9 +282,35 @@ else
     }
   }
 
-  is_dir( $config_root . '/instances' )
-    ? check_pass( 'instances directory exists', $config_root . '/instances' )
-    : check_fail( 'instances directory exists', $config_root . '/instances' );
+  $instances_dir = $config_root . '/instances';
+  if ( !is_dir( $instances_dir ) )
+    check_fail( 'instances directory exists', $instances_dir );
+  else
+  {
+    check_pass( 'instances directory exists', $instances_dir );
+
+    /*
+     * Expected 2750 us3:<web group>. Overlays are PHP that us3 later includes,
+     * so a group- or world-writable directory lets the web tier replace them.
+     */
+    $perms = @fileperms( $instances_dir ) & 07777;
+    $group = @filegroup( $instances_dir );
+    $entry = function_exists( 'posix_getgrgid' ) ? posix_getgrgid( $group ) : false;
+    $printable = sprintf( '%04o owner=%s group=%s', $perms, check_owner( $instances_dir ),
+                          $entry ? $entry[ 'name' ] : $group );
+
+    if ( $perms & 0022 )
+      check_fail( 'instances directory permissions', "writable beyond its owner ($printable)" );
+    elseif ( function_exists( 'posix_getpwnam' ) && posix_getpwnam( 'us3' ) &&
+             check_owner( $instances_dir ) !== 'us3' )
+      check_fail( 'instances directory permissions', "not owned by us3 ($printable)" );
+    elseif ( $perms !== 02750 )
+      check_warn( 'instances directory permissions', "expected 2750 ($printable)" );
+    elseif ( isset( $base_path ) && is_file( $base_path ) && @filegroup( $base_path ) !== $group )
+      check_warn( 'instances directory permissions', "group differs from the base file's ($printable)" );
+    else
+      check_pass( 'instances directory permissions', $printable );
+  }
 }
 
 /* ----------------------------------------------------------- credentials */
@@ -496,8 +544,8 @@ else
   {
     $instance = basename( $dir );
 
-    /* newlims is the metadata application, not a dbinst instance. */
-    if ( $instance === 'uslims3_newlims' )
+    /* newlims is the metadata application and uslims3_data the shared submit area. */
+    if ( $instance === 'uslims3_newlims' || $instance === 'uslims3_data' )
       continue;
     if ( in_array( $instance, $overlays, true ) )
       continue;
@@ -533,7 +581,7 @@ else
 
     $lint = array();
     $code = 0;
-    exec( 'php -l ' . escapeshellarg( $config_php ) . ' 2>&1', $lint, $code );
+    exec( escapeshellarg( PHP_BINARY ) . ' -l ' . escapeshellarg( $config_php ) . ' 2>&1', $lint, $code );
     $code === 0
       ? check_pass( "$instance config.php parses" )
       : check_fail( "$instance config.php parses", implode( ' ', $lint ) );
