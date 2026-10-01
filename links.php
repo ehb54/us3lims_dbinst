@@ -55,7 +55,7 @@ $general_menu = <<<HTML
   <a href='https://$org_site/view_database_info.php'>Database Login Info</a>
   <a href='contacts.php'>Contacts</a>
   <a href='data_security.php'>Data Security</a>
-  <a href='http://$org_site/logout.php'>Logout</a>
+  <a href='https://$org_site/logout.php'>Logout</a>
 
 HTML;
 
@@ -64,7 +64,7 @@ $general_menu_1 = <<<HTML
   $change_my_info_if_not_PAM
   <a href='contacts.php'>Contacts</a>
   <a href='data_security.php'>Data Security</a>
-  <a href='http://$org_site/logout.php'>Logout</a>
+  <a href='https://$org_site/logout.php'>Logout</a>
 
 HTML;
 
@@ -149,7 +149,7 @@ HTML;
 else // not logged in
 {
   $sidebar_menu = <<<HTML
-  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href="https://$org_site/index.php">Welcome!</a>
   <a href='contacts.php'>Contacts</a>
   <a href='data_security.php'>Data Security</a>
   <a href='https://$org_site/login.php'>Login</a>

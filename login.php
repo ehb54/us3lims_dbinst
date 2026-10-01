@@ -27,7 +27,7 @@ if ( $enable_PAM ) {
   <h3>Registered users please log in:</h3>
   <p class='message'>$message</p>
 
-  <form method='post' action='https://$org_site/checkuser.php'>
+  <form method='post' action='checkuser.php'>
     <table cellspacing='0' cellpadding='7'>
       <tr><td>Username or E-Mail Address:</td>
           <td><input type='text' name='email' maxlength='64' size='20'
@@ -59,7 +59,7 @@ HTML;
   <h3>Registered users please log in:</h3>
   <p class='message'>$message</p>
 
-  <form method='post' action='https://$org_site/checkuser.php'>
+  <form method='post' action='checkuser.php'>
     <table cellspacing='0' cellpadding='7'>
       <tr><td>E-Mail Address:</td>
           <td><input type='text' name='email' maxlength='64' size='20'

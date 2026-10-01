@@ -6,6 +6,7 @@
  *
  */
 include 'config.php';
+include 'require_https.php';
 
 if ( !$is_cli ) {
     $sess_name = "PHPSESS_" . $dbname;

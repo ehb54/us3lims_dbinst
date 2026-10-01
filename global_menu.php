@@ -10,7 +10,7 @@
 $userlevel = $_SESSION['userlevel'] ?? -1;
 
 $home_menu = <<<HTML
-            <li><a href="http://$org_site/index.php">Home</a></li>
+            <li><a href="https://$org_site/index.php">Home</a></li>
 
 HTML;
 
