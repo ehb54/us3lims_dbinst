@@ -296,6 +296,13 @@ function do_delete($link)
     return;
   }
 
+  // Without $admin_list the admin accounts cannot be protected, so refuse.
+  if ( empty( $admin_list ) || !is_array( $admin_list ) ) {
+    $_SESSION['message'] = "Account deletion is disabled: \$admin_list is not set in global_config.php.";
+    _eu_redirect_and_exit( $_SERVER['PHP_SELF'] );
+    return;
+  }
+
   $admins = implode( "','", $admin_list );
 
   $link->begin_transaction();

@@ -207,7 +207,7 @@ function is_single_tenant_deployment()
     return isset( $single_tenant_deployment ) ? (bool) $single_tenant_deployment : true;
 }
 
-if ( !isset( $admin_list ) || count( $admin_list ) == 0 ) {
+if ( empty( $admin_list ) || !is_array( $admin_list ) ) {
     ## admin_list must be set in global_config.php or cluster_config.php
     error_log( "ERROR: lib/utility.php: \$admin_list is not set or empty — check global_config.php" );
 }
@@ -307,8 +307,17 @@ global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
 
 if ( file_exists('../down_clusters.php') ) include '../down_clusters.php';
 
-$gfac_link = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
-$result    = mysqli_select_db( $gfac_link, $globaldbname );
+// PHP 8.1 throws on a failed connect; without gfac the cluster health is unknown.
+try
+{
+  $gfac_link = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+}
+catch ( mysqli_sql_exception $e )
+{
+  $gfac_link = false;
+}
+if ( ! $gfac_link )
+  error_log( "lib/utility.php: cannot connect to the gfac database; cluster health is unavailable" );
 
 // Maximum age of cron-generated cluster health records, in seconds.
 // Defaults to 1800, two 12-minute cron runs with slow probes; a nonpositive
@@ -319,9 +328,9 @@ $cluster_status_max_age = isset( $global_cluster_status_max_age_seconds )
 
 $query     = "SELECT cluster, running, queued, status, "
            . "TIMESTAMPDIFF(SECOND, time, NOW()) AS age FROM cluster_status";
-$result    = mysqli_query( $gfac_link, $query );
+$result    = $gfac_link ? mysqli_query( $gfac_link, $query ) : false;
 
-while ( list( $cluster, $running, $queued, $status, $age ) = mysqli_fetch_row( $result ) )
+while ( $result && list( $cluster, $running, $queued, $status, $age ) = mysqli_fetch_row( $result ) )
 {
    // Treat expired health records as down to disable cluster selection.
    if ( $cluster_status_max_age > 0 && $age !== null && (int) $age > $cluster_status_max_age )
@@ -349,7 +358,8 @@ while ( list( $cluster, $running, $queued, $status, $age ) = mysqli_fetch_row( $
    }
 }
 
-mysqli_close( $gfac_link );
+if ( $gfac_link )
+  mysqli_close( $gfac_link );
 
 // Reset default db
 include "db.php";

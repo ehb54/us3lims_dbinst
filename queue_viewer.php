@@ -189,7 +189,19 @@ function cancelLocalJob( $gfacID, $cluster )
 
    require_once $class_dir . 'cancel_result.php';
 
-   $rx = new remote_exec( $cluster, $global_cluster_details, 'elog' );
+   try
+   {
+      $rx = new remote_exec( $cluster, $global_cluster_details, 'elog' );
+   }
+   catch ( InvalidArgumentException $e )
+   {
+      elog( "$self cluster $cluster has invalid settings in global_config.php: " . $e->getMessage() );
+
+      return array(
+         'outcome' => CANCEL_UNCONFIGURED,
+         'message' => "Cannot cancel: cluster $cluster has invalid settings on this LIMS."
+      );
+   }
 
    if ( ! $rx->is_configured() )
    {
