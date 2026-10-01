@@ -419,21 +419,16 @@ HTML;
   list ( $experimentID, $triple_desc ) = mysqli_fetch_array( $result );
   $result->close();
   $stmt->close();
-  $text .= <<<HTML
-    <p class='reporthead'><a name='solution'></a>Solution Data</p>
-    <ul>
-        <li><a href='#solution'
-               class='onclick-show-solution-detail-args' data-args='["solution","$experimentID","$triple_desc"]' >
-               Solution Information</a></li>
-        <li><a href='#solution'
-               class='onclick-show-solution-detail-args' data-args='["analyte","$experimentID","$triple_desc"]' >
-               Analyte Information</a></li>
-        <li><a href='#solution'
-               class='onclick-show-solution-detail-args' data-args='["buffer","$experimentID","$triple_desc"]' >
-               Buffer Information</a></li>
-
-    </ul>
-HTML;
+  $text .= "    <p class='reporthead'><a name='solution'></a>Solution Data</p>\n" .
+           "    <ul>\n";
+  foreach ( [ 'solution', 'analyte', 'buffer' ] as $type )
+  {
+    $args  = htmlspecialchars( json_encode( [ $type, (int)$experimentID, (string)$triple_desc ] ), ENT_QUOTES );
+    $label = ucfirst( $type );
+    $text .= "        <li><a href='#solution' class='onclick-show-solution-detail-args' data-args='$args'>" .
+             "$label Information</a></li>\n";
+  }
+  $text .= "    </ul>\n";
 
   // Let's add links to make things easier to get around
   $self = $_SERVER['PHP_SELF'];

@@ -20,7 +20,7 @@ function show_solution_detail( compType, eID, triple )
    const properType = compType.charAt(0).toUpperCase() +
                     compType.substr(1);
 
-   window.open("solution_detail.php?type=" + compType + "&expID=" + eID + "&triple=" + triple,
+   window.open("solution_detail.php?type=" + compType + "&expID=" + encodeURIComponent( eID ) + "&triple=" + encodeURIComponent( triple ),
                properType,
                "toobar=no,location=no,directories=no,status=no," +
                "scrollbars=yes,resizable=yes,copyhistory=no,"    +
