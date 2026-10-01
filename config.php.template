@@ -6,8 +6,8 @@
 
 // Resolve the service account home without invoking a shell; SELinux
 // httpd_t may prohibit shell execution.
-$us3pwentry         = posix_getpwnam( 'us3' );
-$cfgfile            = $us3pwentry ? $us3pwentry['dir'] . '/lims/.us3lims.ini' : '';
+$us3pwentry         = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
+$cfgfile            = ( $us3pwentry ? $us3pwentry['dir'] : '/home/us3' ) . '/lims/.us3lims.ini';
 $configs            = parse_ini_file( $cfgfile, true );
 $org_name           = 'UltraScan3 LIMS portal';
 $org_site           = 'uslims.uleth.ca/uslims3_instance';
