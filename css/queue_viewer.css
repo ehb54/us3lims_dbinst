@@ -31,26 +31,6 @@
   background-color : #bbb;
 }
 
-div.more_info
-{
-  position         : absolute;
-  width            : 160px;
-  margin-left      : 100px;
-  padding          : 15px;
-  background-color : lemonchiffon;
-  border           : 1px solid black;
-  display          : none;
-  font-size        : 80%;
-}
-
-div.more_info div.moreinfo_hdr
-{
-  text-align       : center;
-  font-size        : 80%;
-  font-weight      : bold;
-  line-height      : 0.6;
-}
-
 #content table td.running
 {
   background-color : #47ff47;

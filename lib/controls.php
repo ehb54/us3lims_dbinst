@@ -476,40 +476,6 @@ echo<<<HTML
 HTML;
 }
 
-// Function to display the fit meniscus option
-/*
-function fit_meniscus()
-{
-echo<<<HTML
-      <fieldset class='option_value'>
-        <legend>Fit Meniscus</legend>
-        <input type="radio" name="meniscus_option" value="1" class='onclick-show-ctl-arg' data-arg=9 > On<br/>
-        <input type="radio" name="meniscus_option" value="0" class='onclick-hide-arg' data-arg=5
-               checked='checked'/> Off<br/>
-        <div class='d-none' id="mag9">
-          <br/>
-          <input type="number" step="any" name="meniscus_range_9" value="0.03"/>Meniscus Fit Range (cm)<br/>
-          <br/>
-          <fieldset>
-            <legend>Meniscus Grid Points</legend>
-            <div class='newslider' id='meniscus-slider'></div>
-            <br />
-            Value:   <input name='meniscus_points' type='number'
-                            id='meniscus_points'
-                            size='12'
-                            value='10' />
-            Minimum: <input id="meniscus-min" 
-                            size='12'
-                            disabled="disabled" />
-            Maximum: <input id="meniscus-max" 
-                            size='12'
-                            disabled="disabled" />
-          </fieldset>
-        </div>
-      </fieldset>
-HTML;
-}
-*/
  
 //          <input type="number" step="any" name="meniscus_range" value="0.03"/>Fit Range (cm)<br/>
 // Function to display the fit meniscus/bottom option

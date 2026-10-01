@@ -88,6 +88,7 @@ $missit_msg = "<br/>ds_remain=" . $ds_remain;
 
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
+    submit_progress( "preparing datasets - $ds_remain remaining" );
 
     if ( ( $ds_remain - $reqds_count ) < $mgroup_count )
       $reqds_count   = $ds_remain;
@@ -216,6 +217,7 @@ HTML;
 
     foreach ( $filenames as $filename )
     {
+      submit_progress( 'submitting ' . basename( $filename ) );
       chdir( dirname( $filename ) );
 
       $job-> clear();

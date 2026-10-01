@@ -265,33 +265,6 @@ function bulk_delete_jobs() {
     }
 }
 
-function show_info( jobid )
-{
-  more_info  = document.getElementById( "more_info" + jobid );
-  info       = document.getElementById( "info" + jobid );
-
-  if ( info.style.display == 'block' ) 
-  {  
-    if ( document.all )  // old IE
-      more_info.innerHTML = "More Info";
-    else
-      more_info.textContent = "More Info";
-
-    info.style.display = 'none';
-  }
-  else
-  {
-    if ( document.all )  // old IE
-      more_info.innerHTML = "Hide Info";
-    else
-      more_info.textContent = "Hide Info";
-
-    info.style.display = 'block';
-  }
-
-  return false;
-}
-
 
 // Kick off the polling loop once the DOM is ready.  This replaces the
 // onload='update_queue_content();' attribute queue_viewer.php used to inject
