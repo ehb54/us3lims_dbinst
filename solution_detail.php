@@ -66,7 +66,6 @@ function do_getInfo( $link, $type, $experimentID, $triple )
 <html>
 <head>
   <title>US Lims Database - $ptype Detail</title>
-  <link rel="stylesheet" type="text/css" href="css/main.css" />
   <link rel="stylesheet" type="text/css" href="css/reports.css" />
   <script src="js/main.js" type="text/javascript"></script>
 </head>
@@ -399,7 +398,6 @@ function display_error( $error_text )
 <head>
   <title>US Lims Database - display file error</title>
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
-  <link rel="stylesheet" type="text/css" href="css/main.css" />
 </head>
 
 <body>
