@@ -18,8 +18,9 @@ return array(
     'ipaddr'          => '127.0.0.1',
     ## Documentation-range placeholder (RFC 5737). This is the host's own
     ## external address and is deployment-specific, so every install must
-    ## override it in its instance overlay. A base default that happens to
-    ## work for one site is worse than one that is obviously not real.
+    ## set it here in the host base (overlays may not set it). A base
+    ## default that happens to work for one site is worse than one that is
+    ## obviously not real.
     'ipa_ext'         => '203.0.113.1',
     'udpport'         => 12233,
     'top_image'       => '#',

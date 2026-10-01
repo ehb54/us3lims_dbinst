@@ -84,7 +84,14 @@ an exotic one; without the second direction such a variable would be dropped
 while the report still read `EQUIVALENT`. Only names are printed, since a
 site-local value may itself be a secret. Each one must be recognized as a base
 value, an overlay value, or a deliberate removal before the instance can be
-migrated.
+migrated. Constants other than `HOME_DIR` and `DEBUG`, and ini settings the
+legacy file changes (`ini_set()`, `error_reporting()`), are listed the same way.
+Record a deliberate removal with `--drop=name,name`. The retired GFAC/Thrift
+keys (`$svcport`, `$uses_thrift`, `$thr_clust_excls`, `$thr_clust_incls`) are
+not read by anything and are not listed.
+
+`--write-candidate` creates the overlay `0640` with the group of `instances/`,
+so the web server can read it.
 
 `full_path` and `data_dir` are derived from the base's `dbinst_root` and the
 instance name, and are not overlay keys. An instance installed somewhere other
@@ -101,8 +108,9 @@ After an equivalent dry run, `--write-candidate` may create:
 - `<dbinst>/config.php.base-overlay-candidate`.
 
 It never replaces the active `config.php`. Activation is a separate deployment
-step after web and CLI checks. Preserve the complete legacy file with
-restrictive permissions; restoring that file is the rollback.
+step after web and CLI checks. Preserve the complete legacy file outside the
+docroot with restrictive permissions (a copy left in the instance directory
+would be served as text); restoring that file is the rollback.
 
 Use `--config-root` and `--credentials-file` only when validating a deployment
 whose installed paths differ from the defaults.
