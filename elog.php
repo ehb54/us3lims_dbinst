@@ -9,12 +9,10 @@ function dt_now () {
 }
 
 function elog( $msg ) {
-    if ( !( strpos($msg, 'queue_content') !== false) ) {
-        return;
-    }
-    $us3home  = exec( "ls -d ~us3" );
-    $elogfile = "$us3home/lims/etc/elog.txt";
-    $msg = "[" .  date('m/d/Y H:i:s', time()) . "] [" .  $_SERVER['REMOTE_ADDR'] . "] $msg";
+    // Without a shell: SELinux httpd_t may prohibit it.
+    $us3pwentry = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
+    $elogfile   = ( $us3pwentry ? $us3pwentry['dir'] : '/home/us3' ) . '/lims/etc/elog.txt';
+    $msg = "[" .  date('m/d/Y H:i:s', time()) . "] [" .  ( $_SERVER['REMOTE_ADDR'] ?? 'cli' ) . "] $msg";
     error_log( "$msg\n", 3, $elogfile );
 }
 

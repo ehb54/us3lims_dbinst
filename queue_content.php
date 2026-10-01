@@ -18,20 +18,35 @@ $start_time = dt_now();
 include_once 'config.php';
 include_once 'lib/utility.php';
 
-// Start by getting info from global db
-$globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname )
-    or die( "Connect failed :  $globaldbhost  $globaldbuser $globaldbpasswd  $globaldbname " );
+// Handle both mysqli exception and false-return modes. Log connection
+// diagnostics server-side and keep credentials out of the response.
+$globaldb       = false;
+$globaldb_error = '';
+
+try
+{
+  $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+  if ( ! $globaldb )
+    $globaldb_error = mysqli_connect_error();
+}
+catch ( mysqli_sql_exception $e )
+{
+  $globaldb_error = $e->getMessage();
+}
 
 if ( ! $globaldb )
 {
-  echo "<p>Cannot open global database on $globaldbhost  mysqli_error($globaldb)</p>\n";
+  error_log( "queue_content.php: cannot connect to global database "
+             . "$globaldbname on $globaldbhost as $globaldbuser: $globaldb_error" );
+  echo "<p>Cannot open the global database. See the server error log.</p>\n";
   return;
 }
 
-$is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
+// Single-tenant deployments restrict level-4 admins to the current database.
+$is_local_deploy = is_single_tenant_deployment();
 
 $query  = "SELECT gfacID, us3_db, cluster, status, metaschedulerClusterExecuting FROM analysis ";
-if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 ) {
+if ( $is_local_deploy  ||  $_SESSION['userlevel'] < 4 ) {
   $query .= "WHERE us3_db = '$dbname' ";
 }
 
@@ -83,7 +98,10 @@ while ( list( $gfacID, $us3_db, $cluster, $status, $clusterExecuting ) = mysqli_
 }
 $batch_results = array();
 foreach ( $gfac_IDs_per_db as $us3_db => $gfacIDs ) {
-    $db_gfacIDs = implode(',', $gfacIDs);
+    // gfacIDs are strings (Airavata IDs are not numeric), so quote each one
+    $db_gfacIDs = implode(',', array_map(function($id) use ($globaldb) {
+        return "'" . mysqli_real_escape_string($globaldb, $id) . "'";
+    }, $gfacIDs));
     $query = "SELECT r.gfacID, r.HPCAnalysisRequestID, queueStatus, lastMessage, updateTime, editXMLFilename, " .
         "investigatorGUID, submitterGUID, submitTime, clusterName, method, runID, analType, inv.email as inv_email, sub.email as sub_email " .
         "FROM $us3_db.HPCAnalysisResult r ".
@@ -225,7 +243,7 @@ foreach( $display_info as $display )
 
   $db_info = ( $_SESSION['userlevel'] >= 2 ) ? "$database (ID: $HPCAnalysisRequestID)" : "";
 
-  $content .= "<tr><th><input type='checkbox' class='select_job' data-gfacid='$gfacID' data-runid='$runID' data-analtype='$analType' data-status='$queueStatus' onchange='toggle_job_selection(this, \"$gfacID\")' />Run ID:</th>\n" .
+  $content .= "<tr><th><input type='checkbox' class='select_job' data-gfacid='$gfacID' data-cluster='$cluster' data-runid='$runID' data-analtype='$analType' data-status='$queueStatus' onchange='toggle_job_selection(this, \"$gfacID\")' />Run ID:</th>\n" .
             "<td colspan='3'>$runID $triple $db_info</td>\n" .
             "<td rowspan='6'>\n" .
             display_buttons( $database, $cluster, $gfacID, $jobEmail ) .
@@ -357,6 +375,7 @@ function display_buttons( $current_db, $cluster, $gfacID, $jobEmail )
                "  <input type='hidden' name='cluster' value='$cluster' />\n" .
                "  <input type='hidden' name='gfacID' value='$gfacID' />\n" .
                "  <input type='hidden' name='jobEmail' value='$jobEmail' />\n" .
+               "  <input type='hidden' name='csrf_token' value='" . csrf_token() . "' />\n" .
                "  <input type='submit' name='delete' value='Delete' />\n" .
                "</form>\n";
 
