@@ -146,7 +146,7 @@ function us3_dbinst_config_fail( $message )
 function us3_dbinst_config_assert_instance( $instance )
 {
   if ( !is_string( $instance ) ||
-       !preg_match( '/^uslims3_[A-Za-z0-9_]+$/', $instance ) )
+       !preg_match( '/^uslims3_[A-Za-z0-9_]+\z/', $instance ) )
     us3_dbinst_config_fail( 'invalid instance name' );
 }
 
