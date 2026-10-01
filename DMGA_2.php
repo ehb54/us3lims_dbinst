@@ -36,6 +36,13 @@ include 'lib/file_writer.php';
 include $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'priority.php';
 
+$submit_method = 'DMGA';
+include 'lib/require_cluster.php';
+if ( $submit_stopped ) {
+  if ( $is_cli ) return;
+  exit();
+}
+
 // Make sure the advancement level is set
 $advanceLevel = $_SESSION['advancelevel'] ?? 0;
 
@@ -50,6 +57,7 @@ $filenames = array();
 $HPCAnalysisRequestID = 0;
 
 $files_ok  = true;  // Let's also make sure there weren't any problems writing the files
+$missit_msg = '';
 
 if ( $_SESSION[ 'separate_datasets' ] )
 {
@@ -95,12 +103,21 @@ else
 {
 //echo "not separate\n"; exit();
   $globalfit = $payload->get();
+
+  // Global DMGA is submitted as on main. us_mpi_analysis's DMGA worker currently
+  // crashes on more than one dataset; that is fixed in UltraScan, not here.
   priority( "DMGA-GF", $payload->get( 'datasetCount' ), $payload->get( 'job_parameters' ) );
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
   
   if ( $filenames[ 0 ] === false )
     $files_ok = false;
+
+  else if ( $filenames[ 0 ] === '2DSA-IT-MISSING' )
+  {
+    $files_ok = false;
+    $missit_msg = "<br/><b>Global Fit without all needed 2DSA-IT models</b/>";
+  }
   
   else
   {
@@ -186,6 +203,7 @@ else
   $output_msg = <<<HTML
   Thank you, there have been one or more problems writing the various files necessary
   for job submission. Please contact your system administrator.
+  $missit_msg
 
 HTML;
 
@@ -221,4 +239,3 @@ include 'footer.php';
 exit();
 
 ?>
-

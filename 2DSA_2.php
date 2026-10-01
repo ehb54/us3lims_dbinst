@@ -49,6 +49,13 @@ include_once $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
 
+$submit_method = '2DSA';
+include 'lib/require_cluster.php';
+if ( $submit_stopped ) {
+  if ( $is_cli ) return;
+  exit();
+}
+
 // Create the payload manager and restore the data
 $payload = new Payload_2DSA( $_SESSION );
 $payload->restore();
@@ -172,6 +179,10 @@ $missit_msg = "<br/>filenames[0]=" . $filenames[0];
   }
 }
 
+## Set before the early exit further down, which renders $page_title too and
+## previously printed an empty heading because the assignment came after it.
+$page_title = $files_ok ? '2DSA Analysis Submitted' : '2DSA Analysis Not Submitted';
+
 if ( $files_ok )
 {
   $output_msg = <<<HTML
@@ -258,7 +269,6 @@ HTML;
 }
 
 // Start displaying page
-$page_title = '2DSA Analysis Submitted';
 include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";

@@ -49,6 +49,13 @@ include_once $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
 
+$submit_method = 'PCSA';
+include 'lib/require_cluster.php';
+if ( $submit_stopped ) {
+  if ( $is_cli ) return;
+  exit();
+}
+
 // Create the payload manager and restore the data
 $payload = new Payload_PCSA( $_SESSION );
 $payload->restore();
