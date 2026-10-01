@@ -337,6 +337,8 @@ abstract class File_writer
                  . "$tarFilename: " . implode( '; ', $tar_output );
         error_log( $tar_msg );
         if ( function_exists( 'elog' ) ) elog( $tar_msg );
+        // submitone.php scans CLI output for ERROR: lines.
+        if ( PHP_SAPI === 'cli' ) echo "$tar_msg\n";
         chdir( $save_cwd );
         return false;
     }
