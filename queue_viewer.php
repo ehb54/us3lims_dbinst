@@ -152,17 +152,6 @@ function delete_single_job( $gfacID, $cluster )
   $cluster = $row['metaschedulerClusterExecuting'];
   }
 
-  // Airavata job IDs are not Slurm job numbers; scancel cannot reach them, so
-  // leave the job's status alone rather than recording a cancel that did not happen.
-  if ( !ctype_digit( (string) $gfacID ) )
-  {
-    $msg = "Cannot cancel: this job was submitted through Airavata, which this LIMS no longer controls";
-    updateLimsStatus( $gfacID, $analysis_cluster, null, $msg );
-    updateGFACStatus( $gfacID, $analysis_cluster, null, $msg );
-    mysqli_close( $gLink );
-    return;
-  }
-
   $cancel = cancelLocalJob( $gfacID, $cluster );
 
   if ( cancel_outcome_is_settled( $cancel[ 'outcome' ] ) )
