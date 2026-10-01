@@ -198,12 +198,13 @@ unset( $utility_config_error, $utility_dbinst_config_file, $utility_global_confi
 collect_config_info();
 
 // $single_tenant_deployment in global_config.php restricts queue views to
-// $dbname, including for level-4 admins. Defaults to false (multi-tenant).
+// $dbname, including for level-4 admins. Unset means single tenant: a host
+// must opt in to letting admins see and cancel other databases' jobs.
 function is_single_tenant_deployment()
 {
     global $single_tenant_deployment;
 
-    return isset( $single_tenant_deployment ) ? (bool) $single_tenant_deployment : false;
+    return isset( $single_tenant_deployment ) ? (bool) $single_tenant_deployment : true;
 }
 
 if ( !isset( $admin_list ) || count( $admin_list ) == 0 ) {
@@ -297,7 +298,7 @@ class cluster_info
    }
 }
 
-if ( !isset( $clusters ) || count( $clusters ) == 0 ) {
+if ( !isset( $clusters ) || !is_array( $clusters ) || count( $clusters ) == 0 ) {
     // An empty cluster list indicates missing or invalid configuration.
     error_log( "ERROR: lib/utility.php: \$clusters is empty after collect_config_info() — check global_config.php and cluster_config.php" );
 }
@@ -310,10 +311,11 @@ $gfac_link = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $glo
 $result    = mysqli_select_db( $gfac_link, $globaldbname );
 
 // Maximum age of cron-generated cluster health records, in seconds.
-// Defaults to 900; a nonpositive value disables the age check.
+// Defaults to 1800, two 12-minute cron runs with slow probes; a nonpositive
+// value disables the age check.
 global $global_cluster_status_max_age_seconds;
 $cluster_status_max_age = isset( $global_cluster_status_max_age_seconds )
-                          ? (int) $global_cluster_status_max_age_seconds : 900;
+                          ? (int) $global_cluster_status_max_age_seconds : 1800;
 
 $query     = "SELECT cluster, running, queued, status, "
            . "TIMESTAMPDIFF(SECOND, time, NOW()) AS age FROM cluster_status";
