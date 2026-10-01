@@ -49,6 +49,13 @@ include_once $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
 
+$submit_method = '2DSA-CG';
+include 'lib/require_cluster.php';
+if ( $submit_stopped ) {
+  if ( $is_cli ) return;
+  exit();
+}
+
 // Create the payload manager and restore the data
 $payload = new Payload_2DSA_CG( $_SESSION );
 $payload->restore();
