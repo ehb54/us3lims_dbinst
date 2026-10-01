@@ -36,6 +36,13 @@ include 'lib/file_writer.php';
 include $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'priority.php';
 
+$submit_method = 'GA';
+include 'lib/require_cluster.php';
+if ( $submit_stopped ) {
+  if ( $is_cli ) return;
+  exit();
+}
+
 // Create the payload manager and restore the data
 $payload = new Payload_GA( $_SESSION );
 $payload->restore();
