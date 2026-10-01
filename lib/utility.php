@@ -168,6 +168,15 @@ if ( !isset( $admin_list ) || count( $admin_list ) == 0 ) {
                          'emre.brookes@umontana.edu' );
 }
 
+// Per-session token for state-changing forms
+function csrf_token()
+{
+  if ( empty( $_SESSION['csrf_token'] ) )
+    $_SESSION['csrf_token'] = bin2hex( random_bytes( 32 ) );
+
+  return $_SESSION['csrf_token'];
+}
+
 function emailsyntax_is_valid($email)
 {
   $array = explode("@", $email);
