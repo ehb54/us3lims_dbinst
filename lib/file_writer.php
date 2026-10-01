@@ -311,9 +311,11 @@ abstract class File_writer
 
     chdir( $current_dir );
 
-    // Payload filenames include user-supplied model descriptions. Quote each
-    // filename as one shell argument, preserving spaces and metacharacters.
-    $fileList = implode( " ", array_map( 'escapeshellarg', $files ) );
+    // Payload filenames include user-supplied model descriptions. Pass them to
+    // tar NUL-separated in a file: escapeshellarg() drops non-ASCII bytes under
+    // the C locale the web server runs in.
+    $listFile = tempnam( $current_dir, '.tarlist-' );
+    file_put_contents( $listFile, implode( "\0", $files ) . "\0" );
     $tarFilename = sprintf( "hpcinput-%s-%s-%05d.tar",
                              $job['database']['host'],
                              $job['database']['name'],
@@ -323,10 +325,11 @@ abstract class File_writer
     $tar_output = [];
     $tar_status = 0;
     exec(
-        "/bin/tar -cf " . escapeshellarg( $tarFilename ) . " " . $fileList . " 2>&1",
+        "/bin/tar -cf " . escapeshellarg( $tarFilename ) . " --null -T " . escapeshellarg( $listFile ) . " 2>&1",
         $tar_output,
         $tar_status
     );
+    @unlink( $listFile );
 
     if ( $tar_status !== 0 )
     {
