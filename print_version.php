@@ -41,6 +41,7 @@ Released      : 3/1/2010
   <meta name="description" content="$site_desc" />
   <meta name="robots" content="index, nofollow" />
   <link rel="shortcut icon" href="images/favicon.ico" />
+  <link href="css/utilities.css" rel="stylesheet" type="text/css" />
   <link href="css/main_print.css" rel="stylesheet" type="text/css" />
   <link href="css/print_version.css" rel="stylesheet" type="text/css" />
   <script src="js/sorttable.js" type="text/javascript"></script>
