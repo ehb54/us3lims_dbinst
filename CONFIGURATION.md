@@ -13,10 +13,26 @@ broken overlay to a legacy file because that could select the wrong database.
 
 ```text
 /home/us3/lims/etc/config/
-|-- dbinst-base.v1.php
-`-- instances/
-    `-- uslims3_NAME.php
+|-- dbinst-base.v1.php        0640 (or 0644) us3:<web group>
+`-- instances/                2750 us3:<web group>
+    `-- uslims3_NAME.php      0640 us3:<web group>
 ```
+
+`instances/` must not be writable by the web group: overlays are PHP that the
+`us3` daemons include, so a writable directory would let the web tier replace
+them. The setgid bit gives new overlays the web group.
+
+The tree lives under the `us3` account's home (`~us3/lims/etc/config`). On
+SELinux-enforcing hosts that home is labeled `user_home_t`, which the web server
+cannot read, so label the tree and the credential file for httpd:
+
+```text
+semanage fcontext -a -t httpd_sys_content_t '/home/us3/lims/etc/config(/.*)?'
+semanage fcontext -a -t httpd_sys_content_t '/home/us3/lims/\.us3lims\.ini'
+restorecon -Rv /home/us3/lims/etc/config /home/us3/lims/.us3lims.ini
+```
+
+Use the `us3` account's actual home if it is not `/home/us3`.
 
 Install and customize `config-base.v1.php.template` as the host base. The base
 contains shared portal, global-database, host, path, and default feature
