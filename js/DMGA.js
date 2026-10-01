@@ -556,7 +556,7 @@ function validate( f, advanceLevel, count_datasets )
     return( validate_single(f) );
 
   else
-    return( validate_multiple(f) );
+    return( validate_multiple( f, advanceLevel ) );
 
   return( true );
 }
@@ -569,9 +569,28 @@ function validate_single( f )
   return( true );
 }
 
-function validate_multiple( f )
+function validate_multiple( f, advanceLevel )
 {
-  // The previous body always threw, so it never blocked a submit.
+  // Advanced users don't go through these tests
+  if ( advanceLevel > 0 ) return( true );
+
+  // Ask once: mc_iterations is only on the first dataset's page
+  if ( valid_field(f.mc_iterations) )
+  {
+    var multiple_ok = confirm( "You have selected more than one dataset " +
+                      "to be fitted in this analysis. Are you sure you want " +
+                      "to perform a global analysis on all included datasets? " +
+                      "The fitted model will be a compromise between all " +
+                      "included datasets and not return the best possible fit " +
+                      "for each individual dataset. This will also significantly " +
+                      "increase the computing time. If this is not what you want " +
+                      "to do, please click on cancel and go back to the dataset " +
+                      "selection and delete the extra datasets from the queue. " +
+                      "Otherwise, select OK to continue.");
+
+    if ( ! multiple_ok ) return( false );
+  }
+
   return( true );
 }
 
