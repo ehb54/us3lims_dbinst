@@ -56,7 +56,7 @@ include 'header.php';
       <td><?php echo order_select( $sort_order ); ?></td>
   </table>
 
-  <div id='queue_content'></div>
+  <div id='queue_content' data-csrf='<?php echo csrf_token(); ?>'></div>
 
 </div>
 
@@ -95,28 +95,34 @@ function order_select( $current_order = NULL )
 // A function to delete the selected job
 function do_delete()
 {
-  $authorized_gfacIDs = get_gfacIDs_authorized();
-  if ( isset( $_POST['gfacIDs'] ) && is_array( $_POST['gfacIDs'] ) )
+  if ( ! hash_equals( csrf_token(), (string) ( $_POST['csrf_token'] ?? '' ) ) )
+      return;
+
+  // Jobs are identified by cluster and gfacID, since scheduler IDs are only unique per cluster
+  $authorized_jobs = get_gfacIDs_authorized();
+  if ( isset( $_POST['gfacIDs'], $_POST['clusters'] ) && is_array( $_POST['gfacIDs'] ) && is_array( $_POST['clusters'] ) )
   {
-      foreach ( $_POST['gfacIDs'] as $gfacID )
+      foreach ( $_POST['gfacIDs'] as $i => $gfacID )
       {
-          if ( !in_array($gfacID, $authorized_gfacIDs, true)) {
+          $cluster = $_POST['clusters'][$i] ?? '';
+          if ( !in_array( "$cluster/$gfacID", $authorized_jobs, true ) ) {
               continue;
           }
-          delete_single_job( $gfacID );
+          delete_single_job( $gfacID, $cluster );
       }
       return;
   }
-  if ( isset( $_POST['gfacID'] )) {
+  if ( isset( $_POST['gfacID'], $_POST['cluster'] ) ) {
       $gfacID   = $_POST['gfacID'];
-      if ( !in_array($gfacID, $authorized_gfacIDs, true)) {
+      $cluster  = $_POST['cluster'];
+      if ( !in_array( "$cluster/$gfacID", $authorized_jobs, true ) ) {
           return;
       }
-      delete_single_job( $gfacID );
+      delete_single_job( $gfacID, $cluster );
   }
 }
 
-function delete_single_job( $gfacID )
+function delete_single_job( $gfacID, $cluster )
 {
   global $global_cluster_details;
   global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
@@ -125,7 +131,7 @@ function delete_single_job( $gfacID )
   $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
   if ( ! $gLink ) return;
 
-  $query = "SELECT cluster, metaschedulerClusterExecuting FROM analysis WHERE gfacID = ?";
+  $query = "SELECT cluster, metaschedulerClusterExecuting FROM analysis WHERE gfacID = ? AND cluster = ?";
   $stmt = mysqli_prepare( $gLink, $query );
   if ( ! $stmt )
   {
@@ -133,13 +139,13 @@ function delete_single_job( $gfacID )
       mysqli_close( $gLink );
       return;
   }
-  mysqli_stmt_bind_param( $stmt, 's', $gfacID );
+  mysqli_stmt_bind_param( $stmt, 'ss', $gfacID, $cluster );
   mysqli_stmt_execute( $stmt );
   $result = mysqli_stmt_get_result( $stmt );
   mysqli_stmt_close( $stmt );
   if ( $row = mysqli_fetch_assoc( $result ) )
   {
-  $cluster = $row['cluster'];
+  $analysis_cluster = $row['cluster'];
   if ( !empty( $row['metaschedulerClusterExecuting'] ) )
   {
   $cluster = $row['metaschedulerClusterExecuting'];
@@ -150,14 +156,14 @@ function delete_single_job( $gfacID )
   if ( cancel_outcome_is_settled( $cancel[ 'outcome' ] ) )
   {
     // Record a settled cancellation in both databases.
-    updateLimsStatus( $gfacID, 'aborted',  $cancel[ 'message' ] );
-    updateGFACStatus( $gfacID, 'CANCELED', $cancel[ 'message' ] );
+    updateLimsStatus( $gfacID, $analysis_cluster, 'aborted',  $cancel[ 'message' ] );
+    updateGFACStatus( $gfacID, $analysis_cluster, 'CANCELED', $cancel[ 'message' ] );
   }
   else
   {
     // Preserve job status when cancellation is unconfirmed; update the message.
-    updateLimsStatus( $gfacID, null, $cancel[ 'message' ] );
-    updateGFACStatus( $gfacID, null, $cancel[ 'message' ] );
+    updateLimsStatus( $gfacID, $analysis_cluster, null, $cancel[ 'message' ] );
+    updateGFACStatus( $gfacID, $analysis_cluster, null, $cancel[ 'message' ] );
   }
   }
   mysqli_close( $gLink );
@@ -215,7 +221,7 @@ function cancelLocalJob( $gfacID, $cluster )
 }
 
 // Function to update the status on an arbitrary lims database
-function updateLimsStatus( $gfacID, $status, $message )
+function updateLimsStatus( $gfacID, $cluster, $status, $message )
 {
 
   //include 'config.php';
@@ -233,9 +239,9 @@ function updateLimsStatus( $gfacID, $status, $message )
 
   // Get database name
   $query  = "SELECT us3_db FROM analysis " .
-            "WHERE gfacID = ?";
+            "WHERE gfacID = ? AND cluster = ?";
   $stmt = mysqli_prepare( $gLink, $query );
-  $stmt->bind_param( 's', $gfacID );
+  $stmt->bind_param( 'ss', $gfacID, $cluster );
   $stmt->execute();
   $result = $stmt->get_result();
   if ( ! $result ) return;
@@ -277,7 +283,7 @@ function updateLimsStatus( $gfacID, $status, $message )
 }
 
 // Function to update the GFAC status, mostly because job is canceled
-function updateGFACStatus( $gfacID, $status, $message )
+function updateGFACStatus( $gfacID, $cluster, $status, $message )
 {
   global $globaldbhost;
   global $globaldbuser;
@@ -292,18 +298,18 @@ function updateGFACStatus( $gfacID, $status, $message )
   // A null status updates queue_msg while preserving the analysis status enum.
   if ( $status === null )
   {
-    $query = "UPDATE analysis SET queue_msg = ? WHERE gfacID = ? ";
-    $args  = [ $message, $gfacID ];
-    $types = 'ss';
+    $query = "UPDATE analysis SET queue_msg = ? WHERE gfacID = ? AND cluster = ? ";
+    $args  = [ $message, $gfacID, $cluster ];
+    $types = 'sss';
   }
   else
   {
     $query = "UPDATE analysis " .
              "SET status = ?, " .
              "queue_msg = ? " .
-             "WHERE gfacID = ? ";
-    $args  = [ strtoupper( $status ), $message, $gfacID ];
-    $types = 'sss';
+             "WHERE gfacID = ? AND cluster = ? ";
+    $args  = [ strtoupper( $status ), $message, $gfacID, $cluster ];
+    $types = 'ssss';
   }
 
   $stmt = mysqli_prepare( $gLink, $query );
@@ -372,7 +378,7 @@ function get_gfacIDs_authorized()
 
     while ( $row = mysqli_fetch_assoc( $result ) )
     {
-        $authorized_gfacIDs[] = $row['gfacID'];
+        $authorized_gfacIDs[] = $row['cluster'] . '/' . $row['gfacID'];
     }
     mysqli_close( $globaldb );
     return $authorized_gfacIDs;

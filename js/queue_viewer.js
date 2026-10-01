@@ -252,13 +252,11 @@ function bulk_delete_jobs() {
         // Create a hidden form and submit it
         var form = $('<form action="queue_viewer.php" method="post"></form>');
         form.append('<input type="hidden" name="delete" value="1" />');
+        form.append($('<input>', { type: 'hidden', name: 'csrf_token', value: $('#queue_content').data('csrf') }));
         selected_gfacIDs.forEach(function(gfacID) {
-            var input = $('<input>', {
-                type: 'hidden',
-                name: 'gfacIDs[]',
-                value: gfacID
-            });
-            form.append(input);
+            var cluster = $('.select_job[data-gfacid="' + gfacID + '"]').data('cluster');
+            form.append($('<input>', { type: 'hidden', name: 'gfacIDs[]', value: gfacID }));
+            form.append($('<input>', { type: 'hidden', name: 'clusters[]', value: cluster }));
         });
         $('body').append(form);
         form.submit();

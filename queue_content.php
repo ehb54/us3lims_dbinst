@@ -98,7 +98,10 @@ while ( list( $gfacID, $us3_db, $cluster, $status, $clusterExecuting ) = mysqli_
 }
 $batch_results = array();
 foreach ( $gfac_IDs_per_db as $us3_db => $gfacIDs ) {
-    $db_gfacIDs = implode(',', $gfacIDs);
+    // gfacIDs are strings (Airavata IDs are not numeric), so quote each one
+    $db_gfacIDs = implode(',', array_map(function($id) use ($globaldb) {
+        return "'" . mysqli_real_escape_string($globaldb, $id) . "'";
+    }, $gfacIDs));
     $query = "SELECT r.gfacID, r.HPCAnalysisRequestID, queueStatus, lastMessage, updateTime, editXMLFilename, " .
         "investigatorGUID, submitterGUID, submitTime, clusterName, method, runID, analType, inv.email as inv_email, sub.email as sub_email " .
         "FROM $us3_db.HPCAnalysisResult r ".
@@ -240,7 +243,7 @@ foreach( $display_info as $display )
 
   $db_info = ( $_SESSION['userlevel'] >= 2 ) ? "$database (ID: $HPCAnalysisRequestID)" : "";
 
-  $content .= "<tr><th><input type='checkbox' class='select_job' data-gfacid='$gfacID' data-runid='$runID' data-analtype='$analType' data-status='$queueStatus' />Run ID:</th>\n" .
+  $content .= "<tr><th><input type='checkbox' class='select_job' data-gfacid='$gfacID' data-cluster='$cluster' data-runid='$runID' data-analtype='$analType' data-status='$queueStatus' />Run ID:</th>\n" .
             "<td colspan='3'>$runID $triple $db_info</td>\n" .
             "<td rowspan='6'>\n" .
             display_buttons( $database, $cluster, $gfacID, $jobEmail ) .
@@ -372,6 +375,7 @@ function display_buttons( $current_db, $cluster, $gfacID, $jobEmail )
                "  <input type='hidden' name='cluster' value='$cluster' />\n" .
                "  <input type='hidden' name='gfacID' value='$gfacID' />\n" .
                "  <input type='hidden' name='jobEmail' value='$jobEmail' />\n" .
+               "  <input type='hidden' name='csrf_token' value='" . csrf_token() . "' />\n" .
                "  <input type='submit' name='delete' value='Delete' />\n" .
                "</form>\n";
 

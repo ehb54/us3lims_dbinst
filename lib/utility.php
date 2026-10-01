@@ -211,6 +211,15 @@ if ( !isset( $admin_list ) || count( $admin_list ) == 0 ) {
     error_log( "ERROR: lib/utility.php: \$admin_list is not set or empty — check global_config.php" );
 }
 
+// Per-session token for state-changing forms
+function csrf_token()
+{
+  if ( empty( $_SESSION['csrf_token'] ) )
+    $_SESSION['csrf_token'] = bin2hex( random_bytes( 32 ) );
+
+  return $_SESSION['csrf_token'];
+}
+
 function emailsyntax_is_valid($email)
 {
   return filter_var( $email, FILTER_VALIDATE_EMAIL ) !== false;
