@@ -28,7 +28,13 @@ function migration_usage()
   return "Usage: php $self --instance=uslims3_NAME --legacy=/path/config.php "
        . "[--config-root=~us3/lims/etc/config] "
        . "[--credentials-file=~us3/lims/.us3lims.ini] "
-       . "[--drop=name,name] [--write-candidate]\n";
+       . "[--drop=name,name] [--write-candidate|--activate]\n"
+       . "\n"
+       . "  (no flag)         compare only; writes nothing\n"
+       . "  --write-candidate create the overlay and a non-activating candidate shim\n"
+       . "  --activate        after --write-candidate: re-prove equivalence, verify the\n"
+       . "                    candidate still matches, then put the shim in place as\n"
+       . "                    config.php, keeping the legacy file as a timestamped backup\n";
 }
 
 function migration_fail( $message )
@@ -84,7 +90,7 @@ function migration_write_temp( $path, $source, $mode, $group = null )
 
 $options = getopt( '', array(
   'instance:', 'legacy:', 'config-root::', 'credentials-file::',
-  'drop::', 'write-candidate'
+  'drop::', 'write-candidate', 'activate'
 ) );
 
 if ( !isset( $options[ 'instance' ] ) || !isset( $options[ 'legacy' ] ) )
@@ -96,6 +102,9 @@ $config_root = isset( $options[ 'config-root' ] )
              ? rtrim( $options[ 'config-root' ], '/' )
              : us3_dbinst_config_root();
 $write_candidate = isset( $options[ 'write-candidate' ] );
+$activate = isset( $options[ 'activate' ] );
+if ( $activate && $write_candidate )
+  migration_fail( '--write-candidate and --activate are separate steps; run them in turn' );
 $dropped = isset( $options[ 'drop' ] )
          ? array_filter( array_map( 'trim', explode( ',', $options[ 'drop' ] ) ) )
          : array();
@@ -219,7 +228,7 @@ if ( $differences )
 }
 
 echo "Result: EQUIVALENT (secret values were compared but not displayed).\n";
-if ( !$write_candidate )
+if ( !$write_candidate && !$activate )
 {
   echo "Dry run only; use --write-candidate to create non-activating files.\n";
   exit( 0 );
@@ -227,6 +236,107 @@ if ( !$write_candidate )
 
 $overlay_path = $config_root . '/instances/' . $instance . '.php';
 $candidate_path = dirname( $legacy_path ) . '/config.php.base-overlay-candidate';
+
+/*
+ * Activation. Deliberately a second command rather than part of --write-candidate:
+ * the operator gets to look at the generated pair first. Everything above has
+ * already re-proved equivalence against the live legacy file, so reaching here
+ * means the comparison passed again, not that an earlier run said it did.
+ */
+if ( $activate )
+{
+  /*
+   * The generated shim resolves the config root itself, through
+   * us3_dbinst_config_root(). It carries no --config-root, so activating against
+   * a non-default root would install a shim that reads somewhere else. Comparing
+   * and writing candidates under an alternate root is fine, and useful for
+   * testing; activating under one is not.
+   */
+  if ( $config_root !== rtrim( us3_dbinst_config_root(), '/' ) )
+    migration_fail( "--activate requires the default config root ("
+                  . us3_dbinst_config_root() . "); the shim does not carry"
+                  . " --config-root, so it would not read $config_root" );
+
+  foreach ( array( $overlay_path, $candidate_path ) as $path )
+    if ( !is_file( $path ) )
+      migration_fail( "run --write-candidate first; missing: $path" );
+
+  /*
+   * The pair must still be what this run would generate. A base edited since
+   * --write-candidate, or a hand-edited overlay, would otherwise be activated
+   * unseen.
+   */
+  if ( file_get_contents( $overlay_path ) !== us3_dbinst_config_overlay_source( $contract ) )
+    migration_fail( "$overlay_path no longer matches what this run generates;"
+                  . " remove it and rerun --write-candidate" );
+  if ( file_get_contents( $candidate_path ) !== us3_dbinst_config_shim_source( $instance ) )
+    migration_fail( "$candidate_path no longer matches what this run generates;"
+                  . " remove it and rerun --write-candidate" );
+
+  /* The shim resolves both of these from its own directory; without them the
+   * instance would break the moment config.php is replaced. */
+  $instance_dir = dirname( $legacy_path );
+  foreach ( array( 'lib/dbinst_config_loader.php', 'elog.php' ) as $needed )
+    if ( !is_file( $instance_dir . '/' . $needed ) )
+      migration_fail( "the shim needs $needed in $instance_dir" );
+
+  /*
+   * Prove the shim actually loads before it becomes config.php. A subprocess, so
+   * a fatal error in it cannot take this script down, and so the values it
+   * publishes cannot collide with the ones already loaded here.
+   */
+  $probe = 'if ( $argv[1] !== "" ) define( "US3_DBINST_CREDENTIALS_FILE", $argv[1] );'
+         . ' include $argv[2];'
+         . ' if ( !isset( $dbname ) || $dbname !== $argv[3] )'
+         . ' { fwrite( STDERR, "shim published dbname=" . ( $dbname ?? "unset" ) . "\n" ); exit( 1 ); }'
+         . ' echo "ok";';
+  $command = escapeshellarg( PHP_BINARY ) . ' -r ' . escapeshellarg( $probe )
+           . ' ' . escapeshellarg( defined( 'US3_DBINST_CREDENTIALS_FILE' )
+                                   ? US3_DBINST_CREDENTIALS_FILE : '' )
+           . ' ' . escapeshellarg( $candidate_path )
+           . ' ' . escapeshellarg( $expected[ 'dbname' ] ) . ' 2>&1';
+  $probe_out = array();
+  $probe_rc = 0;
+  exec( $command, $probe_out, $probe_rc );
+  if ( $probe_rc !== 0 || trim( implode( "\n", $probe_out ) ) !== 'ok' )
+    migration_fail( "the candidate shim does not load, so config.php was left alone: "
+                  . trim( implode( ' ', $probe_out ) ) );
+  echo "Candidate shim loads and reports the expected database.\n";
+
+  /* Keep the legacy file under a name that says what it is, and never overwrite
+   * an earlier backup. */
+  $backup_path = $legacy_path . '.legacy-' . date( 'YmdHis' );
+  if ( file_exists( $backup_path ) )
+    migration_fail( "backup already exists: $backup_path" );
+  if ( !@copy( $legacy_path, $backup_path ) )
+    migration_fail( "could not back up $legacy_path to $backup_path" );
+  $legacy_stat = @stat( $legacy_path );
+  if ( $legacy_stat )
+  {
+    @chmod( $backup_path, $legacy_stat[ 'mode' ] & 0777 );
+    @chown( $backup_path, $legacy_stat[ 'uid' ] );
+    @chgrp( $backup_path, $legacy_stat[ 'gid' ] );
+  }
+
+  /* rename() is atomic within a directory, so a web request either sees the old
+   * complete file or the new shim, never a partial one. */
+  if ( $legacy_stat )
+  {
+    @chmod( $candidate_path, $legacy_stat[ 'mode' ] & 0777 );
+    @chown( $candidate_path, $legacy_stat[ 'uid' ] );
+    @chgrp( $candidate_path, $legacy_stat[ 'gid' ] );
+  }
+  if ( !@rename( $candidate_path, $legacy_path ) )
+    migration_fail( "could not put the shim in place; the legacy config.php is unchanged"
+                  . " and its backup is $backup_path" );
+
+  echo "Activated: $legacy_path is now the generated shim\n";
+  echo "Overlay:   $overlay_path\n";
+  echo "Backup:    $backup_path\n";
+  echo "To roll back: cp " . escapeshellarg( $backup_path ) . ' ' . escapeshellarg( $legacy_path ) . "\n";
+  exit( 0 );
+}
+
 foreach ( array( $overlay_path, $candidate_path ) as $path )
 {
   if ( file_exists( $path ) )
