@@ -82,6 +82,9 @@ if ( isset($_POST['TIGRE']) )
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
     $gwhostid   = $_SESSION[ 'gwhostid' ] ?? 'uslims3';
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
+    // The select list is filtered for display only, so the posted name is
+    // checked here before it reaches the session or a submission.
+    require_authorized_cluster( $cluster_shortname );
     if ( preg_match( "/alamo/", $gwhostid )  &&  $cluster_shortname == 'alamo' )
     {  // alamo-to-alamo uses alamo-local as cluster
       $cluster_shortname = 'alamo-local';

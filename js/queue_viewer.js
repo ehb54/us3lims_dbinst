@@ -253,11 +253,30 @@ function bulk_delete_jobs() {
         var form = $('<form action="queue_viewer.php" method="post"></form>');
         form.append('<input type="hidden" name="delete" value="1" />');
         form.append($('<input>', { type: 'hidden', name: 'csrf_token', value: $('#queue_content').data('csrf') }));
-        selected_gfacIDs.forEach(function(gfacID) {
-            var cluster = $('.select_job[data-gfacid="' + gfacID + '"]').data('cluster');
+        // Walk the rows and keep each one's own cluster, rather than looking the
+        // cluster up by gfacID. A gfacID is the scheduler's job ID and is reused,
+        // so the selector could match more than one row and .data() returns the
+        // first, which sent the cancel to another job's cluster.
+        var paired = 0;
+        $('.select_job').each(function() {
+            var row = $(this);
+            var gfacID = String(row.data('gfacid'));
+            if (!selected_gfacIDs.has(gfacID)) {
+                return;
+            }
+            var cluster = row.data('cluster');
+            if (!cluster) {
+                return;
+            }
             form.append($('<input>', { type: 'hidden', name: 'gfacIDs[]', value: gfacID }));
             form.append($('<input>', { type: 'hidden', name: 'clusters[]', value: cluster }));
+            paired++;
         });
+
+        if (paired === 0) {
+            alert('None of the selected jobs are on this page any more, so nothing was cancelled.');
+            return;
+        }
         $('body').append(form);
         form.submit();
     }
