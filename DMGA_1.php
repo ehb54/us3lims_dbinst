@@ -74,6 +74,9 @@ if ( isset($_POST['TIGRE']) )
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
     $gwhostid   = $_SESSION[ 'gwhostid' ] ?? 'uslims3';
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
+    // The select list is filtered for display only, so the posted name is
+    // checked here before it reaches the session or a submission.
+    require_authorized_cluster( $cluster_shortname );
     if ( preg_match( "/alamo/", $gwhostid )  &&  $cluster_shortname == 'alamo' )
     {  // alamo-to-alamo uses alamo-local as cluster
       $cluster_shortname = 'alamo-local';
@@ -172,12 +175,9 @@ if ( isset($_SESSION['edit_select_type'])  &&
 
 <div>
 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"
-      onsubmit="return validate(this, 
-                <?php echo $advanceLevel; ?>, 
-                <?php echo $dataset_id; ?>, 
-                <?php echo $num_datasets; ?>,
-                <?php echo $separate_datasets; ?>);" >
-
+      class='onsubmit-return-validate-this-args'
+      data-args='<?php echo htmlspecialchars( json_encode( [ (int)$advanceLevel, (int)$num_datasets ] ), ENT_QUOTES ); ?>'
+      >
 
 <?php
 //  if ( isset($error) ) echo $error;
@@ -209,7 +209,7 @@ if ( isset($_SESSION['edit_select_type'])  &&
   if ( $dataset_id == $max_dset_id )
   {
     echo '<div id="clusters-nopmg">' . tigre() . '</div>';
-    echo '<div id="clusters-pmg" style="display:none">' . tigre( true ) . '</div>';
+    echo '<div id="clusters-pmg" class="d-none">' . tigre( true ) . '</div>';
   }
 ?>
 
@@ -250,10 +250,10 @@ function display( $dataset_id, $num_datasets )
             }
       ?>
 
-      <p><button onclick="return toggle('advanced');" id='show'>
+      <p><button class='onclick-return-toggle-advanced' id='show'>
         Show Advanced Options</button></p>
 
-      <div id='advanced' style='display:none'>
+      <div id='advanced' class='d-none'>
 
 <?php
   if ( $dataset_id == 0 )
@@ -293,11 +293,11 @@ function display( $dataset_id, $num_datasets )
   echo<<<HTML
     </div>
 
-    <input class="submit" type="button" 
-            onclick='window.location="queue_setup_2.php"' 
+    <input class="submit onclick-window-location-arg" type="button" 
+            data-arg='queue_setup_2.php'
             value="Edit Profiles"/>
-    <input class="submit" type="button" 
-            onclick='window.location="queue_setup_1.php"' 
+    <input class="submit onclick-window-location-arg" type="button" 
+            data-arg='queue_setup_1.php'
             value="Change Experiment"/>
   </fieldset>
 HTML;

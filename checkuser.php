@@ -207,7 +207,7 @@ $stmt->bind_param( 'i', ...$args );
 $stmt->execute()
       or die( "Query failed : $query<br />\n" . $stmt->error );
 
-header("Location: https://$org_site/index.php");
+header("Location: index.php");
 exit();
 
 function remove_session()

@@ -55,7 +55,7 @@ $general_menu = <<<HTML
   <a href='https://$org_site/view_database_info.php'>Database Login Info</a>
   <a href='contacts.php'>Contacts</a>
   <a href='data_security.php'>Data Security</a>
-  <a href='http://$org_site/logout.php'>Logout</a>
+  <a href='https://$org_site/logout.php'>Logout</a>
 
 HTML;
 
@@ -64,7 +64,7 @@ $general_menu_1 = <<<HTML
   $change_my_info_if_not_PAM
   <a href='contacts.php'>Contacts</a>
   <a href='data_security.php'>Data Security</a>
-  <a href='http://$org_site/logout.php'>Logout</a>
+  <a href='https://$org_site/logout.php'>Logout</a>
 
 HTML;
 
@@ -149,7 +149,7 @@ HTML;
 else // not logged in
 {
   $sidebar_menu = <<<HTML
-  <a href="http://$org_site/index.php">Welcome!</a>
+  <a href="https://$org_site/index.php">Welcome!</a>
   <a href='contacts.php'>Contacts</a>
   <a href='data_security.php'>Data Security</a>
   <a href='https://$org_site/login.php'>Login</a>
@@ -164,7 +164,7 @@ echo<<<HTML
   $sidebar_menu
 
   <!-- A spacer -->
-  <!--div style='padding-bottom:20em;'></div-->
+  <!--div class='pb-20em'></div-->
 
 </div>
 HTML;
@@ -238,20 +238,20 @@ function set_latest_noises( $link )
   // Compose additional page string documenting any new noise determination
   if ( $nndiff === 0 )
   {
-    $new_noise = "<div style='color:blue;'>" .
+    $new_noise = "<div class='text-blue'>" .
       "Previously selected latest edits and noises are in force." .
       "</div>\n";
   }
   else if ( $nndiff === 1 )
   {
-    $new_noise = "<div style='color:blue;'>" .
+    $new_noise = "<div class='text-blue'>" .
       "Previously selected latest edits are in force.<br/>" .
       "1 new latest noise was detected." .
       "</div>\n";
   }
   else
   {
-    $new_noise = "<div style='color:blue;'>" .
+    $new_noise = "<div class='text-blue'>" .
       "Previously selected latest edits are in force.<br/>" .
       "$nndiff new latest noises were detected." .
       "</div>\n";
