@@ -49,6 +49,13 @@ include_once $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
 
+## submit_progress() comes from common. With an older common the include above is
+## only a warning and the call would be fatal, taking the submission with it, so
+## fall back to a no-op: the progress lines are cosmetic.
+if ( ! function_exists( 'submit_progress' ) ) {
+    function submit_progress( $msg ) {}
+}
+
 $submit_method = '2DSA-CG';
 include 'lib/require_cluster.php';
 if ( $submit_stopped ) {
