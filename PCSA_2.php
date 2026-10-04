@@ -49,6 +49,13 @@ include_once $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
 
+## submit_progress() comes from common. With an older common the include above is
+## only a warning and the call would be fatal, taking the submission with it, so
+## fall back to a no-op: the progress lines are cosmetic.
+if ( ! function_exists( 'submit_progress' ) ) {
+    function submit_progress( $msg ) {}
+}
+
 $submit_method = 'PCSA';
 include 'lib/require_cluster.php';
 if ( $submit_stopped ) {
@@ -91,12 +98,11 @@ if ( $separate_datasets > 0 )
   $index         = 0;               // Input datasets index
   $kr            = 0;               // Output request index
 
-  echo "<script>us_submit_prog.show();</script>";
   priority( "PCSA", $dataset_count, $job_params );
   
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
-    echo "<script>us_submit_prog.msg.prep('$ds_remain');</script>";
+    submit_progress( "preparing datasets - $ds_remain remaining" );
 
     if ( ( $ds_remain - $reqds_count ) < $mgroup_count )
       $reqds_count   = $ds_remain;
@@ -172,7 +178,6 @@ else
 if ( $files_ok )
 {
   $output_msg = <<<HTML
-  <script>us_submit_prog.hide()</script>
   <pre>
   Thank you, your job was accepted and is currently processing. An
   email will be sent to {$_SESSION['submitter_email']} when the job is
@@ -193,8 +198,7 @@ HTML;
 
     foreach ( $filenames as $filename )
     {
-      echo "<script>us_submit_prog.msg.submit('" . basename( $filename ) . "');</script>";
-
+      submit_progress( 'submitting ' . basename( $filename ) );
       chdir( dirname( $filename ) );
 
       $job-> clear();
@@ -211,7 +215,7 @@ HTML;
         {
           if ( is_string( $rmsg ) && preg_match( '/^ERROR:/', $rmsg ) )
           {
-            $output_msg .= "<br /><span class='message' style='color:red;font-weight:bold;'>" .
+            $output_msg .= "<br /><span class='message text-red font-bold'>" .
                             "WARNING: job submission failed - $rmsg</span><br />\n";
             break;
           }

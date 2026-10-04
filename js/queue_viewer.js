@@ -153,9 +153,9 @@ function update_ui_from_selection() {
     var total_selected = selected_gfacIDs.size;
     $('#global_select_count').text('Selected Jobs: ' + total_selected);
     if (total_selected > 0) {
-        $('#bulk_delete_button').show();
+        $('#bulk_delete_button').removeClass('d-none');
     } else {
-        $('#bulk_delete_button').hide();
+        $('#bulk_delete_button').addClass('d-none');
     }
 
     // Update "Select All" count
@@ -253,40 +253,78 @@ function bulk_delete_jobs() {
         var form = $('<form action="queue_viewer.php" method="post"></form>');
         form.append('<input type="hidden" name="delete" value="1" />');
         form.append($('<input>', { type: 'hidden', name: 'csrf_token', value: $('#queue_content').data('csrf') }));
-        selected_gfacIDs.forEach(function(gfacID) {
-            var cluster = $('.select_job[data-gfacid="' + gfacID + '"]').data('cluster');
+        // Walk the rows and keep each one's own cluster, rather than looking the
+        // cluster up by gfacID. A gfacID is the scheduler's job ID and is reused,
+        // so the selector could match more than one row and .data() returns the
+        // first, which sent the cancel to another job's cluster.
+        var paired = 0;
+        $('.select_job').each(function() {
+            var row = $(this);
+            var gfacID = String(row.data('gfacid'));
+            if (!selected_gfacIDs.has(gfacID)) {
+                return;
+            }
+            var cluster = row.data('cluster');
+            if (!cluster) {
+                return;
+            }
             form.append($('<input>', { type: 'hidden', name: 'gfacIDs[]', value: gfacID }));
             form.append($('<input>', { type: 'hidden', name: 'clusters[]', value: cluster }));
+            paired++;
         });
+
+        if (paired === 0) {
+            alert('None of the selected jobs are on this page any more, so nothing was cancelled.');
+            return;
+        }
         $('body').append(form);
         form.submit();
     }
 }
 
-function show_info( jobid )
-{
-  more_info  = document.getElementById( "more_info" + jobid );
-  info       = document.getElementById( "info" + jobid );
 
-  if ( info.style.display == 'block' ) 
-  {  
-    if ( document.all )  // old IE
-      more_info.innerHTML = "More Info";
-    else
-      more_info.textContent = "More Info";
+// Kick off the polling loop once the DOM is ready.  This replaces the
+// onload='update_queue_content();' attribute queue_viewer.php used to inject
+// into <body> via header.php, which CSP blocks as an inline event handler.
+document.addEventListener( 'DOMContentLoaded', function() {
+    update_queue_content();
+});
 
-    info.style.display = 'none';
-  }
-  else
-  {
-    if ( document.all )  // old IE
-      more_info.innerHTML = "Hide Info";
-    else
-      more_info.textContent = "Hide Info";
+// Delegated handlers for the queue table.
+//
+// queue_content.php used to emit these as inline onchange= attributes, which
+// CSP blocks.  They have to be delegated from the document rather than bound
+// directly, because update_queue_content() replaces #queue_content wholesale
+// on every poll -- directly bound handlers would be discarded each refresh.
+//
+// Each checkbox already carries the values the old inline handlers passed as
+// arguments in its data-* attributes, so nothing extra had to be emitted.
+document.addEventListener( 'change', function( event ) {
+    const target = event.target;
+    if ( !target ) {
+        return;
+    }
 
-    info.style.display = 'block';
-  }
+    if ( target.id === 'select_all_jobs' ) {
+        toggle_all_selection( target );
+    } else if ( target.classList.contains( 'select_runID_anal_status' ) ) {
+        toggle_runid_anal_status_selection( target,
+                                            target.dataset.runid,
+                                            target.dataset.analtype,
+                                            target.dataset.status );
+    } else if ( target.classList.contains( 'select_runID_anal' ) ) {
+        toggle_runid_anal_selection( target,
+                                     target.dataset.runid,
+                                     target.dataset.analtype );
+    } else if ( target.classList.contains( 'select_runID' ) ) {
+        toggle_runid_selection( target, target.dataset.runid );
+    } else if ( target.classList.contains( 'select_job' ) ) {
+        toggle_job_selection( target, target.dataset.gfacid );
+    }
+});
 
-  return false;
-}
-
+document.addEventListener( 'click', function( event ) {
+    if ( event.target && event.target.id === 'bulk_delete_button' ) {
+        bulk_delete_jobs();
+    }
+});

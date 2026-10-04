@@ -164,8 +164,16 @@ function us3_dbinst_config_assert_type( $key, $value, $type, $source )
   if ( !$valid )
     us3_dbinst_config_fail( "$source key '$key' must be $type" );
 
-  if ( $type == 'string' && $value === '' &&
-       !in_array( $key, array( 'admin_phone', 'disclaimer_file' ), true ) )
+  /*
+   * Keys that are legitimately empty on a deployed host. secure_user/secure_pw are
+   * the read-only database credentials view_database_info.php displays; an instance
+   * with no secure user configured has neither, which is the normal state for every
+   * instance the Ansible roles provision. Rejecting empty here made those instances
+   * impossible to migrate at all.
+   */
+  $may_be_empty = array( 'admin_phone', 'disclaimer_file', 'secure_user', 'secure_pw' );
+
+  if ( $type == 'string' && $value === '' && !in_array( $key, $may_be_empty, true ) )
     us3_dbinst_config_fail( "$source key '$key' must not be empty" );
 }
 

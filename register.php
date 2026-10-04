@@ -120,7 +120,7 @@ You have registered your $org_name account at $org_site.
 You are two steps away from logging in and accessing the system.
 To activate your account, please click here:
 
-http://$org_site/activate.php?id=$userid&code=$db_password
+https://$org_site/activate.php?id=$userid&code=$db_password
     
 Once you activate your membership, you will be able to login with the 
 following information:

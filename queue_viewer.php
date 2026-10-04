@@ -40,7 +40,6 @@ $sort_order = $_SESSION['queue_viewer_sort_order'] ?? 'submitTime';
 // Start displaying page
 $page_title = "Queue Viewer";
 $js     = 'js/queue_viewer.js';
-$onload = "onload='update_queue_content();'";
 $css    = 'css/queue_viewer.css';
 include 'header.php';
 ?>
@@ -80,7 +79,7 @@ function order_select( $current_order = NULL )
 
   $text  = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n";
   $text .= "<select name='sort_order' size='1'
-                    onchange='this.form.submit();' >\n";
+                    class='onchange-form-submit' >\n";
   foreach ( $sortorder as $order => $display )
   {
     $selected = ( $current_order == $order ) ? " selected='selected'" : "";

@@ -16,6 +16,8 @@
  *   --config-root=PATH        default: the loader's compiled-in root
  *   --credentials-file=PATH   default: ~us3/lims/.us3lims.ini
  *   --global-config=PATH      deployment global_config.php to inspect
+ *   --cluster-config=PATH     gridctl cluster_config.php, for the status probes
+ *                             (default ~us3/lims/bin/cluster_config.php)
  *   --instance=NAME           check only this instance; repeatable
  *   --dbinst-root=PATH        where instance checkouts live, for the
  *                             unmigrated-instance scan
@@ -175,7 +177,7 @@ function check_writable_mode( $path, $label )
 /* ---------------------------------------------------------------- options */
 
 $options = getopt( '', array(
-  'config-root::', 'credentials-file::', 'global-config::',
+  'cluster-config::', 'config-root::', 'credentials-file::', 'global-config::',
   'instance::', 'dbinst-root::', 'deep', 'quiet', 'help'
 ) );
 
@@ -641,9 +643,12 @@ else
       'global_ssh_copy_timeout_seconds', 'global_ssh_retries',
       'global_ssh_retry_wait_seconds', 'global_circuit_breaker_failures',
       'global_circuit_breaker_cooldown_seconds', 'global_circuit_breaker_disabled',
-      'global_timeout_bin', 'global_sbatch_submit_retries',
-      'global_sbatch_submit_retry_wait_seconds', 'global_cluster_down_after_failures',
+      'global_timeout_bin', 'global_cluster_down_after_failures',
     );
+    ## Not retired, despite sitting next to those: $global_sbatch_submit_retries
+    ## and $global_sbatch_submit_retry_wait_seconds are read by submit_slurm when
+    ## sbatch provably never started, and the shipped template sets both, so
+    ## listing them here warned about a standard installation's own defaults.
     $found = array_values( array_intersect( $retired, $probe[ 'data' ][ 'globals' ] ) );
     $found
       ? check_warn( 'no retired global keys are set', implode( ', ', $found ) )
@@ -696,19 +701,93 @@ else
                       implode( '; ', $bad ) )
         : check_pass( 'cluster entries use the current key surface',
                       count( $clusters ) . ' clusters' );
+
+      /*
+       * An active cluster needs an active status probe, or cluster_status.php
+       * writes no row for it and the web tier treats a cluster with no row as
+       * down. The two files are edited separately, so activating a cluster in
+       * global_config.php alone leaves it permanently greyed out with nothing
+       * saying why. That is the state an operator lands in after enabling a
+       * converted national HPC entry.
+       */
+      $cluster_config = isset( $options[ 'cluster-config' ] )
+                      ? $options[ 'cluster-config' ]
+                      : rtrim( (string) @shell_exec( 'ls -d ~us3/lims/bin 2>/dev/null' ) )
+                        . '/cluster_config.php';
+      $active_names = array();
+      foreach ( $clusters as $name => $details )
+        if ( is_array( $details ) && ! empty( $details[ 'active' ] ) )
+          $active_names[] = $name;
+
+      if ( ! is_file( $cluster_config ) )
+        check_warn( 'active clusters have a status probe',
+                    "cluster_config.php not found at $cluster_config;"
+                    . ' pass --cluster-config=PATH to check it' );
+      elseif ( ! $active_names )
+        check_warn( 'active clusters have a status probe', 'no cluster is active' );
+      else {
+        $cc = check_subprocess(
+            "<?php\n"
+          . 'include ' . var_export( $cluster_config, true ) . ";\n"
+          . "echo json_encode( isset( \$cluster_configuration )\n"
+          . "                  && is_array( \$cluster_configuration )\n"
+          . "                  ? \$cluster_configuration : null );\n" );
+        $probes = is_array( $cc ) && isset( $cc[ 'data' ] ) ? $cc[ 'data' ] : null;
+        if ( ! is_array( $probes ) )
+          check_warn( 'active clusters have a status probe',
+                      "could not read \$cluster_configuration from $cluster_config" );
+        else {
+          $unprobed = array();
+          foreach ( $active_names as $name ) {
+            if ( ! is_array( isset( $probes[ $name ] ) ? $probes[ $name ] : null ) )
+              $unprobed[] = "$name has no cluster_config.php entry";
+            elseif ( empty( $probes[ $name ][ 'active' ] ) )
+              $unprobed[] = "$name has an inactive status probe";
+            elseif ( trim( (string) ( isset( $probes[ $name ][ 'status' ] )
+                                      ? $probes[ $name ][ 'status' ] : '' ) ) === '' )
+              $unprobed[] = "$name has an active probe with no status command";
+          }
+          $unprobed
+            ? check_fail( 'active clusters have a status probe',
+                          implode( '; ', $unprobed )
+                          . '; the web tier greys out a cluster with no cluster_status row' )
+            : check_pass( 'active clusters have a status probe',
+                          count( $active_names ) . ' active' );
+        }
+      }
     }
 
     /*
-     * The breaker is cross-process memory shared by the web tier and the us3
-     * cron/daemon account. If the directory is unusable it silently disables
-     * itself and every call reverts to per-process retry.
+     * The breaker is cross-process memory. If the directory is unusable it
+     * silently disables itself and every call reverts to per-process retry.
+     *
+     * State is kept per account in a subdirectory of this one, at 0700 with files
+     * at 0600, so the web tier and the us3 daemons do not share a file that
+     * decides whether a cluster is contacted. What matters here is only that the
+     * parent is writable, since each account creates its own subdirectory.
      */
     $breaker = $probe[ 'data' ][ 'breaker_dir' ];
     if ( $breaker === null )
     {
-      $breaker = '/var/tmp/us3-circuit-breaker';
+      /*
+       * remote_exec::default_breaker_dir(): ~us3/lims/etc/circuit-breaker, or
+       * the BREAKER_DIR constant when there is no us3 account. This used to
+       * assume /var/tmp/us3-circuit-breaker, which is the one location the code
+       * deliberately avoids, so the tool reported a path nothing would use.
+       */
+      $us3     = function_exists( 'posix_getpwnam' ) ? @posix_getpwnam( 'us3' ) : false;
+      $breaker = ( is_array( $us3 ) && isset( $us3[ 'dir' ] ) ? $us3[ 'dir' ] : '/home/us3' )
+                 . '/lims/etc/circuit-breaker';
       check_pass( 'breaker directory owner', "code default ($breaker)" );
     }
+    elseif ( preg_match( '#^/var/tmp(/|$)#', $breaker ) )
+      /*
+       * systemd PrivateTmp gives each service its own /var/tmp, so state written
+       * there is invisible to the other side and aged out underneath both.
+       */
+      check_fail( 'breaker directory owner',
+                  "$breaker is under /var/tmp, which PrivateTmp splits per service"
+                  . " and tmpfiles ages out; use a path under ~us3/lims/etc" );
     else
       check_warn( 'breaker directory owner',
                   "global_config.php overrides the code default: $breaker" );

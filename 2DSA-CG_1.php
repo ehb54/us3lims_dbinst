@@ -86,6 +86,9 @@ if ( isset($_POST['TIGRE']) )
     if ( isset( $_SESSION[ 'gwhostid' ] ) )
       $gwhostid   = $_SESSION[ 'gwhostid' ];
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
+    // The select list is filtered for display only, so the posted name is
+    // checked here before it reaches the session or a submission.
+    require_authorized_cluster( $cluster_shortname );
     if ( preg_match( "/alamo/", $gwhostid )  &&  $cluster_shortname == 'alamo' )
     {  // alamo-to-alamo uses alamo-local as cluster
       $cluster_shortname = 'alamo-local';
@@ -185,14 +188,9 @@ if ( isset($_SESSION['edit_select_type'])  &&
 
 <div>
 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"
-      onsubmit="return validate(this, 
-                <?php echo $advanceLevel; ?>, 
-                <?php echo $dataset_id; ?>,
-                <?php echo $num_datasets; ?>, 
-                <?php echo $separate_datasets; ?>,
-                <?php echo $editMeniscus; ?>,
-                <?php echo $dataLeft; ?>);" >
-
+      class='onsubmit-return-validate-this-args'
+      data-args='<?php echo htmlspecialchars( json_encode( [ (int)$advanceLevel, (int)$dataset_id, (int)$num_datasets, (int)$separate_datasets, (float)$editMeniscus, (float)$dataLeft ] ), ENT_QUOTES ); ?>'
+      >
 
 <?php
 // if ( isset($error) ) echo $error;
@@ -268,10 +266,10 @@ function display( $dataset_id, $num_datasets )
   }
  
   echo<<<HTML
-    <p><button onclick="return toggle('advanced');" id='show'>
+    <p><button class='onclick-return-toggle-advanced' id='show'>
       Show Advanced Options</button></p>
 
-    <div id='advanced' style='display:none;'>
+    <div id='advanced' class='d-none'>
 
 HTML;
 
@@ -292,11 +290,11 @@ HTML;
   echo<<<HTML
     </div>
 
-    <input class="submit" type="button" 
-            onclick='window.location="queue_setup_2.php"' 
+    <input class="submit onclick-window-location-arg" type="button" 
+            data-arg='queue_setup_2.php'
             value="Edit Profiles"/>
-    <input class="submit" type="button" 
-            onclick='window.location="queue_setup_1.php"' 
+    <input class="submit onclick-window-location-arg" type="button" 
+            data-arg='queue_setup_1.php'
             value="Change Experiment"/>
   </fieldset>
 HTML;

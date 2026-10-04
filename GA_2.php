@@ -49,6 +49,9 @@ if ( isset($_POST['TIGRE']) )
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
     $gwhostid   = $_SESSION[ 'gwhostid' ] ?? 'uslims3';
     list( $cluster_name, $cluster_shortname, $queue ) = explode(":", $_POST['cluster'] );
+    // The select list is filtered for display only, so the posted name is
+    // checked here before it reaches the session or a submission.
+    require_authorized_cluster( $cluster_shortname );
     if ( preg_match( "/alamo/", $gwhostid )  &&  $cluster_shortname == 'alamo' )
     {  // alamo-to-alamo uses alamo-local as cluster
       $cluster_shortname = 'alamo-local';
@@ -111,11 +114,7 @@ if ( $advanceLevel == 0 )
 $solute_count = 5;
 if ( isset($_GET['count']) )
 {
-  if ( $_GET['count'] < 1 ) $solute_count = 1;
-
-  else if ( $_GET['count'] > $max_buckets ) $solute_count = $max_buckets;
-
-  else $solute_count = $_GET['count'];
+  $solute_count = min( max( (int)$_GET['count'], 1 ), $max_buckets );
 }
   
 // Process initial bucket file upload, if present
@@ -164,7 +163,7 @@ echo <<<HTML
        $file_info</p>
 
     <form enctype="multipart/form-data" action="{$_SERVER['PHP_SELF']}" method="post">
-      <fieldset style="background: #eeeeee">
+      <fieldset class='bg-gray'>
         <legend>Select File to Upload $soluteFile</legend>
         <input type="file" name="file-upload" size="30" accept=".dat"/>
         <input type="submit" name="upload_submit" value="Load Values"/>
@@ -177,8 +176,9 @@ echo <<<HTML
       <legend>Set Number of Solutes</legend>
       <br/>
       Value: <input type='text' name='sol' id='sol'
-                    onchange='javascript:get_solute_count(this);' 
-                    value="$solute_count" size='10'/>
+                    class='onchange-get-solute-count' 
+                    value="$solute_count" data-rendered-count="$solute_count"
+                    size='10'/>
                     Range: (Minimum:1 ~ Maximum:$max_buckets) 
     </fieldset>
   </form>
@@ -186,7 +186,8 @@ echo <<<HTML
 HTML;
 
   echo "<form name='Solutes' action='GA_2.php' method='post' " .
-       "      onsubmit='return validate_solutes( $solute_count );'>\n";
+       "      class='onsubmit-return-validate-solutes-args' " .
+       "      data-args='" . htmlspecialchars( json_encode( [ (int)$solute_count ] ), ENT_QUOTES ) . "' >\n";
 
   echo solute_setup( $buckets, $solute_count );
 
@@ -266,7 +267,7 @@ HTML;
 
   $solute_text .= <<<HTML
     <input class='submit' type='button'
-           onclick="window.location='GA_1.php'" value='Setup GA Control'/>
+           class='onclick-window-location-arg' data-arg='GA_1.php' value='Setup GA Control'/>
     <input type='hidden' name='solute-value' value="$count"/>
     <input type='hidden' name='x-type' value="$xtype"/>
     <input type='hidden' name='y-type' value="$ytype"/>

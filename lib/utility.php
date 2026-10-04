@@ -209,7 +209,7 @@ function is_single_tenant_deployment()
 
 if ( empty( $admin_list ) || !is_array( $admin_list ) ) {
     ## admin_list must be set in global_config.php or cluster_config.php
-    error_log( "ERROR: lib/utility.php: \$admin_list is not set or empty — check global_config.php" );
+    error_log( "ERROR: lib/utility.php: \$admin_list is not set or empty; check global_config.php" );
 }
 
 // Per-session token for state-changing forms
@@ -223,28 +223,7 @@ function csrf_token()
 
 function emailsyntax_is_valid($email)
 {
-  $array = explode("@", $email);
-  if ( count($array) != 2 ) {
-    return FALSE;
-  }
-
-  list($local, $domain) = $array;
-
-  $pattern_local  = '/^([0-9a-z]*([-|_]?[0-9a-z]+)*)' .
-                    '(([-|_]?)\.([-|_]?)[0-9a-z]*([-|_]?[0-9a-z]+)+)*([-|_]?)$/i';
-
-  $pattern_domain = '/^([0-9a-z]+([-]?[0-9a-z]+)*)' .
-                    '(([-]?)\.([-]?)[0-9a-z]*([-]?[0-9a-z]+)+)*\.[a-z]{2,4}$/i';
-
-  $match_local  = preg_match($pattern_local, $local);
-  $match_domain = preg_match($pattern_domain, $domain);
-
-  if ( $match_local && $match_domain )
-  {
-    return TRUE;
-  }
-
-  return FALSE;
+  return filter_var( $email, FILTER_VALIDATE_EMAIL ) !== false;
 }
 
 function PAM_name_is_valid($name)
@@ -298,6 +277,32 @@ function makeRandomPassword($fixed_length = 0 ): string
   return $pass;
 }
 
+// Marks every cluster with no cluster_status row as down, and returns their short
+// names. $reason, when given, says why no row was found at all.
+function mark_clusters_without_status( &$clusters, $have_row, $reason = '' )
+{
+   if ( !is_array( $clusters ) )
+     return array();
+
+   $marked = array();
+   foreach ( $clusters as $cluster )
+   {
+     if ( in_array( $cluster->short_name, $have_row ) )
+       continue;
+
+     $cluster->status = 'down';
+     $marked[]        = $cluster->short_name;
+   }
+
+   if ( count( $marked ) > 0 )
+     error_log( "lib/utility.php: no cluster_status row for "
+                . implode( ', ', $marked ) . "; treating as down."
+                . ( $reason != '' ? " Cause: $reason." : "" )
+                . " Check that cluster_status.php is still running from cron." );
+
+   return $marked;
+}
+
 // A class to keep track of cluster information, and what clusters are available
 class cluster_info
 {
@@ -320,8 +325,10 @@ class cluster_info
 }
 
 if ( !isset( $clusters ) || !is_array( $clusters ) || count( $clusters ) == 0 ) {
-    // An empty cluster list indicates missing or invalid configuration.
-    error_log( "ERROR: lib/utility.php: \$clusters is empty after collect_config_info() — check global_config.php and cluster_config.php" );
+    // Normalize to an empty array: the health loop below counts and indexes
+    // $clusters, which is a TypeError on PHP 8 when it is unset or not an array.
+    error_log( "ERROR: lib/utility.php: \$clusters is empty after collect_config_info(); check global_config.php and cluster_config.php" );
+    $clusters = array();
 }
 
 global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
@@ -350,6 +357,7 @@ $cluster_status_max_age = isset( $global_cluster_status_max_age_seconds )
 $query     = "SELECT cluster, running, queued, status, "
            . "TIMESTAMPDIFF(SECOND, time, NOW()) AS age FROM cluster_status";
 $result    = $gfac_link ? mysqli_query( $gfac_link, $query ) : false;
+$have_row  = array();
 
 while ( $result && list( $cluster, $running, $queued, $status, $age ) = mysqli_fetch_row( $result ) )
 {
@@ -375,15 +383,73 @@ while ( $result && list( $cluster, $running, $queued, $status, $age ) = mysqli_f
        $clusters[$ii]->running = $running;
        $clusters[$ii]->queued  = $queued;
        $clusters[$ii]->status  = $status;
+       $have_row[] = $cluster;
      }
    }
 }
+
+// A cluster with no cluster_status row has never been probed, or its probe has
+// stopped writing. That is the same unknown as an expired row, so treat it the
+// same way rather than leaving it selectable on a constructor default.
+mark_clusters_without_status( $clusters, $have_row, $gfac_link ? '' : 'the gfac database is unreachable' );
 
 if ( $gfac_link )
   mysqli_close( $gfac_link );
 
 // Reset default db
 include "db.php";
+
+// Is this session allowed to submit to $shortname?
+//
+// showClusters() filters the select list by clusterAuth, but that is display
+// only: the submission pages take the cluster out of $_POST and put it in the
+// session without checking it again, so a posted name that was never offered
+// was accepted. The rule here is the one the list applies, kept in one place so
+// the two cannot drift: userlevel 2 or above, the cluster configured, and the
+// cluster named in this session's authorizations.
+function cluster_is_authorized( $shortname )
+{
+   global $clusters;
+
+   if ( ! isset( $_SESSION[ 'userlevel' ] ) || $_SESSION[ 'userlevel' ] < 2 )
+     return false;
+
+   if ( ! is_array( $clusters ) )
+     return false;
+
+   $configured = false;
+   foreach ( $clusters as $cluster )
+   {
+     if ( $cluster->short_name === $shortname )
+     {
+       $configured = true;
+       break;
+     }
+   }
+
+   if ( ! $configured )
+     return false;
+
+   return isset( $_SESSION[ 'clusterAuth' ] )
+          && is_array( $_SESSION[ 'clusterAuth' ] )
+          && in_array( $shortname, $_SESSION[ 'clusterAuth' ] );
+}
+
+// Stop with a message when the posted cluster is not this user's to use. The
+// pages that submit call this straight after reading $_POST['cluster'].
+function require_authorized_cluster( $shortname )
+{
+   if ( cluster_is_authorized( $shortname ) )
+     return;
+
+   error_log( "lib/utility.php: session for "
+              . ( $_SESSION[ 'email' ] ?? 'unknown' )
+              . " posted unauthorized cluster '" . (string) $shortname . "'" );
+
+   echo "<p class='red'>That cluster is not available to this account.</p>\n";
+   include 'footer.php';
+   exit();
+}
 
 // Function to show appropriate clusters
 function showClusters()
@@ -393,7 +459,7 @@ function showClusters()
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
 
-  $text = "    <fieldset style='margin-top:1em' id='clusters'>\n" .
+  $text = "    <fieldset class='mt-1em' id='clusters'>\n" .
           "      <legend>Available Clusters:</legend>\n";
 
   // Double check cluster authorizations
@@ -425,8 +491,8 @@ HTML;
         {
           // A failed health probe reports 'warn'; the cluster remains selectable.
           $clstat   = ( $cluster->status == 'warn' )
-                    ? "<td STYLE='color: DarkOrange' title='last health check failed'>$cluster->status</td>"
-                    : "<td STYLE='color: green'>$cluster->status</td>";
+                    ? "<td class='text-darkorange' title='last health check failed'>$cluster->status</td>"
+                    : "<td class='text-green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
@@ -455,12 +521,12 @@ HTML;
   
         else if ( $cluster->status == 'down' )
         {
-          $clstat   = "<td STYLE='color: red'>$cluster->status</td>";
+          $clstat   = "<td class='text-red'>$cluster->status</td>";
         }
   
         else if ( $cluster->status == 'draining' )
         {
-          $clstat   = "<td STYLE='color: DarkViolet'>$cluster->status</td>";
+          $clstat   = "<td class='text-darkviolet'>$cluster->status</td>";
         }
 
         $clname = $cluster->name;
@@ -527,7 +593,7 @@ function tigre( $force_pmg = false )
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
 
-  $text = "    <fieldset style='margin-top:1em' id='clusters'>\n" .
+  $text = "    <fieldset class='mt-1em' id='clusters'>\n" .
           "      <legend>Select Cluster</legend>\n";
 
   ## do we have mgroupcount && mc_iterations > 1?
@@ -593,8 +659,8 @@ HTML;
         {
           // A failed health probe reports 'warn'; the cluster remains selectable.
           $clstat   = ( $cluster->status == 'warn' )
-                    ? "<td STYLE='color: DarkOrange' title='last health check failed'>$cluster->status</td>"
-                    : "<td STYLE='color: green'>$cluster->status</td>";
+                    ? "<td class='text-darkorange' title='last health check failed'>$cluster->status</td>"
+                    : "<td class='text-green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
   
@@ -623,12 +689,12 @@ HTML;
   
         else if ( $cluster->status == 'down' )
         {
-          $clstat   = "<td STYLE='color: red'>$cluster->status</td>";
+          $clstat   = "<td class='text-red'>$cluster->status</td>";
         }
   
         else if ( $cluster->status == 'draining' )
         {
-          $clstat   = "<td STYLE='color: DarkViolet'>$cluster->status</td>";
+          $clstat   = "<td class='text-darkviolet'>$cluster->status</td>";
         }
 
         $clname = $cluster->name;
@@ -659,7 +725,7 @@ HTML;
 ##    if ( $ngamc > 0 )
 ##    {  // Add note about choosing "-gamc" cluster
 ##       $mctext .= <<<HTML
-##       </table><table><tr><td STYLE='color: DarkViolet'>
+##       </table><table><tr><td class='text-darkviolet'>
 ##<b>N.B.</b> For GA-MC jobs, select any existing "-gamc" variation of a chosen cluster.</td></tr>
 ## HTML;
 ##    }

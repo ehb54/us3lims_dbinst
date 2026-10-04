@@ -175,8 +175,8 @@ It covers the host base and its permissions, each overlay and the effective
 configuration it produces, the shim and its `$is_cli` marker, contract-version
 agreement between the base and each instance's loader, the credential file, the
 `$is_cli` marker in unmigrated instances, retired global keys, cluster entries
-still carrying keys `remote_exec` now rejects, and the circuit breaker
-directory.
+still carrying keys `remote_exec` now rejects, whether every active cluster has
+an active status probe, and the circuit breaker directory.
 
 Useful options:
 
@@ -186,10 +186,39 @@ Useful options:
 - `--deep` additionally opens the instance and global databases with their real
   credentials.
 - `--quiet` prints only warnings and failures.
+- `--cluster-config=PATH` points at gridctl's `cluster_config.php` when it is not
+  at `~us3/lims/bin/cluster_config.php`. The tool checks that every cluster
+  active in `global_config.php` has an active status probe there, since the two
+  files are edited separately and a cluster active in only the first is greyed
+  out by the web tier with nothing saying why.
 
 Run it as the `us3` account for the CLI view, and once more as the web account
 where possible: the two see different file permissions, which is the difference
 that matters most for the credential file.
+
+## Cluster health after an upgrade
+
+`cluster_status.php` writes the `gfac.cluster_status` rows the web tier reads to
+decide which clusters a user may select. Run it once by hand before handing the
+host back:
+
+```text
+sudo -u us3 php /home/us3/lims/bin/gridctl/cluster_status.php
+```
+
+It is also on `us3`'s crontab every 12 minutes, so the rows refresh on their own,
+but an upgrade leaves a window where every cluster looks unavailable. Two rules
+produce that:
+
+- a row older than `$global_cluster_status_max_age_seconds` (default 1800, two
+  cron runs) is treated as down. Nothing probed the clusters during the
+  maintenance window, so every row is stale when the host comes back;
+- a cluster with no row at all is treated as down as well, since an unprobed
+  cluster is the same unknown as an expired one.
+
+Both are intended: an unknown cluster is not offered for submission. Skipping the
+manual run is not harmful, it just greys every cluster out until the next cron
+run. `uslims_upgrade.php` prints this as step 3 of its closing instructions.
 
 ## Required verification
 
@@ -203,5 +232,7 @@ Before activating an instance:
 4. verify web login, session database identity, and instance isolation;
 5. verify gridctl `submitctl.php` recognizes the literal `$is_cli` marker;
 6. exercise submission, status, cancellation, and result handling; and
-7. demonstrate restoration of the preserved legacy file.
+7. demonstrate restoration of the preserved legacy file; and
+8. refresh cluster health with `cluster_status.php`, then confirm the intended
+   clusters are selectable rather than greyed out.
 
