@@ -214,10 +214,13 @@ function PAM_name_is_valid($name)
 // on, a large batch holds back its progress lines long enough for Apache's
 // proxy timeout to drop the request mid-submit (ultrascan-tickets#1115).
 // Flushes the top buffer without ending it, so callers capturing output with
-// ob_start() (e.g. gridctl submitone.php) still receive everything.
+// ob_start() (e.g. gridctl submitone.php) still receive everything. A buffer
+// started without PHP_OUTPUT_HANDLER_FLUSHABLE is left alone: ob_flush() on it
+// only raises a notice.
 function flush_output()
 {
-  if ( ob_get_level() > 0 ) {
+  $status = ob_get_status();
+  if ( ! empty( $status ) && ( $status[ 'flags' ] & PHP_OUTPUT_HANDLER_FLUSHABLE ) ) {
     ob_flush();
   }
   flush();
