@@ -38,6 +38,11 @@ include $class_dir . 'submit_gfac.php';
 include $class_dir . 'submit_airavata.php';
 include_once $class_dir . 'priority.php';
 
+// A large batch takes minutes to submit; finish it even if the browser or
+// the web server gives up on this request (ultrascan-tickets#1115)
+ignore_user_abort( true );
+set_time_limit( 0 );
+
 // Make sure the advancement level is set
 $advanceLevel = $_SESSION['advancelevel'] ?? 0;
 
