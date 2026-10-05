@@ -28,12 +28,48 @@ function elog_secret_key( $key ) {
 ## so entries for the same person can still be matched up while debugging.
 function elog_identity_key( $key ) {
     foreach ( [ 'email', 'firstname', 'lastname', 'fullname', 'phone', 'address',
-                'loginid', 'username' ] as $needle ) {
+                'loginid', 'username', 'user_id', 'new_submitter' ] as $needle ) {
         if ( stripos( (string) $key, $needle ) !== false ) {
             return true;
         }
     }
     return false;
+}
+
+## A per-host secret for the digest below, generated once and reused so a
+## person's entries keep matching across log lines. Unsalted SHA-1 is
+## reversible by dictionary against the people table, and by brute force for
+## something as short as a phone number; keying the hash on a secret nothing
+## in elog.txt ever reveals closes that.
+function elog_hmac_key() {
+    static $cached = null;
+    if ( $cached !== null ) {
+        return $cached;
+    }
+
+    $us3pwentry = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
+    $keyfile    = ( $us3pwentry ? $us3pwentry['dir'] : '/home/us3' ) . '/lims/etc/elog_hmac_key';
+
+    $existing = @file_get_contents( $keyfile );
+    if ( $existing !== false && $existing !== '' ) {
+        return $cached = $existing;
+    }
+
+    $key = random_bytes( 32 );
+
+    ## Atomic: a second process racing this one writes its own temp file and
+    ## simply loses the rename, rather than two processes sharing a
+    ## half-written key or overwriting an already-adopted one.
+    $tmp = $keyfile . '.' . getmypid() . '.tmp';
+    if ( @file_put_contents( $tmp, $key ) !== false ) {
+        @chmod( $tmp, 0600 );
+        if ( ! @rename( $tmp, $keyfile ) ) {
+            @unlink( $tmp );
+        }
+    }
+
+    $existing = @file_get_contents( $keyfile );
+    return $cached = ( $existing !== false && $existing !== '' ) ? $existing : $key;
 }
 
 ## elog.txt is plain text under ~us3/lims/etc, readable by anyone who can read the
@@ -49,7 +85,7 @@ function elog_filter( $data ) {
         if ( elog_secret_key( $key ) ) {
             $out[ $key ] = '[redacted]';
         } elseif ( elog_identity_key( $key ) && is_scalar( $value ) && $value !== '' ) {
-            $out[ $key ] = '[id:' . substr( sha1( (string) $value ), 0, 8 ) . ']';
+            $out[ $key ] = '[id:' . substr( hash_hmac( 'sha256', (string) $value, elog_hmac_key() ), 0, 8 ) . ']';
         } elseif ( is_array( $value ) || is_object( $value ) ) {
             $out[ $key ] = elog_filter( $value );
         } else {
@@ -67,11 +103,35 @@ function elog( $msg ) {
     // Without a shell: SELinux httpd_t may prohibit it.
     $us3pwentry = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
     $elogfile   = ( $us3pwentry ? $us3pwentry['dir'] : '/home/us3' ) . '/lims/etc/elog.txt';
-    if ( @filesize( $elogfile ) > ELOG_MAX_BYTES ) {
-        @rename( $elogfile, "$elogfile.1" );
+
+    ## Rollover under a lock: two requests over the limit at once must not both
+    ## rename to the same ".1", which only one of them can hold, silently
+    ## losing whichever rollover lost the race.
+    $lockfile = "$elogfile.lock";
+    $lock     = @fopen( $lockfile, 'c' );
+    if ( $lock !== false ) {
+        @chmod( $lockfile, 0600 );
+        if ( @flock( $lock, LOCK_EX ) ) {
+            if ( @filesize( $elogfile ) > ELOG_MAX_BYTES && ! @rename( $elogfile, "$elogfile.1" ) ) {
+                ## Surfaced to the system log, not swallowed: a web account that
+                ## cannot write ~us3/lims/etc otherwise fails this every time
+                ## with no sign anywhere that it is happening.
+                error_log( "elog: could not roll over $elogfile to $elogfile.1" );
+            }
+            flock( $lock, LOCK_UN );
+        }
+        fclose( $lock );
     }
+
+    $existed = file_exists( $elogfile );
     $msg = "[" .  date('m/d/Y H:i:s', time()) . "] [" .  ( $_SERVER['REMOTE_ADDR'] ?? 'cli' ) . "] $msg";
     error_log( "$msg\n", 3, $elogfile );
+    if ( ! $existed ) {
+        ## error_log() creates the file under the web process's umask, which
+        ## is commonly 0644; elog.txt holds debug detail even after
+        ## filtering, so it should not be world-readable.
+        @chmod( $elogfile, 0640 );
+    }
 }
 
 function elogo( $msg, $obj ) {
