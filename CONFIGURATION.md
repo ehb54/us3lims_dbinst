@@ -203,12 +203,17 @@ decide which clusters a user may select. Run it once by hand before handing the
 host back:
 
 ```text
-sudo -u us3 php /home/us3/lims/bin/gridctl/cluster_status.php
+sudo -u us3 php /home/us3/lims/bin/cluster_status.php
 ```
 
-It is also on `us3`'s crontab every 12 minutes, so the rows refresh on their own,
-but an upgrade leaves a window where every cluster looks unavailable. Two rules
-produce that:
+It is also on `us3`'s crontab every 12 minutes, so the rows refresh on their own
+**once that entry is active**. An upgrade comments out the LIMS cron entries,
+including this one, for the duration; confirm it was uncommented again before
+relying on the 12-minute self-heal below, or every cluster stays greyed out
+indefinitely rather than just for one upgrade window.
+
+An upgrade also leaves a window where every cluster looks unavailable even with
+cron running. Two rules produce that:
 
 - a row older than `$global_cluster_status_max_age_seconds` (default 1800, two
   cron runs) is treated as down. Nothing probed the clusters during the
