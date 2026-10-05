@@ -51,9 +51,18 @@ include_once $class_dir . 'priority.php';
 
 ## submit_progress() comes from common. With an older common the include above is
 ## only a warning and the call would be fatal, taking the submission with it, so
-## fall back to a no-op: the progress lines are cosmetic.
+## fall back to a minimal stand-in: a bare flush() with nothing written sends
+## Apache nothing, so a long batch would hit the proxy's idle timeout again,
+## the exact failure the old echo+flush_output() pairs here existed to avoid.
 if ( ! function_exists( 'submit_progress' ) ) {
-    function submit_progress( $msg ) {}
+    function submit_progress( $msg ) {
+        if ( PHP_SAPI === 'cli' )
+            return;
+        echo "<!-- progress -->\n";
+        if ( ob_get_level() > 0 )
+            @ob_flush();
+        @flush();
+    }
 }
 
 $submit_method = 'PCSA';
