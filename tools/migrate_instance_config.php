@@ -304,8 +304,12 @@ if ( $activate )
   echo "Candidate shim loads and reports the expected database.\n";
 
   /* Keep the legacy file under a name that says what it is, and never overwrite
-   * an earlier backup. */
-  $backup_path = $legacy_path . '.legacy-' . date( 'YmdHis' );
+   * an earlier backup. Outside the instance docroot: the legacy config.php
+   * holds database passwords, and a name ending in anything but .php is
+   * served as plain text by the same web server, not run as PHP. The
+   * instances directory already exists and is writable here, since
+   * --write-candidate had to create $overlay_path in it first. */
+  $backup_path = dirname( $overlay_path ) . '/' . $instance . '.config.php.legacy-' . date( 'YmdHis' );
   if ( file_exists( $backup_path ) )
     migration_fail( "backup already exists: $backup_path" );
   if ( !@copy( $legacy_path, $backup_path ) )
