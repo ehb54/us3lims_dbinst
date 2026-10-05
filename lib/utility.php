@@ -210,6 +210,19 @@ function PAM_name_is_valid($name)
   return FALSE;
 }
 
+// Push output written so far through to the web server. With output_buffering
+// on, a large batch holds back its progress lines long enough for Apache's
+// proxy timeout to drop the request mid-submit (ultrascan-tickets#1115).
+// Flushes the top buffer without ending it, so callers capturing output with
+// ob_start() (e.g. gridctl submitone.php) still receive everything.
+function flush_output()
+{
+  if ( ob_get_level() > 0 ) {
+    ob_flush();
+  }
+  flush();
+}
+
 // Random Password generator. 
 // http://www.phpfreaks.com/quickcode/Random_Password_Generator/56.php
 /**
