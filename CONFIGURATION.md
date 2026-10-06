@@ -206,11 +206,14 @@ host back:
 sudo -u us3 php /home/us3/lims/bin/cluster_status.php
 ```
 
-It is also on `us3`'s crontab every 12 minutes, so the rows refresh on their own
-**once that entry is active**. An upgrade comments out the LIMS cron entries,
-including this one, for the duration; confirm it was uncommented again before
-relying on the 12-minute self-heal below, or every cluster stays greyed out
-indefinitely rather than just for one upgrade window.
+It is also on a crontab every 12 minutes, so the rows refresh on their own
+**once that entry is active** -- `us3`'s own crontab on a hand-built host, or
+`/etc/crontab` on a host the us3lims-roles Ansible roles built, which is also
+where `uslims_upgrade.php`'s idle check for a commented-out LIMS cron looks.
+An upgrade comments out the LIMS cron entries, including this one, for the
+duration; confirm it was uncommented again, in whichever of the two locations
+applies, before relying on the 12-minute self-heal below, or every cluster
+stays greyed out indefinitely rather than just for one upgrade window.
 
 An upgrade also leaves a window where every cluster looks unavailable even with
 cron running. Two rules produce that:

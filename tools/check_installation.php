@@ -479,6 +479,20 @@ foreach ( $overlays as $instance )
     check_warn( 'instance is migrated',
                 'an overlay exists but config.php is still the legacy file' );
 
+  /* migrate_instance_config.php --activate backs up the legacy config.php it
+   * replaces; before 5682b3f that backup landed in the instance docroot
+   * itself, next to config.php, with the database passwords it held. A host
+   * that ran --activate before that fix still has it sitting there. */
+  $stale_backups = glob( rtrim( $effective[ 'full_path' ], '/' )
+                        . '/' . $instance . '.config.php.legacy-*' ) ?: array();
+  if ( $stale_backups )
+    check_warn( 'no legacy config.php backup left in the docroot',
+                count( $stale_backups ) . ' found, e.g. ' . $stale_backups[ 0 ]
+                . ' -- move it under ' . $config_root . '/instances, outside'
+                . ' anything the web server serves' );
+  else
+    check_pass( 'no legacy config.php backup left in the docroot' );
+
   if ( $deep )
   {
     $connect = check_subprocess(

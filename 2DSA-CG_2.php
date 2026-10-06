@@ -59,9 +59,7 @@ if ( ! function_exists( 'submit_progress' ) ) {
         if ( PHP_SAPI === 'cli' )
             return;
         echo "<!-- progress -->\n";
-        if ( ob_get_level() > 0 )
-            @ob_flush();
-        @flush();
+        flush_output();
     }
 }
 

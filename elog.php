@@ -57,15 +57,19 @@ function elog_hmac_key() {
 
     $key = random_bytes( 32 );
 
-    ## Atomic: a second process racing this one writes its own temp file and
-    ## simply loses the rename, rather than two processes sharing a
-    ## half-written key or overwriting an already-adopted one.
+    ## First-writer-wins: link() never replaces an existing target (unlike
+    ## rename(), which would), so a second process racing this one -- or a
+    ## second account that can't read the first one's key file and so looks
+    ## unset to it -- adopts the file the first process created instead of
+    ## installing its own and silently changing every digest already written
+    ## under the old key.
     $tmp = $keyfile . '.' . getmypid() . '.tmp';
     if ( @file_put_contents( $tmp, $key ) !== false ) {
         @chmod( $tmp, 0600 );
-        if ( ! @rename( $tmp, $keyfile ) ) {
-            @unlink( $tmp );
+        if ( ! @link( $tmp, $keyfile ) && ! is_file( $keyfile ) ) {
+            error_log( "elog: could not create $keyfile" );
         }
+        @unlink( $tmp );
     }
 
     $existing = @file_get_contents( $keyfile );
@@ -100,33 +104,47 @@ function elog_json( $data ) {
 }
 
 function elog( $msg ) {
-    // Without a shell: SELinux httpd_t may prohibit it.
     $us3pwentry = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
     $elogfile   = ( $us3pwentry ? $us3pwentry['dir'] : '/home/us3' ) . '/lims/etc/elog.txt';
 
-    ## Rollover under a lock: two requests over the limit at once must not both
-    ## rename to the same ".1", which only one of them can hold, silently
-    ## losing whichever rollover lost the race.
-    $lockfile = "$elogfile.lock";
-    $lock     = @fopen( $lockfile, 'c' );
-    if ( $lock !== false ) {
-        @chmod( $lockfile, 0600 );
-        if ( @flock( $lock, LOCK_EX ) ) {
-            if ( @filesize( $elogfile ) > ELOG_MAX_BYTES && ! @rename( $elogfile, "$elogfile.1" ) ) {
-                ## Surfaced to the system log, not swallowed: a web account that
-                ## cannot write ~us3/lims/etc otherwise fails this every time
-                ## with no sign anywhere that it is happening.
-                error_log( "elog: could not roll over $elogfile to $elogfile.1" );
-            }
-            flock( $lock, LOCK_UN );
-        }
-        fclose( $lock );
+    ## Lock the log file itself rather than a separate lock file: whichever
+    ## account created a separate lock file first would be the only one able
+    ## to open it, leaving every other account's rollover (and its over-limit
+    ## growth) silent forever. Any account that can write elog.txt can lock
+    ## elog.txt. 'c' creates the file if missing, without truncating it.
+    $fh = @fopen( $elogfile, 'c' );
+    if ( $fh === false ) {
+        error_log( "elog: could not open $elogfile" );
+        return;
     }
 
-    $existed = file_exists( $elogfile );
-    $msg = "[" .  date('m/d/Y H:i:s', time()) . "] [" .  ( $_SERVER['REMOTE_ADDR'] ?? 'cli' ) . "] $msg";
-    error_log( "$msg\n", 3, $elogfile );
-    if ( ! $existed ) {
+    $created = @filesize( $elogfile ) === 0;
+    if ( ! @flock( $fh, LOCK_EX ) ) {
+        error_log( "elog: could not lock $elogfile" );
+        fclose( $fh );
+        return;
+    }
+
+    ## Rollover under the same lock: two requests over the limit at once must
+    ## not both rename to the same ".1", which only one of them can hold,
+    ## silently losing whichever rollover lost the race.
+    if ( @filesize( $elogfile ) > ELOG_MAX_BYTES ) {
+        if ( @rename( $elogfile, "$elogfile.1" ) ) {
+            $created = true;
+        } else {
+            ## Surfaced to the system log, not swallowed: an account that
+            ## cannot write ~us3/lims/etc otherwise fails this every time
+            ## with no sign anywhere that it is happening.
+            error_log( "elog: could not roll over $elogfile to $elogfile.1" );
+        }
+    }
+
+    $line = "[" .  date('m/d/Y H:i:s', time()) . "] [" .  ( $_SERVER['REMOTE_ADDR'] ?? 'cli' ) . "] $msg";
+    error_log( "$line\n", 3, $elogfile );
+    flock( $fh, LOCK_UN );
+    fclose( $fh );
+
+    if ( $created ) {
         ## error_log() creates the file under the web process's umask, which
         ## is commonly 0644; elog.txt holds debug detail even after
         ## filtering, so it should not be world-readable.
