@@ -820,7 +820,7 @@ function HPCDetail( $link, $requestID )
   $row = mysqli_fetch_assoc( $result );
   $result->close();
   $requestID = $row['HPCAnalysisRequestID'];
-  $row['requestXMLFile'] = '<pre style="white-space: pre-wrap; word-break: break-all; max-width: 90vw; overflow-wrap: anywhere; display: block;">' . htmlentities( $row['requestXMLFile'] ) . '</pre>';
+  $row['requestXMLFile'] = '<pre style="white-space: pre-wrap; word-break: break-all;">' . htmlentities( $row['requestXMLFile'] ) . '</pre>';
 
   // Save for later
   $requestGUID  = $row['HPCAnalysisRequestGUID'];
@@ -843,7 +843,7 @@ HTML;
   $result = mysqli_query( $link, $query )
            or die( "Query failed : $query<br />\n" . mysqli_error($link));
   $row = mysqli_fetch_assoc( $result );
-  $row['jobfile'] = '<pre style="white-space: pre-wrap; word-break: break-all; max-width: 90vw; overflow-wrap: anywhere; display: block;">' . htmlentities( $row['jobfile'] ) . '</pre>';
+  $row['jobfile'] = '<pre style="white-space: pre-wrap; word-break: break-all;">' . htmlentities( $row['jobfile'] ) . '</pre>';
 
   // Populate the status display from the recorded LIMS queue status.
   $row['gfacStatus'] = htmlspecialchars( $row['queueStatus'] ?? 'n/a' );
@@ -859,7 +859,7 @@ HTML;
   {
     $queue_msgs   = file_get_contents( $msg_filename );
     $len_msgs     = strlen( $queue_msgs );
-    $queue_msgs   = '<pre style="white-space: pre-wrap; word-break: break-all; max-width: 90vw; overflow-wrap: anywhere; display: block;">' . $queue_msgs . '</pre>';
+    $queue_msgs   = '<pre style="white-space: pre-wrap; word-break: break-all;">' . $queue_msgs . '</pre>';
   }
 
   // Get resulting model and noise information
