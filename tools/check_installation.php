@@ -481,10 +481,17 @@ foreach ( $overlays as $instance )
 
   /* migrate_instance_config.php --activate backs up the legacy config.php it
    * replaces; before 5682b3f that backup landed in the instance docroot
-   * itself, next to config.php, with the database passwords it held. A host
-   * that ran --activate before that fix still has it sitting there. */
-  $stale_backups = glob( rtrim( $effective[ 'full_path' ], '/' )
-                        . '/' . $instance . '.config.php.legacy-*' ) ?: array();
+   * itself, next to config.php, with the database passwords it held, named
+   * plain config.php.legacy-<timestamp> (no instance prefix). A host that
+   * ran --activate before that fix still has it sitting there under that
+   * older name -- checked for here too, since the newer, prefixed name this
+   * glob checked alone would never match it. */
+  $stale_backups = array_merge(
+      glob( rtrim( $effective[ 'full_path' ], '/' )
+          . '/' . $instance . '.config.php.legacy-*' ) ?: array(),
+      glob( rtrim( $effective[ 'full_path' ], '/' )
+          . '/config.php.legacy-*' ) ?: array()
+  );
   if ( $stale_backups )
     check_warn( 'no legacy config.php backup left in the docroot',
                 count( $stale_backups ) . ' found, e.g. ' . $stale_backups[ 0 ]

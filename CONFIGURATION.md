@@ -123,10 +123,35 @@ After an equivalent dry run, `--write-candidate` may create:
 - `/home/us3/lims/etc/config/instances/uslims3_NAME.php`; and
 - `<dbinst>/config.php.base-overlay-candidate`.
 
-It never replaces the active `config.php`. Activation is a separate deployment
-step after web and CLI checks. Preserve the complete legacy file outside the
-docroot with restrictive permissions (a copy left in the instance directory
-would be served as text); restoring that file is the rollback.
+It never replaces the active `config.php` by itself. Activation is a separate
+deployment step, `--activate`, after web and CLI checks on the candidate pair
+above.
+
+`--activate` re-proves equivalence against the live legacy file, checks the
+overlay and candidate shim still match what this run would generate (not an
+earlier run, and not a hand edit), and proves the candidate shim actually
+loads and publishes the expected `$dbname` -- in a subprocess, so a fatal
+error in it cannot take the migration down or leave `config.php` half
+replaced. Only then does it back up the legacy file and put the shim in its
+place:
+
+- the legacy `config.php` is copied to
+  `<config-root>/instances/<instance>.config.php.legacy-<YYYYMMDDHHMMSS>`,
+  keeping its original owner, group and mode. This is outside the docroot and
+  not named `.php`, so it is never served as text or run as PHP, unlike a
+  backup left in the instance directory itself (the state a host that ran
+  `--activate` before 5682b3f can still be in -- `check_installation.php`
+  flags that).
+- `config.php` is then replaced with the candidate shim via `rename()`,
+  atomic within the directory, so a concurrent web request sees either the
+  old complete file or the new shim, never a partial one.
+
+`--activate` prints the backup's path and the exact rollback command on
+success (`cp <backup> <instance>/config.php`); there is no separate rollback
+tool. The overlay and the generated shim are left in place either way --
+rolling back only restores the legacy `config.php` it was replaced from, so
+the instance's overlay stays wherever `--write-candidate` put it until the
+next migration attempt.
 
 Use `--config-root` and `--credentials-file` only when validating a deployment
 whose installed paths differ from the defaults.
