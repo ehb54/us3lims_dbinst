@@ -65,6 +65,11 @@ if ( ! function_exists( 'submit_progress' ) ) {
     }
 }
 
+// A large batch takes minutes to submit; finish it even if the browser or
+// the web server gives up on this request (ultrascan-tickets#1115)
+ignore_user_abort( true );
+set_time_limit( 0 );
+
 $submit_method = '2DSA';
 include 'lib/require_cluster.php';
 if ( $submit_stopped ) {

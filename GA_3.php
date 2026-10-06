@@ -34,7 +34,29 @@ include 'lib/payload_manager.php';
 include 'lib/HPC_analysis.php';
 include 'lib/file_writer.php';
 include $class_dir . 'submit_slurm.php';
+include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
+
+## submit_progress() comes from common. With an older common the include above is
+## only a warning and the call would be fatal, taking the submission with it, so
+## fall back to a minimal stand-in: a bare flush() with nothing written sends
+## Apache nothing, so a long batch would hit the proxy's idle timeout again,
+## the exact failure the old echo+flush_output() pairs here existed to avoid.
+if ( ! function_exists( 'submit_progress' ) ) {
+    function submit_progress( $msg ) {
+        if ( PHP_SAPI === 'cli' )
+            return;
+        echo "<!-- progress -->\n";
+        if ( ob_get_level() > 0 )
+            @ob_flush();
+        @flush();
+    }
+}
+
+// A large batch takes minutes to submit; finish it even if the browser or
+// the web server gives up on this request (ultrascan-tickets#1115)
+ignore_user_abort( true );
+set_time_limit( 0 );
 
 $submit_method = 'GA';
 include 'lib/require_cluster.php';
@@ -65,6 +87,7 @@ if ( $_SESSION[ 'separate_datasets' ] )
 
   for ( $ii = 0; $ii < $dataset_count; $ii++ )
   {
+    submit_progress( "preparing datasets - " . ( $dataset_count - $ii ) . " remaining" );
     $single               = $payload->get_dataset( $ii );
     $HPCAnalysisRequestID = $HPC->writeDB( $single );
     $filenames[ $ii ]     = $file->write( $single, $HPCAnalysisRequestID );
@@ -158,6 +181,8 @@ HTML;
 
     foreach ( $filenames as $filename )
     {
+      submit_progress( 'submitting ' . basename( $filename ) );
+
       chdir( dirname( $filename ) );
 
       $job-> clear();
