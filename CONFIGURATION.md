@@ -137,7 +137,10 @@ place:
 
 - the legacy `config.php` is copied to
   `<config-root>/instances/<instance>.config.php.legacy-<YYYYMMDDHHMMSS>`,
-  keeping its original owner, group and mode. This is outside the docroot and
+  with `@chmod`/`@chown`/`@chgrp` attempting to keep its original owner,
+  group and mode -- `@chown`/`@chgrp` only actually succeed run as root;
+  run as any other account, the backup keeps that account's own owner and
+  group instead, silently (round-6 nit). This is outside the docroot and
   not named `.php`, so it is never served as text or run as PHP, unlike a
   backup left in the instance directory itself (the state a host that ran
   `--activate` before 5682b3f can still be in -- `check_installation.php`
@@ -148,10 +151,12 @@ place:
 
 `--activate` prints the backup's path and the exact rollback command on
 success (`cp <backup> <instance>/config.php`); there is no separate rollback
-tool. The overlay and the generated shim are left in place either way --
-rolling back only restores the legacy `config.php` it was replaced from, so
-the instance's overlay stays wherever `--write-candidate` put it until the
-next migration attempt.
+tool. Running that command overwrites the candidate shim with the restored
+legacy content -- the shim is not left in place once you roll back (round-6
+nit). The overlay `--write-candidate` created *is* left in place either way,
+since the rollback command never touches it; retrying the whole migration
+needs that overlay file deleted first, because `--write-candidate` refuses
+to replace an existing one rather than overwrite it.
 
 Use `--config-root` and `--credentials-file` only when validating a deployment
 whose installed paths differ from the defaults.

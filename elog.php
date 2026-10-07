@@ -88,11 +88,14 @@ function elog_hmac_key() {
     $key = random_bytes( 32 );
 
     ## First-writer-wins: link() never replaces an existing target (unlike
-    ## rename(), which would), so a second process racing this one -- or a
-    ## second account that can't read the first one's key file and so looks
-    ## unset to it -- adopts the file the first process created instead of
-    ## installing its own and silently changing every digest already written
-    ## under the old key.
+    ## rename(), which would), so a second process racing this one adopts
+    ## the file the first process created instead of installing its own and
+    ## silently changing every digest already written under the old key.
+    ## (Round-6 nit: that is the race case only. A second account that can't
+    ## read the first one's key file still reaches this same link() call --
+    ## it just fails harmlessly, since the target already exists -- and
+    ## readback below then falls through to the in-memory $key already
+    ## warned about above, not to the first account's actual key.)
     $tmp = $keyfile . '.' . getmypid() . '.tmp';
     ## umask(0077) for the window between creating $tmp and the chmod() right
     ## after: file_put_contents() otherwise creates it under the process's
@@ -112,8 +115,11 @@ function elog_hmac_key() {
     $existing = @file_get_contents( $keyfile );
     if ( ( $existing === false || $existing === '' ) && !$warned ) {
         $warned = true;
-        error_log( "elog: could not read back $keyfile after creating it; using a fresh"
-                 . " in-memory key for this request only" );
+        ## Not "after creating it" (round-6 nit): this account may have lost
+        ## the link() race to another account's write, not created anything
+        ## itself, and still can't read the result either way.
+        error_log( "elog: could not read back $keyfile; using a fresh in-memory key for"
+                 . " this request only" );
     }
     return $cached = ( $existing !== false && $existing !== '' ) ? $existing : $key;
 }
@@ -196,13 +202,27 @@ function elog( $msg ) {
             continue;
         }
 
-        $rolled_stat = false;
-        ## Rollover under the same lock: two requests over the limit at once
-        ## must not both rename to the same ".1", which only one of them can
-        ## hold, silently losing whichever rollover lost the race.
+        ## Rollover under the same lock, by copying this process's own
+        ## already-open, already-locked fd to ".1" and truncating it, not
+        ## rename()+recreate. rename() left the live path a brand new inode
+        ## that whichever account's rollover won then owned exclusively --
+        ## on a split web/us3 account layout the *other* account could
+        ## neither write nor even open it afterward (its chmod/chgrp below
+        ## only widened the *group*, never the owner), a lockout with no way
+        ## back short of a human fixing the file by hand. Truncating the
+        ## existing fd in place keeps $elogfile's own inode, owner, group
+        ## and mode exactly as they already were, so nothing is ever locked
+        ## out by a rollover, and there is no window where the live file is
+        ## momentarily missing or under the wrong mode (the previous
+        ## version's chmod/chgrp ran only after unlocking, below).
         if ( $path_stat !== false && $path_stat[ 'size' ] > ELOG_MAX_BYTES ) {
-            if ( @rename( $elogfile, "$elogfile.1" ) ) {
-                $rolled_stat = $path_stat;
+            rewind( $fh );
+            $contents = stream_get_contents( $fh );
+            if ( $contents !== false && @file_put_contents( "$elogfile.1", $contents ) !== false ) {
+                @chmod( "$elogfile.1", $path_stat[ 'mode' ] & 0777 );
+                @chgrp( "$elogfile.1", $path_stat[ 'gid' ] );
+                ftruncate( $fh, 0 );
+                rewind( $fh );
             } else {
                 ## Surfaced to the system log, not swallowed: an account that
                 ## cannot write ~us3/lims/etc otherwise fails this every time
@@ -216,18 +236,25 @@ function elog( $msg ) {
         flock( $fh, LOCK_UN );
         fclose( $fh );
 
-        if ( $rolled_stat !== false ) {
-            ## The rolled file's own mode/group wins, not a hardcoded
-            ## default: a deliberately shared 0660 us3:<web group> file (so
-            ## a split web/us3 account layout can both write it) must stay
-            ## shared after rotation, not get reset to a single-account mode
-            ## on every rollover.
-            @chmod( $elogfile, $rolled_stat[ 'mode' ] & 0777 );
-            @chgrp( $elogfile, $rolled_stat[ 'gid' ] );
-        } elseif ( ! $existed_before ) {
-            ## Genuinely new, not a rollover: error_log() created it under
-            ## the web process's umask, so narrow it from whatever that left.
-            @chmod( $elogfile, 0640 );
+        ## Not gated on whether a rollover just happened (round-6 nit): that
+        ## and an already-world-readable file used to be mutually exclusive
+        ## branches of this same if/elseif, so a file that happened to need
+        ## both narrowing and rolling over on the same call kept its unsafe
+        ## mode until some later call rolled it over again. Rollover by
+        ## itself needs nothing restored here -- $elogfile's own mode and
+        ## group never changed, by design -- it just must not suppress the
+        ## narrowing check below.
+        if ( ! $existed_before ) {
+            ## Genuinely new, not a rollover (e.g. an operator deleted
+            ## elog.txt by hand): error_log() created it under the web
+            ## process's umask, so narrow it from whatever that left. 0660,
+            ## matching dbutils#45 step 5's own fresh-provisioning mode, not
+            ## 0640 -- a split web/us3 layout's setgid directory gives the
+            ## new file the right group already; 0640 would still lock the
+            ## *other* account out of a file this same account didn't
+            ## delete (round-6 should-fix, related to the rollover fix
+            ## above).
+            @chmod( $elogfile, 0660 );
         } elseif ( $path_stat !== false && ( $path_stat[ 'mode' ] & 0007 ) !== 0 ) {
             ## An existing file inherited from before this scheme (e.g.
             ## upgraded from main, still 0644) would otherwise stay
