@@ -139,8 +139,10 @@ place:
   `<config-root>/instances/<instance>.config.php.legacy-<YYYYMMDDHHMMSS>`,
   with `@chmod`/`@chown`/`@chgrp` attempting to keep its original owner,
   group and mode -- `@chown`/`@chgrp` only actually succeed run as root;
-  run as any other account, the backup keeps that account's own owner and
-  group instead, silently (round-6 nit). This is outside the docroot and
+  run as any other account, the backup's owner becomes that account, silently.
+  Its group still matches the legacy file's group, but only because that
+  account must already belong to it to read the file in the first place, not
+  because the `@chgrp` did anything. This is outside the docroot and
   not named `.php`, so it is never served as text or run as PHP, unlike a
   backup left in the instance directory itself (the state a host that ran
   `--activate` before 5682b3f can still be in -- `check_installation.php`
@@ -152,8 +154,8 @@ place:
 `--activate` prints the backup's path and the exact rollback command on
 success (`cp <backup> <instance>/config.php`); there is no separate rollback
 tool. Running that command overwrites the candidate shim with the restored
-legacy content -- the shim is not left in place once you roll back (round-6
-nit). The overlay `--write-candidate` created *is* left in place either way,
+legacy content -- the shim is not left in place once you roll back. The
+overlay `--write-candidate` created *is* left in place either way,
 since the rollback command never touches it; retrying the whole migration
 needs that overlay file deleted first, because `--write-candidate` refuses
 to replace an existing one rather than overwrite it.

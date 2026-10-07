@@ -91,11 +91,11 @@ function elog_hmac_key() {
     ## rename(), which would), so a second process racing this one adopts
     ## the file the first process created instead of installing its own and
     ## silently changing every digest already written under the old key.
-    ## (Round-6 nit: that is the race case only. A second account that can't
-    ## read the first one's key file still reaches this same link() call --
-    ## it just fails harmlessly, since the target already exists -- and
-    ## readback below then falls through to the in-memory $key already
-    ## warned about above, not to the first account's actual key.)
+    ## That is the race case only. A second account that can't read the
+    ## first one's key file still reaches this same link() call -- it just
+    ## fails harmlessly, since the target already exists -- and readback
+    ## below then falls through to the in-memory $key already warned about
+    ## above, not to the first account's actual key.
     $tmp = $keyfile . '.' . getmypid() . '.tmp';
     ## umask(0077) for the window between creating $tmp and the chmod() right
     ## after: file_put_contents() otherwise creates it under the process's
@@ -115,9 +115,9 @@ function elog_hmac_key() {
     $existing = @file_get_contents( $keyfile );
     if ( ( $existing === false || $existing === '' ) && !$warned ) {
         $warned = true;
-        ## Not "after creating it" (round-6 nit): this account may have lost
-        ## the link() race to another account's write, not created anything
-        ## itself, and still can't read the result either way.
+        ## Not "after creating it": this account may have lost the link()
+        ## race to another account's write, not created anything itself,
+        ## and still can't read the result either way.
         error_log( "elog: could not read back $keyfile; using a fresh in-memory key for"
                  . " this request only" );
     }
@@ -154,28 +154,29 @@ function elog_json( $data ) {
 function elog( $msg ) {
     $elogfile = elog_state_dir() . '/elog.txt';
 
-    ## Bounded retry, not a one-shot open: a process that opened $elogfile
-    ## just before another account's rollover renamed it away would be
-    ## locking the OLD inode (now elog.txt.1), not the path it still thinks
-    ## is elog.txt -- writing through that fd would silently land in the
-    ## rolled-over file instead of the live one. Detected below by comparing
-    ## the open fd's inode against the path's current one, and handled by
-    ## closing and reopening the path, which then names the fresh file.
+    ## Bounded retry, not a one-shot open: the inode-mismatch check further
+    ## down can still, in principle, find this fd pointing at a different
+    ## inode than the path now does. Handled by closing and reopening the
+    ## path, which then names the current file.
     for ( $attempt = 0; $attempt < 3; $attempt++ ) {
         $existed_before = file_exists( $elogfile );
 
-        ## umask(0027) for the window a fresh file is created in: fopen('c',
+        ## umask(0007) for the window a fresh file is created in: fopen('c+',
         ## ...) would otherwise create it under the process's own umask
-        ## (commonly 0644, world-readable) until the chmod() below runs, and
-        ## elog.txt holds debug detail even after filtering.
-        $old_umask = umask( 0027 );
+        ## (commonly 0644 or 0640, leaving the other account locked out)
+        ## until the chmod() below runs, and elog.txt holds debug detail
+        ## even after filtering. 0666 & ~0007 = 0660, matching dbutils#45
+        ## step 5's own fresh-provisioning mode.
+        $old_umask = umask( 0007 );
         ## Lock the log file itself rather than a separate lock file:
         ## whichever account created a separate lock file first would be the
         ## only one able to open it, leaving every other account's rollover
         ## (and its over-limit growth) silent forever. Any account that can
-        ## write elog.txt can lock elog.txt. 'c' creates the file if missing,
-        ## without truncating it.
-        $fh = @fopen( $elogfile, 'c' );
+        ## write elog.txt can lock elog.txt. 'c+' creates the file if
+        ## missing, without truncating it, and opens it for reading as well
+        ## as writing -- the rollover copy below reads back through this
+        ## same fd, so a write-only 'c' silently copies nothing.
+        $fh = @fopen( $elogfile, 'c+' );
         umask( $old_umask );
         if ( $fh === false ) {
             error_log( "elog: could not open $elogfile" );
@@ -194,14 +195,12 @@ function elog( $msg ) {
         ## function made), which can predate both this lock and any
         ## rollover that happened while waiting for it.
         ##
-        ## The inode-mismatch check below is now vestigial, not vestigial-
-        ## but-untestable (test-coverage audit, round 6): rollover no longer
-        ## renames the live path at all (it truncates this process's own fd
-        ## in place, see the rollover block further down), so nothing inside
-        ## elog() can make $path_stat's and $fh_stat's inodes disagree
-        ## anymore. Left in for defense in depth against something outside
-        ## elog() renaming the path, not because elog()'s own rollover can
-        ## still trigger it.
+        ## The inode-mismatch check below is defense in depth, not a case
+        ## elog()'s own rollover can trigger: rollover truncates this
+        ## process's own fd in place rather than renaming the live path (see
+        ## the rollover block further down), so nothing inside elog() can
+        ## make $path_stat's and $fh_stat's inodes disagree. Left in for
+        ## something outside elog() renaming the path instead.
         clearstatcache( true, $elogfile );
         $path_stat = @stat( $elogfile );
         $fh_stat    = @fstat( $fh );
@@ -222,17 +221,39 @@ function elog( $msg ) {
         ## existing fd in place keeps $elogfile's own inode, owner, group
         ## and mode exactly as they already were, so nothing is ever locked
         ## out by a rollover, and there is no window where the live file is
-        ## momentarily missing or under the wrong mode (the previous
-        ## version's chmod/chgrp ran only after unlocking, below).
+        ## momentarily missing or under the wrong mode.
+        ##
+        ## The copy lands in a temp file first, never in ".1" directly:
+        ## written under it, so a reader never sees a partial ".1"; on a
+        ## full disk the previous ".1" is untouched instead of lost; and
+        ## rename() onto ".1" replaces a symlink there rather than writing
+        ## through it. stream_copy_to_stream() streams rather than buffering
+        ## the whole file in memory (an elog.txt near memory_limit would
+        ## otherwise abort every call), and its return value is compared
+        ## against the known size before anything is truncated, so a short
+        ## copy is caught instead of silently emptying the live log.
         if ( $path_stat !== false && $path_stat[ 'size' ] > ELOG_MAX_BYTES ) {
             rewind( $fh );
-            $contents = stream_get_contents( $fh );
-            if ( $contents !== false && @file_put_contents( "$elogfile.1", $contents ) !== false ) {
-                @chmod( "$elogfile.1", $path_stat[ 'mode' ] & 0777 );
-                @chgrp( "$elogfile.1", $path_stat[ 'gid' ] );
-                ftruncate( $fh, 0 );
-                rewind( $fh );
+            $tmpfile   = "$elogfile.1." . getmypid() . '.tmp';
+            $old_umask = umask( 0077 );
+            $tmp_fh    = @fopen( $tmpfile, 'w' );
+            umask( $old_umask );
+            $copied = ( $tmp_fh !== false ) ? @stream_copy_to_stream( $fh, $tmp_fh ) : false;
+            if ( $tmp_fh !== false ) {
+                fclose( $tmp_fh );
+            }
+            if ( $copied === $path_stat[ 'size' ] ) {
+                @chmod( $tmpfile, $path_stat[ 'mode' ] & 0777 );
+                @chgrp( $tmpfile, $path_stat[ 'gid' ] );
+                if ( @rename( $tmpfile, "$elogfile.1" ) ) {
+                    ftruncate( $fh, 0 );
+                    rewind( $fh );
+                } else {
+                    @unlink( $tmpfile );
+                    error_log( "elog: could not install $elogfile.1" );
+                }
             } else {
+                @unlink( $tmpfile );
                 ## Surfaced to the system log, not swallowed: an account that
                 ## cannot write ~us3/lims/etc otherwise fails this every time
                 ## with no sign anywhere that it is happening.
@@ -245,8 +266,8 @@ function elog( $msg ) {
         flock( $fh, LOCK_UN );
         fclose( $fh );
 
-        ## Not gated on whether a rollover just happened (round-6 nit): that
-        ## and an already-world-readable file used to be mutually exclusive
+        ## Not gated on whether a rollover just happened: that and an
+        ## already-world-readable file used to be mutually exclusive
         ## branches of this same if/elseif, so a file that happened to need
         ## both narrowing and rolling over on the same call kept its unsafe
         ## mode until some later call rolled it over again. Rollover by
@@ -254,15 +275,18 @@ function elog( $msg ) {
         ## group never changed, by design -- it just must not suppress the
         ## narrowing check below.
         if ( ! $existed_before ) {
-            ## Genuinely new, not a rollover (e.g. an operator deleted
-            ## elog.txt by hand): error_log() created it under the web
-            ## process's umask, so narrow it from whatever that left. 0660,
-            ## matching dbutils#45 step 5's own fresh-provisioning mode, not
-            ## 0640 -- a split web/us3 layout's setgid directory gives the
-            ## new file the right group already; 0640 would still lock the
-            ## *other* account out of a file this same account didn't
-            ## delete (round-6 should-fix, related to the rollover fix
-            ## above).
+            ## Genuinely new: fopen('c+', ...) above already created it at
+            ## 0660 under the umask(0007) set for that window, matching
+            ## dbutils#45 step 5's own fresh-provisioning mode. This chmod
+            ## is defense in depth against anything that left the umask
+            ## window differently, not the only thing narrowing the file.
+            ##
+            ## This branch is also why clearing elog.txt should be done
+            ## with "> elog.txt" or ": > elog.txt" rather than deleting it:
+            ## whichever account's request happens to notice it missing
+            ## recreates it in the directory's own mode (0755 us3:us3 under
+            ## the roles-provisioned default), owned by that account alone,
+            ## not in the setgid layout step 5 provisions for a fresh file.
             @chmod( $elogfile, 0660 );
         } elseif ( $path_stat !== false && ( $path_stat[ 'mode' ] & 0007 ) !== 0 ) {
             ## An existing file inherited from before this scheme (e.g.
@@ -270,13 +294,18 @@ function elog( $msg ) {
             ## world-readable until its next rollover, which may be months
             ## away. Narrowed on every call instead, preserving whatever
             ## owner/group access it already has.
+            ##
+            ## This also removes a legacy 0666's o+w, which matters only on
+            ## a host where step 5 hasn't provisioned the setgid directory
+            ## yet: apache would otherwise rely on world-write to log at
+            ## all, and loses that the first time this narrowing runs.
             @chmod( $elogfile, $path_stat[ 'mode' ] & 0777 & ~0007 );
         }
 
         return;
     }
 
-    error_log( "elog: $elogfile kept getting rolled over from under this process; giving up" );
+    error_log( "elog: $elogfile's inode kept changing out from under this process; giving up" );
 }
 
 function elogo( $msg, $obj ) {
