@@ -193,6 +193,15 @@ function elog( $msg ) {
         ## request (e.g. the pre-lock filesize() a prior version of this
         ## function made), which can predate both this lock and any
         ## rollover that happened while waiting for it.
+        ##
+        ## The inode-mismatch check below is now vestigial, not vestigial-
+        ## but-untestable (test-coverage audit, round 6): rollover no longer
+        ## renames the live path at all (it truncates this process's own fd
+        ## in place, see the rollover block further down), so nothing inside
+        ## elog() can make $path_stat's and $fh_stat's inodes disagree
+        ## anymore. Left in for defense in depth against something outside
+        ## elog() renaming the path, not because elog()'s own rollover can
+        ## still trigger it.
         clearstatcache( true, $elogfile );
         $path_stat = @stat( $elogfile );
         $fh_stat    = @fstat( $fh );
