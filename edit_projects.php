@@ -168,11 +168,54 @@ function do_new( $link )
   exit();
 }
 
+// Server-side authorization: is the session user allowed to read or change
+// $projectID? Either an explicit projectPerson membership row, or userlevel
+// > 2 (super, admin, superadmin -- the same threshold runID_info.php's
+// HPCDetail() uses for the equivalent project-via-experiment check).
+//
+// Without this, only the list/nav views (which build their own SQL by
+// joining projectPerson on the session's own personID) ever restricted
+// access -- a direct ?ID=/?edit= request, or a posted 'update' with an
+// arbitrary projectID, went straight to a WHERE projectID = ? query with
+// no ownership check at all, so any logged-in user could read or edit any
+// other user's project by guessing/incrementing its numeric ID.
+function user_may_access_project( $link, $projectID )
+{
+  if ( $_SESSION['userlevel'] > 2 )
+    return true;
+
+  $ID = $_SESSION['id'];
+  // language=MariaDB
+  $query = "SELECT 1 FROM projectPerson WHERE personID = ? AND projectID = ? LIMIT 1";
+  $stmt  = $link->prepare( $query );
+  $stmt->bind_param( 'ii', $ID, $projectID );
+  $stmt->execute()
+        or die ("Query failed : $query<br/>" . $stmt->error);
+  $stmt->store_result();
+  $authorized = $stmt->num_rows > 0;
+  $stmt->close();
+
+  return $authorized;
+}
+
+// Shared denial response: never leaks whether $projectID exists, only that
+// this session cannot access it.
+function deny_project_access()
+{
+  echo "<p>You do not have access to that project.</p>\n";
+}
+
 // Function to update the current record
 function do_update( $link )
 {
   $ID        = $_SESSION['id'];
   $projectID = htmlentities($_POST['projectID']);
+
+  if ( ! is_numeric( $projectID ) || ! user_may_access_project( $link, $projectID ) )
+  {
+    deny_project_access();
+    exit();
+  }
 
   // Since we always send out emails here, and the user could press the
   //  Update button even though nothing has changed, let's check
@@ -358,6 +401,12 @@ function display_record( $link )
   if (!(is_numeric($projectID)))
     return;
 
+  if ( ! user_may_access_project( $link, $projectID ) )
+  {
+    deny_project_access();
+    return;
+  }
+
   $query  = "SELECT projectGUID, goals, molecules, purity, expense, " .
             "bufferComponents, saltInformation, AUC_questions, expDesign, notes, description, status " .
             "FROM project " .
@@ -542,6 +591,12 @@ function edit_record( $link )
   // Anything other than a number here is a security risk
   if (!(is_numeric($projectID)))
     return;
+
+  if ( ! user_may_access_project( $link, $projectID ) )
+  {
+    deny_project_access();
+    return;
+  }
 
   $query  = "SELECT goals, molecules, purity, expense, bufferComponents, " .
             "saltInformation, AUC_questions, expDesign, notes, description, status, lastUpdated  " .
