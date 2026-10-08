@@ -16,6 +16,7 @@ if ( $_SESSION['userlevel'] < 1 )
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
+include_once 'lib/pagination.php';
 // ini_set('display_errors', 'On');
 
 
@@ -47,7 +48,8 @@ if (isset($_POST['update']))
 
 // Start displaying page
 $page_title = 'My Projects';
-$js = 'js/edit_projects.js';
+$js  = 'js/edit_projects.js';
+$css = 'css/pagination.css';
 include 'header.php';
 include 'lib/selectboxes.php';
 
@@ -203,6 +205,101 @@ function user_may_access_project( $link, $projectID )
 function deny_project_access()
 {
   echo "<p>You do not have access to that project.</p>\n";
+}
+
+function h( $str )
+{
+  return htmlspecialchars( (string) $str, ENT_QUOTES, 'UTF-8' );
+}
+
+// Read-only list of the runs (experiment rows) associated with $projectID,
+// paginated via lib/pagination.php. Caller must already have confirmed
+// user_may_access_project( $link, $projectID ) -- this function trusts
+// that and only re-applies the same "WHERE projectID = ?" scoping to its
+// own count and list queries, so both see exactly the same set of rows.
+//
+// Lists runs, not the individual analysis jobs under them (HPCAnalysisRequest/
+// Result); RunID Info and Reports already drill into those per run.
+function render_project_runs( $link, $projectID )
+{
+  // Let pagination_query_string()/pagination_render() preserve the project
+  // id across Prev/Next even when it reached us via get_id()'s fallback
+  // (first project) rather than an explicit ?ID= in the request.
+  $_GET['ID'] = $projectID;
+
+  $f_page = $_GET['runs_page'] ?? null;
+
+  $count_stmt = $link->prepare( 'SELECT COUNT(*) FROM experiment WHERE projectID = ?' );
+  $count_stmt->bind_param( 'i', $projectID );
+  $count_stmt->execute();
+  $count_stmt->bind_result( $total );
+  $count_stmt->fetch();
+  $count_stmt->close();
+
+  echo "<h2>Associated Runs</h2>\n";
+
+  if ( $total == 0 )
+  {
+    echo "<p class='message'>No runs are associated with this project yet.</p>\n";
+    return;
+  }
+
+  [ 'page' => $page, 'page_size' => $page_size, 'total_pages' => $total_pages, 'offset' => $offset ] =
+    pagination_compute( $f_page, $total, PAGINATION_DEFAULT_PAGE_SIZE );
+
+  // Deterministic order: experimentID is the primary key, so ties in any
+  // other column (e.g. identical dateBegin) can never reorder rows between
+  // pages. One correlated subquery per row for the first associated report
+  // -- projects have at most a few dozen runs per page, so this stays cheap
+  // and avoids a second round trip.
+  $list_stmt = $link->prepare(
+    'SELECT e.experimentID, e.runID, e.dateBegin, e.type, e.runType,
+            ( SELECT r.reportID FROM report r
+              WHERE r.experimentID = e.experimentID
+              ORDER BY r.reportID LIMIT 1 ) AS reportID
+     FROM experiment e
+     WHERE e.projectID = ?
+     ORDER BY e.experimentID DESC
+     LIMIT ? OFFSET ?'
+  );
+  $list_stmt->bind_param( 'iii', $projectID, $page_size, $offset );
+  $list_stmt->execute();
+  $result = $list_stmt->get_result();
+
+  echo "<table cellspacing='0' cellpadding='10' class='style1'>\n";
+  echo "<thead><tr>\n";
+  echo "  <th>Run ID</th>\n";
+  echo "  <th>Date</th>\n";
+  echo "  <th>Type</th>\n";
+  echo "  <th>Run Type</th>\n";
+  echo "  <th>Run Info</th>\n";
+  echo "  <th>Reports</th>\n";
+  echo "</tr></thead>\n";
+  echo "<tbody>\n";
+
+  while ( $row = $result->fetch_assoc() )
+  {
+    $info_url = h( 'runID_info.php?experimentID=' . $row['experimentID'] );
+    $reports_cell = ( $row['reportID'] !== null )
+      ? "<a href='" . h( 'view_reports.php?reportID=' . $row['reportID'] ) . "'>Reports</a>"
+      : '&mdash;';
+
+    echo "<tr>\n";
+    echo "  <td>" . h( $row['runID'] ) . "</td>\n";
+    echo "  <td>" . h( $row['dateBegin'] ) . "</td>\n";
+    echo "  <td>" . h( $row['type'] ) . "</td>\n";
+    echo "  <td>" . h( $row['runType'] ) . "</td>\n";
+    echo "  <td><a href='$info_url'>RunID Info</a></td>\n";
+    echo "  <td>$reports_cell</td>\n";
+    echo "</tr>\n";
+  }
+
+  $result->close();
+  $list_stmt->close();
+
+  echo "</tbody></table>\n";
+
+  pagination_render( $_SERVER['PHP_SELF'], [ 'ID', 'runs_page' ], $page, $total_pages, 'runs_page' );
 }
 
 // Function to update the current record
@@ -513,6 +610,8 @@ echo<<<HTML
   </form>
 
 HTML;
+
+  render_project_runs( $link, $projectID );
 }
 
 // Function to figure out which record to display

@@ -38,6 +38,7 @@ if ( !isset( $_SESSION['userlevel'] ) ||
 
 include 'config.php';
 include 'db.php';
+include_once 'lib/pagination.php';
 
 global $link;
 
@@ -49,7 +50,13 @@ if ( !isset( $enable_PAM ) ) $enable_PAM = false;
 // Constants
 // ---------------------------------------------------------------------------
 
-define( 'AUDIT_PAGE_SIZE', 25 );
+// Kept as its own name for readability at call sites in this file; same
+// value as the shared default in lib/pagination.php.
+define( 'AUDIT_PAGE_SIZE', PAGINATION_DEFAULT_PAGE_SIZE );
+
+// Full list of GET keys this page's links need to preserve across requests
+// (filters, the detail-view id, and the page number).
+define( 'AUDIT_QUERY_KEYS', [ 'auditID', 'person_id', 'actor', 'action', 'changed_field', 'date_from', 'date_to', 'page' ] );
 
 // AUDIT_ACTIONS is kept as a flat ordered list for the filter dropdown.
 // Render order: lifecycle, access changes, authorization edge cases.
@@ -143,15 +150,7 @@ function h( $str )
 // auditID is included so View links work; pass [ 'auditID' => '' ] to clear it.
 function audit_query_string( array $overrides = [] )
 {
-  $keys = [ 'auditID', 'person_id', 'actor', 'action', 'changed_field', 'date_from', 'date_to', 'page' ];
-  $parts = [];
-  foreach ( $keys as $k )
-  {
-    $val = array_key_exists( $k, $overrides ) ? $overrides[ $k ] : ( $_GET[ $k ] ?? '' );
-    if ( $val !== null && $val !== '' )
-      $parts[] = urlencode( $k ) . '=' . urlencode( (string) $val );
-  }
-  return $parts ? '?' . implode( '&', $parts ) : '?';
+  return pagination_query_string( AUDIT_QUERY_KEYS, $overrides );
 }
 
 // ---------------------------------------------------------------------------
@@ -631,9 +630,8 @@ function render_list( $link, $f_actor, $f_action, $f_person_id, $f_date_from, $f
   $count_stmt->fetch();
   $count_stmt->close();
 
-  $total_pages = max( 1, (int) ceil( $total / AUDIT_PAGE_SIZE ) );
-  $page        = min( $f_page, $total_pages );
-  $offset      = ( $page - 1 ) * AUDIT_PAGE_SIZE;
+  [ 'page' => $page, 'page_size' => $page_size, 'total_pages' => $total_pages, 'offset' => $offset ] =
+    pagination_compute( $f_page, $total, AUDIT_PAGE_SIZE );
 
   render_filter_form( $link, $f_person_id, $f_actor, $f_action, $f_changed_field, $f_date_from, $f_date_to );
 
@@ -653,7 +651,7 @@ function render_list( $link, $f_actor, $f_action, $f_person_id, $f_date_from, $f
                FROM people_audit
                $where_sql
                ORDER BY auditID DESC
-               LIMIT " . AUDIT_PAGE_SIZE . " OFFSET " . (int) $offset;
+               LIMIT " . (int) $page_size . " OFFSET " . (int) $offset;
 
   $list_stmt = $link->prepare( $list_sql );
   if ( $where_types )
@@ -708,7 +706,7 @@ function render_list( $link, $f_actor, $f_action, $f_person_id, $f_date_from, $f
   echo "</tbody></table>\n";
   echo "</div>\n";
 
-  render_pagination( $page, $total_pages );
+  pagination_render( $_SERVER['PHP_SELF'], AUDIT_QUERY_KEYS, $page, $total_pages, 'page', 'audit-pagination' );
 }
 
 function render_filter_form( $link, $f_person_id, $f_actor, $f_action, $f_changed_field, $f_date_from, $f_date_to )
@@ -795,23 +793,6 @@ echo <<<HTML
   </table>
 </form>
 HTML;
-}
-
-function render_pagination( $page, $total_pages )
-{
-  if ( $total_pages <= 1 ) return;
-
-  echo "<div class='audit-pagination'>\n";
-
-  if ( $page > 1 )
-    echo "<a href='" . h( $_SERVER['PHP_SELF'] . audit_query_string( [ 'page' => $page - 1 ] ) ) . "'>&laquo; Prev</a> ";
-
-  echo "Page " . h( $page ) . " of " . h( $total_pages );
-
-  if ( $page < $total_pages )
-    echo " <a href='" . h( $_SERVER['PHP_SELF'] . audit_query_string( [ 'page' => $page + 1 ] ) ) . "'>Next &raquo;</a>";
-
-  echo "\n</div>\n";
 }
 
 // ---------------------------------------------------------------------------
