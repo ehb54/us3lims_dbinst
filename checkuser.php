@@ -9,6 +9,16 @@ include 'checkinstance.php';
 include 'db.php';
 include 'lib/utility.php';
 
+// A transient DB failure during login must not dump raw SQL/driver text to
+// the browser (information disclosure, and a broken-looking page besides);
+// show the same friendly message login.php already uses for bad input.
+function login_db_unavailable()
+{
+  $message = "The login service is temporarily unavailable. Please try again in a moment.";
+  include 'login.php';
+  exit();
+}
+
 $loginname  = htmlentities(trim($_POST['email']));
 $passwd = trim($_POST['password']);
 if ( !isset( $enable_PAM ) ) {
@@ -43,10 +53,9 @@ if ( $enable_PAM && PAM_name_is_valid( $loginname ) ) {
   $args      = [ $loginname ];
   $stmt      = $link->prepare( $query );
   $stmt->bind_param( 's', ...$args );
-  $stmt->execute()
-        or die( "Query failed : $query<br />\n" . $stmt->error );
-  $result = $stmt->get_result()
-          or die( "Query failed : $query<br />\n" . $stmt->error );
+  if ( ! $stmt->execute() || ! ( $result = $stmt->get_result() ) ) {
+    login_db_unavailable();
+  }
   $row    = mysqli_fetch_assoc($result);
   $count  = $result->num_rows;
 
@@ -69,10 +78,9 @@ if ( !$pamActive ) {
   $args   = [ $loginname ];
   $stmt   = $link->prepare( $query );
   $stmt->bind_param( 's', ...$args );
-  $stmt->execute()
-        or die( "Query failed : $query<br />\n" . $stmt->error );
-  $result = $stmt->get_result()
-        or die( "Query failed : $query<br />\n" . $stmt->error );
+  if ( ! $stmt->execute() || ! ( $result = $stmt->get_result() ) ) {
+    login_db_unavailable();
+  }
 
   $row    = mysqli_fetch_assoc($result);
   $count  = mysqli_num_rows($result);
@@ -140,13 +148,17 @@ if ( $count == 1 )
 
 }
 
-else if ( $count > 1 )
+// Every branch below that fails before the account's own activated/enabled
+// state is checked uses the same generic message, on purpose: telling an
+// unauthenticated caller specifically that an account doesn't exist, has a
+// duplicate row, or just has the wrong password lets them enumerate valid
+// email addresses by the response alone. None of that distinction is needed
+// once the real cause is in the server log for an admin to look at.
+if ( $count > 1 )
 {
   remove_session();
-  $message = "There was a problem with duplicate email addresses.  " .
-             "Please contact the administrator: "                    .
-             "<a href='mailto:$admin_email'>"                  .
-             "&lt;$admin_email&gt;</a>.";
+  error_log( "login: duplicate email addresses for $loginname" );
+  $message = "Error: Invalid email address or password.";
   include 'login.php';
   exit();
 }
@@ -156,23 +168,22 @@ else if ( $count > 1 )
 if ( $count < 1 )
 {
   remove_session();
-  $message =  "Error: The account for <i>\"$loginname\"</i> has not been " .
-              "correctly set up. <br/>Please set up a new account first " .
-              "or correctly type the username or email address.";
+  $message = "Error: Invalid email address or password.";
   include 'login.php';
   exit();
 }
 
 if ( !$pamActive && $row["password"] != $md5pass ) {
   remove_session();
-  $message = "Error: Invalid password for $loginname.";
+  $message = "Error: Invalid email address or password.";
   include 'login.php';
   exit();
 }
 
 if ( $pamActive && !pam_auth( $loginname, $passwd, $error ) ) {
   remove_session();
-  $message = "Error: Password failed for $loginname.\n$error";
+  error_log( "login: PAM authentication failed for $loginname: $error" );
+  $message = "Error: Invalid email address or password.";
   include 'login.php';
   exit();
 }
@@ -198,14 +209,22 @@ if ( $row["account_enabled"] != 1 )
   exit();
 }
 
-// Update last login time
-
+// Update last login time. Credentials are already fully verified at this
+// point, so a failure here must not block the login itself -- it would
+// otherwise turn a cosmetic bookkeeping write into a reason the user can't
+// get in.
 $query = "UPDATE people SET lastLogin=now() WHERE personID=?";
 $args = [ $personID ];
 $stmt = $link->prepare( $query );
 $stmt->bind_param( 'i', ...$args );
-$stmt->execute()
-      or die( "Query failed : $query<br />\n" . $stmt->error );
+if ( ! $stmt->execute() ) {
+  error_log( "login: could not update lastLogin for personID=$personID: " . $stmt->error );
+}
+
+// New session id for the newly-authenticated session: nothing an
+// unauthenticated request may have already seen (e.g. a session id fixed
+// before login) should carry over as a valid, logged-in session.
+session_regenerate_id( true );
 
 header("Location: index.php");
 exit();
