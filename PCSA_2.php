@@ -51,6 +51,11 @@ include_once $class_dir . 'submit_airavata.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
 
+// A large batch takes minutes to submit; finish it even if the browser or
+// the web server gives up on this request (ultrascan-tickets#1115)
+ignore_user_abort( true );
+set_time_limit( 0 );
+
 // Create the payload manager and restore the data
 $payload = new Payload_PCSA( $_SESSION );
 $payload->restore();
@@ -87,11 +92,13 @@ if ( $separate_datasets > 0 )
   $kr            = 0;               // Output request index
 
   echo "<script>us_submit_prog.show();</script>";
+  flush_output();
   priority( "PCSA", $dataset_count, $job_params );
   
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
     echo "<script>us_submit_prog.msg.prep('$ds_remain');</script>";
+    flush_output();
 
     if ( ( $ds_remain - $reqds_count ) < $mgroup_count )
       $reqds_count   = $ds_remain;
@@ -203,6 +210,7 @@ HTML;
     foreach ( $filenames as $filename )
     {
       echo "<script>us_submit_prog.msg.submit('" . basename( $filename ) . "');</script>";
+      flush_output();
 
       chdir( dirname( $filename ) );
 
@@ -215,6 +223,16 @@ HTML;
       {
         $output_msg .= "<br /><span class='message'>Message from the queue...</span><br />\n" .
                         print_r( $retval, true ) . " <br />\n";
+
+        foreach ( $retval as $rmsg )
+        {
+          if ( is_string( $rmsg ) && preg_match( '/^ERROR:/', $rmsg ) )
+          {
+            $output_msg .= "<br /><span class='message' style='color:red;font-weight:bold;'>" .
+                            "WARNING: job submission failed - $rmsg</span><br />\n";
+            break;
+          }
+        }
       }
     }
 

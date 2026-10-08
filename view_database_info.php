@@ -79,13 +79,13 @@ which can be opened by selecting:</p>
   <tr><th>Database Name:</th>
       <td>$dbname</td></tr>
 
-  <tr><th>Host Address</th>
+  <tr><th>Host Address:</th>
       <td>$hostaddr</td></tr>
 
-  <tr><th>Investigator Email</th>
+  <tr><th>Investigator Email:</th>
       <td>{$_SESSION['email']}</td></tr>
 
-  <tr><th>Investigator Password</th>
+  <tr><th>Investigator Password:</th>
       <td>Not used for this database</td></tr>
 
 </table>
@@ -130,13 +130,13 @@ which can be opened by selecting:</p>
   <tr><th>Database Name:</th>
       <td>$dbname</td></tr>
 
-  <tr><th>Host Address</th>
+  <tr><th>Host Address:</th>
       <td>$hostaddr</td></tr>
 
-  <tr><th>Investigator Email</th>
+  <tr><th>Investigator Email:</th>
       <td>{$_SESSION['email']}</td></tr>
 
-  <tr><th>Investigator Password</th>
+  <tr><th>Investigator Password:</th>
       <td>The password you logged in here with</td></tr>
 
 </table>

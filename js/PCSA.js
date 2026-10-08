@@ -4,8 +4,8 @@
 $(document).ready(function()
 {
   // Montecarlo Slider setup
-  $("#montecarlo-min").attr('value', 1  );
-  $("#montecarlo-max").attr('value', 100);
+  $("#montecarlo-min").val(1);
+  $("#montecarlo-max").val(100);
   $("#montecarlo-slider").slider(
   {
     animate: true,
@@ -16,18 +16,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#mc_iterations" ).attr('value', ui.value);
+      $( "#mc_iterations" ).val(ui.value);
     },
   });
 
-  $("#mc_iterations").change( function()
+  $("#mc_iterations").on( 'change', function()
   {
     $("#montecarlo-slider").slider( 'value', this.value );
   });
 
   // Main var counts setup
-  $("#varcount-min").attr('value', 2  );
-  $("#varcount-max").attr('value', 20 );
+  $("#varcount-min").val(2);
+  $("#varcount-max").val(20);
   $("#varcount-slider").slider(
   {
     animate: true,
@@ -38,18 +38,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#varcount_points" ).attr('value', ui.value);
+      $( "#varcount_points" ).val(ui.value);
     },
   });
 
-  $("#varcount_points").change( function()
+  $("#varcount_points").on( 'change', function()
   {
     $("#varcount-slider").slider( 'value', this.value );
   });
 
   // Horizontal-Line var counts setup
-  $("#hlvcount-min").attr('value', 20  );
-  $("#hlvcount-max").attr('value', 400 );
+  $("#hlvcount-min").val(20);
+  $("#hlvcount-max").val(400);
   $("#hlvcount-slider").slider(
   {
     animate: true,
@@ -60,18 +60,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#hlvcount_points" ).attr('value', ui.value);
+      $( "#hlvcount_points" ).val(ui.value);
     },
   });
 
-  $("#hlvcount_points").change( function()
+  $("#hlvcount_points").on( 'change', function()
   {
     $("#hlvcount-slider").slider( 'value', this.value );
   });
 
   // Grid-Fit Iterations Slider setup
-  $("#gfititer-min").attr('value', 1  );
-  $("#gfititer-max").attr('value', 10 );
+  $("#gfititer-min").val(1);
+  $("#gfititer-max").val(10);
   $("#gfititer-slider").slider(
   {
     animate: true,
@@ -82,18 +82,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#gfit_iterations" ).attr('value', ui.value);
+      $( "#gfit_iterations" ).val(ui.value);
     },
   });
 
-  $("#gfit_iterations").change( function()
+  $("#gfit_iterations").on( 'change', function()
   {
     $("#gfititer-slider").slider( 'value', this.value );
   });
 
   // Curves Points Slider setup
-  $("#curvpoint-min").attr('value', 50  );
-  $("#curvpoint-max").attr('value', 500);
+  $("#curvpoint-min").val(50);
+  $("#curvpoint-max").val(500);
   $("#curvpoint-slider").slider(
   {
     animate: true,
@@ -104,18 +104,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#curves_points" ).attr('value', ui.value);
+      $( "#curves_points" ).val(ui.value);
     },
   });
 
-  $("#curves_points").change( function()
+  $("#curves_points").on( 'change', function()
   {
     $("#curvpoint-slider").slider( 'value', this.value );
   });
 
   // Simpoints Slider setup
-  $("#simpoints-min").attr('value', 50  );
-  $("#simpoints-max").attr('value', 5000);
+  $("#simpoints-min").val(50);
+  $("#simpoints-max").val(5000);
   $("#simpoints-slider").slider(
   {
     animate: true,
@@ -126,18 +126,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#simpoints-value" ).attr('value', ui.value);
+      $( "#simpoints-value" ).val(ui.value);
     },
   });
 
-  $("#simpoints-value").change( function()
+  $("#simpoints-value").on( 'change', function()
   {
     $("#simpoints-slider").slider( 'value', this.value );
   });
 
   // Band_volume Slider setup
-  $("#band_volume-min").attr('value', 0.0 );
-  $("#band_volume-max").attr('value', 0.05);
+  $("#band_volume-min").val(0.0);
+  $("#band_volume-max").val(0.05);
   $("#band_volume-slider").slider(
   {
     animate: true,
@@ -148,35 +148,35 @@ $(document).ready(function()
     step:    0.0001,
     slide: function( event, ui )
     {
-      $( "#band_volume-value" ).attr('value', ui.value);
+      $( "#band_volume-value" ).val(ui.value);
     },
   });
 
-  $("#band_volume-value").change( function()
+  $("#band_volume-value").on( 'change', function()
   {
     $("#band_volume-slider").slider( 'value', this.value );
   });
 
   // Parallel masters group count setup
-  $("#PMGC_enable").change( function()
+  $("#PMGC_enable").on( 'change', function()
   {
     if ( $("#PMGC_enable").is(":checked") )
     {
        $("#PMGC_count").show();
-       $("#req_mgroupcount").attr( 'value', 8 );
+       $("#req_mgroupcount").val(8);
     }
 
     else
     {
        $("#PMGC_count").hide();
-       $("#req_mgroupcount").attr( 'value', 1 );
+       $("#req_mgroupcount").val(1);
     }
 
   });
 
   // Debug_level Slider setup
-  $("#debug_level-min").attr('value', 0 );
-  $("#debug_level-max").attr('value', 4 );
+  $("#debug_level-min").val(0);
+  $("#debug_level-max").val(4);
   $("#debug_level-slider").slider(
   {
     animate: true,
@@ -187,11 +187,11 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#debug_level-value" ).attr('value', ui.value);
+      $( "#debug_level-value" ).val(ui.value);
     },
   });
 
-  $("#debug_level-value").change( function()
+  $("#debug_level-value").on( 'change', function()
   {
     $("#debug_level-slider").slider( 'value', this.value );
   });

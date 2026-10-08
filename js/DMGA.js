@@ -4,8 +4,8 @@
 $(document).ready(function()
 {
   // Montecarlo Slider setup
-  $("#montecarlo-min").attr('value', 1  );
-  $("#montecarlo-max").attr('value', 100);
+  $("#montecarlo-min").val(1);
+  $("#montecarlo-max").val(100);
   $("#montecarlo-slider").slider(
   {
     animate: true,
@@ -16,11 +16,11 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#mc_iterations" ).attr('value', ui.value);
+      $( "#mc_iterations" ).val(ui.value);
     },
   });
 
-  $("#mc_iterations").change( function()
+  $("#mc_iterations").on( 'change', function()
   {
     if ( this.value < 1 ) this.value = 1;
     if ( this.value > 100 ) this.value = 100;
@@ -28,8 +28,8 @@ $(document).ready(function()
   });
 
   // Demes Slider setup
-  $("#demes-min").attr('value', 1  );
-  $("#demes-max").attr('value', 100);
+  $("#demes-min").val(1);
+  $("#demes-max").val(100);
   $("#demes-slider").slider(
   {
     animate: true,
@@ -40,18 +40,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#demes-value" ).attr('value', ui.value);
+      $( "#demes-value" ).val(ui.value);
     },
   });
 
-  $("#demes-value").change( function()
+  $("#demes-value").on( 'change', function()
   {
     $("#demes-slider").slider( 'value', this.value );
   });
 
   // Population Slider setup
-  $("#genes-min").attr('value', 25  );
-  $("#genes-max").attr('value', 1000);
+  $("#genes-min").val(25);
+  $("#genes-max").val(1000);
   $("#genes-slider").slider(
   {
     animate: true,
@@ -62,18 +62,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#genes-value" ).attr('value', ui.value);
+      $( "#genes-value" ).val(ui.value);
     },
   });
 
-  $("#genes-value").change( function()
+  $("#genes-value").on( 'change', function()
   {
     $("#genes-slider").slider( 'value', this.value );
   });
 
   // Generations Slider setup
-  $("#generations-min").attr('value', 25  );
-  $("#generations-max").attr('value', 500);
+  $("#generations-min").val(25);
+  $("#generations-max").val(500);
   $("#generations-slider").slider(
   {
     animate: true,
@@ -84,18 +84,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#generations-value" ).attr('value', ui.value);
+      $( "#generations-value" ).val(ui.value);
     },
   });
 
-  $("#generations-value").change( function()
+  $("#generations-value").on( 'change', function()
   {
     $("#generations-slider").slider( 'value', this.value );
   });
 
   // Crossover Slider setup
-  $("#crossover-min").attr('value', 0  );
-  $("#crossover-max").attr('value', 100);
+  $("#crossover-min").val(0);
+  $("#crossover-max").val(100);
   $("#crossover-slider").slider(
   {
     animate: true,
@@ -106,18 +106,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#crossover-value" ).attr('value', ui.value);
+      $( "#crossover-value" ).val(ui.value);
     },
   });
 
-  $("#crossover-value").change( function()
+  $("#crossover-value").on( 'change', function()
   {
     $("#crossover-slider").slider( 'value', this.value );
   });
 
   // Mutation Slider setup
-  $("#mutation-min").attr('value', 0  );
-  $("#mutation-max").attr('value', 100);
+  $("#mutation-min").val(0);
+  $("#mutation-max").val(100);
   $("#mutation-slider").slider(
   {
     animate: true,
@@ -128,18 +128,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#mutation-value" ).attr('value', ui.value);
+      $( "#mutation-value" ).val(ui.value);
     },
   });
 
-  $("#mutation-value").change( function()
+  $("#mutation-value").on( 'change', function()
   {
     $("#mutation-slider").slider( 'value', this.value );
   });
 
   // Plague Slider setup
-  $("#plague-min").attr('value', 0  );
-  $("#plague-max").attr('value', 100);
+  $("#plague-min").val(0);
+  $("#plague-max").val(100);
   $("#plague-slider").slider(
   {
     animate: true,
@@ -150,18 +150,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#plague-value" ).attr('value', ui.value);
+      $( "#plague-value" ).val(ui.value);
     },
   });
 
-  $("#plague-value").change( function()
+  $("#plague-value").on( 'change', function()
   {
     $("#plague-slider").slider( 'value', this.value );
   });
 
   // Elitism Slider setup
-  $("#elitism-min").attr('value', 0 );
-  $("#elitism-max").attr('value', 5 );
+  $("#elitism-min").val(0);
+  $("#elitism-max").val(5);
   $("#elitism-slider").slider(
   {
     animate: true,
@@ -172,18 +172,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#elitism-value" ).attr('value', ui.value);
+      $( "#elitism-value" ).val(ui.value);
     },
   });
 
-  $("#elitism-value").change( function()
+  $("#elitism-value").on( 'change', function()
   {
     $("#elitism-slider").slider( 'value', this.value );
   });
 
   // Migration Slider setup
-  $("#migration-min").attr('value', 0  );
-  $("#migration-max").attr('value', 50);
+  $("#migration-min").val(0);
+  $("#migration-max").val(50);
   $("#migration-slider").slider(
   {
     animate: true,
@@ -194,19 +194,19 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#migration-value" ).attr('value', ui.value);
+      $( "#migration-value" ).val(ui.value);
     },
   });
 
-  $("#migration-value").change( function()
+  $("#migration-value").on( 'change', function()
   {
     $("#migration-slider").slider( 'value', this.value );
   });
 
   // Regularization Slider setup
   // Values from 0-100, but this is in % so divide by 100 later
-  $("#regularization-min").attr('value', 0  );
-  $("#regularization-max").attr('value', 100);
+  $("#regularization-min").val(0);
+  $("#regularization-max").val(100);
   $("#regularization-slider").slider(
   {
     animate: true,
@@ -217,18 +217,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#regularization-value" ).attr('value', ui.value);
+      $( "#regularization-value" ).val(ui.value);
     },
   });
 
-  $("#regularization-value").change( function()
+  $("#regularization-value").on( 'change', function()
   {
     $("#regularization-slider").slider( 'value', this.value );
   });
 
   // Random Seed Slider setup
-  $("#seed-min").attr('value', 0   );
-  $("#seed-max").attr('value', 1000);
+  $("#seed-min").val(0);
+  $("#seed-max").val(1000);
   $("#seed-slider").slider(
   {
     animate: true,
@@ -239,18 +239,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#seed-value" ).attr('value', ui.value);
+      $( "#seed-value" ).val(ui.value);
     },
   });
 
-  $("#seed-value").change( function()
+  $("#seed-value").on( 'change', function()
   {
     $("#seed-slider").slider( 'value', this.value );
   });
 
   // Simpoints Slider setup
-  $("#simpoints-min").attr('value', 50  );
-  $("#simpoints-max").attr('value', 5000);
+  $("#simpoints-min").val(50);
+  $("#simpoints-max").val(5000);
   $("#simpoints-slider").slider(
   {
     animate: true,
@@ -261,18 +261,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#simpoints-value" ).attr('value', ui.value);
+      $( "#simpoints-value" ).val(ui.value);
     },
   });
 
-  $("#simpoints-value").change( function()
+  $("#simpoints-value").on( 'change', function()
   {
     $("#simpoints-slider").slider( 'value', this.value );
   });
 
   // Band_volume Slider setup
-  $("#band_volume-min").attr('value', 0.0 );
-  $("#band_volume-max").attr('value', 0.05);
+  $("#band_volume-min").val(0.0);
+  $("#band_volume-max").val(0.05);
   $("#band_volume-slider").slider(
   {
     animate: true,
@@ -283,22 +283,22 @@ $(document).ready(function()
     step:    0.0001,
     slide: function( event, ui )
     {
-      $( "#band_volume-value" ).attr('value', ui.value);
+      $( "#band_volume-value" ).val(ui.value);
     },
   });
 
-  $("#band_volume-value").change( function()
+  $("#band_volume-value").on( 'change', function()
   {
     $("#band_volume-slider").slider( 'value', this.value );
   });
 
   // Parallel masters group count setup
-  $("#PMGC_enable").change( function()
+  $("#PMGC_enable").on( 'change', function()
   {
     if ( $("#PMGC_enable").is(":checked") )
     {
        $("#PMGC_count").show();
-       $("#req_mgroupcount").attr( 'value', 8 );
+       $("#req_mgroupcount").val(8);
        $("#clusters-nopmg").hide();
        $("#clusters-pmg").show();
     }
@@ -306,15 +306,15 @@ $(document).ready(function()
     else
     {
        $("#PMGC_count").hide();
-       $("#req_mgroupcount").attr( 'value', 1 );
+       $("#req_mgroupcount").val(1);
        $("#clusters-nopmg").show();
        $("#clusters-pmg").hide();
     }
 
   });
   // Conc_threshold Slider setup
-  $("#conc_threshold-min").attr('value', 0.00000001 );
-  $("#conc_threshold-max").attr('value', 0.1 );
+  $("#conc_threshold-min").val(0.00000001);
+  $("#conc_threshold-max").val(0.1);
   $("#conc_threshold-slider").slider(
   {
     animate: true,
@@ -325,18 +325,18 @@ $(document).ready(function()
     step:     1,
     slide: function( event, ui )
     {
-      $( "#conc_threshold-value" ).attr('value', Math.pow(10, ui.value) );
+      $( "#conc_threshold-value" ).val(Math.pow(10, ui.value));
     },
   });
 
-  $("#conc_threshold-value").change( function()
+  $("#conc_threshold-value").on( 'change', function()
   {
     $("#conc_threshold-slider").slider( 'value', Math.log(this.value) / Math.log(10) );
   });
 
   // P_grid Slider setup
-  $("#p_grid-min").attr('value', 50 );
-  $("#p_grid-max").attr('value', 5000);
+  $("#p_grid-min").val(50);
+  $("#p_grid-max").val(5000);
   $("#p_grid-slider").slider(
   {
     animate: true,
@@ -347,18 +347,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#p_grid-value" ).attr('value', ui.value);
+      $( "#p_grid-value" ).val(ui.value);
     },
   });
 
-  $("#p_grid-value").change( function()
+  $("#p_grid-value").on( 'change', function()
   {
     $("#p_grid-slider").slider( 'value', this.value );
   });
 
   // Mutate_sigma Slider setup
-  $("#mutate_sigma-min").attr('value', -10 );
-  $("#mutate_sigma-max").attr('value', 10 );
+  $("#mutate_sigma-min").val(-10);
+  $("#mutate_sigma-max").val(10);
   $("#mutate_sigma-slider").slider(
   {
     animate: true,
@@ -369,18 +369,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#mutate_sigma-value" ).attr('value', ui.value);
+      $( "#mutate_sigma-value" ).val(ui.value);
     },
   });
 
-  $("#mutate_sigma-value").change( function()
+  $("#mutate_sigma-value").on( 'change', function()
   {
     $("#mutate_sigma-slider").slider( 'value', this.value );
   });
 
   // Mutate_s Slider setup
-  $("#mutate_s-min").attr('value', 0 );
-  $("#mutate_s-max").attr('value', 100 );
+  $("#mutate_s-min").val(0);
+  $("#mutate_s-max").val(100);
   $("#mutate_s-slider").slider(
   {
     animate: true,
@@ -391,18 +391,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#mutate_s-value" ).attr('value', ui.value);
+      $( "#mutate_s-value" ).val(ui.value);
     },
   });
 
-  $("#mutate_s-value").change( function()
+  $("#mutate_s-value").on( 'change', function()
   {
     $("#mutate_s-slider").slider( 'value', this.value );
   });
 
   // Mutate_k Slider setup
-  $("#mutate_k-min").attr('value', 0 );
-  $("#mutate_k-max").attr('value', 100 );
+  $("#mutate_k-min").val(0);
+  $("#mutate_k-max").val(100);
   $("#mutate_k-slider").slider(
   {
     animate: true,
@@ -413,18 +413,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#mutate_k-value" ).attr('value', ui.value);
+      $( "#mutate_k-value" ).val(ui.value);
     },
   });
 
-  $("#mutate_k-value").change( function()
+  $("#mutate_k-value").on( 'change', function()
   {
     $("#mutate_k-slider").slider( 'value', this.value );
   });
 
   // Mutate s/k Slider setup
-  $("#mutate_sk-min").attr('value', 0 );
-  $("#mutate_sk-max").attr('value', 100 );
+  $("#mutate_sk-min").val(0);
+  $("#mutate_sk-max").val(100);
   $("#mutate_sk-slider").slider(
   {
     animate: true,
@@ -435,18 +435,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#mutate_sk-value" ).attr('value', ui.value);
+      $( "#mutate_sk-value" ).val(ui.value);
     },
   });
 
-  $("#mutate_sk-value").change( function()
+  $("#mutate_sk-value").on( 'change', function()
   {
     $("#mutate_sk-slider").slider( 'value', this.value );
   });
 
   // Debug_level Slider setup
-  $("#debug_level-min").attr('value', 0 );
-  $("#debug_level-max").attr('value', 4 );
+  $("#debug_level-min").val(0);
+  $("#debug_level-max").val(4);
   $("#debug_level-slider").slider(
   {
     animate: true,
@@ -457,11 +457,11 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#debug_level-value" ).attr('value', ui.value);
+      $( "#debug_level-value" ).val(ui.value);
     },
   });
 
-  $("#debug_level-value").change( function()
+  $("#debug_level-value").on( 'change', function()
   {
     $("#debug_level-slider").slider( 'value', this.value );
   });

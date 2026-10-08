@@ -4,8 +4,8 @@
 $(document).ready(function()
 {
   // Montecarlo Slider setup
-  $("#montecarlo-min").attr('value', 1  );
-  $("#montecarlo-max").attr('value', 100);
+  $("#montecarlo-min").val(1);
+  $("#montecarlo-max").val(100);
   $("#montecarlo-slider").slider(
   {
     animate: true,
@@ -16,18 +16,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#mc_iterations" ).attr('value', ui.value);
+      $( "#mc_iterations" ).val(ui.value);
     },
   });
 
-  $("#mc_iterations").change( function()
+  $("#mc_iterations").on( 'change', function()
   {
     $("#montecarlo-slider").slider( 'value', this.value );
   });
 
   // Meniscus Slider setup
-  $("#meniscus-min").attr('value', 3  );
-  $("#meniscus-max").attr('value', 31 );
+  $("#meniscus-min").val(3);
+  $("#meniscus-max").val(31);
   $("#meniscus-slider").slider(
   {
     animate: true,
@@ -38,18 +38,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#meniscus_points" ).attr('value', ui.value);
+      $( "#meniscus_points" ).val(ui.value);
     },
   });
 
-  $("#meniscus_points").change( function()
+  $("#meniscus_points").on( 'change', function()
   {
     $("#meniscus-slider").slider( 'value', this.value );
   });
 
   // Iterations Slider setup
-  $("#iterations-min").attr('value', 1  );
-  $("#iterations-max").attr('value', 10 );
+  $("#iterations-min").val(1);
+  $("#iterations-max").val(10);
   $("#iterations-slider").slider(
   {
     animate: true,
@@ -60,18 +60,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#max_iterations" ).attr('value', ui.value);
+      $( "#max_iterations" ).val(ui.value);
     },
   });
 
-  $("#max_iterations").change( function()
+  $("#max_iterations").on( 'change', function()
   {
     $("#iterations-slider").slider( 'value', this.value );
   });
 
   // Simpoints Slider setup
-  $("#simpoints-min").attr('value', 50  );
-  $("#simpoints-max").attr('value', 5000);
+  $("#simpoints-min").val(50);
+  $("#simpoints-max").val(5000);
   $("#simpoints-slider").slider(
   {
     animate: true,
@@ -82,18 +82,18 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#simpoints-value" ).attr('value', ui.value);
+      $( "#simpoints-value" ).val(ui.value);
     },
   });
 
-  $("#simpoints-value").change( function()
+  $("#simpoints-value").on( 'change', function()
   {
     $("#simpoints-slider").slider( 'value', this.value );
   });
 
   // Band_volume Slider setup
-  $("#band_volume-min").attr('value', 0.0 );
-  $("#band_volume-max").attr('value', 0.05);
+  $("#band_volume-min").val(0.0);
+  $("#band_volume-max").val(0.05);
   $("#band_volume-slider").slider(
   {
     animate: true,
@@ -104,35 +104,35 @@ $(document).ready(function()
     step:    0.0001,
     slide: function( event, ui )
     {
-      $( "#band_volume-value" ).attr('value', ui.value);
+      $( "#band_volume-value" ).val(ui.value);
     },
   });
 
-  $("#band_volume-value").change( function()
+  $("#band_volume-value").on( 'change', function()
   {
     $("#band_volume-slider").slider( 'value', this.value );
   });
 
   // Parallel masters group count setup
-  $("#PMGC_enable").change( function()
+  $("#PMGC_enable").on( 'change', function()
   {
     if ( $("#PMGC_enable").is(":checked") )
     {
        $("#PMGC_count").show();
-       $("#req_mgroupcount").attr( 'value', 4 );
+       $("#req_mgroupcount").val(4);
     }
 
     else
     {
        $("#PMGC_count").hide();
-       $("#req_mgroupcount").attr( 'value', 1 );
+       $("#req_mgroupcount").val(1);
     }
 
   });
 
   // Debug_level Slider setup
-  $("#debug_level-min").attr('value', 0 );
-  $("#debug_level-max").attr('value', 4 );
+  $("#debug_level-min").val(0);
+  $("#debug_level-max").val(4);
   $("#debug_level-slider").slider(
   {
     animate: true,
@@ -143,11 +143,11 @@ $(document).ready(function()
     step:    1,
     slide: function( event, ui )
     {
-      $( "#debug_level-value" ).attr('value', ui.value);
+      $( "#debug_level-value" ).val(ui.value);
     },
   });
 
-  $("#debug_level-value").change( function()
+  $("#debug_level-value").on( 'change', function()
   {
     $("#debug_level-slider").slider( 'value', this.value );
   });

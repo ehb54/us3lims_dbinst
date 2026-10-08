@@ -49,8 +49,8 @@ if ( isset( $_POST['change_cell'] ) )
   </div>
 
   <script>
-    $('#people_select').change( change_person );
-    $('#run_select')   .change( change_run_select );
+    $('#people_select').on( 'change', change_person );
+    $('#run_select')   .on( 'change', change_run_select );
   </script>
 HTML;
 }
@@ -109,8 +109,8 @@ else
   </div>
 
   <script>
-    $('#people_select').change( change_person );
-    $('#run_select')   .change( change_run_select );
+    $('#people_select').on( 'change', change_person );
+    $('#run_select')   .on( 'change', change_run_select );
   </script>
 HTML;
 }

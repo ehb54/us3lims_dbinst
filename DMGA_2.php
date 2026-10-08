@@ -36,7 +36,13 @@ include 'lib/file_writer.php';
 include $class_dir . 'submit_local.php';
 include $class_dir . 'submit_gfac.php';
 include $class_dir . 'submit_airavata.php';
+include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
+
+// A large batch takes minutes to submit; finish it even if the browser or
+// the web server gives up on this request (ultrascan-tickets#1115)
+ignore_user_abort( true );
+set_time_limit( 0 );
 
 // Make sure the advancement level is set
 $advanceLevel = $_SESSION['advancelevel'] ?? 0;
@@ -59,10 +65,14 @@ if ( $_SESSION[ 'separate_datasets' ] )
 //print_r( $payload->get() );
 
   $dataset_count = $payload->get( 'datasetCount' );
+  echo "<script>us_submit_prog.show();</script>";
+  flush_output();
   priority( "DMGA", $dataset_count, $payload->get( 'job_parameters' ) );
 
   for ( $ii = 0; $ii < $dataset_count; $ii++ )
   {
+    echo "<script>us_submit_prog.msg.prep('" . ( $dataset_count - $ii ) . "');</script>";
+    flush_output();
     $single               = $payload->get_dataset( $ii );
     $HPCAnalysisRequestID = $HPC->writeDB( $single );
     $filenames[ $ii ]     = $file->write( $single, $HPCAnalysisRequestID );
@@ -127,6 +137,7 @@ else
 if ( $files_ok )
 {
   $output_msg = <<<HTML
+  <script>us_submit_prog.hide()</script>
   <pre>
   Thank you, your job was accepted and is currently processing. An
   email will be sent to {$_SESSION[ 'submitter_email' ]} when the job is
@@ -164,6 +175,9 @@ HTML;
 
     foreach ( $filenames as $filename )
     {
+      echo "<script>us_submit_prog.msg.submit('" . basename( $filename ) . "');</script>";
+      flush_output();
+
       chdir( dirname( $filename ) );
 
       $job-> clear();
@@ -177,6 +191,16 @@ HTML;
       {
         $output_msg .= "<br /><span class='message'>Message from the queue...</span><br />\n" .
                         print_r( $retval, true ) . " <br />\n";
+
+        foreach ( $retval as $rmsg )
+        {
+          if ( is_string( $rmsg ) && preg_match( '/^ERROR:/', $rmsg ) )
+          {
+            $output_msg .= "<br /><span class='message' style='color:red;font-weight:bold;'>" .
+                            "WARNING: job submission failed - $rmsg</span><br />\n";
+            break;
+          }
+        }
       }
     }
 

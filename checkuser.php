@@ -187,6 +187,17 @@ if ( $row["activated"] != 1 )
   exit();
 }
 
+if ( $row["account_enabled"] != 1 )
+{
+  remove_session();
+  $message = "Error: This account has been disabled. " .
+             "Please contact the administrator: " .
+             "<a href='mailto:$admin_email'>" .
+             "&lt;$admin_email&gt;</a>.";
+  include 'login.php';
+  exit();
+}
+
 // Update last login time
 
 $query = "UPDATE people SET lastLogin=now() WHERE personID=?";
