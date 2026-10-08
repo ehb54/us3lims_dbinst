@@ -11,6 +11,36 @@
  */
 
 // ---------------------------------------------------------------------------
+// Repost on validation failure
+// ---------------------------------------------------------------------------
+
+/**
+ * Stash this request's $_POST so the redirect that a validation failure
+ * sends the browser to can redisplay the form with what was actually
+ * typed, instead of the blank/stale defaults edit_record()/do_new() would
+ * otherwise show. 'type' tells edit_users.php's dispatcher which form to
+ * route back into.
+ */
+function _eu_stash_repost( $type, array $post )
+{
+  $_SESSION[ 'edit_users_repost' ] = array( 'type' => $type, 'post' => $post );
+}
+
+/**
+ * One field's value from a stashed repost, HTML-escaped for use in a
+ * value='...' attribute the same way the rest of this file's form markup
+ * is built. $override is the 'post' array from _eu_stash_repost(), or null
+ * when there is nothing to restore (the normal, non-error case).
+ */
+function eu_restored_value( $override, $key, $default = '' )
+{
+  if ( $override === null || ! array_key_exists( $key, $override ) ) {
+    return $default;
+  }
+  return htmlentities( trim( (string) $override[ $key ] ), ENT_QUOTES );
+}
+
+// ---------------------------------------------------------------------------
 // Redirect-and-exit wrapper
 // ---------------------------------------------------------------------------
 
@@ -601,6 +631,7 @@ function do_update($link)
       $link->rollback();
       error_log( $e->getMessage() );
       $_SESSION['message'] = 'An error occurred and the account was not updated. Please try again.';
+      _eu_stash_repost( 'update', $_POST );
       _eu_redirect_and_exit( $_SERVER['PHP_SELF'] . "?personID=$personID" );
       return;
     }
@@ -622,10 +653,12 @@ function do_update($link)
     }
   }
 
-  else
+  else {
     $_SESSION['message'] = "The following errors were noted:<br />" .
                            $message .
                            "Changes were not recorded.";
+    _eu_stash_repost( 'update', $_POST );
+  }
 
   _eu_redirect_and_exit( $_SERVER['PHP_SELF'] . "?personID=$personID" );
 }
@@ -719,6 +752,7 @@ function do_create($link)
       $link->rollback();
       error_log( $e->getMessage() );
       $_SESSION['message'] = 'An error occurred and the account was not created. Please try again.';
+      _eu_stash_repost( 'create', $_POST );
       _eu_redirect_and_exit( $_SERVER['PHP_SELF'] );
       return;
     }
@@ -735,10 +769,12 @@ function do_create($link)
     return;
   }
 
-  else
+  else {
     $_SESSION['message'] = "The following errors were noted:<br />" .
                            $message .
                            "New user was not created!";
+    _eu_stash_repost( 'create', $_POST );
+  }
 
   _eu_redirect_and_exit( $_SERVER['PHP_SELF'] );
 }
@@ -965,13 +1001,15 @@ HTML;
 // ---------------------------------------------------------------------------
 
 // Function to edit a record
-function edit_record($link)
+function edit_record($link, $override = null)
 {
   global $enable_GMP;
   global $enable_PAM;
 
-  // Get the record we need to edit
-  $personID = $_POST['personID'];
+  // Get the record we need to edit. $override (a failed update's own
+  // $_POST, stashed by _eu_stash_repost()) still names the record by its
+  // own personID, same as a normal edit request would.
+  $personID = $override['personID'] ?? $_POST['personID'];
 
   $query  = "SELECT lname, fname, organization, " .
       "address, city, state, zip, country, phone, email, " .
@@ -1013,6 +1051,47 @@ function edit_record($link)
   $result->close();
   $stmt->close();
 
+  // A validation failure on the last attempt to save this record: show what
+  // was actually typed, not the database's still-unchanged values, so the
+  // only thing the user has to fix is whatever the error message named.
+  global $clusters;
+  if ( $override !== null )
+  {
+    $lname           = eu_restored_value( $override, 'lname', $lname );
+    $fname           = eu_restored_value( $override, 'fname', $fname );
+    $organization    = eu_restored_value( $override, 'organization', $organization );
+    $address         = eu_restored_value( $override, 'address', $address );
+    $city            = eu_restored_value( $override, 'city', $city );
+    $state           = eu_restored_value( $override, 'state', $state );
+    $zip             = eu_restored_value( $override, 'zip', $zip );
+    $country         = eu_restored_value( $override, 'country', $country );
+    $phone           = eu_restored_value( $override, 'phone', $phone );
+    $email           = eu_restored_value( $override, 'email', $email );
+    $userlevel       = isset( $override['userlevel'] ) ? intval( $override['userlevel'] ) : $userlevel;
+    $advancelevel    = $override['advancelevel'] ?? $advancelevel;
+    $row['activated']       = ( isset( $override['activated'] ) && $override['activated'] == 'on' ) ? 1 : 0;
+    $row['account_enabled'] = ( isset( $override['account_enabled'] ) && $override['account_enabled'] == 'on' ) ? 1 : 0;
+
+    if ( $enable_GMP ) {
+      $gmpReviewerRole = $override['gmpReviewerRole'] ?? $gmpReviewerRole;
+    }
+    if ( $enable_PAM ) {
+      $authenticatePAM = ( isset( $override['authenticatePAM'] ) && $override['authenticatePAM'] == 'on' ) ? 1 : 0;
+      $userNamePAM     = eu_restored_value( $override, 'userNamePAM', $userNamePAM );
+    }
+
+    // Same checkbox names do_update() itself reads -- rebuild the colon-
+    // delimited list from what was actually posted, not what is still
+    // saved in the database.
+    $checked_clusters = array();
+    foreach ( $clusters as $cluster ) {
+      if ( isset( $override[ $cluster->short_name ] ) && $override[ $cluster->short_name ] == 'on' ) {
+        $checked_clusters[] = $cluster->short_name;
+      }
+    }
+    $clusterAuth = implode( ':', $checked_clusters );
+  }
+
   // Create dropdowns
   $userlevel_text    = userlevel_select( $userlevel );
   $advancelevel_text = advancelevel_select( $advancelevel );
@@ -1022,7 +1101,6 @@ function edit_record($link)
   $acct_enabled_text = "<label><input type='checkbox' name='account_enabled'$acct_enabled_chk /> Enabled</label>";
 
   // Figure out checks for cluster authorizations
-  global $clusters;
   foreach ( $clusters as $cluster )
   {
     $checked_cluster  = "checked_$cluster->short_name";
@@ -1067,6 +1145,20 @@ function edit_record($link)
   $result->close();
   $instrAuth_text = implode( ":", $instrAuth );
 
+  // Same as the cluster checkboxes above: on a repost, what was actually
+  // posted (do_update() reads these as 'inst_<id>') wins over what the
+  // database still has on file.
+  if ( $override !== null )
+  {
+    $checked_instruments = array();
+    foreach ( $instruments as $instrumentID => $instName ) {
+      if ( isset( $override[ "inst_$instrumentID" ] ) && $override[ "inst_$instrumentID" ] == 'on' ) {
+        $checked_instruments[] = $instrumentID;
+      }
+    }
+    $instrAuth_text = implode( ":", $checked_instruments );
+  }
+
   foreach ( $instruments as $instrumentID => $instName )
   {
     $checked_instr  = "checked_$instrumentID";
@@ -1110,6 +1202,9 @@ function edit_record($link)
       . "<tr><th>Authenticate via PAM:</th>"
       .  "<td>$authenticatePAM_text</td></tr>"
       .  "<tr><th>User name (PAM):</th>"
+      // Not marked required: get_user_info.php only enforces this when
+      // "Authenticate via PAM" above is checked -- otherwise it silently
+      // falls back to the email address, by design.
       .  "<td><input type='text' name='userNamePAM' size='40'"
       .  "          maxlength='64' value='$userNamePAM' /></td></tr>"
     : ""
@@ -1130,36 +1225,37 @@ echo<<<HTML
     <tbody>
 
     <tr><th colspan='2' class='form-section-header'>Profile Information</th></tr>
-    <tr><th>First Name:</th>
+    <tr><td colspan='2' class='required-note'>* required</td></tr>
+    <tr><th>First Name: *</th>
         <td><input type='text' name='fname' size='40'
-                   maxlength='64' value='$fname' /></td></tr>
-    <tr><th>Last Name:</th>
+                   maxlength='64' value='$fname' required /></td></tr>
+    <tr><th>Last Name: *</th>
         <td><input type='text' name='lname' size='40'
-                   maxlength='64' value='$lname' /></td></tr>
-    <tr><th>Organization:</th>
+                   maxlength='64' value='$lname' required /></td></tr>
+    <tr><th>Organization: *</th>
         <td><input type='text' name='organization' size='40'
-                   maxlength='128' value='$organization' /></td></tr>
-    <tr><th>Address:</th>
+                   maxlength='128' value='$organization' required /></td></tr>
+    <tr><th>Address: *</th>
         <td><input type='text' name='address' size='40'
-                   maxlength='128' value='$address' /></td></tr>
-    <tr><th>City:</th>
+                   maxlength='128' value='$address' required /></td></tr>
+    <tr><th>City: *</th>
         <td><input type='text' name='city' size='40'
-                   maxlength='64' value='$city' /></td></tr>
-    <tr><th>State (Province):</th>
+                   maxlength='64' value='$city' required /></td></tr>
+    <tr><th>State (Province): *</th>
         <td><input type='text' name='state' size='40'
-                   maxlength='64' value='$state' /></td></tr>
-    <tr><th>Postal Code:</th>
+                   maxlength='64' value='$state' required /></td></tr>
+    <tr><th>Postal Code: *</th>
         <td><input type='text' name='zip' size='40'
-                   maxlength='16' value='$zip' /></td></tr>
-    <tr><th>Country:</th>
+                   maxlength='16' value='$zip' required /></td></tr>
+    <tr><th>Country: *</th>
         <td><input type='text' name='country' size='40'
-                   maxlength='64' value='$country' /></td></tr>
-    <tr><th>Phone:</th>
+                   maxlength='64' value='$country' required /></td></tr>
+    <tr><th>Phone: *</th>
         <td><input type='text' name='phone' size='40'
-                   maxlength='64' value='$phone' /></td></tr>
-    <tr><th>Email:</th>
+                   maxlength='64' value='$phone' required /></td></tr>
+    <tr><th>Email: *</th>
         <td><input type='text' name='email' size='40'
-                   maxlength='64' value='$email' /></td></tr>
+                   maxlength='64' value='$email' required /></td></tr>
 
     <tr><th colspan='2' class='form-section-header'>Account Access</th></tr>
     <tr><th>Registration:</th>
@@ -1189,19 +1285,38 @@ HTML;
 }
 
 // Function to create a new record
-function do_new($link)
+function do_new($link, $override = null)
 {
    global $enable_GMP;
    global $enable_PAM;
+
+   // A validation failure on the last attempt to create this record: show
+   // what was actually typed, same as edit_record() does for an update.
+   $fname           = eu_restored_value( $override, 'fname' );
+   $lname           = eu_restored_value( $override, 'lname' );
+   $organization    = eu_restored_value( $override, 'organization' );
+   $address         = eu_restored_value( $override, 'address' );
+   $city            = eu_restored_value( $override, 'city' );
+   $state           = eu_restored_value( $override, 'state' );
+   $zip             = eu_restored_value( $override, 'zip' );
+   $country         = eu_restored_value( $override, 'country' );
+   $phone           = eu_restored_value( $override, 'phone' );
+   $email           = eu_restored_value( $override, 'email' );
+   $gmpReviewerRole = $override['gmpReviewerRole'] ?? 'NONE';
+   // Checked by default on a fresh form, same as before; a repost reflects
+   // whatever was actually submitted instead.
+   $authenticatePAM_checked = ( $override === null || ( isset( $override['authenticatePAM'] ) && $override['authenticatePAM'] == 'on' ) )
+                            ? ' checked' : '';
+   $userNamePAM     = eu_restored_value( $override, 'userNamePAM' );
 
    $extrasGMP =
     $enable_GMP
     ? "<tr><th>GMP Reviewer Role:</th>"
       . "<td>"
       . "<select name='gmpReviewerRole'>"
-      . "<option value='NONE'>None</option>"
-      . "<option value='REVIEWER'>Reviewer</option>"
-      . "<option value='APPROVER'>Approver</option>"
+      . "<option value='NONE'"     . ( $gmpReviewerRole == 'NONE'     ? ' selected' : '' ) . ">None</option>"
+      . "<option value='REVIEWER'" . ( $gmpReviewerRole == 'REVIEWER' ? ' selected' : '' ) . ">Reviewer</option>"
+      . "<option value='APPROVER'" . ( $gmpReviewerRole == 'APPROVER' ? ' selected' : '' ) . ">Approver</option>"
       . "</select>"
       . "</td>"
       . "</tr>"
@@ -1211,11 +1326,13 @@ function do_new($link)
    $extrasPAM =
     $enable_PAM
     ? "<tr><th>Authenticate via PAM:</th>"
-      . "<td><input type='checkbox' name='authenticatePAM' checked>"
+      . "<td><input type='checkbox' name='authenticatePAM'$authenticatePAM_checked>"
       . "</td></tr>"
+      // Not marked required: left blank with "Authenticate via PAM"
+      // unchecked, get_user_info.php falls back to the email address.
       . "<tr><th>User name (PAM):</th>"
       . "<td><input type='text' name='userNamePAM' size='40'"
-      . "               maxlength='64'></td></tr>"
+      . "               maxlength='64' value='$userNamePAM'></td></tr>"
     : ""
     ;
 
@@ -1233,36 +1350,37 @@ echo<<<HTML
     <tbody>
 
     <tr><th colspan='2' class='form-section-header'>Profile Information</th></tr>
-    <tr><th>First Name:</th>
+    <tr><td colspan='2' class='required-note'>* required</td></tr>
+    <tr><th>First Name: *</th>
         <td><input type='text' name='fname' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>Last Name:</th>
+                   maxlength='64' value='$fname' required /></td></tr>
+    <tr><th>Last Name: *</th>
         <td><input type='text' name='lname' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>Organization:</th>
+                   maxlength='64' value='$lname' required /></td></tr>
+    <tr><th>Organization: *</th>
         <td><input type='text' name='organization' size='40'
-                   maxlength='128' /></td></tr>
-    <tr><th>Address:</th>
+                   maxlength='128' value='$organization' required /></td></tr>
+    <tr><th>Address: *</th>
         <td><input type='text' name='address' size='40'
-                   maxlength='128' /></td></tr>
-    <tr><th>City:</th>
+                   maxlength='128' value='$address' required /></td></tr>
+    <tr><th>City: *</th>
         <td><input type='text' name='city' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>State (Province):</th>
+                   maxlength='64' value='$city' required /></td></tr>
+    <tr><th>State (Province): *</th>
         <td><input type='text' name='state' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>Postal Code:</th>
+                   maxlength='64' value='$state' required /></td></tr>
+    <tr><th>Postal Code: *</th>
         <td><input type='text' name='zip' size='40'
-                   maxlength='16' /></td></tr>
-    <tr><th>Country:</th>
+                   maxlength='16' value='$zip' required /></td></tr>
+    <tr><th>Country: *</th>
         <td><input type='text' name='country' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>Phone:</th>
+                   maxlength='64' value='$country' required /></td></tr>
+    <tr><th>Phone: *</th>
         <td><input type='text' name='phone' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>Email:</th>
+                   maxlength='64' value='$phone' required /></td></tr>
+    <tr><th>Email: *</th>
         <td><input type='text' name='email' size='40'
-                   maxlength='64' /></td></tr>
+                   maxlength='64' value='$email' required /></td></tr>
 
     <tr><th colspan='2' class='form-section-header'>Authentication</th></tr>
     $extrasGMP

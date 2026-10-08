@@ -8,6 +8,27 @@
  *
  */
 
+// Single source of truth for which profile fields are always required, so
+// the validation below and the "*" markers on the edit/create forms
+// (edit_users_actions.php) can never drift apart from each other.
+if ( ! function_exists( 'profile_required_fields' ) ) {
+  function profile_required_fields()
+  {
+    return array(
+      'fname'        => 'first name',
+      'lname'        => 'last name',
+      'organization' => 'organization',
+      'address'      => 'address',
+      'city'         => 'city',
+      'state'        => 'state or province',
+      'zip'          => 'postal code or zip',
+      'country'      => 'country',
+      'phone'        => 'phone',
+      'email'        => 'email address',
+    );
+  }
+}
+
 $lname              = trim(substr(addslashes(htmlentities($_POST['lname'])), 0,64));
 $fname              = trim(substr(addslashes(htmlentities($_POST['fname'])), 0,64));
 $organization       = trim(substr(addslashes(htmlentities($_POST['organization'])), 0,128));
@@ -32,35 +53,11 @@ if ( isset( $enable_PAM ) && $enable_PAM ) {
 // Let's do some error checking first of all
 // -- most fields are required
 $message = "";
-if ( empty($fname) )
-  $message .= "--first name is missing<br />";
-
-if ( empty($lname) )
-  $message .= "--last name is missing<br />";
-
-if ( empty($organization) )
-  $message .= "--organization is missing<br />";
-
-if ( empty($address) )
-  $message .= "--address is missing<br />";
-
-if ( empty($city) )
-  $message .= "--city is missing<br />";
-
-if ( empty($state) )
-  $message .= "--state or province is missing<br />";
-
-if ( empty($zip) )
-  $message .= "--postal code or zip is missing<br />";
-
-if ( empty($country) )
-  $message .= "--country is missing<br />";
-
-if ( empty($phone) )
-  $message .= "--phone is missing<br />";
-
-if ( empty($email) )
-  $message .= "--email address is missing<br />";
+foreach ( profile_required_fields() as $field_key => $field_label )
+{
+  if ( empty( $$field_key ) )
+    $message .= "--$field_label is missing<br />";
+}
 
 if (! emailsyntax_is_valid($email) )
   $message .= "--$email is not a valid email address<br />";

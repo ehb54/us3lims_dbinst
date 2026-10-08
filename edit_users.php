@@ -84,8 +84,22 @@ include 'header.php';
         } ?>
 
 <?php
+// A validation failure on the last update/create redirected here as a
+// plain GET (so the browser's back/reload behaves normally), with nothing
+// in $_POST to tell this dispatch which form that was. The repost stashed
+// before that redirect (_eu_stash_repost()) carries it instead, and is
+// read exactly once.
+$repost = $_SESSION['edit_users_repost'] ?? null;
+unset( $_SESSION['edit_users_repost'] );
+
 // Edit or display a record
-if (isset($_POST['edit']))
+if ( $repost !== null && $repost['type'] === 'update' )
+  edit_record($link, $repost['post']);
+
+else if ( $repost !== null && $repost['type'] === 'create' )
+  do_new($link, $repost['post']);
+
+else if (isset($_POST['edit']))
   edit_record($link);
 
 else if (isset($_POST['new']))
