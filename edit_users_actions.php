@@ -116,10 +116,16 @@ function write_audit_row( $link, $personID, $user_email, $user_name, $action, $o
   $old_json = ( $old_values !== null ) ? json_encode( audit_filter_values( $old_values ) ) : null;
   $new_json = ( $new_values !== null ) ? json_encode( audit_filter_values( $new_values ) ) : null;
 
+  // created_at is written explicitly as UTC_TIMESTAMP(), not left to the
+  // column's own DEFAULT CURRENT_TIMESTAMP: CURRENT_TIMESTAMP is the
+  // session's time zone, which on a host whose MySQL session is not UTC
+  // records audit events under local time while every other timestamp this
+  // table is read against (view_people_audit.php's filters and display) is
+  // documented and labeled as UTC.
   $sql = "INSERT INTO people_audit
-            ( personID,  user_email,  user_name,  changed_by_personID,  changed_by_email,  changed_by_name,  action,  old_values,  new_values,  notes )
+            ( personID,  user_email,  user_name,  changed_by_personID,  changed_by_email,  changed_by_name,  action,  old_values,  new_values,  notes,  created_at )
           VALUES
-            ( ?,         ?,           ?,          ?,                    ?,                 ?,                ?,       ?,           ?,           ? )";
+            ( ?,         ?,           ?,          ?,                    ?,                 ?,                ?,       ?,           ?,           ?,      UTC_TIMESTAMP() )";
 
   $stmt = $link->prepare( $sql );
   if ( !$stmt )

@@ -14,8 +14,14 @@
  *   person_id  exact personID match, driven by user dropdown
  *   actor      partial match against changed_by_email or changed_by_name
  *   action     exact match against action enum
- *   date_from  YYYY-MM-DD, inclusive lower bound on created_at
- *   date_to    YYYY-MM-DD, inclusive upper bound on created_at
+ *   date_from  YYYY-MM-DD in UTC, inclusive lower bound on created_at
+ *   date_to    YYYY-MM-DD in UTC, inclusive upper bound on created_at
+ *
+ * created_at is written as UTC_TIMESTAMP() (edit_users_actions.php's
+ * write_audit_row()), not the column's local-session-time default, so every
+ * date_from/date_to boundary below is a UTC calendar day and every
+ * timestamp shown is labeled UTC rather than silently being whatever the
+ * server's local time zone happens to be.
  *   page       current page number (1-based)
  */
 
@@ -222,6 +228,10 @@ function audit_build_where( $f_actor, $f_action, $f_person_id, $f_date_from, $f_
     $params[] = $f_person_id;
   }
 
+  // created_at is UTC (write_audit_row() writes UTC_TIMESTAMP(), not the
+  // column's local-session-time default), so these bounds are UTC calendar
+  // days, matching the "(UTC)" labels on the filter form and the list/detail
+  // views -- not the server's or the browser's local time zone.
   if ( $f_date_from !== null )
   {
     $where[]  = 'created_at >= ?';
@@ -534,7 +544,7 @@ function render_detail( $link, $audit_id )
   echo "<tbody>\n";
   echo "<tr><th colspan='2' class='audit-section'>Event information</th></tr>\n";
   echo "<tr><th>Audit ID</th><td>"    . h( $row['auditID']    ) . "</td></tr>\n";
-  echo "<tr><th>Timestamp</th><td>"   . h( $row['created_at'] ) . "</td></tr>\n";
+  echo "<tr><th>Timestamp (UTC)</th><td>" . h( $row['created_at'] ) . "</td></tr>\n";
   echo "<tr><th>Action</th><td><strong>" . h( audit_action_label( $row['action'] ) ) . "</strong></td></tr>\n";
   echo "<tr><th>Summary</th><td>"     . audit_summary( $row['action'], $row['old_values'], $row['new_values'], $row['notes'] ) . "</td></tr>\n";
 
@@ -654,7 +664,7 @@ function render_list( $link, $f_actor, $f_action, $f_person_id, $f_date_from, $f
   echo "<div class='audit-scroll'>\n";
   echo "<table class='audit-list'>\n";
   echo "<thead><tr>\n";
-  echo "  <th>Timestamp</th>\n";
+  echo "  <th>Timestamp (UTC)</th>\n";
   echo "  <th>Action</th>\n";
   echo "  <th>User</th>\n";
   echo "  <th>Changed by</th>\n";
@@ -771,9 +781,9 @@ echo <<<HTML
       <td><select name='changed_field'>$field_options</select></td>
     </tr>
     <tr>
-      <th>Date from:</th>
+      <th>Date from (UTC):</th>
       <td><input type='text' name='date_from' value='$v_date_from' size='12' placeholder='YYYY-MM-DD' /></td>
-      <th>Date to:</th>
+      <th>Date to (UTC):</th>
       <td><input type='text' name='date_to' value='$v_date_to' size='12' placeholder='YYYY-MM-DD' /></td>
     </tr>
     <tr>
