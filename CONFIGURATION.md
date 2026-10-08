@@ -140,9 +140,11 @@ place:
   with `@chmod`/`@chown`/`@chgrp` attempting to keep its original owner,
   group and mode -- `@chown`/`@chgrp` only actually succeed run as root;
   run as any other account, the backup's owner becomes that account, silently.
-  Its group still matches the legacy file's group, but only because that
-  account must already belong to it to read the file in the first place, not
-  because the `@chgrp` did anything. This is outside the docroot and
+  Its group comes from the setgid `instances/` directory it is created in,
+  not from the `@chgrp` call or from the creating account belonging to the
+  legacy file's group -- a root:root legacy file backed up by a non-root
+  account still comes out owned by that account with the directory's own
+  group, not root's. This is outside the docroot and
   not named `.php`, so it is never served as text or run as PHP, unlike a
   backup left in the instance directory itself (the state a host that ran
   `--activate` before 5682b3f can still be in -- `check_installation.php`

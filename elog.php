@@ -212,12 +212,15 @@ function elog( $msg ) {
 
         ## Rollover under the same lock, by copying this process's own
         ## already-open, already-locked fd to ".1" and truncating it, not
-        ## rename()+recreate. rename() left the live path a brand new inode
-        ## that whichever account's rollover won then owned exclusively --
-        ## on a split web/us3 account layout the *other* account could
-        ## neither write nor even open it afterward (its chmod/chgrp below
-        ## only widened the *group*, never the owner), a lockout with no way
-        ## back short of a human fixing the file by hand. Truncating the
+        ## rename()+recreate on the live path itself (an earlier design,
+        ## long gone from this file -- no chmod/chgrp of the live path
+        ## exists anywhere below anymore). That design's rename() left the
+        ## live path a brand new inode that whichever account's rollover
+        ## won then owned exclusively; a chmod/chgrp afterward could widen
+        ## the *group* for the other account in a split web/us3 layout, but
+        ## never the owner, so that account could still neither write nor
+        ## even open the new live path -- a lockout with no way back short
+        ## of a human fixing the file by hand. Truncating the
         ## existing fd in place keeps $elogfile's own inode, owner, group
         ## and mode exactly as they already were, so nothing is ever locked
         ## out by a rollover, and there is no window where the live file is
@@ -234,16 +237,44 @@ function elog( $msg ) {
         ## copy is caught instead of silently emptying the live log.
         if ( $path_stat !== false && $path_stat[ 'size' ] > ELOG_MAX_BYTES ) {
             rewind( $fh );
+
+            ## Both this glob and the 'x' open below run under this call's
+            ## exclusive flock() on $elogfile (acquired above), so no other
+            ## process can be concurrently, legitimately mid-rollover right
+            ## now, whatever pid its tmp file names -- anything matching
+            ## this glob is therefore either debris from a rollover that was
+            ## killed before it reached the rename() further down (nothing
+            ## else ever cleans those up), or a symlink an attacker planted
+            ## ahead of time at a predictable pid-based name, pointing at a
+            ## file this process cannot otherwise write. Removing it before
+            ## creating this call's own tmp file handles both the same way:
+            ## a plain unlink() removes a symlink without ever following
+            ## it, so the attacker's target is never touched either way.
+            foreach ( glob( "$elogfile.1.*.tmp" ) ?: [] as $stale ) {
+                @unlink( $stale );
+            }
+
             $tmpfile   = "$elogfile.1." . getmypid() . '.tmp';
+            ## 'x' (O_EXCL), not 'w' (round 8 should-fix): belt-and-suspenders
+            ## alongside the cleanup above, for the narrower race where
+            ## something recreates this exact name again between that
+            ## unlink() and this fopen(). 'w' would truncate and write
+            ## through whatever is there by then, symlink included; 'x'
+            ## fails outright instead of following it.
             $old_umask = umask( 0077 );
-            $tmp_fh    = @fopen( $tmpfile, 'w' );
+            $tmp_fh    = @fopen( $tmpfile, 'x' );
             umask( $old_umask );
             $copied = ( $tmp_fh !== false ) ? @stream_copy_to_stream( $fh, $tmp_fh ) : false;
             if ( $tmp_fh !== false ) {
                 fclose( $tmp_fh );
             }
             if ( $copied === $path_stat[ 'size' ] ) {
-                @chmod( $tmpfile, $path_stat[ 'mode' ] & 0777 );
+                ## & 0770, not & 0777 (round 8 nit): a legacy 0644 live file
+                ## would otherwise carry its o+r straight into '.1' even
+                ## though elog.txt itself gets narrowed off o+r/o+w by the
+                ## check further down -- '.1' deserves the same narrowing,
+                ## not whatever mode the live file happened to have.
+                @chmod( $tmpfile, $path_stat[ 'mode' ] & 0770 );
                 @chgrp( $tmpfile, $path_stat[ 'gid' ] );
                 if ( @rename( $tmpfile, "$elogfile.1" ) ) {
                     ftruncate( $fh, 0 );
@@ -285,8 +316,11 @@ function elog( $msg ) {
             ## with "> elog.txt" or ": > elog.txt" rather than deleting it:
             ## whichever account's request happens to notice it missing
             ## recreates it in the directory's own mode (0755 us3:us3 under
-            ## the roles-provisioned default), owned by that account alone,
-            ## not in the setgid layout step 5 provisions for a fresh file.
+            ## the roles-provisioned default), owned by that account alone --
+            ## the directory itself is not setgid, so a file this chmod()
+            ## widens to 0660 is still only group-writable by whichever
+            ## group that account's own primary group happens to be, not
+            ## necessarily the other account's group.
             @chmod( $elogfile, 0660 );
         } elseif ( $path_stat !== false && ( $path_stat[ 'mode' ] & 0007 ) !== 0 ) {
             ## An existing file inherited from before this scheme (e.g.
@@ -295,10 +329,18 @@ function elog( $msg ) {
             ## away. Narrowed on every call instead, preserving whatever
             ## owner/group access it already has.
             ##
-            ## This also removes a legacy 0666's o+w, which matters only on
-            ## a host where step 5 hasn't provisioned the setgid directory
-            ## yet: apache would otherwise rely on world-write to log at
-            ## all, and loses that the first time this narrowing runs.
+            ## This also removes a legacy 0666's o+w, which matters because
+            ## nothing here makes the *directory* setgid: on a roles host
+            ## (0755 us3:us3 ~us3/lims/etc) apache has never been able to
+            ## rotate elog.txt at all -- rotation renames inside the
+            ## directory, which needs write access to the directory itself,
+            ## not just to the file -- so a legacy 0666 is apache's only way
+            ## to keep logging there, and this narrowing removes it the
+            ## first time it runs. Accepted, not fixed here: making the
+            ## directory itself setgid-writable by both accounts is a
+            ## larger change (a dedicated elog subdirectory, provisioned
+            ## 2770 us3:<web group>, is the clean version of that) that
+            ## dbutils#45's step 5 does not attempt.
             @chmod( $elogfile, $path_stat[ 'mode' ] & 0777 & ~0007 );
         }
 
