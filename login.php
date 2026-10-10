@@ -34,7 +34,7 @@ if ( $enable_PAM ) {
                      class='w-20em' autocomplete='username' autofocus required /></td></tr>
 
       <tr><td>Password:</td>
-          <td><input type='password' name='password' maxlength='80'
+          <td><input type='password' name='password' maxlength='127'
                      size='20' class='w-20em' autocomplete='current-password' required /></td></tr>
 
       <tr><td><input type='submit' name='Submit' value='Sign In'/></td></tr>
@@ -66,7 +66,7 @@ HTML;
                      class='w-20em' autocomplete='username' autofocus required /></td></tr>
 
       <tr><td>Password:</td>
-          <td><input type='password' name='password' maxlength='80'
+          <td><input type='password' name='password' maxlength='127'
                      size='20' class='w-20em' autocomplete='current-password' required /></td></tr>
 
       <tr><td><input type='submit' name='Submit' value='Sign In'/></td></tr>

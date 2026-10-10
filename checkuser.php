@@ -19,6 +19,40 @@ function login_db_unavailable()
   exit();
 }
 
+/**
+ * Prepare and execute a parameterized SELECT, routing every failure mode to
+ * login_db_unavailable() instead of letting it reach the browser.
+ *
+ * Previously this held only on PHP 7.2: mysqli's default report mode there
+ * is silent failure (prepare()/execute() return false, which the original
+ * `if ( ! $stmt->execute() ... )` check caught, though nothing checked
+ * prepare() itself, so a false $stmt there still reached bind_param() as a
+ * fatal "call to a member function on bool"). PHP 8.1 changed the default
+ * to MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT, so on 8.2 a connection
+ * problem throws mysqli_sql_exception instead of returning false -- from
+ * prepare() as readily as from execute(), uncaught, past every check here,
+ * as a fatal 500 with driver text in it.
+ *
+ * @return array{0: mysqli_stmt, 1: mysqli_result}
+ */
+function login_db_query( $link, $query, $types, array $args )
+{
+  try {
+    $stmt = $link->prepare( $query );
+    if ( ! $stmt ) {
+      login_db_unavailable();
+    }
+    $stmt->bind_param( $types, ...$args );
+    if ( ! $stmt->execute() || ! ( $result = $stmt->get_result() ) ) {
+      login_db_unavailable();
+    }
+  } catch ( Throwable $e ) {
+    login_db_unavailable();
+  }
+
+  return array( $stmt, $result );
+}
+
 $loginname  = htmlentities(trim($_POST['email']));
 $passwd = trim($_POST['password']);
 if ( !isset( $enable_PAM ) ) {
@@ -49,13 +83,7 @@ $pamActive = false;
 
 if ( $enable_PAM && PAM_name_is_valid( $loginname ) ) {
   // for PAM authentication
-  $query     = "SELECT * FROM people WHERE userNamePAM=?";
-  $args      = [ $loginname ];
-  $stmt      = $link->prepare( $query );
-  $stmt->bind_param( 's', ...$args );
-  if ( ! $stmt->execute() || ! ( $result = $stmt->get_result() ) ) {
-    login_db_unavailable();
-  }
+  list( $stmt, $result ) = login_db_query( $link, "SELECT * FROM people WHERE userNamePAM=?", 's', [ $loginname ] );
   $row    = mysqli_fetch_assoc($result);
   $count  = $result->num_rows;
 
@@ -74,13 +102,7 @@ if ( !$pamActive ) {
 
   // Find the id of the record with the same e-mail address:
 
-  $query  = "SELECT * FROM people WHERE email=?";
-  $args   = [ $loginname ];
-  $stmt   = $link->prepare( $query );
-  $stmt->bind_param( 's', ...$args );
-  if ( ! $stmt->execute() || ! ( $result = $stmt->get_result() ) ) {
-    login_db_unavailable();
-  }
+  list( $stmt, $result ) = login_db_query( $link, "SELECT * FROM people WHERE email=?", 's', [ $loginname ] );
 
   $row    = mysqli_fetch_assoc($result);
   $count  = mysqli_num_rows($result);
@@ -213,12 +235,25 @@ if ( $row["account_enabled"] != 1 )
 // point, so a failure here must not block the login itself -- it would
 // otherwise turn a cosmetic bookkeeping write into a reason the user can't
 // get in.
-$query = "UPDATE people SET lastLogin=now() WHERE personID=?";
-$args = [ $personID ];
-$stmt = $link->prepare( $query );
-$stmt->bind_param( 'i', ...$args );
-if ( ! $stmt->execute() ) {
-  error_log( "login: could not update lastLogin for personID=$personID: " . $stmt->error );
+// Caught, not routed through login_db_unavailable(): credentials are
+// already verified, so on PHP 8.1+ (mysqli throwing instead of returning
+// false by default) this must still only log, the same as the 7.2 case
+// below already did -- a thrown exception here must not turn a cosmetic
+// bookkeeping failure into a login failure either.
+try {
+  $query = "UPDATE people SET lastLogin=now() WHERE personID=?";
+  $args = [ $personID ];
+  $stmt = $link->prepare( $query );
+  if ( ! $stmt ) {
+    error_log( "login: could not prepare lastLogin update for personID=$personID: " . $link->error );
+  } else {
+    $stmt->bind_param( 'i', ...$args );
+    if ( ! $stmt->execute() ) {
+      error_log( "login: could not update lastLogin for personID=$personID: " . $stmt->error );
+    }
+  }
+} catch ( Throwable $e ) {
+  error_log( "login: could not update lastLogin for personID=$personID: " . $e->getMessage() );
 }
 
 // New session id for the newly-authenticated session: nothing an

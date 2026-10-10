@@ -255,7 +255,7 @@ function elog( $msg ) {
             }
 
             $tmpfile   = "$elogfile.1." . getmypid() . '.tmp';
-            ## 'x' (O_EXCL), not 'w' (round 8 should-fix): belt-and-suspenders
+            ## 'x' (O_EXCL), not 'w': belt-and-suspenders
             ## alongside the cleanup above, for the narrower race where
             ## something recreates this exact name again between that
             ## unlink() and this fopen(). 'w' would truncate and write
@@ -269,7 +269,7 @@ function elog( $msg ) {
                 fclose( $tmp_fh );
             }
             if ( $copied === $path_stat[ 'size' ] ) {
-                ## & 0770, not & 0777 (round 8 nit): a legacy 0644 live file
+                ## & 0770, not & 0777: a legacy 0644 live file
                 ## would otherwise carry its o+r straight into '.1' even
                 ## though elog.txt itself gets narrowed off o+r/o+w by the
                 ## check further down -- '.1' deserves the same narrowing,
