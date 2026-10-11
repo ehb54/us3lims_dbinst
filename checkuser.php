@@ -152,9 +152,13 @@ if ( !$pamActive ) {
 }
 
 
+// Telling an unauthenticated caller specifically that an address is a PAM
+// account (as opposed to a wrong password or an account that doesn't
+// exist) lets them enumerate PAM accounts by the response alone, so this
+// uses the same generic message as the checks below rather than its own.
 if ( $enable_PAM && !$pamActive && $row['authenticatePAM'] == 1 ) {
   remove_session();
-  $message = "Error: E-Mail address login is not allowed for this user";
+  $message = "Error: Invalid email address or password.";
   include 'login.php';
   exit();
 }
