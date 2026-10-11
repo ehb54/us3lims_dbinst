@@ -333,8 +333,7 @@ function elog( $msg ) {
             ## nothing here makes the *directory* setgid: on a split
             ## web/us3 account host (0755 us3:us3 ~us3/lims/etc) apache has
             ## never been able to rotate elog.txt at all -- rotation renames
-            ## inside the
-            ## directory, which needs write access to the directory itself,
+            ## inside the directory, which needs write access to the directory itself,
             ## not just to the file -- so a legacy 0666 is apache's only way
             ## to keep logging there, and this narrowing removes it the
             ## first time it runs. Accepted, not fixed here: making the

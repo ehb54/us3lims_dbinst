@@ -31,7 +31,8 @@ return array(
     'timezone'        => 'America/Chicago',
     'dbinst_root'     => '/srv/www/htdocs/uslims3/',
     'enable_GMP'      => false,
-    'enable_PAM'      => false
+    'enable_PAM'      => false,
+    'trust_proxy_https_header' => false
   )
 );
 

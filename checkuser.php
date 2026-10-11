@@ -25,7 +25,7 @@ function login_db_unavailable( $reason = 'unknown' )
 
 /**
  * Connect before db.php's own mysqli_connect(...) or die() (db.php:6) runs:
- * that line is the one failure mode (of 12 tested) that never reached
+ * that line is the one failure mode that never reached
  * login_db_unavailable() at all, because it runs before any of this file's
  * own handling exists. On PHP 7.2 its own die() prints a plain-text page
  * naming the database; on 8.1+, mysqli's own default report mode throws
@@ -33,7 +33,7 @@ function login_db_unavailable( $reason = 'unknown' )
  * with driver text in it. db.php reuses the returned $link when it is
  * already a live connection (see db.php's own guard), so its own connect
  * attempt is skipped once this one has already succeeded, and checkuser.php
- * is the only caller that ever pre-sets $link -- db.php's other 48 callers
+ * is the only caller that ever pre-sets $link -- db.php's other 50 callers
  * are unaffected.
  *
  * @return mysqli

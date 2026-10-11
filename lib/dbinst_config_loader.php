@@ -57,7 +57,8 @@ function us3_dbinst_config_base_types()
     'timezone'        => 'string',
     'dbinst_root'     => 'string',
     'enable_GMP'      => 'boolean',
-    'enable_PAM'      => 'boolean'
+    'enable_PAM'      => 'boolean',
+    'trust_proxy_https_header' => 'boolean'
   );
 }
 
@@ -84,7 +85,8 @@ function us3_dbinst_config_overlay_optional_types()
   return array(
     // These are the only v1 base values an instance may replace.
     'enable_GMP' => 'boolean',
-    'enable_PAM' => 'boolean'
+    'enable_PAM' => 'boolean',
+    'trust_proxy_https_header' => 'boolean'
   );
 }
 

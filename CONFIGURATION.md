@@ -41,7 +41,8 @@ values. It must not contain instance database or secure-user credentials.
 Each overlay is a PHP file that returns a schema-v1 array. The loader rejects
 unknown keys, missing values, invalid types, path traversal, mismatched
 instance/database names, and all base overrides except the explicitly allowed
-`enable_GMP` and `enable_PAM` feature exceptions.
+`enable_GMP`, `enable_PAM`, and `trust_proxy_https_header` feature
+exceptions.
 
 The loader is `lib/dbinst_config_loader.php` in the dbinst checkout. Keeping it
 with application code allows old and new dbinst versions to coexist. A
@@ -164,6 +165,29 @@ to replace an existing one rather than overwrite it.
 
 Use `--config-root` and `--credentials-file` only when validating a deployment
 whose installed paths differ from the defaults.
+
+## Turning PAM or GMP on for one instance
+
+newinst's `--base-overlay` does not write `enable_GMP` or `enable_PAM` into a
+new instance's overlay, so a host whose base says `false` has no flag to set
+at creation time for a single PAM/GMP instance without changing every
+instance on the host (editing the base) or hand-editing `config.php` (not an
+option once migrated).
+
+The overlay itself is the supported place for this: it is one of the three
+base values an overlay may replace (see the allowlist above), and the loader
+revalidates it on every load, so a schema-invalid edit fails to load rather
+than silently corrupting state. The "do not edit by hand" comment at the top
+of a generated overlay is about *replacing* it wholesale (that is what
+`--write-candidate` does, and why it refuses to overwrite an existing one) --
+adding or changing one of the three allowed keys in its `values` array is a
+normal, supported edit, not the thing that comment warns against.
+
+To enable PAM or GMP for an instance whose base does not: add
+`'enable_PAM' => true` (or `'enable_GMP'`) to that instance's overlay
+`values` array and confirm it still loads (`tools/check_installation.php` as
+`us3`). There is no equivalent newinst flag yet for setting this at creation
+time; create the instance normally, then make this edit.
 
 ## Credential loading fails loudly
 

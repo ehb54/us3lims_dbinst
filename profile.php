@@ -88,6 +88,14 @@ function do_update($link)
 
   if ( $pw1 != $pw2 )
     $message .= "--passwords do not match.";
+  // An all-spaces entry trims to '', the same as the field being left blank
+  // -- so below, nothing distinguishes "did not try to change the
+  // password" from "tried to, but it was silently dropped", and the
+  // all-spaces case got the same "Personal information updated." as a
+  // real change. $_POST['pw1'] (untrimmed) is checked here instead of
+  // $pw1, specifically to catch that case before it is lost.
+  elseif ( $pw1 === '' && $_POST['pw1'] !== '' )
+    $message .= "--password cannot be all spaces.";
 
   if ( empty($message) )
   {
