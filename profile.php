@@ -79,8 +79,12 @@ function do_update($link)
     $message .= "--password must be less than 128 characters long.<br />";
   }
   // We can't use any sanitization here, because it would alter the password potentially
-  $pw1 = $_POST['pw1'];
-  $pw2 = $_POST['pw2'];
+  // -- except trim(), to match checkuser.php's own trim() of the submitted login
+  // password: without it, a password set here with a leading/trailing space could
+  // never be used to log in again (checkuser.php trims before hashing, so the
+  // re-typed password's hash would never match what was stored here untrimmed).
+  $pw1 = trim($_POST['pw1']);
+  $pw2 = trim($_POST['pw2']);
 
   if ( $pw1 != $pw2 )
     $message .= "--passwords do not match.";
@@ -267,10 +271,10 @@ echo<<<HTML
                    maxlength='64' value='$email' /></td></tr>
     <tr><th>New Password (or leave blank to leave password unchanged):</th>
         <td><input type='password' name='pw1' size='40'
-                   maxlength='128' /></td></tr>
+                   maxlength='127' /></td></tr>
     <tr><th>New Password Again (must match):</th>
         <td><input type='password' name='pw2' size='40'
-                   maxlength='128' /></td></tr>
+                   maxlength='127' /></td></tr>
 
     </tbody>
   </table>
