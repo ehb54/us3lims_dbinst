@@ -26,7 +26,29 @@ function require_https_target( $org_site, $request_uri )
     return 'https://' . $host . (string) $request_uri;
 }
 
-if ( PHP_SAPI !== 'cli' && ( empty( $_SERVER['HTTPS'] ) || $_SERVER['HTTPS'] === 'off' ) )
+/**
+ * Whether this request counts as HTTPS, given $_SERVER['HTTPS'] and, only
+ * when explicitly trusted (config.php's $trust_proxy_https_header), the
+ * proxy's own X-Forwarded-Proto. A separate, pure function so both branches
+ * are testable without faking $_SERVER globally.
+ */
+function request_is_https( $https_server_var, $trust_proxy_header, $forwarded_proto )
+{
+    if ( ! empty( $https_server_var ) && $https_server_var !== 'off' )
+    {
+        return true;
+    }
+
+    return $trust_proxy_header
+        && $forwarded_proto !== null
+        && strcasecmp( trim( $forwarded_proto ), 'https' ) === 0;
+}
+
+if ( PHP_SAPI !== 'cli' && ! request_is_https(
+        $_SERVER['HTTPS'] ?? null,
+        ! empty( $trust_proxy_https_header ),
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null
+     ) )
 {
     $target = require_https_target( isset( $org_site ) ? $org_site : '',
                                     isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '/' );

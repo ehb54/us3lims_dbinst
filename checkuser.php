@@ -6,8 +6,92 @@
  *
  */
 include 'checkinstance.php';
+
+// A transient DB failure during login must not dump raw SQL/driver text to
+// the browser (information disclosure, and a broken-looking page besides);
+// show the same friendly message login.php already uses for bad input.
+//
+// $reason is logged, never shown: every call site used to drop the cause
+// entirely, so a real outage left no trace to diagnose from -- nothing on
+// 8.2, where the only other record of it would have been the driver text
+// this function exists to keep off the browser.
+function login_db_unavailable( $reason = 'unknown' )
+{
+  error_log( "checkuser.php: login unavailable: $reason" );
+  $message = "The login service is temporarily unavailable. Please try again in a moment.";
+  include 'login.php';
+  exit();
+}
+
+/**
+ * Connect before db.php's own mysqli_connect(...) or die() (db.php:6) runs:
+ * that line is the one failure mode that never reached
+ * login_db_unavailable() at all, because it runs before any of this file's
+ * own handling exists. On PHP 7.2 its own die() prints a plain-text page
+ * naming the database; on 8.1+, mysqli's own default report mode throws
+ * mysqli_sql_exception instead of returning false, uncaught, as an HTTP 500
+ * with driver text in it. db.php reuses the returned $link when it is
+ * already a live connection (see db.php's own guard), so its own connect
+ * attempt is skipped once this one has already succeeded, and checkuser.php
+ * is the only caller that ever pre-sets $link -- db.php's other 50 callers
+ * are unaffected.
+ *
+ * @return mysqli
+ */
+function login_db_connect_or_unavailable( $dbhost, $dbusername, $dbpasswd, $dbname )
+{
+  try {
+    $link = @mysqli_connect( $dbhost, $dbusername, $dbpasswd, $dbname );
+    $reason = $link instanceof mysqli ? '' : mysqli_connect_error();
+  } catch ( Throwable $e ) {
+    $link = false;
+    $reason = $e->getMessage();
+  }
+  if ( ! ( $link instanceof mysqli ) ) {
+    login_db_unavailable( "connect failed: $reason" );
+  }
+
+  return $link;
+}
+
+$link = login_db_connect_or_unavailable( $dbhost, $dbusername, $dbpasswd, $dbname );
+
 include 'db.php';
 include 'lib/utility.php';
+
+/**
+ * Prepare and execute a parameterized SELECT, routing every failure mode to
+ * login_db_unavailable() instead of letting it reach the browser.
+ *
+ * Previously this held only on PHP 7.2: mysqli's default report mode there
+ * is silent failure (prepare()/execute() return false, which the original
+ * `if ( ! $stmt->execute() ... )` check caught, though nothing checked
+ * prepare() itself, so a false $stmt there still reached bind_param() as a
+ * fatal "call to a member function on bool"). PHP 8.1 changed the default
+ * to MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT, so on 8.2 a connection
+ * problem throws mysqli_sql_exception instead of returning false -- from
+ * prepare() as readily as from execute(), uncaught, past every check here,
+ * as a fatal 500 with driver text in it.
+ *
+ * @return array{0: mysqli_stmt, 1: mysqli_result}
+ */
+function login_db_query( $link, $query, $types, array $args )
+{
+  try {
+    $stmt = $link->prepare( $query );
+    if ( ! $stmt ) {
+      login_db_unavailable( 'prepare failed: ' . mysqli_error( $link ) );
+    }
+    $stmt->bind_param( $types, ...$args );
+    if ( ! $stmt->execute() || ! ( $result = $stmt->get_result() ) ) {
+      login_db_unavailable( 'execute failed: ' . $stmt->error );
+    }
+  } catch ( Throwable $e ) {
+    login_db_unavailable( $e->getMessage() );
+  }
+
+  return array( $stmt, $result );
+}
 
 $loginname  = htmlentities(trim($_POST['email']));
 $passwd = trim($_POST['password']);
@@ -39,14 +123,7 @@ $pamActive = false;
 
 if ( $enable_PAM && PAM_name_is_valid( $loginname ) ) {
   // for PAM authentication
-  $query     = "SELECT * FROM people WHERE userNamePAM=?";
-  $args      = [ $loginname ];
-  $stmt      = $link->prepare( $query );
-  $stmt->bind_param( 's', ...$args );
-  $stmt->execute()
-        or die( "Query failed : $query<br />\n" . $stmt->error );
-  $result = $stmt->get_result()
-          or die( "Query failed : $query<br />\n" . $stmt->error );
+  list( $stmt, $result ) = login_db_query( $link, "SELECT * FROM people WHERE userNamePAM=?", 's', [ $loginname ] );
   $row    = mysqli_fetch_assoc($result);
   $count  = $result->num_rows;
 
@@ -65,14 +142,7 @@ if ( !$pamActive ) {
 
   // Find the id of the record with the same e-mail address:
 
-  $query  = "SELECT * FROM people WHERE email=?";
-  $args   = [ $loginname ];
-  $stmt   = $link->prepare( $query );
-  $stmt->bind_param( 's', ...$args );
-  $stmt->execute()
-        or die( "Query failed : $query<br />\n" . $stmt->error );
-  $result = $stmt->get_result()
-        or die( "Query failed : $query<br />\n" . $stmt->error );
+  list( $stmt, $result ) = login_db_query( $link, "SELECT * FROM people WHERE email=?", 's', [ $loginname ] );
 
   $row    = mysqli_fetch_assoc($result);
   $count  = mysqli_num_rows($result);
@@ -82,9 +152,13 @@ if ( !$pamActive ) {
 }
 
 
+// Telling an unauthenticated caller specifically that an address is a PAM
+// account (as opposed to a wrong password or an account that doesn't
+// exist) lets them enumerate PAM accounts by the response alone, so this
+// uses the same generic message as the checks below rather than its own.
 if ( $enable_PAM && !$pamActive && $row['authenticatePAM'] == 1 ) {
   remove_session();
-  $message = "Error: E-Mail address login is not allowed for this user";
+  $message = "Error: Invalid email address or password.";
   include 'login.php';
   exit();
 }
@@ -140,13 +214,17 @@ if ( $count == 1 )
 
 }
 
-else if ( $count > 1 )
+// Every branch below that fails before the account's own activated/enabled
+// state is checked uses the same generic message, on purpose: telling an
+// unauthenticated caller specifically that an account doesn't exist, has a
+// duplicate row, or just has the wrong password lets them enumerate valid
+// email addresses by the response alone. None of that distinction is needed
+// once the real cause is in the server log for an admin to look at.
+if ( $count > 1 )
 {
   remove_session();
-  $message = "There was a problem with duplicate email addresses.  " .
-             "Please contact the administrator: "                    .
-             "<a href='mailto:$admin_email'>"                  .
-             "&lt;$admin_email&gt;</a>.";
+  error_log( "login: duplicate email addresses for $loginname" );
+  $message = "Error: Invalid email address or password.";
   include 'login.php';
   exit();
 }
@@ -156,23 +234,22 @@ else if ( $count > 1 )
 if ( $count < 1 )
 {
   remove_session();
-  $message =  "Error: The account for <i>\"$loginname\"</i> has not been " .
-              "correctly set up. <br/>Please set up a new account first " .
-              "or correctly type the username or email address.";
+  $message = "Error: Invalid email address or password.";
   include 'login.php';
   exit();
 }
 
 if ( !$pamActive && $row["password"] != $md5pass ) {
   remove_session();
-  $message = "Error: Invalid password for $loginname.";
+  $message = "Error: Invalid email address or password.";
   include 'login.php';
   exit();
 }
 
 if ( $pamActive && !pam_auth( $loginname, $passwd, $error ) ) {
   remove_session();
-  $message = "Error: Password failed for $loginname.\n$error";
+  error_log( "login: PAM authentication failed for $loginname: $error" );
+  $message = "Error: Invalid email address or password.";
   include 'login.php';
   exit();
 }
@@ -198,14 +275,35 @@ if ( $row["account_enabled"] != 1 )
   exit();
 }
 
-// Update last login time
+// Update last login time. Credentials are already fully verified at this
+// point, so a failure here must not block the login itself -- it would
+// otherwise turn a cosmetic bookkeeping write into a reason the user can't
+// get in.
+// Caught, not routed through login_db_unavailable(): credentials are
+// already verified, so on PHP 8.1+ (mysqli throwing instead of returning
+// false by default) this must still only log, the same as the 7.2 case
+// below already did -- a thrown exception here must not turn a cosmetic
+// bookkeeping failure into a login failure either.
+try {
+  $query = "UPDATE people SET lastLogin=now() WHERE personID=?";
+  $args = [ $personID ];
+  $stmt = $link->prepare( $query );
+  if ( ! $stmt ) {
+    error_log( "login: could not prepare lastLogin update for personID=$personID: " . $link->error );
+  } else {
+    $stmt->bind_param( 'i', ...$args );
+    if ( ! $stmt->execute() ) {
+      error_log( "login: could not update lastLogin for personID=$personID: " . $stmt->error );
+    }
+  }
+} catch ( Throwable $e ) {
+  error_log( "login: could not update lastLogin for personID=$personID: " . $e->getMessage() );
+}
 
-$query = "UPDATE people SET lastLogin=now() WHERE personID=?";
-$args = [ $personID ];
-$stmt = $link->prepare( $query );
-$stmt->bind_param( 'i', ...$args );
-$stmt->execute()
-      or die( "Query failed : $query<br />\n" . $stmt->error );
+// New session id for the newly-authenticated session: nothing an
+// unauthenticated request may have already seen (e.g. a session id fixed
+// before login) should carry over as a valid, logged-in session.
+session_regenerate_id( true );
 
 header("Location: index.php");
 exit();

@@ -14,8 +14,14 @@
  *   person_id  exact personID match, driven by user dropdown
  *   actor      partial match against changed_by_email or changed_by_name
  *   action     exact match against action enum
- *   date_from  YYYY-MM-DD, inclusive lower bound on created_at
- *   date_to    YYYY-MM-DD, inclusive upper bound on created_at
+ *   date_from  YYYY-MM-DD in UTC, inclusive lower bound on created_at
+ *   date_to    YYYY-MM-DD in UTC, inclusive upper bound on created_at
+ *
+ * created_at is written as UTC_TIMESTAMP() (edit_users_actions.php's
+ * write_audit_row()), not the column's local-session-time default, so every
+ * date_from/date_to boundary below is a UTC calendar day and every
+ * timestamp shown is labeled UTC rather than silently being whatever the
+ * server's local time zone happens to be.
  *   page       current page number (1-based)
  */
 
@@ -32,6 +38,7 @@ if ( !isset( $_SESSION['userlevel'] ) ||
 
 include 'config.php';
 include 'db.php';
+include_once 'lib/pagination.php';
 
 global $link;
 
@@ -43,7 +50,13 @@ if ( !isset( $enable_PAM ) ) $enable_PAM = false;
 // Constants
 // ---------------------------------------------------------------------------
 
-define( 'AUDIT_PAGE_SIZE', 25 );
+// Kept as its own name for readability at call sites in this file; same
+// value as the shared default in lib/pagination.php.
+define( 'AUDIT_PAGE_SIZE', PAGINATION_DEFAULT_PAGE_SIZE );
+
+// Full list of GET keys this page's links need to preserve across requests
+// (filters, the detail-view id, and the page number).
+define( 'AUDIT_QUERY_KEYS', [ 'auditID', 'person_id', 'actor', 'action', 'changed_field', 'date_from', 'date_to', 'page' ] );
 
 // AUDIT_ACTIONS is kept as a flat ordered list for the filter dropdown.
 // Render order: lifecycle, access changes, authorization edge cases.
@@ -137,15 +150,7 @@ function h( $str )
 // auditID is included so View links work; pass [ 'auditID' => '' ] to clear it.
 function audit_query_string( array $overrides = [] )
 {
-  $keys = [ 'auditID', 'person_id', 'actor', 'action', 'changed_field', 'date_from', 'date_to', 'page' ];
-  $parts = [];
-  foreach ( $keys as $k )
-  {
-    $val = array_key_exists( $k, $overrides ) ? $overrides[ $k ] : ( $_GET[ $k ] ?? '' );
-    if ( $val !== null && $val !== '' )
-      $parts[] = urlencode( $k ) . '=' . urlencode( (string) $val );
-  }
-  return $parts ? '?' . implode( '&', $parts ) : '?';
+  return pagination_query_string( AUDIT_QUERY_KEYS, $overrides );
 }
 
 // ---------------------------------------------------------------------------
@@ -222,6 +227,10 @@ function audit_build_where( $f_actor, $f_action, $f_person_id, $f_date_from, $f_
     $params[] = $f_person_id;
   }
 
+  // created_at is UTC (write_audit_row() writes UTC_TIMESTAMP(), not the
+  // column's local-session-time default), so these bounds are UTC calendar
+  // days, matching the "(UTC)" labels on the filter form and the list/detail
+  // views -- not the server's or the browser's local time zone.
   if ( $f_date_from !== null )
   {
     $where[]  = 'created_at >= ?';
@@ -534,7 +543,7 @@ function render_detail( $link, $audit_id )
   echo "<tbody>\n";
   echo "<tr><th colspan='2' class='audit-section'>Event information</th></tr>\n";
   echo "<tr><th>Audit ID</th><td>"    . h( $row['auditID']    ) . "</td></tr>\n";
-  echo "<tr><th>Timestamp</th><td>"   . h( $row['created_at'] ) . "</td></tr>\n";
+  echo "<tr><th>Timestamp (UTC)</th><td>" . h( $row['created_at'] ) . "</td></tr>\n";
   echo "<tr><th>Action</th><td><strong>" . h( audit_action_label( $row['action'] ) ) . "</strong></td></tr>\n";
   echo "<tr><th>Summary</th><td>"     . audit_summary( $row['action'], $row['old_values'], $row['new_values'], $row['notes'] ) . "</td></tr>\n";
 
@@ -621,9 +630,8 @@ function render_list( $link, $f_actor, $f_action, $f_person_id, $f_date_from, $f
   $count_stmt->fetch();
   $count_stmt->close();
 
-  $total_pages = max( 1, (int) ceil( $total / AUDIT_PAGE_SIZE ) );
-  $page        = min( $f_page, $total_pages );
-  $offset      = ( $page - 1 ) * AUDIT_PAGE_SIZE;
+  [ 'page' => $page, 'page_size' => $page_size, 'total_pages' => $total_pages, 'offset' => $offset ] =
+    pagination_compute( $f_page, $total, AUDIT_PAGE_SIZE );
 
   render_filter_form( $link, $f_person_id, $f_actor, $f_action, $f_changed_field, $f_date_from, $f_date_to );
 
@@ -643,7 +651,7 @@ function render_list( $link, $f_actor, $f_action, $f_person_id, $f_date_from, $f
                FROM people_audit
                $where_sql
                ORDER BY auditID DESC
-               LIMIT " . AUDIT_PAGE_SIZE . " OFFSET " . (int) $offset;
+               LIMIT " . (int) $page_size . " OFFSET " . (int) $offset;
 
   $list_stmt = $link->prepare( $list_sql );
   if ( $where_types )
@@ -654,7 +662,7 @@ function render_list( $link, $f_actor, $f_action, $f_person_id, $f_date_from, $f
   echo "<div class='audit-scroll'>\n";
   echo "<table class='audit-list'>\n";
   echo "<thead><tr>\n";
-  echo "  <th>Timestamp</th>\n";
+  echo "  <th>Timestamp (UTC)</th>\n";
   echo "  <th>Action</th>\n";
   echo "  <th>User</th>\n";
   echo "  <th>Changed by</th>\n";
@@ -698,7 +706,7 @@ function render_list( $link, $f_actor, $f_action, $f_person_id, $f_date_from, $f
   echo "</tbody></table>\n";
   echo "</div>\n";
 
-  render_pagination( $page, $total_pages );
+  pagination_render( $_SERVER['PHP_SELF'], AUDIT_QUERY_KEYS, $page, $total_pages, 'page', 'audit-pagination' );
 }
 
 function render_filter_form( $link, $f_person_id, $f_actor, $f_action, $f_changed_field, $f_date_from, $f_date_to )
@@ -771,9 +779,9 @@ echo <<<HTML
       <td><select name='changed_field'>$field_options</select></td>
     </tr>
     <tr>
-      <th>Date from:</th>
+      <th>Date from (UTC):</th>
       <td><input type='text' name='date_from' value='$v_date_from' size='12' placeholder='YYYY-MM-DD' /></td>
-      <th>Date to:</th>
+      <th>Date to (UTC):</th>
       <td><input type='text' name='date_to' value='$v_date_to' size='12' placeholder='YYYY-MM-DD' /></td>
     </tr>
     <tr>
@@ -785,23 +793,6 @@ echo <<<HTML
   </table>
 </form>
 HTML;
-}
-
-function render_pagination( $page, $total_pages )
-{
-  if ( $total_pages <= 1 ) return;
-
-  echo "<div class='audit-pagination'>\n";
-
-  if ( $page > 1 )
-    echo "<a href='" . h( $_SERVER['PHP_SELF'] . audit_query_string( [ 'page' => $page - 1 ] ) ) . "'>&laquo; Prev</a> ";
-
-  echo "Page " . h( $page ) . " of " . h( $total_pages );
-
-  if ( $page < $total_pages )
-    echo " <a href='" . h( $_SERVER['PHP_SELF'] . audit_query_string( [ 'page' => $page + 1 ] ) ) . "'>Next &raquo;</a>";
-
-  echo "\n</div>\n";
 }
 
 // ---------------------------------------------------------------------------

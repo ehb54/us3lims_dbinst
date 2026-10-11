@@ -9,16 +9,16 @@
 $us3pwentry         = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
 $cfgfile            = ( $us3pwentry ? $us3pwentry['dir'] : '/home/us3' ) . '/lims/.us3lims.ini';
 $configs            = parse_ini_file( $cfgfile, true );
-$org_name           = 'UltraScan3 LIMS portal';
-$org_site           = 'uslims.uleth.ca/uslims3_instance';
-$site_author        = 'Borries Demeler, University of Lethbridge';
+$org_name           = 'UltraScan3 LIMS portal'; # CHANGE-ME: your organization's name
+$org_site           = 'CHANGE-ME.example.org/uslims3_instance';
+$site_author        = 'CHANGE-ME: site contact name and affiliation';
 $site_keywords      = 'ultrascan analytical ultracentrifugation lims';
                       # The website keywords (meta tag)
 $site_desc          = 'Website for the UltraScan3 LIMS portal'; # Site description
 
-$admin              = 'Borries Demeler';
+$admin              = 'CHANGE-ME: site administrator name';
 $admin_phone        = 'Office: <br />Fax: ';
-$admin_email        = 'cch-admin@biophysics.uleth.ca';
+$admin_email        = 'us3-admin@CHANGE-ME.example.org';
 
 $dbusername         = '';  # the name of the MySQL user
 $dbpasswd           = '';  # the password for the MySQL user
@@ -59,6 +59,17 @@ $current_year       = date( 'Y' );
 // Feature flags
 $enable_GMP         = false;  # Enable GMP related features
 $enable_PAM         = false;  # Enable PAM login
+
+// A TLS-terminating reverse proxy forwards every request to this host as
+// plain HTTP, so $_SERVER['HTTPS'] never reflects what the actual client
+// connection used: require_https.php then redirects every single request
+// forever (redirect to https, the proxy forwards as http again, repeat).
+// Enable this ONLY when this host sits behind such a proxy and is not
+// itself directly reachable from outside it (e.g. bound to localhost or an
+// internal network only) -- X-Forwarded-Proto is not validated beyond
+// trusting the proxy to have set it honestly, which is only true once the
+// proxy is the only thing that can reach this host at all.
+$trust_proxy_https_header = false;
 
 //////////// End of user specific configuration
 

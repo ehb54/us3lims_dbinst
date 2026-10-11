@@ -461,7 +461,7 @@ function get_id($link)
 
   // If we're here, there aren't any records
 echo<<<HTML
-  <form action='{$_SERVER[PHP_SELF]}' method='post'>
+  <form action='{$_SERVER['PHP_SELF']}' method='post'>
   <table cellspacing='0' cellpadding='0' class='style1'>
     <thead>
       <tr><th colspan='2'>Edit User Projects</th></tr>

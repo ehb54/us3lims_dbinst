@@ -5,6 +5,14 @@
  * Extracted from inline style= attributes for CSP compliance.
  */
 
+/* "* required" legend above the profile fields it applies to */
+.required-note {
+    color: #666;
+    font-size: 0.82em;
+    font-style: italic;
+    padding: 2px 10px 6px;
+}
+
 /* Section divider rows inside the user profile tables */
 .form-section-header {
     background: #3a3a3a;

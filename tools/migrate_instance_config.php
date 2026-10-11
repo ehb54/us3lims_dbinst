@@ -66,7 +66,7 @@ function migration_capture_legacy( $path )
   return array( $captured, $constants, $ini );
 }
 
-function migration_write_temp( $path, $source, $mode, $group = null )
+function migration_write_temp( $path, $source, $mode, $group = null, $owner = null )
 {
   global $migration_temps;
   $directory = dirname( $path );
@@ -80,7 +80,8 @@ function migration_write_temp( $path, $source, $mode, $group = null )
     migration_fail( "could not write temporary file in $directory" );
 
   if ( !chmod( $temporary, $mode ) ||
-       ( $group !== null && !@chgrp( $temporary, $group ) ) )
+       ( $group !== null && !@chgrp( $temporary, $group ) ) ||
+       ( $owner !== null && !@chown( $temporary, $owner ) ) )
   {
     @unlink( $temporary );
     migration_fail( "could not set candidate permissions for: $path" );
@@ -137,7 +138,23 @@ foreach ( $optional as $key => $type )
 }
 
 $contract = us3_dbinst_config_overlay_contract( $instance, $overlay_values );
-us3_dbinst_config_validate_overlay( $contract, $instance );
+try
+{
+  us3_dbinst_config_validate_overlay( $contract, $instance );
+}
+catch ( RuntimeException $e )
+{
+  /*
+   * A legacy value that collides with the v1 contract's own type for an
+   * allowed overlay key (e.g. a hand-edited `$enable_PAM = 1;`, an int,
+   * where the contract requires a real bool) used to surface here as an
+   * uncaught RuntimeException with a full stack trace -- a useless hint
+   * for an operator who just needs to know which legacy value to fix.
+   */
+  migration_fail( "legacy value for an overlay key does not fit the schema-v1 contract: "
+                 . $e->getMessage() . " -- fix the legacy assignment (e.g. use true/false,"
+                 . " not 1/0) and rerun" );
+}
 
 $expected = array_merge( $base, $overlay_values );
 $dbinst_root = us3_dbinst_config_path_with_slash( $expected[ 'dbinst_root' ] );
@@ -165,7 +182,13 @@ foreach ( $expected as $key => $value )
   {
     $equal = array_key_exists( $key, $legacy ) && $legacy[ $key ] === $value;
   }
-  echo sprintf( "%-22s %s\n", $key, $equal ? 'equal' : 'DIFFERENT' );
+  ## MISSING, not just DIFFERENT, when the legacy config never set this key
+  ## at all (e.g. no $enable_GMP line) -- a value that collides with what
+  ## the base expects and a key the legacy config never mentioned are
+  ## different problems with different fixes, and "DIFFERENT" alone gave
+  ## no hint which one this was.
+  $status = $equal ? 'equal' : ( array_key_exists( $key, $legacy ) ? 'DIFFERENT' : 'MISSING' );
+  echo sprintf( "%-22s %s\n", $key, $status );
   if ( !$equal )
     $differences++;
 }
@@ -204,8 +227,18 @@ $accounted[] = 'thr_clust_incls';
 $unreviewed = array_diff( array_keys( $legacy ), $accounted, $dropped );
 sort( $unreviewed );
 
-/* The loader defines HOME_DIR and DEBUG itself; anything else is site-specific. */
-foreach ( array_diff( $legacy_constants, array( 'HOME_DIR', 'DEBUG' ), $dropped ) as $name )
+/*
+ * The loader defines HOME_DIR and DEBUG itself, and elog.php (included by
+ * every instance's own config.php, including every legacy one -- 4.2.0's
+ * newinst makeconfig.php already writes "include_once 'elog.php';" into
+ * all of them) defines ELOG_MAX_BYTES. None of these are site-specific:
+ * every existing instance's legacy config.php defines ELOG_MAX_BYTES this
+ * same way just by including this file, so without this exclusion every
+ * one of them reported it NEEDS REVIEW until given --drop=ELOG_MAX_BYTES,
+ * which is dbinst's own constant to have an opinion about, not something
+ * for an operator to review or drop.
+ */
+foreach ( array_diff( $legacy_constants, array( 'HOME_DIR', 'DEBUG', 'ELOG_MAX_BYTES' ), $dropped ) as $name )
   $unreviewed[] = "constant $name";
 foreach ( array_diff( $legacy_ini, $dropped ) as $name )
   $unreviewed[] = "ini setting $name";
@@ -284,17 +317,27 @@ if ( $activate )
    * Prove the shim actually loads before it becomes config.php. A subprocess, so
    * a fatal error in it cannot take this script down, and so the values it
    * publishes cannot collide with the ones already loaded here.
+   *
+   * Run as us3 specifically, via runuser, not as whoever invoked this tool:
+   * submitone.php and the other CLI scripts the shim actually has to work
+   * for all run as us3, so a probe run as root (as the upgrade's other
+   * steps are) passed even when the overlay this same run just wrote was
+   * unreadable by us3 -- the exact case the ownership fix above addresses,
+   * confirmed to only surface once the probe asks the right account.
    */
   $probe = 'if ( $argv[1] !== "" ) define( "US3_DBINST_CREDENTIALS_FILE", $argv[1] );'
          . ' include $argv[2];'
          . ' if ( !isset( $dbname ) || $dbname !== $argv[3] )'
          . ' { fwrite( STDERR, "shim published dbname=" . ( $dbname ?? "unset" ) . "\n" ); exit( 1 ); }'
          . ' echo "ok";';
-  $command = escapeshellarg( PHP_BINARY ) . ' -r ' . escapeshellarg( $probe )
+  $probe_inner = escapeshellarg( PHP_BINARY ) . ' -r ' . escapeshellarg( $probe )
            . ' ' . escapeshellarg( defined( 'US3_DBINST_CREDENTIALS_FILE' )
                                    ? US3_DBINST_CREDENTIALS_FILE : '' )
            . ' ' . escapeshellarg( $candidate_path )
-           . ' ' . escapeshellarg( $expected[ 'dbname' ] ) . ' 2>&1';
+           . ' ' . escapeshellarg( $expected[ 'dbname' ] );
+  $command = ( function_exists( 'posix_geteuid' ) && posix_geteuid() === 0 )
+           ? 'runuser -l us3 -c ' . escapeshellarg( $probe_inner ) . ' 2>&1'
+           : $probe_inner . ' 2>&1';
   $probe_out = array();
   $probe_rc = 0;
   exec( $command, $probe_out, $probe_rc );
@@ -349,10 +392,23 @@ foreach ( array( $overlay_path, $candidate_path ) as $path )
     migration_fail( "directory is missing or unwritable: " . dirname( $path ) );
 }
 
-// Group-readable by the web server, which owns the instances directory's group
+/*
+ * Group-readable by the web server, which owns the instances directory's
+ * group -- but owned by us3 explicitly, not by whoever runs this tool. Run
+ * as root (as the upgrade's other steps are), the overlay used to end up
+ * root:<web group>: php-fpm (in the web group) kept working, but us3 --
+ * the account submitone.php and the other CLI scripts actually run as --
+ * could not read it at all, failing GMP submissions at config load with no
+ * clearer sign than "submitone.php exited without submitting the job".
+ */
+$us3_pw = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
+if ( !$us3_pw )
+  migration_fail( "could not resolve the us3 account; the overlay must be"
+                . " owned by it, not by whoever runs this tool" );
+
 $overlay_temp = migration_write_temp(
   $overlay_path, us3_dbinst_config_overlay_source( $contract ), 0640,
-  filegroup( dirname( $overlay_path ) ) );
+  filegroup( dirname( $overlay_path ) ), $us3_pw[ 'uid' ] );
 $candidate_temp = migration_write_temp(
   $candidate_path, us3_dbinst_config_shim_source( $instance ), 0644 );
 // link() never replaces an existing file; the temporaries are removed at exit

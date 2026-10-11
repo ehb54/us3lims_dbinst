@@ -100,6 +100,18 @@ function do_delete()
 
   // Jobs are identified by cluster and gfacID, since scheduler IDs are only unique per cluster
   $authorized_jobs = get_gfacIDs_authorized();
+
+  // Selecting several jobs at once cancels them one request at a time, each
+  // with its own scancel timeout+retry. Once a cluster has already failed to
+  // answer once in this request, it is very unlikely to answer a second
+  // (ultrascan-tickets: multi-select cancel could stack N * ~32s of timeouts
+  // against one unreachable cluster before the page could redirect). Skip
+  // the remote attempt for every later job on an already-failed cluster in
+  // this same request; jobmonitor.php's own independent poll of that
+  // cluster will still see the job as missing/canceled and finalize it on
+  // its own regardless of whether scancel itself ever got through.
+  $failed_clusters = array();
+
   if ( isset( $_POST['gfacIDs'], $_POST['clusters'] ) && is_array( $_POST['gfacIDs'] ) && is_array( $_POST['clusters'] ) )
   {
       foreach ( $_POST['gfacIDs'] as $i => $gfacID )
@@ -108,7 +120,7 @@ function do_delete()
           if ( !in_array( "$cluster/$gfacID", $authorized_jobs, true ) ) {
               continue;
           }
-          delete_single_job( $gfacID, $cluster );
+          delete_single_job( $gfacID, $cluster, $failed_clusters );
       }
       return;
   }
@@ -118,11 +130,11 @@ function do_delete()
       if ( !in_array( "$cluster/$gfacID", $authorized_jobs, true ) ) {
           return;
       }
-      delete_single_job( $gfacID, $cluster );
+      delete_single_job( $gfacID, $cluster, $failed_clusters );
   }
 }
 
-function delete_single_job( $gfacID, $cluster )
+function delete_single_job( $gfacID, $cluster, array &$failed_clusters )
 {
   global $global_cluster_details;
   global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname;
@@ -151,7 +163,21 @@ function delete_single_job( $gfacID, $cluster )
   $cluster = $row['metaschedulerClusterExecuting'];
   }
 
-  $cancel = cancelLocalJob( $gfacID, $cluster );
+  if ( in_array( $cluster, $failed_clusters, true ) )
+  {
+    $cancel = array(
+       'outcome' => CANCEL_UNREACHABLE,
+       'message' => "Cancel not sent: cluster $cluster did not respond to an earlier cancel in this batch,"
+                    . " so this job may still be running. Try again once the cluster is reachable."
+    );
+  }
+  else
+  {
+    $cancel = cancelLocalJob( $gfacID, $cluster );
+
+    if ( $cancel[ 'outcome' ] === CANCEL_UNREACHABLE )
+      $failed_clusters[] = $cluster;
+  }
 
   if ( cancel_outcome_is_settled( $cancel[ 'outcome' ] ) )
   {

@@ -37,6 +37,7 @@ Released      : 6/30/2011
 
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>$page_title -
          $org_name $title_devel</title>
   <meta name="Author" content="$site_author" />

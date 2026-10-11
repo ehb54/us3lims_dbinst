@@ -41,7 +41,8 @@ values. It must not contain instance database or secure-user credentials.
 Each overlay is a PHP file that returns a schema-v1 array. The loader rejects
 unknown keys, missing values, invalid types, path traversal, mismatched
 instance/database names, and all base overrides except the explicitly allowed
-`enable_GMP` and `enable_PAM` feature exceptions.
+`enable_GMP`, `enable_PAM`, and `trust_proxy_https_header` feature
+exceptions.
 
 The loader is `lib/dbinst_config_loader.php` in the dbinst checkout. Keeping it
 with application code allows old and new dbinst versions to coexist. A
@@ -123,13 +124,70 @@ After an equivalent dry run, `--write-candidate` may create:
 - `/home/us3/lims/etc/config/instances/uslims3_NAME.php`; and
 - `<dbinst>/config.php.base-overlay-candidate`.
 
-It never replaces the active `config.php`. Activation is a separate deployment
-step after web and CLI checks. Preserve the complete legacy file outside the
-docroot with restrictive permissions (a copy left in the instance directory
-would be served as text); restoring that file is the rollback.
+It never replaces the active `config.php` by itself. Activation is a separate
+deployment step, `--activate`, after web and CLI checks on the candidate pair
+above.
+
+`--activate` re-proves equivalence against the live legacy file, checks the
+overlay and candidate shim still match what this run would generate (not an
+earlier run, and not a hand edit), and proves the candidate shim actually
+loads and publishes the expected `$dbname` -- in a subprocess, so a fatal
+error in it cannot take the migration down or leave `config.php` half
+replaced. Only then does it back up the legacy file and put the shim in its
+place:
+
+- the legacy `config.php` is copied to
+  `<config-root>/instances/<instance>.config.php.legacy-<YYYYMMDDHHMMSS>`,
+  with `@chmod`/`@chown`/`@chgrp` attempting to keep its original owner,
+  group and mode -- `@chown`/`@chgrp` only actually succeed run as root;
+  run as any other account, the backup's owner becomes that account, silently.
+  Its group comes from the setgid `instances/` directory it is created in,
+  not from the `@chgrp` call or from the creating account belonging to the
+  legacy file's group -- a root:root legacy file backed up by a non-root
+  account still comes out owned by that account with the directory's own
+  group, not root's. This is outside the docroot and
+  not named `.php`, so it is never served as text or run as PHP, unlike a
+  backup left in the instance directory itself (the state a host that ran
+  `--activate` before 5682b3f can still be in -- `check_installation.php`
+  flags that).
+- `config.php` is then replaced with the candidate shim via `rename()`,
+  atomic within the directory, so a concurrent web request sees either the
+  old complete file or the new shim, never a partial one.
+
+`--activate` prints the backup's path and the exact rollback command on
+success (`cp <backup> <instance>/config.php`); there is no separate rollback
+tool. Running that command overwrites the candidate shim with the restored
+legacy content -- the shim is not left in place once you roll back. The
+overlay `--write-candidate` created *is* left in place either way,
+since the rollback command never touches it; retrying the whole migration
+needs that overlay file deleted first, because `--write-candidate` refuses
+to replace an existing one rather than overwrite it.
 
 Use `--config-root` and `--credentials-file` only when validating a deployment
 whose installed paths differ from the defaults.
+
+## Turning PAM or GMP on for one instance
+
+newinst's `--base-overlay` does not write `enable_GMP` or `enable_PAM` into a
+new instance's overlay, so a host whose base says `false` has no flag to set
+at creation time for a single PAM/GMP instance without changing every
+instance on the host (editing the base) or hand-editing `config.php` (not an
+option once migrated).
+
+The overlay itself is the supported place for this: it is one of the three
+base values an overlay may replace (see the allowlist above), and the loader
+revalidates it on every load, so a schema-invalid edit fails to load rather
+than silently corrupting state. The "do not edit by hand" comment at the top
+of a generated overlay is about *replacing* it wholesale (that is what
+`--write-candidate` does, and why it refuses to overwrite an existing one) --
+adding or changing one of the three allowed keys in its `values` array is a
+normal, supported edit, not the thing that comment warns against.
+
+To enable PAM or GMP for an instance whose base does not: add
+`'enable_PAM' => true` (or `'enable_GMP'`) to that instance's overlay
+`values` array and confirm it still loads (`tools/check_installation.php` as
+`us3`). There is no equivalent newinst flag yet for setting this at creation
+time; create the instance normally, then make this edit.
 
 ## Credential loading fails loudly
 
