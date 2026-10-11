@@ -5,6 +5,12 @@
 // lib/utility.php's cluster fieldset lists only clusters in the user's
 // clusterAuthorizations, so an account authorized for no configured cluster
 // posts no 'cluster' and the job would otherwise be reported as accepted.
+
+// Needed unconditionally below for pick_cluster_is_metascheduler_entry() in
+// the very condition that decides whether a metascheduler resolution is
+// needed at all -- cheap (function/const definitions only, no DB or SSH).
+require_once '/home/us3/lims/bin/gridctl/pick_cluster_reserve.php';
+
 $submit_stopped = false;
 if ( ! isset( $_SESSION['cluster'] ) )
 {
@@ -14,4 +20,84 @@ if ( ! isset( $_SESSION['cluster'] ) )
                    . "its cluster authorizations.";
   include __DIR__ . '/submit_stop.php';
   $submit_stopped = true;
+}
+
+// A posted cluster may be a metascheduler pseudo-entry (its own $cluster_details
+// row carries a 'clusters' list rather than a real sshport/workdir/queue --
+// lib/utility.php's collect_config_info() deliberately lists these for
+// selection, see METASCHEDULER-DESIGN.md). Nothing downstream can submit
+// directly to one, so it is resolved to a real member cluster here, before any
+// files are written -- a resolution failure must never leave an orphaned
+// HPCAnalysisRequest row or XML file behind. The chosen real cluster rides in
+// $_SESSION['cluster']['metaschedulerClusterExecuting'] so every later
+// _2.php/_3.php page can read it without re-resolving, exactly mirroring how
+// submitone.php (autoflow) already calls pick_cluster().
+if ( ! $submit_stopped
+     && isset( $global_cluster_details[ $_SESSION['cluster']['shortname'] ] )
+     && pick_cluster_is_metascheduler_entry(
+          $global_cluster_details[ $_SESSION['cluster']['shortname'] ] ) )
+{
+  $pseudo_cluster = $_SESSION['cluster']['shortname'];
+  $candidates     = $global_cluster_details[ $pseudo_cluster ][ 'clusters' ];
+
+  // Kill switch: flipping the pool's own 'active' to false must stop this
+  // resolution outright, not just hide it from the previous page's cluster
+  // list (collect_config_info() filtering) -- a user who already selected
+  // this pool before it was disabled would otherwise still resolve to a
+  // real cluster here. Mirrors submitone.php's own check for the autoflow
+  // path.
+  if ( array_key_exists( 'active', $global_cluster_details[ $pseudo_cluster ] )
+       && ! $global_cluster_details[ $pseudo_cluster ][ 'active' ] )
+  {
+    $pick = array( 'chosen' => null,
+        'reason' => "metascheduler '$pseudo_cluster' is disabled (active=false)",
+        'tier' => null, 'scores' => array() );
+  }
+  else
+  {
+    $gfac_link = @mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+
+    if ( ! $gfac_link )
+    {
+      ## No status data is learnable without this connection -- never treat a
+      ## failed connection as permission to pick blindly (same rule
+      ## submitone.php applies).
+      $pick = array( 'chosen' => null, 'reason' => 'could not connect to gfac for cluster status',
+                      'tier' => null, 'scores' => array() );
+    }
+    else
+    {
+      // Membership in the pool is never itself authorization for a specific
+      // real cluster inside it -- the same per-person allowlist a direct
+      // submission to a real cluster already goes through
+      // (require_authorized_cluster(), called on the previous page with the
+      // pseudo name), checked here again against every real candidate.
+      $authorized = isset( $_SESSION['clusterAuth'] ) && is_array( $_SESSION['clusterAuth'] )
+                  ? $_SESSION['clusterAuth'] : array();
+
+      // pick_cluster_reserve(), not pick_cluster() directly: an interactive
+      // submission here and an autoflow one in submitone.php can race the same
+      // pool concurrently, with no coordination between the two processes
+      // otherwise.
+      $pick = pick_cluster_reserve( $gfac_link, $pseudo_cluster, $candidates, $global_cluster_details,
+                                     array(), array(), null, $authorized );
+      mysqli_close( $gfac_link );
+    }
+  }
+
+  error_log( pick_cluster_log_line( $pseudo_cluster, $pick ) );
+
+  if ( $pick[ 'chosen' ] === null )
+  {
+    $submit_stop_msg = "<b>No cluster in the '$pseudo_cluster' pool is currently available"
+                     . ( $pick[ 'reason' ] ? " ({$pick['reason']})" : '' ) . ".</b><br/>"
+                     . "Nothing was submitted. Try again shortly, or ask your administrator "
+                     . "to check that pool's clusters.";
+    include __DIR__ . '/submit_stop.php';
+    $submit_stopped = true;
+  }
+  else
+  {
+    $_SESSION['cluster'][ 'metaschedulerClusterExecuting' ] = $pick[ 'chosen' ];
+  }
 }

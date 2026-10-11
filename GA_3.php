@@ -167,6 +167,7 @@ HTML;
   if ( isset( $_SESSION[ 'cluster' ] ) )
   {
     $cluster     = $_SESSION[ 'cluster' ][ 'shortname' ];
+    $metaschedulerClusterExecuting = $_SESSION[ 'cluster' ][ 'metaschedulerClusterExecuting' ] ?? null;
     unset( $_SESSION[ 'cluster' ] );
 
     $job = new submit_slurm();
@@ -185,6 +186,10 @@ HTML;
 
       $job-> clear();
       $job-> parse_input( basename( $filename ) );
+      if ( isset( $metaschedulerClusterExecuting ) && $metaschedulerClusterExecuting !== null )
+      {
+        $job-> set_metascheduler_cluster_executing( $metaschedulerClusterExecuting );
+      }
 
       if ( ! DEBUG ) $job->submit();
       
