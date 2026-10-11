@@ -60,6 +60,17 @@ $current_year       = date( 'Y' );
 $enable_GMP         = false;  # Enable GMP related features
 $enable_PAM         = false;  # Enable PAM login
 
+// A TLS-terminating reverse proxy forwards every request to this host as
+// plain HTTP, so $_SERVER['HTTPS'] never reflects what the actual client
+// connection used: require_https.php then redirects every single request
+// forever (redirect to https, the proxy forwards as http again, repeat).
+// Enable this ONLY when this host sits behind such a proxy and is not
+// itself directly reachable from outside it (e.g. bound to localhost or an
+// internal network only) -- X-Forwarded-Proto is not validated beyond
+// trusting the proxy to have set it honestly, which is only true once the
+// proxy is the only thing that can reach this host at all.
+$trust_proxy_https_header = false;
+
 //////////// End of user specific configuration
 
 // ensure a trailing slash
