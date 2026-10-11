@@ -62,20 +62,25 @@ function enter_record( $message = '' )
 {
   if ( isset($message) && isset($_SESSION['POST']) )
   {
-    // Get posted information from register.php
-    $lname        = $_SESSION['POST']['lname'];
-    $fname        = $_SESSION['POST']['fname'];
-    $organization = $_SESSION['POST']['organization'];
-    $address      = $_SESSION['POST']['address'];
-    $city         = $_SESSION['POST']['city'];
-    $state        = $_SESSION['POST']['state'];
-    $zip          = $_SESSION['POST']['zip'];
-    $country      = $_SESSION['POST']['country'];
-    $phone        = $_SESSION['POST']['phone'];
+    // Get posted information from register.php. Escaped here, once, right
+    // after reading it back -- these values are re-shown below as HTML
+    // attribute values (value='...'), and this re-show path never used to
+    // run at all (the old session mismatch lost the values before it could),
+    // so a quote or markup in any of them -- a last name like "O'Brien", or
+    // a deliberate payload -- never had to be escaped before. It does now.
+    $lname        = htmlspecialchars( $_SESSION['POST']['lname'], ENT_QUOTES );
+    $fname        = htmlspecialchars( $_SESSION['POST']['fname'], ENT_QUOTES );
+    $organization = htmlspecialchars( $_SESSION['POST']['organization'], ENT_QUOTES );
+    $address      = htmlspecialchars( $_SESSION['POST']['address'], ENT_QUOTES );
+    $city         = htmlspecialchars( $_SESSION['POST']['city'], ENT_QUOTES );
+    $state        = htmlspecialchars( $_SESSION['POST']['state'], ENT_QUOTES );
+    $zip          = htmlspecialchars( $_SESSION['POST']['zip'], ENT_QUOTES );
+    $country      = htmlspecialchars( $_SESSION['POST']['country'], ENT_QUOTES );
+    $phone        = htmlspecialchars( $_SESSION['POST']['phone'], ENT_QUOTES );
 
     // email might have been unset
     if ( isset( $_SESSION['POST']['email'] ) )
-      $email = $_SESSION['POST']['email'];
+      $email = htmlspecialchars( $_SESSION['POST']['email'], ENT_QUOTES );
 
     unset( $_SESSION['POST'] );
 
