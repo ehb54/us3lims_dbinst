@@ -625,7 +625,13 @@ function get_id( $link )
 
   // We don't know which record, so just find the first one
     // language=MariaDB
-  $query  = "SELECT projectID " .
+  // j.projectID, not bare projectID: project and projectPerson both have
+  // this column, and an unqualified reference to it is ambiguous -- a
+  // bare edit_projects.php (no $_GET['ID'], falling back to this query)
+  // used to fatal here with "Column 'projectID' in field list is
+  // ambiguous" (errno 1052), uncaught under PHP 8.1+'s own default mysqli
+  // report mode.
+  $query  = "SELECT j.projectID " .
             "FROM project j, projectPerson p " .
             "WHERE p.personID = ? " .
             "AND p.projectID = j.projectID " .
@@ -649,7 +655,7 @@ function get_id( $link )
 
   // If we're here, there aren't any records
 echo<<<HTML
-  <form action='{$_SERVER[PHP_SELF]}' method='post'>
+  <form action='{$_SERVER['PHP_SELF']}' method='post'>
   <table cellspacing='0' cellpadding='0' class='style1'>
     <thead>
       <tr><th colspan='2'>Edit My Projects</th></tr>
