@@ -422,10 +422,26 @@ include "db.php";
 // session without checking it again, so a posted name that was never offered
 // was accepted. The rule here is the one the list applies, kept in one place so
 // the two cannot drift: userlevel 2 or above, the cluster configured, and the
-// cluster named in this session's authorizations.
+// cluster named in this session's authorizations -- except for the entry
+// flagged 'localhost' => true (common#24's own flag for "this is the
+// appliance's own co-located node", not an external HPC resource), which is
+// always authorized regardless of clusterAuth.
+//
+// THE BUG this carves out. gridctl's submitone.php builds $_SESSION[
+// 'clusterAuth'] for an autoflow/GMP submission from the run owner's own
+// people.clusterAuthorizations column, with no interactive user or form in
+// the loop at all. The schema's own default value for that column
+// (lonestar5:stampede2:comet:jetstream) names only retired national HPC
+// resources, and nothing adds a GMP site's own local cluster to it for a
+// new account -- so on a GMP site, every autoflow run owned by an
+// account still on that default fails its first stage outright, 4.2.0
+// never checked this at all. A remote, non-local cluster still needs a
+// real authorization entry; only the host's own node is exempt, since it
+// is inherent site infrastructure the LIMS host already controls, not an
+// external allocation a site admin grants per account.
 function cluster_is_authorized( $shortname )
 {
-   global $clusters;
+   global $clusters, $global_cluster_details;
 
    if ( ! isset( $_SESSION[ 'userlevel' ] ) || $_SESSION[ 'userlevel' ] < 2 )
      return false;
@@ -442,6 +458,14 @@ function cluster_is_authorized( $shortname )
        break;
      }
    }
+
+   ## Still gated on userlevel and on the cluster actually being configured
+   ## above -- only the clusterAuth list requirement below is skipped for
+   ## the host's own node.
+   if ( $configured
+        && isset( $global_cluster_details[ $shortname ][ 'localhost' ] )
+        && $global_cluster_details[ $shortname ][ 'localhost' ] )
+     return true;
 
    if ( ! $configured )
      return false;
