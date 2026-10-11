@@ -55,7 +55,24 @@ if ( ! $submit_stopped
   }
   else
   {
-    $gfac_link = @mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+    ## try/catch, not just the @-suppressed falsy check: this is reached from
+    ## a web request, which never loads gridctl_bootstrap.php's
+    ## mysqli_report( MYSQLI_REPORT_OFF ) -- so under PHP 8.1+'s real default
+    ## (MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT) a connect failure throws
+    ## mysqli_sql_exception instead of returning false, which @ does not
+    ## suppress. Without this, a real gfac outage during an interactive
+    ## submission produced an uncaught fatal error instead of the graceful
+    ## "could not connect" page below -- worse exactly when the system is
+    ## already in trouble, and invisible in ordinary testing because a
+    ## connect attempt almost always succeeds.
+    try
+    {
+      $gfac_link = @mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+    }
+    catch ( \Throwable $e )
+    {
+      $gfac_link = false;
+    }
 
     if ( ! $gfac_link )
     {
