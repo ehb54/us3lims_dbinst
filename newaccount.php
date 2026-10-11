@@ -6,7 +6,11 @@
  *
  */
 
-session_start();
+// checkinstance.php (not a bare session_start()): sets the same Secure/
+// HttpOnly/SameSite cookie flags and HTTPS enforcement every other page
+// gets, which this page -- reachable by a not-yet-logged-in visitor --
+// used to skip entirely.
+include 'checkinstance.php';
 
 include_once 'config.php';
 include_once 'db.php';
