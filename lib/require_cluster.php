@@ -75,12 +75,24 @@ if ( ! $submit_stopped
       $authorized = isset( $_SESSION['clusterAuth'] ) && is_array( $_SESSION['clusterAuth'] )
                   ? $_SESSION['clusterAuth'] : array();
 
+      // Set only by submitone.php (autoflow), which has the analysis
+      // profile's own XML available before this page runs and uses it to
+      // approximate the job's own process-count demand (see
+      // pick_cluster_estimate_job_requirements()). A genuine interactive
+      // submission never sets this -- there is no equivalent data available
+      // this early in that path -- so $job_requirements stays array() there,
+      // exactly as it always has: pick_cluster_meets_requirements() already
+      // treats an unresolved requirement as "never fails a candidate",
+      // never as "requires nothing".
+      $job_requirements = isset( $_SESSION[ 'metascheduler_job_requirements_estimate' ] )
+                         ? $_SESSION[ 'metascheduler_job_requirements_estimate' ] : array();
+
       // pick_cluster_reserve(), not pick_cluster() directly: an interactive
       // submission here and an autoflow one in submitone.php can race the same
       // pool concurrently, with no coordination between the two processes
       // otherwise.
       $pick = pick_cluster_reserve( $gfac_link, $pseudo_cluster, $candidates, $global_cluster_details,
-                                     array(), array(), null, $authorized );
+                                     $job_requirements, array(), null, $authorized );
       mysqli_close( $gfac_link );
     }
   }
