@@ -6,18 +6,58 @@
  *
  */
 include 'checkinstance.php';
-include 'db.php';
-include 'lib/utility.php';
 
 // A transient DB failure during login must not dump raw SQL/driver text to
 // the browser (information disclosure, and a broken-looking page besides);
 // show the same friendly message login.php already uses for bad input.
-function login_db_unavailable()
+//
+// $reason is logged, never shown: every call site used to drop the cause
+// entirely, so a real outage left no trace to diagnose from -- nothing on
+// 8.2, where the only other record of it would have been the driver text
+// this function exists to keep off the browser.
+function login_db_unavailable( $reason = 'unknown' )
 {
+  error_log( "checkuser.php: login unavailable: $reason" );
   $message = "The login service is temporarily unavailable. Please try again in a moment.";
   include 'login.php';
   exit();
 }
+
+/**
+ * Connect before db.php's own mysqli_connect(...) or die() (db.php:6) runs:
+ * that line is the one failure mode (of 12 tested) that never reached
+ * login_db_unavailable() at all, because it runs before any of this file's
+ * own handling exists. On PHP 7.2 its own die() prints a plain-text page
+ * naming the database; on 8.1+, mysqli's own default report mode throws
+ * mysqli_sql_exception instead of returning false, uncaught, as an HTTP 500
+ * with driver text in it. db.php reuses the returned $link when it is
+ * already a live connection (see db.php's own guard), so its own connect
+ * attempt is skipped once this one has already succeeded, and checkuser.php
+ * is the only caller that ever pre-sets $link -- db.php's other 48 callers
+ * are unaffected.
+ *
+ * @return mysqli
+ */
+function login_db_connect_or_unavailable( $dbhost, $dbusername, $dbpasswd, $dbname )
+{
+  try {
+    $link = @mysqli_connect( $dbhost, $dbusername, $dbpasswd, $dbname );
+    $reason = $link instanceof mysqli ? '' : mysqli_connect_error();
+  } catch ( Throwable $e ) {
+    $link = false;
+    $reason = $e->getMessage();
+  }
+  if ( ! ( $link instanceof mysqli ) ) {
+    login_db_unavailable( "connect failed: $reason" );
+  }
+
+  return $link;
+}
+
+$link = login_db_connect_or_unavailable( $dbhost, $dbusername, $dbpasswd, $dbname );
+
+include 'db.php';
+include 'lib/utility.php';
 
 /**
  * Prepare and execute a parameterized SELECT, routing every failure mode to
@@ -40,14 +80,14 @@ function login_db_query( $link, $query, $types, array $args )
   try {
     $stmt = $link->prepare( $query );
     if ( ! $stmt ) {
-      login_db_unavailable();
+      login_db_unavailable( 'prepare failed: ' . mysqli_error( $link ) );
     }
     $stmt->bind_param( $types, ...$args );
     if ( ! $stmt->execute() || ! ( $result = $stmt->get_result() ) ) {
-      login_db_unavailable();
+      login_db_unavailable( 'execute failed: ' . $stmt->error );
     }
   } catch ( Throwable $e ) {
-    login_db_unavailable();
+    login_db_unavailable( $e->getMessage() );
   }
 
   return array( $stmt, $result );
