@@ -330,9 +330,10 @@ function elog( $msg ) {
             ## owner/group access it already has.
             ##
             ## This also removes a legacy 0666's o+w, which matters because
-            ## nothing here makes the *directory* setgid: on a roles host
-            ## (0755 us3:us3 ~us3/lims/etc) apache has never been able to
-            ## rotate elog.txt at all -- rotation renames inside the
+            ## nothing here makes the *directory* setgid: on a split
+            ## web/us3 account host (0755 us3:us3 ~us3/lims/etc) apache has
+            ## never been able to rotate elog.txt at all -- rotation renames
+            ## inside the
             ## directory, which needs write access to the directory itself,
             ## not just to the file -- so a legacy 0666 is apache's only way
             ## to keep logging there, and this narrowing removes it the
