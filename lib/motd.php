@@ -74,7 +74,7 @@ function motd_block()
       echo "<p class='message pb-40em' >Job submission is blocked.</p>\n";
 
     echo "</div>\n";
-    include 'footer.php';
+    include $common_dir . 'footer.php';
     exit();
   }
 

@@ -251,7 +251,7 @@ echo <<<HTML
 
 HTML;
 
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 ?>

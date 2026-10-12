@@ -820,5 +820,5 @@ else
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();

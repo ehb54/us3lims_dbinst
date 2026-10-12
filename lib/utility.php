@@ -487,7 +487,7 @@ function require_authorized_cluster( $shortname )
               . " posted unauthorized cluster '" . (string) $shortname . "'" );
 
    echo "<p class='red'>That cluster is not available to this account.</p>\n";
-   include 'footer.php';
+   include $common_dir . 'footer.php';
    exit();
 }
 

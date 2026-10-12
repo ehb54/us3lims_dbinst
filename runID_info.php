@@ -59,7 +59,7 @@ include 'header.php';
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 // Function to create a dropdown for available runIDs

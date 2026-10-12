@@ -18,4 +18,4 @@ include 'lib/utility.php';
 <?php echo showClusters(); ?>
 </div>
 </div>
-<?php include 'footer.php'; ?>
+<?php include $common_dir . 'footer.php'; ?>

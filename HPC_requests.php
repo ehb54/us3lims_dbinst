@@ -196,7 +196,7 @@ else
 
 echo "</pre>\n";
 echo "</div>\n";
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 ?>

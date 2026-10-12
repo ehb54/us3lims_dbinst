@@ -190,7 +190,7 @@ motd_submit();
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 if ( $is_cli ) {
   echo __FILE__ . " exiting 4\n";
 }

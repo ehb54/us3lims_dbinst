@@ -184,7 +184,7 @@ if ( isset($_SESSION['edit_select_type'])  &&
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 // Function to display controls for one dataset

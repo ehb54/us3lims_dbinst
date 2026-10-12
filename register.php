@@ -144,5 +144,5 @@ echo "<p>Your login information has been mailed to your email address.\n" .
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 ?>

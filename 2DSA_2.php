@@ -308,7 +308,7 @@ echo <<<HTML
 
 HTML;
 
-include 'footer.php';
+include $common_dir . 'footer.php';
 if ( $is_cli ) {
   return;
 }
