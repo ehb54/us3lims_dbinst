@@ -487,6 +487,10 @@ function require_authorized_cluster( $shortname )
               . " posted unauthorized cluster '" . (string) $shortname . "'" );
 
    echo "<p class='red'>That cluster is not available to this account.</p>\n";
+   // $common_dir is set in config.php's global scope; a function doesn't see
+   // it without this -- round-12 blocker, dbinst#57: footer silently didn't
+   // load here even with $common_dir configured correctly.
+   global $common_dir;
    include $common_dir . 'footer.php';
    exit();
 }
