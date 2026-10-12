@@ -8,8 +8,8 @@
 return array(
   'schema_version' => 1,
   'values' => array(
-    'org_name'        => 'UltraScan3 LIMS portal',
-    'site_author'     => 'Borries Demeler, University of Lethbridge',
+    'org_name'        => 'CHANGE-ME: your organization\'s name',
+    'site_author'     => 'CHANGE-ME: site contact name and affiliation',
     'site_keywords'   => 'ultrascan analytical ultracentrifugation lims',
     'site_desc'       => 'Website for the UltraScan3 LIMS portal',
     'globaldbuser'    => 'gfac',
