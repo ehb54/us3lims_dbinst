@@ -102,7 +102,10 @@ function us3_dbinst_config_overlay_contract( $instance, $values )
 function us3_dbinst_config_overlay_source( $contract )
 {
   return "<?php\n"
-       . "/* Generated configuration; do not edit by hand. */\n"
+       . "/* Generated configuration; do not edit by hand (that means replacing this\n"
+       . " * file wholesale -- adding or changing one of the three allowlisted keys\n"
+       . " * in 'values' below is a normal, supported edit; see CONFIGURATION.md,\n"
+       . " * \"Turning PAM or GMP on for one instance\"). */\n"
        . 'return ' . var_export( $contract, true ) . ";\n";
 }
 

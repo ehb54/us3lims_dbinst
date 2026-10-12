@@ -60,11 +60,12 @@ foreach ( profile_required_fields() as $field_key => $field_label )
 }
 
 if (! emailsyntax_is_valid($email) )
-  // $email is the raw submission: this message is re-shown to the browser
-  // (newaccount.php's enter_record(), echoed as page text), so an
-  // unescaped value here is the same class of bug as the re-shown form
-  // fields themselves.
-  $message .= "--" . htmlspecialchars( $email, ENT_QUOTES ) . " is not a valid email address<br />";
+  // $email already went through htmlentities() at the top of this file,
+  // same as every other field here -- wrapping it in htmlspecialchars()
+  // too double-escaped it (e.g. a literal '&' became '&amp;amp;'), not
+  // left it unescaped; round-12 nit, dbinst#57. Echoed as-is, same as the
+  // other fields' validation messages above and below it.
+  $message .= "--$email is not a valid email address<br />";
 
 if ( isset( $enable_PAM ) && $enable_PAM && empty( $userNamePAM ) ) {
   $message .= "--user name (PAM) is missing <br>";
