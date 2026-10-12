@@ -324,6 +324,18 @@ if ( $activate )
    * steps are) passed even when the overlay this same run just wrote was
    * unreadable by us3 -- the exact case the ownership fix above addresses,
    * confirmed to only surface once the probe asks the right account.
+   *
+   * -s /bin/sh, not left to runuser -l's own default: -l simulates a real
+   * login, which uses us3's own /etc/passwd shell field -- a hardened host
+   * that sets that to /sbin/nologin (a normal choice for a service account
+   * that should never get an interactive login) made runuser itself refuse
+   * outright ("This account is currently not available"), before the probe
+   * ever ran at all. Confirmed directly: identical setup, us3's shell
+   * flipped to /sbin/nologin, runuser -l us3 -c fails with that message
+   * and rc 1; adding -s /bin/sh here works regardless of what us3's own
+   * shell field says, since nothing this probe runs needs a real login
+   * shell's environment setup in the first place (every path/argument
+   * below is already absolute).
    */
   $probe = 'if ( $argv[1] !== "" ) define( "US3_DBINST_CREDENTIALS_FILE", $argv[1] );'
          . ' include $argv[2];'
@@ -336,7 +348,7 @@ if ( $activate )
            . ' ' . escapeshellarg( $candidate_path )
            . ' ' . escapeshellarg( $expected[ 'dbname' ] );
   $command = ( function_exists( 'posix_geteuid' ) && posix_geteuid() === 0 )
-           ? 'runuser -l us3 -c ' . escapeshellarg( $probe_inner ) . ' 2>&1'
+           ? 'runuser -l us3 -s /bin/sh -c ' . escapeshellarg( $probe_inner ) . ' 2>&1'
            : $probe_inner . ' 2>&1';
   $probe_out = array();
   $probe_rc = 0;
