@@ -295,7 +295,13 @@ function makeRandomPassword($fixed_length = 0 ): string
 
 // Marks every cluster with no cluster_status row as down, and returns their short
 // names. $reason, when given, says why no row was found at all.
-function mark_clusters_without_status( &$clusters, $have_row, $reason = '' )
+// $global_cluster_details, when given, exempts a metascheduler pool entry (its
+// own row carries a 'clusters' array rather than a real sshport/queue) from
+// this: a pool has no real host to probe status on, by design -- cluster_status
+// .php never writes a row for one -- so having no row is expected there, not a
+// down/unhealthy signal. Mirrors pick_cluster_is_metascheduler_entry()'s shape
+// check (gridctl's pick_cluster.php) and require_cluster.php's own copy of it.
+function mark_clusters_without_status( &$clusters, $have_row, $reason = '', $global_cluster_details = null )
 {
    if ( !is_array( $clusters ) )
      return array();
@@ -304,6 +310,11 @@ function mark_clusters_without_status( &$clusters, $have_row, $reason = '' )
    foreach ( $clusters as $cluster )
    {
      if ( in_array( $cluster->short_name, $have_row ) )
+       continue;
+
+     $entry = is_array( $global_cluster_details )
+            ? ( $global_cluster_details[ $cluster->short_name ] ?? null ) : null;
+     if ( is_array( $entry ) && array_key_exists( 'clusters', $entry ) && is_array( $entry[ 'clusters' ] ) )
        continue;
 
      $cluster->status = 'down';
@@ -407,7 +418,8 @@ while ( $result && list( $cluster, $running, $queued, $status, $age ) = mysqli_f
 // A cluster with no cluster_status row has never been probed, or its probe has
 // stopped writing. That is the same unknown as an expired row, so treat it the
 // same way rather than leaving it selectable on a constructor default.
-mark_clusters_without_status( $clusters, $have_row, $gfac_link ? '' : 'the gfac database is unreachable' );
+mark_clusters_without_status( $clusters, $have_row, $gfac_link ? '' : 'the gfac database is unreachable',
+                               $global_cluster_details );
 
 if ( $gfac_link )
   mysqli_close( $gfac_link );

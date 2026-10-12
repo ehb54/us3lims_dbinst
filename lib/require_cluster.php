@@ -74,7 +74,17 @@ if ( $require_cluster_is_pool )
     $require_cluster_us3_entry = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
     $require_cluster_us3_bin = ( $require_cluster_us3_entry ? $require_cluster_us3_entry[ 'dir' ] : '/home/us3' )
                               . '/lims/bin';
-    require_once "$require_cluster_us3_bin/gridctl/pick_cluster_reserve.php";
+    // gridctl's own install layout varies: a standalone gridctl checkout
+    // sits in a 'gridctl' subdirectory under bin, but us3lims-roles installs
+    // gridctl's files directly into bin itself, with no 'gridctl'
+    // subdirectory at all. Probe for the subdirectory shape first and fall
+    // back to the flat shape, rather than assuming either -- the same spirit
+    // as submitone.php's own is_file()/class_exists() guards (round-12,
+    // gridctl#33-era fix) for resolving its own pooling code.
+    $require_cluster_gridctl_dir = is_file( "$require_cluster_us3_bin/gridctl/pick_cluster_reserve.php" )
+      ? "$require_cluster_us3_bin/gridctl"
+      : $require_cluster_us3_bin;
+    require_once "$require_cluster_gridctl_dir/pick_cluster_reserve.php";
   }
 
   $pseudo_cluster = $_SESSION['cluster']['shortname'];
