@@ -6,10 +6,24 @@
 // clusterAuthorizations, so an account authorized for no configured cluster
 // posts no 'cluster' and the job would otherwise be reported as accepted.
 
-// Needed unconditionally below for pick_cluster_is_metascheduler_entry() in
-// the very condition that decides whether a metascheduler resolution is
-// needed at all -- cheap (function/const definitions only, no DB or SSH).
-require_once '/home/us3/lims/bin/gridctl/pick_cluster_reserve.php';
+// Mirror cluster_is_authorized()'s own 'localhost' => true exemption
+// (lib/utility.php): a direct submission to the appliance's co-located
+// node is always authorized regardless of clusterAuth, since it's inherent
+// site infrastructure, not an external allocation a site admin grants per
+// account. Without this, going through a pool that happens to contain that
+// same node disagreed with a direct submission to it -- round-12
+// should-fix, dbinst#82.
+function require_cluster_expand_localhost_authorized( $candidates, $global_cluster_details, $authorized )
+{
+  foreach ( $candidates as $candidate_name )
+  {
+    if ( isset( $global_cluster_details[ $candidate_name ][ 'localhost' ] )
+         && $global_cluster_details[ $candidate_name ][ 'localhost' ]
+         && ! in_array( $candidate_name, $authorized, true ) )
+      $authorized[] = $candidate_name;
+  }
+  return $authorized;
+}
 
 $submit_stopped = false;
 if ( ! isset( $_SESSION['cluster'] ) )
@@ -32,11 +46,37 @@ if ( ! isset( $_SESSION['cluster'] ) )
 // $_SESSION['cluster']['metaschedulerClusterExecuting'] so every later
 // _2.php/_3.php page can read it without re-resolving, exactly mirroring how
 // submitone.php (autoflow) already calls pick_cluster().
-if ( ! $submit_stopped
-     && isset( $global_cluster_details[ $_SESSION['cluster']['shortname'] ] )
-     && pick_cluster_is_metascheduler_entry(
-          $global_cluster_details[ $_SESSION['cluster']['shortname'] ] ) )
+// Cheap pre-check mirroring pick_cluster_is_metascheduler_entry() exactly
+// (a pool entry is an array carrying its own 'clusters' array), done
+// without loading any gridctl file -- gridctl is only ever pulled in below,
+// and only for a submission that actually posted a pool. A direct
+// submission to a real cluster, or any host with no metascheduler pools
+// configured at all, never touches gridctl from here.
+$require_cluster_entry = $submit_stopped
+  ? null
+  : ( $global_cluster_details[ $_SESSION['cluster']['shortname'] ] ?? null );
+$require_cluster_is_pool = is_array( $require_cluster_entry )
+  && array_key_exists( 'clusters', $require_cluster_entry )
+  && is_array( $require_cluster_entry[ 'clusters' ] );
+
+if ( $require_cluster_is_pool )
 {
+  // us3lims-roles installs gridctl under whatever the us3 account's own
+  // home directory is, not necessarily /home/us3 -- resolved the same way
+  // gridctl_bootstrap.php resolves it for gridctl's own files, so a roles
+  // host with a different home for us3 still finds it. Guarded with
+  // function_exists(): if something else in this same request already
+  // loaded gridctl's pick_cluster*.php under a different (but equivalent)
+  // path, requiring it again here under this resolved path would otherwise
+  // be a fatal "Cannot redeclare".
+  if ( ! function_exists( 'pick_cluster_is_metascheduler_entry' ) )
+  {
+    $require_cluster_us3_entry = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
+    $require_cluster_us3_bin = ( $require_cluster_us3_entry ? $require_cluster_us3_entry[ 'dir' ] : '/home/us3' )
+                              . '/lims/bin';
+    require_once "$require_cluster_us3_bin/gridctl/pick_cluster_reserve.php";
+  }
+
   $pseudo_cluster = $_SESSION['cluster']['shortname'];
   $candidates     = $global_cluster_details[ $pseudo_cluster ][ 'clusters' ];
 
@@ -91,6 +131,8 @@ if ( ! $submit_stopped
       // pseudo name), checked here again against every real candidate.
       $authorized = isset( $_SESSION['clusterAuth'] ) && is_array( $_SESSION['clusterAuth'] )
                   ? $_SESSION['clusterAuth'] : array();
+      $authorized = require_cluster_expand_localhost_authorized(
+        $candidates, $global_cluster_details, $authorized );
 
       // Set only by submitone.php (autoflow), which has the analysis
       // profile's own XML available before this page runs and uses it to
