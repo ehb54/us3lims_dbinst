@@ -260,6 +260,25 @@ function us3_dbinst_config_path_with_slash( $path )
   return rtrim( $path, '/' ) . '/';
 }
 
+// Keys the v1 contract added to us3_dbinst_config_base_types() after v1
+// first shipped. A base file written before a given key existed doesn't
+// have it on disk; defaulting it in us3_dbinst_config_load_base() keeps
+// that pre-existing base working once the code starts requiring the key,
+// instead of a hard "missing key" failure -- 500 on every page until an
+// admin notices and hand-edits the base file. (Observed: this is exactly
+// what happened to every v1 base made before round-11 added
+// trust_proxy_https_header, and would have recurred for common_dir too
+// without this.) A key here must have a value that is always safe --
+// i.e. matches what an install made before the key existed was already
+// relying on implicitly.
+function us3_dbinst_config_base_key_defaults()
+{
+  return array(
+    'trust_proxy_https_header' => false,
+    'common_dir'               => '/srv/www/htdocs/common/',
+  );
+}
+
 function us3_dbinst_config_load_base( $root )
 {
   $root = rtrim( $root, '/' );
@@ -267,6 +286,9 @@ function us3_dbinst_config_load_base( $root )
     $root . '/' . us3_dbinst_config_base_filename(), 'base' );
   if ( isset( $base[ 'instance' ] ) )
     us3_dbinst_config_fail( 'base file must not declare an instance' );
+
+  $base[ 'values' ] = array_merge(
+    us3_dbinst_config_base_key_defaults(), $base[ 'values' ] );
 
   us3_dbinst_config_validate_values(
     $base[ 'values' ], us3_dbinst_config_base_types(), array(), 'base' );
