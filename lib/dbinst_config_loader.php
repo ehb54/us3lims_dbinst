@@ -56,6 +56,7 @@ function us3_dbinst_config_base_types()
     'disclaimer_file' => 'string',
     'timezone'        => 'string',
     'dbinst_root'     => 'string',
+    'common_dir'      => 'string',
     'enable_GMP'      => 'boolean',
     'enable_PAM'      => 'boolean',
     'trust_proxy_https_header' => 'boolean'

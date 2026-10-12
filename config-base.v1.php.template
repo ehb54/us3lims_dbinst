@@ -27,6 +27,12 @@ return array(
     'top_banner'      => 'images/#',
     'submit_dir'      => '/srv/www/htdocs/uslims3/uslims3_data/',
     'class_dir'       => '/srv/www/htdocs/common/class/',
+    ## Shared header/footer/topmenu partials and the /common static-asset
+    ## alias (css/js/images) -- round-12 blocker, dbinst#57/newinst#27/
+    ## webinfo#17: neither this base+overlay contract nor any deployment
+    ## tool set this at all, so every page under it lost its CSS, menu and
+    ## footer the moment dbinst's symlink-based sharing was removed.
+    'common_dir'      => '/srv/www/htdocs/common/',
     'disclaimer_file' => '',
     'timezone'        => 'America/Chicago',
     'dbinst_root'     => '/srv/www/htdocs/uslims3/',
