@@ -165,6 +165,8 @@ $expected[ 'submit_dir' ] = us3_dbinst_config_path_with_slash(
   $expected[ 'submit_dir' ] );
 $expected[ 'class_dir' ] = us3_dbinst_config_path_with_slash(
   $expected[ 'class_dir' ] );
+$expected[ 'common_dir' ] = us3_dbinst_config_path_with_slash(
+  $expected[ 'common_dir' ] );
 $expected[ 'current_year' ] = date( 'Y' );
 $expected[ 'is_cli' ] = php_sapi_name() == 'cli';
 
