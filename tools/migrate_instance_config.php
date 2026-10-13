@@ -189,6 +189,22 @@ foreach ( $expected as $key => $value )
   ## the base expects and a key the legacy config never mentioned are
   ## different problems with different fixes, and "DIFFERENT" alone gave
   ## no hint which one this was.
+  ##
+  ## A key us3_dbinst_config_base_key_defaults() knows about is missing for
+  ## the same reason a pre-round-11/12 BASE file was: it predates the
+  ## contract adding the key at all, so a legacy (pre-v1) config.php could
+  ## never have set it either. The loader already defaults it there; this
+  ## tool used to still block on it as a plain MISSING difference, with no
+  ## way to accept it short of hand-editing the legacy file to add a line
+  ## it never needed before (round-13 should-fix, dbinst#57) -- --drop is
+  ## for the opposite direction (an unexpected OLD key), not this one.
+  $base_defaults = us3_dbinst_config_base_key_defaults();
+  if ( !$equal && !array_key_exists( $key, $legacy ) && array_key_exists( $key, $base_defaults ) )
+  {
+    $status = 'MISSING (base default used)';
+    echo sprintf( "%-22s %s\n", $key, $status );
+    continue;
+  }
   $status = $equal ? 'equal' : ( array_key_exists( $key, $legacy ) ? 'DIFFERENT' : 'MISSING' );
   echo sprintf( "%-22s %s\n", $key, $status );
   if ( !$equal )

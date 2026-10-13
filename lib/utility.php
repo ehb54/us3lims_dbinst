@@ -486,7 +486,15 @@ function require_authorized_cluster( $shortname )
               . ( $_SESSION[ 'email' ] ?? 'unknown' )
               . " posted unauthorized cluster '" . (string) $shortname . "'" );
 
-   echo "<p class='red'>That cluster is not available to this account.</p>\n";
+   ## Round-13 nit (dbinst#57): a bare one-line refusal, with no heading,
+   ## explanation of why, or way back, left a user staring at an otherwise
+   ## unstyled page. Names the cluster and points back to queue setup,
+   ## where a different (authorized) cluster can be chosen instead.
+   echo "<h3>Cluster not available</h3>\n"
+      . "<p class='red'>The cluster '" . htmlspecialchars( (string) $shortname, ENT_QUOTES )
+      . "' is not available to this account.</p>\n"
+      . "<p>Go back and choose a different cluster, or contact your site administrator"
+      . " if this one should be authorized for you.</p>\n";
    // $common_dir is set in config.php's global scope; a function doesn't see
    // it without this -- round-12 blocker, dbinst#57: footer silently didn't
    // load here even with $common_dir configured correctly.
