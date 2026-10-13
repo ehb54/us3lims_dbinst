@@ -369,6 +369,16 @@ function us3_dbinst_config_load( $instance, $root = null,
     $values[ 'submit_dir' ] );
   $values[ 'class_dir' ] = us3_dbinst_config_path_with_slash(
     $values[ 'class_dir' ] );
+  ## Missing here (round-13 should fix): submit_dir/class_dir/dbinst_root
+  ## were all normalized to end in '/', but common_dir never was, even
+  ## though every page concatenates it directly ($common_dir . 'footer.php').
+  ## migrate_instance_config.php normalizes its own comparison copy of
+  ## common_dir before comparing (us3_dbinst_config_path_with_slash(),
+  ## this same function), so a base missing the trailing slash still
+  ## reported EQUIVALENT there -- that check was only ever validating
+  ## against itself, not against what this loader actually hands back.
+  $values[ 'common_dir' ] = us3_dbinst_config_path_with_slash(
+    $values[ 'common_dir' ] );
   $values[ 'current_year' ] = date( 'Y' );
   $values[ 'is_cli' ] = php_sapi_name() == 'cli';
 
