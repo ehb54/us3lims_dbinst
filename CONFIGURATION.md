@@ -168,13 +168,12 @@ whose installed paths differ from the defaults.
 
 ## Turning PAM or GMP on for one instance
 
-newinst's `--base-overlay` now writes `enable_GMP` and `enable_PAM` into a new
-instance's overlay, but always as `false` -- even when the base itself would
-turn them on, overriding it (tracked separately, newinst#27: it should write
-them only when actually chosen at creation time, not unconditionally). Until
-that lands, a host whose base says `false` still has no flag to set at
-creation time for a single PAM/GMP instance without changing every instance
-on the host (editing the base) or hand-editing `config.php` (not an option
+newinst's `--base-overlay` does not write `enable_GMP` or `enable_PAM` into a
+new instance's overlay -- it has no creation-time flag for choosing either, so
+a new instance always inherits whatever the base itself configures. A host
+whose base says `false` still has no flag to set at creation time for a
+single PAM/GMP instance without changing every instance on the host (editing
+the base) or hand-editing `config.php` (not an option
 once migrated).
 
 The overlay itself is the supported place for this: it is one of the three
