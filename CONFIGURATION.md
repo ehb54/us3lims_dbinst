@@ -38,6 +38,18 @@ Install and customize `config-base.v1.php.template` as the host base. The base
 contains shared portal, global-database, host, path, and default feature
 values. It must not contain instance database or secure-user credentials.
 
+`common_dir` (one of those path values) is the host's shared `common/`
+checkout -- the source every instance's rendered pages splice `header.php`
+and `footer.php` from, and the one `/common/{css,images,js}` Apache alias
+serves static assets out of. It belongs in the base, not an overlay: every
+instance on a host shares the same one. An instance whose config predates
+`common_dir` being added to the contract (a pre-4.3.0 legacy `config.php`, or
+a base+overlay instance converted before this key landed) has every page
+missing its shared header, footer and CSS until it is backfilled -- see
+`uslims_upgrade.php` step 9's `$common_dir` catch-up and the
+`4.3.0_common_dir_backfill`/`4.3.0_dbinst_base_common_dir_backfill` migrations
+in dbutils.
+
 Each overlay is a PHP file that returns a schema-v1 array. The loader rejects
 unknown keys, missing values, invalid types, path traversal, mismatched
 instance/database names, and all base overrides except the explicitly allowed
