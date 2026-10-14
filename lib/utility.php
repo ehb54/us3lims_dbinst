@@ -330,6 +330,65 @@ function mark_clusters_without_status( &$clusters, $have_row, $reason = '', $glo
    return $marked;
 }
 
+// Round-14 nit (dbinst#82): a pool's own cluster_info stayed at the
+// constructor default ('*') once exempted above, since nothing ever
+// derived it from the pool's actual members -- so a pool row looked
+// selectable on the submission page even with every member down. 'down'
+// only when every member is down/draining, since pick_cluster() can still
+// route a real submission to any one healthy member regardless of the
+// others; 'warn' when some but not all are down/draining/warn, so an
+// operator sees degraded capacity before it is a full outage; otherwise
+// left alone (every member already reports its own healthy status).
+//
+// Pure: takes the already-resolved member statuses as plain strings, not
+// the pool's own name or $clusters, so it is testable without constructing
+// cluster_info objects at all.
+function pool_status_from_members( array $member_statuses )
+{
+   if ( empty( $member_statuses ) )
+     return 'down'; // no members configured at all: nothing a submission could ever reach
+
+   $down_like = function( $status ) { return $status === 'down' || $status === 'draining'; };
+
+   $down_count = count( array_filter( $member_statuses, $down_like ) );
+
+   if ( $down_count === count( $member_statuses ) )
+     return 'down';
+
+   if ( $down_count > 0 || in_array( 'warn', $member_statuses, true ) )
+     return 'warn';
+
+   return 'up';
+}
+
+// Applies pool_status_from_members() to every pool entry in $clusters, once every real
+// cluster's own status is already resolved (i.e. after mark_clusters_without_status() and
+// the cluster_status query loop above have both run). A pool member not itself present in
+// $clusters (not independently active, or filtered out upstream) is treated as 'down' --
+// absent data is not evidence of health.
+function resolve_pool_statuses( array &$clusters, $global_cluster_details )
+{
+   if ( !is_array( $global_cluster_details ) )
+     return;
+
+   $status_by_name = array();
+   foreach ( $clusters as $cluster )
+     $status_by_name[ $cluster->short_name ] = $cluster->status;
+
+   foreach ( $clusters as $cluster )
+   {
+      $entry = $global_cluster_details[ $cluster->short_name ] ?? null;
+      if ( !is_array( $entry ) || !isset( $entry[ 'clusters' ] ) || !is_array( $entry[ 'clusters' ] ) )
+        continue;
+
+      $member_statuses = array();
+      foreach ( $entry[ 'clusters' ] as $member_name )
+        $member_statuses[] = $status_by_name[ $member_name ] ?? 'down';
+
+      $cluster->status = pool_status_from_members( $member_statuses );
+   }
+}
+
 // A class to keep track of cluster information, and what clusters are available
 class cluster_info
 {
@@ -417,9 +476,12 @@ while ( $result && list( $cluster, $running, $queued, $status, $age ) = mysqli_f
 
 // A cluster with no cluster_status row has never been probed, or its probe has
 // stopped writing. That is the same unknown as an expired row, so treat it the
-// same way rather than leaving it selectable on a constructor default.
+// same way rather than leaving it selectable on a constructor default -- except
+// a metascheduler pool, which has no probe of its own by design (exempted
+// above) and gets its own status derived from its members, below, instead.
 mark_clusters_without_status( $clusters, $have_row, $gfac_link ? '' : 'the gfac database is unreachable',
                                $global_cluster_details );
+resolve_pool_statuses( $clusters, $global_cluster_details );
 
 if ( $gfac_link )
   mysqli_close( $gfac_link );
