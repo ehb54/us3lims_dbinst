@@ -366,10 +366,22 @@ function pool_status_from_members( array $member_statuses )
 // the cluster_status query loop above have both run). A pool member not itself present in
 // $clusters (not independently active, or filtered out upstream) is treated as 'down' --
 // absent data is not evidence of health.
-function resolve_pool_statuses( array &$clusters, $global_cluster_details )
+//
+// Round 15 nit, dbinst#82: a member this account is not authorized to use
+// (cluster_is_authorized()) is treated as 'down' here too, the same as an
+// absent one -- a pool whose only healthy member is one this account can
+// never actually be routed to was reporting 'warn' (implying "degraded
+// but usable") and leaving the row pre-checked, when picking it always
+// landed on the stop page for this account. $is_authorized defaults to
+// cluster_is_authorized() itself (the real, session-based check);
+// injectable so a test can drive this without a session.
+function resolve_pool_statuses( array &$clusters, $global_cluster_details, ?callable $is_authorized = null )
 {
    if ( !is_array( $global_cluster_details ) )
      return;
+
+   if ( $is_authorized === null )
+     $is_authorized = 'cluster_is_authorized';
 
    $status_by_name = array();
    foreach ( $clusters as $cluster )
@@ -383,7 +395,9 @@ function resolve_pool_statuses( array &$clusters, $global_cluster_details )
 
       $member_statuses = array();
       foreach ( $entry[ 'clusters' ] as $member_name )
-        $member_statuses[] = $status_by_name[ $member_name ] ?? 'down';
+        $member_statuses[] = $is_authorized( $member_name )
+                            ? ( $status_by_name[ $member_name ] ?? 'down' )
+                            : 'down';
 
       $cluster->status = pool_status_from_members( $member_statuses );
    }
