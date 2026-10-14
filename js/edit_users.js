@@ -87,21 +87,6 @@ function validate( form )
     msg += "--email address is missing\n";
     errors++;
   }
-  else 
-  {
-    // Check for @ and ensire a . is at the right place.
-    var checkEmail = form.email.value;
-
-    if (  checkEmail.indexOf('@') < 0  ||
-           ( checkEmail.charAt(checkEmail.length-4) != '.'
-             && checkEmail.charAt(checkEmail.length-3) != '.'
-           )
-         )
-    {
-    msg += "--email address is invalid\n";
-    errors++;
-    }
-  }
 
   if ( errors > 0 )
   {

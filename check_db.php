@@ -134,6 +134,6 @@ while ( list( $id, $reqID, $guid, $status, $time )
 
 
 echo "</pre></div>\n";
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 ?>

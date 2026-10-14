@@ -27,14 +27,6 @@ abstract class HPC_analysis
     // Finally the HPCDataset and HPCRequestData tables
     $this->HPCDataset( $HPCAnalysisRequestID, $data['dataset'] );
 
-    if ( DEBUG )
-    {
-      // echo "From HPC_analysis...\n";
-      $this->email_log( $data );
-      // $this->debug_out( $data );
-      // echo "End of DB update\n";
-    }
-
     // Return the original analysis ID
     return $HPCAnalysisRequestID;
   }
@@ -147,45 +139,6 @@ abstract class HPC_analysis
     echo "Session variables: \n";
     print_r( $_SESSION );
     echo "</pre>\n";
-  }
-
-  // This function provides email logging without interrupting
-  //  the jobs themselves
-  function email_log( $job )
-  {
-    $to = "dzollars@gmail.com";
-    $subject = "Logging from {$job['database']['name']} ";
-    $message = "job files---\n";
-    $message .= $this->__multiarray( $job );
-    $message .= "\nSESSION variables---\n";
-    $message .= $this->__multiarray( $_SESSION );
-    mail($to, $subject, $message);
-  }
-
-  // This function parses values in an array, calling itself recursively
-  //  as needed for multilevel arrays
-  function __multiarray( $job )
-  {
-    $msg = "";
-    static $level = 0;       // to keep track of some indentation
-
-    foreach ($job as $key => $value)
-    {
-      if (is_array($value))
-      {
-        $level++;
-        $msg .= "$key data:\n";
-        $msg .= $this->__multiarray( $value );
-      }
-      else
-      {
-        for ($x = 0; $x < $level; $x++)
-          $msg .= "  ";
-        $msg .= "$key: $value\n";
-      }
-    }
-    $level--;
-    return $msg;
   }
 
 }
@@ -378,21 +331,21 @@ class HPC_PCSA extends HPC_analysis
   {
     global $link;
     $query  = "INSERT INTO PCSA_Settings SET " .
-              "HPCAnalysisRequestID = $HPCAnalysisRequestID, " .
-              "curve_type           = '{$job_parameters['curve_type']}',     " .
-              "s_min                = {$job_parameters['x_min']},            " .
-              "s_max                = {$job_parameters['x_max']},            " .
-              "ff0_min              = {$job_parameters['y_min']},            " .
-              "ff0_max              = {$job_parameters['y_max']},            " .
-              "vars_count           = {$job_parameters['vars_count']},       " .
-              "gfit_iterations      = {$job_parameters['gfit_iterations']},  " .
-              "curves_points        = {$job_parameters['curves_points']},    " .
-              "thr_deltr_ratio      = {$job_parameters['thr_deltr_ratio']},  " .
-              "tikreg_option        = {$job_parameters['tikreg_option']},    " .
-              "tikreg_alpha         = {$job_parameters['tikreg_alpha']},     " .
-              "mc_iterations        = {$job_parameters['mc_iterations']},    " .
-              "tinoise_option       = {$job_parameters['tinoise_option']},   " .
-              "rinoise_option       = {$job_parameters['rinoise_option']}    ";
+              "HPCAnalysisRequestID = ?, " .
+              "curve_type           = ?, " .
+              "s_min                = ?, " .
+              "s_max                = ?, " .
+              "ff0_min              = ?, " .
+              "ff0_max              = ?, " .
+              "vars_count           = ?, " .
+              "gfit_iterations      = ?, " .
+              "curves_points        = ?, " .
+              "thr_deltr_ratio      = ?, " .
+              "tikreg_option        = ?, " .
+              "tikreg_alpha         = ?, " .
+              "mc_iterations        = ?, " .
+              "tinoise_option       = ?, " .
+              "rinoise_option       = ?   ";
     $stmt = mysqli_prepare( $link, $query );
     $args = [ $HPCAnalysisRequestID, $job_parameters['curve_type'], $job_parameters['x_min'],
         $job_parameters['x_max'], $job_parameters['y_min'], $job_parameters['y_max'],
@@ -401,6 +354,7 @@ class HPC_PCSA extends HPC_analysis
         $job_parameters['mc_iterations'], $job_parameters['tinoise_option'], $job_parameters['rinoise_option'] ];
     $stmt->bind_param("isddddiiididiii", ...$args );
     $stmt->execute() or die( "Query failed : $query<br />" . print_r($args, true) . "<br />" . $stmt->error);
+    $stmt->close();
   }
 }
 

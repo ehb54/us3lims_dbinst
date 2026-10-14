@@ -33,16 +33,35 @@ include 'lib/utility.php';
 include 'lib/payload_manager.php';
 include 'lib/HPC_analysis.php';
 include 'lib/file_writer.php';
-include $class_dir . 'submit_local.php';
-include $class_dir . 'submit_gfac.php';
-include $class_dir . 'submit_airavata.php';
+include $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
+
+## submit_progress() comes from common. With an older common the include above is
+## only a warning and the call would be fatal, taking the submission with it, so
+## fall back to a minimal stand-in: a bare flush() with nothing written sends
+## Apache nothing, so a long batch would hit the proxy's idle timeout again,
+## the exact failure the old echo+flush_output() pairs here existed to avoid.
+if ( ! function_exists( 'submit_progress' ) ) {
+    function submit_progress( $msg ) {
+        if ( PHP_SAPI === 'cli' )
+            return;
+        echo "<!-- progress -->\n";
+        flush_output();
+    }
+}
 
 // A large batch takes minutes to submit; finish it even if the browser or
 // the web server gives up on this request (ultrascan-tickets#1115)
 ignore_user_abort( true );
 set_time_limit( 0 );
+
+$submit_method = 'DMGA';
+include 'lib/require_cluster.php';
+if ( $submit_stopped ) {
+  if ( $is_cli ) return;
+  exit();
+}
 
 // Make sure the advancement level is set
 $advanceLevel = $_SESSION['advancelevel'] ?? 0;
@@ -58,6 +77,7 @@ $filenames = array();
 $HPCAnalysisRequestID = 0;
 
 $files_ok  = true;  // Let's also make sure there weren't any problems writing the files
+$missit_msg = '';
 
 if ( $_SESSION[ 'separate_datasets' ] )
 {
@@ -65,14 +85,11 @@ if ( $_SESSION[ 'separate_datasets' ] )
 //print_r( $payload->get() );
 
   $dataset_count = $payload->get( 'datasetCount' );
-  echo "<script>us_submit_prog.show();</script>";
-  flush_output();
   priority( "DMGA", $dataset_count, $payload->get( 'job_parameters' ) );
 
   for ( $ii = 0; $ii < $dataset_count; $ii++ )
   {
-    echo "<script>us_submit_prog.msg.prep('" . ( $dataset_count - $ii ) . "');</script>";
-    flush_output();
+    submit_progress( "preparing datasets - " . ( $dataset_count - $ii ) . " remaining" );
     $single               = $payload->get_dataset( $ii );
     $HPCAnalysisRequestID = $HPC->writeDB( $single );
     $filenames[ $ii ]     = $file->write( $single, $HPCAnalysisRequestID );
@@ -107,12 +124,21 @@ else
 {
 //echo "not separate\n"; exit();
   $globalfit = $payload->get();
+
+  // Global DMGA is submitted as on main. us_mpi_analysis's DMGA worker currently
+  // crashes on more than one dataset; that is fixed in UltraScan, not here.
   priority( "DMGA-GF", $payload->get( 'datasetCount' ), $payload->get( 'job_parameters' ) );
   $HPCAnalysisRequestID = $HPC->writeDB( $globalfit );
   $filenames[ 0 ] = $file->write( $globalfit, $HPCAnalysisRequestID );
   
   if ( $filenames[ 0 ] === false )
     $files_ok = false;
+
+  else if ( $filenames[ 0 ] === '2DSA-IT-MISSING' )
+  {
+    $files_ok = false;
+    $missit_msg = "<br/><b>Global Fit without all needed 2DSA-IT models</b/>";
+  }
   
   else
   {
@@ -137,7 +163,6 @@ else
 if ( $files_ok )
 {
   $output_msg = <<<HTML
-  <script>us_submit_prog.hide()</script>
   <pre>
   Thank you, your job was accepted and is currently processing. An
   email will be sent to {$_SESSION[ 'submitter_email' ]} when the job is
@@ -151,21 +176,7 @@ HTML;
     $cluster     = $_SESSION[ 'cluster' ][ 'shortname' ];
     unset( $_SESSION[ 'cluster' ] );
 
-    if ( isset( $global_cluster_details )
-         && is_array( $global_cluster_details )
-         && array_key_exists( $cluster, $global_cluster_details ) 
-         && array_key_exists( 'airavata', $global_cluster_details[$cluster] ) ) {
-           if ( $global_cluster_details[$cluster]['airavata' ] ) {
-               $job = new submit_airavata();
-           } else {
-               $job = new submit_local();
-           }
-    } else {
-        error_log( "$cluster not properly setup\n" );
-        $msg = "<br /><span class='message'>Configuration error: Unsupported cluster $cluster</span><br />\n";
-        echo $msg;
-        exit;
-    }
+    $job = new submit_slurm();
 
     $save_cwd = getcwd();         // So we can come back to the current 
                                   // working directory later
@@ -175,8 +186,7 @@ HTML;
 
     foreach ( $filenames as $filename )
     {
-      echo "<script>us_submit_prog.msg.submit('" . basename( $filename ) . "');</script>";
-      flush_output();
+      submit_progress( 'submitting ' . basename( $filename ) );
 
       chdir( dirname( $filename ) );
 
@@ -196,7 +206,7 @@ HTML;
         {
           if ( is_string( $rmsg ) && preg_match( '/^ERROR:/', $rmsg ) )
           {
-            $output_msg .= "<br /><span class='message' style='color:red;font-weight:bold;'>" .
+            $output_msg .= "<br /><span class='message text-red font-bold'>" .
                             "WARNING: job submission failed - $rmsg</span><br />\n";
             break;
           }
@@ -216,6 +226,7 @@ else
   $output_msg = <<<HTML
   Thank you, there have been one or more problems writing the various files necessary
   for job submission. Please contact your system administrator.
+  $missit_msg
 
 HTML;
 
@@ -247,8 +258,7 @@ echo <<<HTML
 
 HTML;
 
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 ?>
-

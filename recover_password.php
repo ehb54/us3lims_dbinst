@@ -79,7 +79,7 @@ $message = "We have reset your password at your request.
     
 New Password: $random_password
     
-http://$org_site
+https://$org_site
 
 Please save this message for your reference.
 Thanks!

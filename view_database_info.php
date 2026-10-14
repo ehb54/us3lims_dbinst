@@ -151,4 +151,4 @@ which can be opened by selecting:</p>
 
 HTML;
 }
-include 'footer.php';
+include $common_dir . 'footer.php';
