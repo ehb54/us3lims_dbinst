@@ -198,10 +198,19 @@ foreach ( $expected as $key => $value )
   ## way to accept it short of hand-editing the legacy file to add a line
   ## it never needed before (round-13 should-fix, dbinst#57) -- --drop is
   ## for the opposite direction (an unexpected OLD key), not this one.
+  ## Round 15 nit, dbinst#57: this used to print "MISSING (base default
+  ## used)" for ANY key the loader has a default for, whatever the
+  ## base/overlay actually resolved it to -- a site that explicitly
+  ## overrode the key in its own base (not the stock default at all) got
+  ## told it was using the default anyway. Checked against the value this
+  ## key actually resolved to ($value, $expected's own entry), not merely
+  ## whether a default exists for the key.
   $base_defaults = us3_dbinst_config_base_key_defaults();
   if ( !$equal && !array_key_exists( $key, $legacy ) && array_key_exists( $key, $base_defaults ) )
   {
-    $status = 'MISSING (base default used)';
+    $status = $base_defaults[ $key ] === $value
+            ? 'MISSING (base default used)'
+            : 'MISSING (base/overlay value used)';
     echo sprintf( "%-22s %s\n", $key, $status );
     continue;
   }
