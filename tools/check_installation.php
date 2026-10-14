@@ -174,12 +174,12 @@ function check_writable_mode( $path, $label )
   return check_pass( "$label permissions", $printable );
 }
 
-## Which of the base's own 'org_name'/'site_author' fields still carry the
-## shipped template's literal 'CHANGE-ME' placeholder (config-base.v1.php.
-## template) -- pure (no I/O), so a test can drive it directly against a
-## constructed $base_values array. Returns [ key => null ] for a field
-## that was actually configured, [ key => placeholder value ] for one that
-## was not -- the caller decides PASS/FAIL per key from that, same as every
+## Which of the base's own 'org_name'/'site_author'/'ipa_ext' fields still
+## carry a shipped template placeholder (config-base.v1.php.template) --
+## pure (no I/O), so a test can drive it directly against a constructed
+## $base_values array. Returns [ key => null ] for a field that was
+## actually configured, [ key => placeholder value ] for one that was
+## not -- the caller decides PASS/FAIL per key from that, same as every
 ## other check in this file.
 function check_base_placeholder_fields( array $base_values )
 {
@@ -187,8 +187,22 @@ function check_base_placeholder_fields( array $base_values )
   foreach ( array( 'org_name', 'site_author' ) as $key )
   {
     $value = (string) ( $base_values[ $key ] ?? '' );
-    $result[ $key ] = ( strpos( $value, 'CHANGE-ME' ) === 0 ) ? $value : null;
+    ## Round 15 should-fix, dbinst#57: a leading space ("CHANGE-ME" typed
+    ## after an accidental space) or a lowercase spelling ("change-me")
+    ## both still name an unedited field, but the old check (strpos ===
+    ## 0, exact case, no trim) missed both.
+    $result[ $key ] = ( stripos( ltrim( $value ), 'CHANGE-ME' ) === 0 ) ? $value : null;
   }
+
+  ## ipa_ext's own shipped placeholder is a specific value, not a
+  ## CHANGE-ME-prefixed string: config-base.v1.php.template ships
+  ## '203.0.113.1', an RFC 5737 documentation address that is never real
+  ## on any actual network. An unedited site had every GMP e-signature UDP
+  ## packet claim this fake address as its own host, with nothing here
+  ## ever flagging it.
+  $ipa_ext = (string) ( $base_values[ 'ipa_ext' ] ?? '' );
+  $result[ 'ipa_ext' ] = ( trim( $ipa_ext ) === '203.0.113.1' ) ? $ipa_ext : null;
+
   return $result;
 }
 
