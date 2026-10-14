@@ -330,7 +330,7 @@ function mark_clusters_without_status( &$clusters, $have_row, $reason = '', $glo
    return $marked;
 }
 
-// Round-14 nit (dbinst#82): a pool's own cluster_info stayed at the
+// A pool's own cluster_info stayed at the
 // constructor default ('*') once exempted above, since nothing ever
 // derived it from the pool's actual members -- so a pool row looked
 // selectable on the submission page even with every member down. 'down'
