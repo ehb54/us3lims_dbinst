@@ -276,7 +276,7 @@ else
                   . us3_dbinst_config_contract_version() . ' contract',
                   count( $base_values ) . ' values' );
 
-      ## ROUND-14 SHOULD-FIX (dbinst#57). The shipped base template's own
+      ## The shipped base template's own
       ## placeholder values ('CHANGE-ME: your organization's name', etc.)
       ## are valid strings as far as the v1 contract's own type-checking
       ## is concerned, so an unedited base passes every check above this
