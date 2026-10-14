@@ -208,7 +208,7 @@ echo <<<HTML
 
 HTML;
 
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 // Function to display a varying number of solutes

@@ -151,11 +151,31 @@ function write_audit_row( $link, $personID, $user_email, $user_name, $action, $o
   // session's time zone, which on a host whose MySQL session is not UTC
   // records audit events under local time while every other timestamp this
   // table is read against (view_people_audit.php's filters and display) is
-  // documented and labeled as UTC.
+  // documented and labeled as UTC. Unconditional, not gated on whether
+  // this instance's migration boundary has been recorded yet (round 14's
+  // own attempt at that, commit 897e645, was reverted minutes later: a
+  // newinst-created instance never gets a boundary row at all, so gating
+  // on one would have left every row a fresh instance ever writes in
+  // local time, forever).
+  //
+  // created_at_utc = 1 is dbutils' own per-row signal (utility.php's
+  // ensure_people_audit_utc_flag_column()/migrate_people_audit_created_at_
+  // to_utc()) that this row is already correct and must never be shifted
+  // by the local-time-to-UTC migration -- set here, at the moment of
+  // writing, rather than inferred later from timing or an auditID
+  // snapshot, which is exactly what let a row written in the gap between
+  // this code going live and uslims_upgrade.php actually completing get
+  // wrongly reconverted (round 15, dbutils#52 blocking). The column is
+  // ensured to exist first: this file cannot require dbutils' utility.php
+  // under php-fpm (same reason the marker-table CREATE below is
+  // duplicated locally rather than shared), and a host can reach this
+  // code before uslims_upgrade.php has ever run on it.
+  mysqli_query( $link, "ALTER TABLE people_audit ADD COLUMN IF NOT EXISTS created_at_utc TINYINT(1) NOT NULL DEFAULT 0" );
+
   $sql = "INSERT INTO people_audit
-            ( personID,  user_email,  user_name,  changed_by_personID,  changed_by_email,  changed_by_name,  action,  old_values,  new_values,  notes,  created_at )
+            ( personID,  user_email,  user_name,  changed_by_personID,  changed_by_email,  changed_by_name,  action,  old_values,  new_values,  notes,  created_at,      created_at_utc )
           VALUES
-            ( ?,         ?,           ?,          ?,                    ?,                 ?,                ?,       ?,           ?,           ?,      UTC_TIMESTAMP() )";
+            ( ?,         ?,           ?,          ?,                    ?,                 ?,                ?,       ?,           ?,           ?,      UTC_TIMESTAMP(), 1 )";
 
   $stmt = $link->prepare( $sql );
   if ( !$stmt )

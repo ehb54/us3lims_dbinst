@@ -48,6 +48,7 @@ $submit_dir         = '/srv/www/htdocs/uslims3/uslims3_data/'; # Full path
 $class_dir          = '/srv/www/htdocs/common/class/';       # Production class path
 //$class_dir          = '/srv/www/htdocs/common/class_devel/'; # Development class path
 //$class_dir          = '/srv/www/htdocs/common/class_local/'; # Local class path
+$common_dir         = '/srv/www/htdocs/common/';  # shared header/footer/topmenu partials, not reached via symlink
 $disclaimer_file    = ''; # the name of a text file with disclaimer info
 
 // Dates

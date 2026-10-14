@@ -56,6 +56,7 @@ function us3_dbinst_config_base_types()
     'disclaimer_file' => 'string',
     'timezone'        => 'string',
     'dbinst_root'     => 'string',
+    'common_dir'      => 'string',
     'enable_GMP'      => 'boolean',
     'enable_PAM'      => 'boolean',
     'trust_proxy_https_header' => 'boolean'
@@ -102,7 +103,10 @@ function us3_dbinst_config_overlay_contract( $instance, $values )
 function us3_dbinst_config_overlay_source( $contract )
 {
   return "<?php\n"
-       . "/* Generated configuration; do not edit by hand. */\n"
+       . "/* Generated configuration; do not edit by hand (that means replacing this\n"
+       . " * file wholesale -- adding or changing one of the three allowlisted keys\n"
+       . " * in 'values' below is a normal, supported edit; see CONFIGURATION.md,\n"
+       . " * \"Turning PAM or GMP on for one instance\"). */\n"
        . 'return ' . var_export( $contract, true ) . ";\n";
 }
 
@@ -256,6 +260,25 @@ function us3_dbinst_config_path_with_slash( $path )
   return rtrim( $path, '/' ) . '/';
 }
 
+// Keys the v1 contract added to us3_dbinst_config_base_types() after v1
+// first shipped. A base file written before a given key existed doesn't
+// have it on disk; defaulting it in us3_dbinst_config_load_base() keeps
+// that pre-existing base working once the code starts requiring the key,
+// instead of a hard "missing key" failure -- 500 on every page until an
+// admin notices and hand-edits the base file. (Observed: this is exactly
+// what happened to every v1 base made before round-11 added
+// trust_proxy_https_header, and would have recurred for common_dir too
+// without this.) A key here must have a value that is always safe --
+// i.e. matches what an install made before the key existed was already
+// relying on implicitly.
+function us3_dbinst_config_base_key_defaults()
+{
+  return array(
+    'trust_proxy_https_header' => false,
+    'common_dir'               => '/srv/www/htdocs/common/',
+  );
+}
+
 function us3_dbinst_config_load_base( $root )
 {
   $root = rtrim( $root, '/' );
@@ -263,6 +286,9 @@ function us3_dbinst_config_load_base( $root )
     $root . '/' . us3_dbinst_config_base_filename(), 'base' );
   if ( isset( $base[ 'instance' ] ) )
     us3_dbinst_config_fail( 'base file must not declare an instance' );
+
+  $base[ 'values' ] = array_merge(
+    us3_dbinst_config_base_key_defaults(), $base[ 'values' ] );
 
   us3_dbinst_config_validate_values(
     $base[ 'values' ], us3_dbinst_config_base_types(), array(), 'base' );
@@ -343,6 +369,16 @@ function us3_dbinst_config_load( $instance, $root = null,
     $values[ 'submit_dir' ] );
   $values[ 'class_dir' ] = us3_dbinst_config_path_with_slash(
     $values[ 'class_dir' ] );
+  ## Missing here (round-13 should fix): submit_dir/class_dir/dbinst_root
+  ## were all normalized to end in '/', but common_dir never was, even
+  ## though every page concatenates it directly ($common_dir . 'footer.php').
+  ## migrate_instance_config.php normalizes its own comparison copy of
+  ## common_dir before comparing (us3_dbinst_config_path_with_slash(),
+  ## this same function), so a base missing the trailing slash still
+  ## reported EQUIVALENT there -- that check was only ever validating
+  ## against itself, not against what this loader actually hands back.
+  $values[ 'common_dir' ] = us3_dbinst_config_path_with_slash(
+    $values[ 'common_dir' ] );
   $values[ 'current_year' ] = date( 'Y' );
   $values[ 'is_cli' ] = php_sapi_name() == 'cli';
 

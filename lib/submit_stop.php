@@ -18,5 +18,5 @@ else
   <p><a href="queue_setup_1.php">Submit another request</a></p>
 </div>
 HTML;
-  include 'footer.php';
+  include $common_dir . 'footer.php';
 }

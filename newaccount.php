@@ -55,7 +55,7 @@ else                  // Just display the captcha
 
 <?php
 
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 function enter_record( $message = '' )

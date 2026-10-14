@@ -574,8 +574,45 @@ function require_authorized_cluster( $shortname )
               . ( $_SESSION[ 'email' ] ?? 'unknown' )
               . " posted unauthorized cluster '" . (string) $shortname . "'" );
 
-   echo "<p class='red'>That cluster is not available to this account.</p>\n";
-   include 'footer.php';
+   ## Round 15 should-fix, dbinst#57 (see ehb54/us3lims_gridctl#33): this
+   ## exit() is one of the "a page this script include()s can exit() with
+   ## its own specific, already-known reason" paths gridctl's own
+   ## submitone_shutdown_handler() is written to read -- but nothing here
+   ## ever set it, so a refusal during an autoflow submission recorded
+   ## whatever incidental PHP warning happened to fire instead (observed:
+   ## "Undefined index: authenticatePAM" on a PAM+GMP site), never the
+   ## actual reason. Harmless to set unconditionally even when this
+   ## function is reached from a direct, interactive web submission
+   ## instead (gridctl's shutdown handler is not registered there, so
+   ## nothing ever reads this global in that path).
+   $GLOBALS[ 'gridctl_submission_failure_reason' ] =
+       "cluster '" . (string) $shortname . "' is not authorized for this account";
+
+   ## Round-13 nit (dbinst#57): a bare one-line refusal, with no heading,
+   ## explanation of why, or way back, left a user staring at an otherwise
+   ## unstyled page. Names the cluster and points back to queue setup,
+   ## where a different (authorized) cluster can be chosen instead.
+   ##
+   ## Round 15 nit, dbinst#57: still a bare fragment (567 bytes observed)
+   ## even after that fix, because only the footer was ever included --
+   ## every other "stop" page in this codebase (lib/submit_stop.php,
+   ## DMGA_2.php, 2DSA_2.php, ...) includes the LOCAL 'header.php' first,
+   ## giving the page its <html>/<head>, navigation and CSS; this one
+   ## never did, so the heading/explanation above rendered with nothing
+   ## around it.
+   include 'header.php';
+   echo "<div id='content'>\n"
+      . "<h3>Cluster not available</h3>\n"
+      . "<p class='red'>The cluster '" . htmlspecialchars( (string) $shortname, ENT_QUOTES )
+      . "' is not available to this account.</p>\n"
+      . "<p>Go back and choose a different cluster, or contact your site administrator"
+      . " if this one should be authorized for you.</p>\n"
+      . "</div>\n";
+   // $common_dir is set in config.php's global scope; a function doesn't see
+   // it without this -- round-12 blocker, dbinst#57: footer silently didn't
+   // load here even with $common_dir configured correctly.
+   global $common_dir;
+   include $common_dir . 'footer.php';
    exit();
 }
 

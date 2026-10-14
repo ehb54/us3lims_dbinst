@@ -17,7 +17,7 @@ if ( !isset( $enable_PAM ) ) {
 if ( $enable_PAM
      && $_SESSION['authenticatePAM'] == true ) {
   include 'header.php';
-  include 'footer.php';
+  include $common_dir . 'footer.php';
   exit();
 }
 
@@ -61,7 +61,7 @@ else
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 // Function to update the current record

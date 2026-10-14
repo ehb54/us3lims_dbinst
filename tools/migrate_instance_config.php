@@ -165,6 +165,8 @@ $expected[ 'submit_dir' ] = us3_dbinst_config_path_with_slash(
   $expected[ 'submit_dir' ] );
 $expected[ 'class_dir' ] = us3_dbinst_config_path_with_slash(
   $expected[ 'class_dir' ] );
+$expected[ 'common_dir' ] = us3_dbinst_config_path_with_slash(
+  $expected[ 'common_dir' ] );
 $expected[ 'current_year' ] = date( 'Y' );
 $expected[ 'is_cli' ] = php_sapi_name() == 'cli';
 
@@ -187,6 +189,31 @@ foreach ( $expected as $key => $value )
   ## the base expects and a key the legacy config never mentioned are
   ## different problems with different fixes, and "DIFFERENT" alone gave
   ## no hint which one this was.
+  ##
+  ## A key us3_dbinst_config_base_key_defaults() knows about is missing for
+  ## the same reason a pre-round-11/12 BASE file was: it predates the
+  ## contract adding the key at all, so a legacy (pre-v1) config.php could
+  ## never have set it either. The loader already defaults it there; this
+  ## tool used to still block on it as a plain MISSING difference, with no
+  ## way to accept it short of hand-editing the legacy file to add a line
+  ## it never needed before (round-13 should-fix, dbinst#57) -- --drop is
+  ## for the opposite direction (an unexpected OLD key), not this one.
+  ## Round 15 nit, dbinst#57: this used to print "MISSING (base default
+  ## used)" for ANY key the loader has a default for, whatever the
+  ## base/overlay actually resolved it to -- a site that explicitly
+  ## overrode the key in its own base (not the stock default at all) got
+  ## told it was using the default anyway. Checked against the value this
+  ## key actually resolved to ($value, $expected's own entry), not merely
+  ## whether a default exists for the key.
+  $base_defaults = us3_dbinst_config_base_key_defaults();
+  if ( !$equal && !array_key_exists( $key, $legacy ) && array_key_exists( $key, $base_defaults ) )
+  {
+    $status = $base_defaults[ $key ] === $value
+            ? 'MISSING (base default used)'
+            : 'MISSING (base/overlay value used)';
+    echo sprintf( "%-22s %s\n", $key, $status );
+    continue;
+  }
   $status = $equal ? 'equal' : ( array_key_exists( $key, $legacy ) ? 'DIFFERENT' : 'MISSING' );
   echo sprintf( "%-22s %s\n", $key, $status );
   if ( !$equal )
@@ -324,6 +351,18 @@ if ( $activate )
    * steps are) passed even when the overlay this same run just wrote was
    * unreadable by us3 -- the exact case the ownership fix above addresses,
    * confirmed to only surface once the probe asks the right account.
+   *
+   * -s /bin/sh, not left to runuser -l's own default: -l simulates a real
+   * login, which uses us3's own /etc/passwd shell field -- a hardened host
+   * that sets that to /sbin/nologin (a normal choice for a service account
+   * that should never get an interactive login) made runuser itself refuse
+   * outright ("This account is currently not available"), before the probe
+   * ever ran at all. Confirmed directly: identical setup, us3's shell
+   * flipped to /sbin/nologin, runuser -l us3 -c fails with that message
+   * and rc 1; adding -s /bin/sh here works regardless of what us3's own
+   * shell field says, since nothing this probe runs needs a real login
+   * shell's environment setup in the first place (every path/argument
+   * below is already absolute).
    */
   $probe = 'if ( $argv[1] !== "" ) define( "US3_DBINST_CREDENTIALS_FILE", $argv[1] );'
          . ' include $argv[2];'
@@ -336,7 +375,7 @@ if ( $activate )
            . ' ' . escapeshellarg( $candidate_path )
            . ' ' . escapeshellarg( $expected[ 'dbname' ] );
   $command = ( function_exists( 'posix_geteuid' ) && posix_geteuid() === 0 )
-           ? 'runuser -l us3 -c ' . escapeshellarg( $probe_inner ) . ' 2>&1'
+           ? 'runuser -l us3 -s /bin/sh -c ' . escapeshellarg( $probe_inner ) . ' 2>&1'
            : $probe_inner . ' 2>&1';
   $probe_out = array();
   $probe_rc = 0;
