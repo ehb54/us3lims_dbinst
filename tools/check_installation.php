@@ -174,6 +174,24 @@ function check_writable_mode( $path, $label )
   return check_pass( "$label permissions", $printable );
 }
 
+## Which of the base's own 'org_name'/'site_author' fields still carry the
+## shipped template's literal 'CHANGE-ME' placeholder (config-base.v1.php.
+## template) -- pure (no I/O), so a test can drive it directly against a
+## constructed $base_values array. Returns [ key => null ] for a field
+## that was actually configured, [ key => placeholder value ] for one that
+## was not -- the caller decides PASS/FAIL per key from that, same as every
+## other check in this file.
+function check_base_placeholder_fields( array $base_values )
+{
+  $result = array();
+  foreach ( array( 'org_name', 'site_author' ) as $key )
+  {
+    $value = (string) ( $base_values[ $key ] ?? '' );
+    $result[ $key ] = ( strpos( $value, 'CHANGE-ME' ) === 0 ) ? $value : null;
+  }
+  return $result;
+}
+
 /* ---------------------------------------------------------------- options */
 
 $options = getopt( '', array(
@@ -257,6 +275,19 @@ else
       check_pass( 'base validates against the v'
                   . us3_dbinst_config_contract_version() . ' contract',
                   count( $base_values ) . ' values' );
+
+      ## ROUND-14 SHOULD-FIX (dbinst#57). The shipped base template's own
+      ## placeholder values ('CHANGE-ME: your organization's name', etc.)
+      ## are valid strings as far as the v1 contract's own type-checking
+      ## is concerned, so an unedited base passes every check above this
+      ## one and renders every page with the literal placeholder text --
+      ## nothing here ever flagged that until now.
+      foreach ( check_base_placeholder_fields( $base_values ) as $key => $value )
+      {
+        $value === null
+          ? check_pass( "base $key is configured", (string) $base_values[ $key ] )
+          : check_fail( "base $key is configured", "still the shipped placeholder: $value" );
+      }
 
       foreach ( array( 'submit_dir', 'class_dir' ) as $key )
       {
