@@ -486,6 +486,20 @@ function require_authorized_cluster( $shortname )
               . ( $_SESSION[ 'email' ] ?? 'unknown' )
               . " posted unauthorized cluster '" . (string) $shortname . "'" );
 
+   ## Round 15 should-fix, dbinst#57 (see ehb54/us3lims_gridctl#33): this
+   ## exit() is one of the "a page this script include()s can exit() with
+   ## its own specific, already-known reason" paths gridctl's own
+   ## submitone_shutdown_handler() is written to read -- but nothing here
+   ## ever set it, so a refusal during an autoflow submission recorded
+   ## whatever incidental PHP warning happened to fire instead (observed:
+   ## "Undefined index: authenticatePAM" on a PAM+GMP site), never the
+   ## actual reason. Harmless to set unconditionally even when this
+   ## function is reached from a direct, interactive web submission
+   ## instead (gridctl's shutdown handler is not registered there, so
+   ## nothing ever reads this global in that path).
+   $GLOBALS[ 'gridctl_submission_failure_reason' ] =
+       "cluster '" . (string) $shortname . "' is not authorized for this account";
+
    ## Round-13 nit (dbinst#57): a bare one-line refusal, with no heading,
    ## explanation of why, or way back, left a user staring at an otherwise
    ## unstyled page. Names the cluster and points back to queue setup,
