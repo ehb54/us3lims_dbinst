@@ -181,7 +181,7 @@ function emailsyntax_is_valid($email)
                     '(([-|_]?)\.([-|_]?)[0-9a-z]*([-|_]?[0-9a-z]+)+)*([-|_]?)$/i';
 
   $pattern_domain = '/^([0-9a-z]+([-]?[0-9a-z]+)*)' .
-                    '(([-]?)\.([-]?)[0-9a-z]*([-]?[0-9a-z]+)+)*\.[a-z]{2,4}$/i';
+                    '(([-]?)\.([-]?)[0-9a-z]*([-]?[0-9a-z]+)+)*\.[a-z]{2,63}$/i';
 
   $match_local  = preg_match($pattern_local, $local);
   $match_domain = preg_match($pattern_domain, $domain);
