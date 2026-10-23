@@ -6,7 +6,9 @@
  *
  */
 
-session_start();
+// Use the instance session, the same one register.php writes its error
+// message and the posted fields to.
+include_once 'checkinstance.php';
 
 include_once 'config.php';
 include_once 'db.php';
@@ -58,20 +60,21 @@ function enter_record( $message = '' )
 {
   if ( isset($message) && isset($_SESSION['POST']) )
   {
-    // Get posted information from register.php
-    $lname        = $_SESSION['POST']['lname'];
-    $fname        = $_SESSION['POST']['fname'];
-    $organization = $_SESSION['POST']['organization'];
-    $address      = $_SESSION['POST']['address'];
-    $city         = $_SESSION['POST']['city'];
-    $state        = $_SESSION['POST']['state'];
-    $zip          = $_SESSION['POST']['zip'];
-    $country      = $_SESSION['POST']['country'];
-    $phone        = $_SESSION['POST']['phone'];
+    // Get posted information from register.php. It is the raw POST, so
+    // escape it for the value='' attributes below.
+    $lname        = htmlentities( $_SESSION['POST']['lname']        ?? '', ENT_QUOTES );
+    $fname        = htmlentities( $_SESSION['POST']['fname']        ?? '', ENT_QUOTES );
+    $organization = htmlentities( $_SESSION['POST']['organization'] ?? '', ENT_QUOTES );
+    $address      = htmlentities( $_SESSION['POST']['address']      ?? '', ENT_QUOTES );
+    $city         = htmlentities( $_SESSION['POST']['city']         ?? '', ENT_QUOTES );
+    $state        = htmlentities( $_SESSION['POST']['state']        ?? '', ENT_QUOTES );
+    $zip          = htmlentities( $_SESSION['POST']['zip']          ?? '', ENT_QUOTES );
+    $country      = htmlentities( $_SESSION['POST']['country']      ?? '', ENT_QUOTES );
+    $phone        = htmlentities( $_SESSION['POST']['phone']        ?? '', ENT_QUOTES );
 
     // email might have been unset
     if ( isset( $_SESSION['POST']['email'] ) )
-      $email = $_SESSION['POST']['email'];
+      $email = htmlentities( $_SESSION['POST']['email'], ENT_QUOTES );
 
     unset( $_SESSION['POST'] );
 
