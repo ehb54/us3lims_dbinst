@@ -27,9 +27,17 @@ include 'header.php';
 // Are we being directed to enter the data?
 if ( isset( $_POST['enter_request'] ) )
 {
-  // Check if they match
-  if ( $_POST['captcha'] == $_SESSION['captcha'] )
+  // Check if they match. Each captcha gets one attempt, and a missing or
+  // empty captcha never matches.
+  $captcha = $_SESSION['captcha'] ?? '';
+  unset( $_SESSION['captcha'] );
+
+  if ( $captcha !== '' && hash_equals( $captcha, (string) ( $_POST['captcha'] ?? '' ) ) )
+  {
+    // register.php accepts the form only after this
+    $_SESSION['captcha_solved'] = true;
     enter_record();
+  }
 
   else
     do_captcha( "Entered text does not match." );
@@ -41,7 +49,12 @@ else if ( isset( $_SESSION['message'] ) )
   $message = $_SESSION['message'];
   unset( $_SESSION['message'] );
 
-  enter_record( $message );
+  // Show the form again only if the captcha was solved in this session
+  if ( empty( $_SESSION['captcha_solved'] ) )
+    do_captcha( $message );
+
+  else
+    enter_record( $message );
 }
 
 else                  // Just display the captcha

@@ -12,6 +12,16 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 
+// Accept the form only after the captcha in newaccount.php was solved in
+// this session
+if ( empty( $_SESSION['captcha_solved'] ) )
+{
+  unset( $_SESSION['POST'] );
+  $_SESSION['message'] = 'Please enter the text shown in the image first.';
+  header( "Location: newaccount.php" );
+  exit();
+}
+
 // Get the information the new user posted
 include 'get_user_info.php';
 
@@ -47,8 +57,9 @@ if ( $count > 0 )
     exit(); 
 }
 
-// Not going back
+// Not going back. One solved captcha allows one new account.
 unset( $_SESSION['POST'] );
+unset( $_SESSION['captcha_solved'] );
 
 // Now we can start drawing the page
 $page_title = "New Account Registration";
