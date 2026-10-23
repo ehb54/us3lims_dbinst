@@ -6,7 +6,9 @@
  *
  */
 
-session_start();
+// Use the instance session, the same one register.php writes its error
+// message and the posted fields to.
+include_once 'checkinstance.php';
 
 include_once 'config.php';
 include_once 'db.php';
@@ -25,9 +27,17 @@ include 'header.php';
 // Are we being directed to enter the data?
 if ( isset( $_POST['enter_request'] ) )
 {
-  // Check if they match
-  if ( $_POST['captcha'] == $_SESSION['captcha'] )
+  // Check if they match. Each captcha gets one attempt, and a missing or
+  // empty captcha never matches.
+  $captcha = $_SESSION['captcha'] ?? '';
+  unset( $_SESSION['captcha'] );
+
+  if ( $captcha !== '' && hash_equals( $captcha, (string) ( $_POST['captcha'] ?? '' ) ) )
+  {
+    // register.php accepts the form only after this
+    $_SESSION['captcha_solved'] = true;
     enter_record();
+  }
 
   else
     do_captcha( "Entered text does not match." );
@@ -39,7 +49,12 @@ else if ( isset( $_SESSION['message'] ) )
   $message = $_SESSION['message'];
   unset( $_SESSION['message'] );
 
-  enter_record( $message );
+  // Show the form again only if the captcha was solved in this session
+  if ( empty( $_SESSION['captcha_solved'] ) )
+    do_captcha( $message );
+
+  else
+    enter_record( $message );
 }
 
 else                  // Just display the captcha
@@ -58,20 +73,21 @@ function enter_record( $message = '' )
 {
   if ( isset($message) && isset($_SESSION['POST']) )
   {
-    // Get posted information from register.php
-    $lname        = $_SESSION['POST']['lname'];
-    $fname        = $_SESSION['POST']['fname'];
-    $organization = $_SESSION['POST']['organization'];
-    $address      = $_SESSION['POST']['address'];
-    $city         = $_SESSION['POST']['city'];
-    $state        = $_SESSION['POST']['state'];
-    $zip          = $_SESSION['POST']['zip'];
-    $country      = $_SESSION['POST']['country'];
-    $phone        = $_SESSION['POST']['phone'];
+    // Get posted information from register.php. It is the raw POST, so
+    // escape it for the value='' attributes below.
+    $lname        = htmlentities( $_SESSION['POST']['lname']        ?? '', ENT_QUOTES );
+    $fname        = htmlentities( $_SESSION['POST']['fname']        ?? '', ENT_QUOTES );
+    $organization = htmlentities( $_SESSION['POST']['organization'] ?? '', ENT_QUOTES );
+    $address      = htmlentities( $_SESSION['POST']['address']      ?? '', ENT_QUOTES );
+    $city         = htmlentities( $_SESSION['POST']['city']         ?? '', ENT_QUOTES );
+    $state        = htmlentities( $_SESSION['POST']['state']        ?? '', ENT_QUOTES );
+    $zip          = htmlentities( $_SESSION['POST']['zip']          ?? '', ENT_QUOTES );
+    $country      = htmlentities( $_SESSION['POST']['country']      ?? '', ENT_QUOTES );
+    $phone        = htmlentities( $_SESSION['POST']['phone']        ?? '', ENT_QUOTES );
 
     // email might have been unset
     if ( isset( $_SESSION['POST']['email'] ) )
-      $email = $_SESSION['POST']['email'];
+      $email = htmlentities( $_SESSION['POST']['email'], ENT_QUOTES );
 
     unset( $_SESSION['POST'] );
 

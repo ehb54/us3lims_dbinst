@@ -5,7 +5,12 @@
  * Creates a captcha text string onto a jpeg background and sends it back
  *
  */
-session_start();
+// Use the instance session, where newaccount.php stores the captcha text.
+// checkinstance.php includes config.php; drop anything it prints (such as
+// blank lines after its closing tag) so nothing ends up ahead of the image.
+ob_start();
+include_once 'checkinstance.php';
+ob_end_clean();
 
 if ( ! isset( $_SESSION['captcha'] ) )
 {
