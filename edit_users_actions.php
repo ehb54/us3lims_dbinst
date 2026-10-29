@@ -123,6 +123,35 @@ function audit_diff( $old_row, $new_row )
   return [ 'old' => $old_diff, 'new' => $new_diff ];
 }
 
+// Makes sure people_audit has its created_at_utc column, adding it on a host the upgrade has not
+// reached yet. Called before a save's transaction: ALTER TABLE commits implicitly, so inside one
+// it would commit the user change before the audit row is written. False when the column is
+// missing and this account cannot add it; the save is then refused rather than written unflagged.
+function ensure_audit_flag_column( $link )
+{
+  try
+  {
+    $res = mysqli_query( $link, "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()"
+                              . " AND TABLE_NAME = 'people_audit' AND COLUMN_NAME = 'created_at_utc'" );
+    if ( $res && (int) mysqli_fetch_row( $res )[ 0 ] > 0 )
+      return true;
+    return (bool) mysqli_query( $link, "ALTER TABLE people_audit ADD COLUMN IF NOT EXISTS created_at_utc TINYINT(1) NOT NULL DEFAULT 0" );
+  }
+  catch ( mysqli_sql_exception $e )
+  {
+    error_log( 'people_audit created_at_utc column: ' . $e->getMessage() );
+    return false;
+  }
+}
+
+// Refuses the save when ensure_audit_flag_column() could not provide the column.
+function _eu_refuse_without_audit_column()
+{
+  $_SESSION['message'] = 'The change was not saved: the people_audit table lacks its created_at_utc column and'
+                       . ' this account cannot add it. Ask the administrator to run uslims_upgrade.php --apply.';
+  _eu_redirect_and_exit( $_SERVER['PHP_SELF'] );
+}
+
 // Inserts one row into people_audit.
 //
 // Parameters:
@@ -165,12 +194,8 @@ function write_audit_row( $link, $personID, $user_email, $user_name, $action, $o
   // writing, rather than inferred later from timing or an auditID
   // snapshot, which is exactly what let a row written in the gap between
   // this code going live and uslims_upgrade.php actually completing get
-  // wrongly reconverted (round 15, dbutils#52 blocking). The column is
-  // ensured to exist first: this file cannot require dbutils' utility.php
-  // under php-fpm (same reason the marker-table CREATE below is
-  // duplicated locally rather than shared), and a host can reach this
-  // code before uslims_upgrade.php has ever run on it.
-  mysqli_query( $link, "ALTER TABLE people_audit ADD COLUMN IF NOT EXISTS created_at_utc TINYINT(1) NOT NULL DEFAULT 0" );
+  // wrongly reconverted. The caller ensures the column before its
+  // transaction (ensure_audit_flag_column()).
 
   $sql = "INSERT INTO people_audit
             ( personID,  user_email,  user_name,  changed_by_personID,  changed_by_email,  changed_by_name,  action,  old_values,  new_values,  notes,  created_at,      created_at_utc )
@@ -361,6 +386,12 @@ function do_delete($link)
 
   $admins = implode( "','", $admin_list );
 
+  if ( !ensure_audit_flag_column( $link ) )
+  {
+    _eu_refuse_without_audit_column();
+    return;
+  }
+
   $link->begin_transaction();
   try
   {
@@ -504,6 +535,12 @@ function do_update($link)
         $instrumentIDs[] = $instrumentID;
       }
     }
+  }
+
+  if ( empty($message) && !ensure_audit_flag_column( $link ) )
+  {
+    _eu_refuse_without_audit_column();
+    return;
   }
 
   if ( empty($message) )
@@ -734,6 +771,12 @@ function do_create($link)
     }
     $stmt = $link->prepare( $query );
     $stmt->bind_param( $args_type, ...$args );
+
+    if ( !ensure_audit_flag_column( $link ) )
+    {
+      _eu_refuse_without_audit_column();
+      return;
+    }
 
     $link->begin_transaction();
     try
