@@ -17,8 +17,7 @@ function require_cluster_expand_localhost_authorized( $candidates, $global_clust
 {
   foreach ( $candidates as $candidate_name )
   {
-    if ( isset( $global_cluster_details[ $candidate_name ][ 'localhost' ] )
-         && $global_cluster_details[ $candidate_name ][ 'localhost' ]
+    if ( remote_exec::localhost_flag( $global_cluster_details[ $candidate_name ][ 'localhost' ] ?? false )
          && ! in_array( $candidate_name, $authorized, true ) )
       $authorized[] = $candidate_name;
   }
