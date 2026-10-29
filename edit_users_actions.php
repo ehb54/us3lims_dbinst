@@ -181,11 +181,9 @@ function write_audit_row( $link, $personID, $user_email, $user_name, $action, $o
   // records audit events under local time while every other timestamp this
   // table is read against (view_people_audit.php's filters and display) is
   // documented and labeled as UTC. Unconditional, not gated on whether
-  // this instance's migration boundary has been recorded yet (round 14's
-  // own attempt at that, commit 897e645, was reverted minutes later: a
+  // this instance's migration boundary has been recorded yet: a
   // newinst-created instance never gets a boundary row at all, so gating
-  // on one would have left every row a fresh instance ever writes in
-  // local time, forever).
+  // on one would leave every row a fresh instance writes in local time.
   //
   // created_at_utc = 1 is dbutils' own per-row signal (utility.php's
   // ensure_people_audit_utc_flag_column()/migrate_people_audit_created_at_

@@ -191,21 +191,13 @@ foreach ( $expected as $key => $value )
   ## different problems with different fixes, and "DIFFERENT" alone gave
   ## no hint which one this was.
   ##
-  ## A key us3_dbinst_config_base_key_defaults() knows about is missing for
-  ## the same reason a pre-round-11/12 BASE file was: it predates the
-  ## contract adding the key at all, so a legacy (pre-v1) config.php could
-  ## never have set it either. The loader already defaults it there; this
-  ## tool used to still block on it as a plain MISSING difference, with no
-  ## way to accept it short of hand-editing the legacy file to add a line
-  ## it never needed before (round-13 should-fix, dbinst#57) -- --drop is
-  ## for the opposite direction (an unexpected OLD key), not this one.
-  ## Round 15 nit, dbinst#57: this used to print "MISSING (base default
-  ## used)" for ANY key the loader has a default for, whatever the
-  ## base/overlay actually resolved it to -- a site that explicitly
-  ## overrode the key in its own base (not the stock default at all) got
-  ## told it was using the default anyway. Checked against the value this
-  ## key actually resolved to ($value, $expected's own entry), not merely
-  ## whether a default exists for the key.
+  ## A key us3_dbinst_config_base_key_defaults() knows about is missing
+  ## because it predates the contract adding the key, so a legacy (pre-v1)
+  ## config.php could never have set it. The loader defaults it, so it is
+  ## reported here rather than blocking (--drop is for the opposite
+  ## direction, an unexpected OLD key). The status is checked against the
+  ## value the key actually resolved to ($value), since a site may override
+  ## the stock default in its own base.
   $base_defaults = us3_dbinst_config_base_key_defaults();
   if ( !$equal && !array_key_exists( $key, $legacy ) && array_key_exists( $key, $base_defaults ) )
   {

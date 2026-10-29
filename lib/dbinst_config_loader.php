@@ -266,8 +266,8 @@ function us3_dbinst_config_path_with_slash( $path )
 // that pre-existing base working once the code starts requiring the key,
 // instead of a hard "missing key" failure -- 500 on every page until an
 // admin notices and hand-edits the base file. (Observed: this is exactly
-// what happened to every v1 base made before round-11 added
-// trust_proxy_https_header, and would have recurred for common_dir too
+// what happened to every v1 base made before trust_proxy_https_header
+// was added, and would have recurred for common_dir too
 // without this.) A key here must have a value that is always safe --
 // i.e. matches what an install made before the key existed was already
 // relying on implicitly.
@@ -369,14 +369,8 @@ function us3_dbinst_config_load( $instance, $root = null,
     $values[ 'submit_dir' ] );
   $values[ 'class_dir' ] = us3_dbinst_config_path_with_slash(
     $values[ 'class_dir' ] );
-  ## Missing here (round-13 should fix): submit_dir/class_dir/dbinst_root
-  ## were all normalized to end in '/', but common_dir never was, even
-  ## though every page concatenates it directly ($common_dir . 'footer.php').
-  ## migrate_instance_config.php normalizes its own comparison copy of
-  ## common_dir before comparing (us3_dbinst_config_path_with_slash(),
-  ## this same function), so a base missing the trailing slash still
-  ## reported EQUIVALENT there -- that check was only ever validating
-  ## against itself, not against what this loader actually hands back.
+  ## Normalized like submit_dir/class_dir/dbinst_root, since every page
+  ## concatenates it directly ($common_dir . 'footer.php').
   $values[ 'common_dir' ] = us3_dbinst_config_path_with_slash(
     $values[ 'common_dir' ] );
   $values[ 'current_year' ] = date( 'Y' );

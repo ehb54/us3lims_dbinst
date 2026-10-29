@@ -63,7 +63,7 @@ if (! emailsyntax_is_valid($email) )
   // $email already went through htmlentities() at the top of this file,
   // same as every other field here -- wrapping it in htmlspecialchars()
   // too double-escaped it (e.g. a literal '&' became '&amp;amp;'), not
-  // left it unescaped; round-12 nit, dbinst#57. Echoed as-is, same as the
+  // left it unescaped. Echoed as-is, same as the
   // other fields' validation messages above and below it.
   $message .= "--$email is not a valid email address<br />";
 
