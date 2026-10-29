@@ -153,6 +153,9 @@ if ( !isset( $class_dir ) ) {
 } else if ( !is_dir( $class_dir ) ) {
     $utility_config_error( "\$class_dir [$class_dir] is not a directory" );
 } else {
+    // remote_exec::localhost_flag() reads cluster_details' 'localhost' flag
+    require_once $class_dir . 'remote_exec.php';
+
     $utility_dbinst_config_candidates = array();
 
     if ( isset( $full_path ) ) {
@@ -567,8 +570,7 @@ function cluster_is_authorized( $shortname )
    ## above -- only the clusterAuth list requirement below is skipped for
    ## the host's own node.
    if ( $configured
-        && isset( $global_cluster_details[ $shortname ][ 'localhost' ] )
-        && $global_cluster_details[ $shortname ][ 'localhost' ] )
+        && remote_exec::localhost_flag( $global_cluster_details[ $shortname ][ 'localhost' ] ?? false ) )
      return true;
 
    if ( ! $configured )
