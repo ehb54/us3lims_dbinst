@@ -43,10 +43,21 @@ $analysis_menu = <<<HTML
 
 HTML;
 
+// Administrators also get the dispatch dashboard, with the count of open alert items.
+$dispatch_link = '';
+if ( $userlevel >= 4 )
+{
+  include_once __DIR__ . '/lib/dispatch_indicator.php';
+  $dispatch_open = dispatch_open_alert_count();
+  $dispatch_link = "  <a href='https://$org_site/dispatch_dashboard.php'>Dispatch Dashboard"
+                 . ( $dispatch_open > 0 ? " <span class='text-red'>($dispatch_open open)</span>" : '' ) . "</a>\n";
+}
+
 $monitor_menu = <<<HTML
   <h4>Status Monitor</h4>
   <a href='https://$org_site/queue_viewer.php'>Queue Status</a>
   <a href='https://$org_site/show_clusters.php'>Cluster Status</a>
+$dispatch_link
 HTML;
 
 $general_menu = <<<HTML

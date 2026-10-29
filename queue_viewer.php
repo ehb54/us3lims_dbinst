@@ -33,6 +33,17 @@ if ( isset( $_POST['delete'] ) )
   exit();
 }
 
+// A metascheduler request not yet handed to the monitor is cancelled in the
+// dispatch ledger, never with scancel.
+if ( isset( $_POST['dispatch_cancel'] ) )
+{
+  include_once 'lib/dispatch_queue.php';
+  if ( hash_equals( csrf_token(), (string) ( $_POST['csrf_token'] ?? '' ) ) )
+    dispatch_queue_cancel( $link, $dbname, (int) ( $_POST['dispatchRequestID'] ?? 0 ) );
+  header( "Location: {$_SERVER['PHP_SELF']}" );
+  exit();
+}
+
 // define( 'DEBUG', true );
 // Get sort order from session or default to submitTime
 $sort_order = $_SESSION['queue_viewer_sort_order'] ?? 'submitTime';
@@ -143,7 +154,11 @@ function delete_single_job( $gfacID, $cluster, array &$failed_clusters )
   $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
   if ( ! $gLink ) return;
 
-  $query = "SELECT cluster, metaschedulerClusterExecuting FROM analysis WHERE gfacID = ? AND cluster = ?";
+  // $cluster is the execution cluster: two jobs can share a number when a
+  // pool sends them to different clusters.
+  $request = gfac_analysis_has_request_id( $gLink ) ? 'HPCAnalysisRequestID' : 'NULL';
+  $query = "SELECT id, us3_db, $request AS requestID, cluster, metaschedulerClusterExecuting FROM analysis"
+         . " WHERE gfacID = ? AND COALESCE( NULLIF( metaschedulerClusterExecuting, '' ), cluster ) = ?";
   $stmt = mysqli_prepare( $gLink, $query );
   if ( ! $stmt )
   {
@@ -157,11 +172,6 @@ function delete_single_job( $gfacID, $cluster, array &$failed_clusters )
   mysqli_stmt_close( $stmt );
   if ( $row = mysqli_fetch_assoc( $result ) )
   {
-  $analysis_cluster = $row['cluster'];
-  if ( !empty( $row['metaschedulerClusterExecuting'] ) )
-  {
-  $cluster = $row['metaschedulerClusterExecuting'];
-  }
 
   if ( in_array( $cluster, $failed_clusters, true ) )
   {
@@ -182,14 +192,14 @@ function delete_single_job( $gfacID, $cluster, array &$failed_clusters )
   if ( cancel_outcome_is_settled( $cancel[ 'outcome' ] ) )
   {
     // Record a settled cancellation in both databases.
-    updateLimsStatus( $gfacID, $analysis_cluster, 'aborted',  $cancel[ 'message' ] );
-    updateGFACStatus( $gfacID, $analysis_cluster, 'CANCELED', $cancel[ 'message' ] );
+    updateLimsStatus( $gfacID, $row, 'aborted',  $cancel[ 'message' ] );
+    updateGFACStatus( $row[ 'id' ], 'CANCELED', $cancel[ 'message' ] );
   }
   else
   {
     // Preserve job status when cancellation is unconfirmed; update the message.
-    updateLimsStatus( $gfacID, $analysis_cluster, null, $cancel[ 'message' ] );
-    updateGFACStatus( $gfacID, $analysis_cluster, null, $cancel[ 'message' ] );
+    updateLimsStatus( $gfacID, $row, null, $cancel[ 'message' ] );
+    updateGFACStatus( $row[ 'id' ], null, $cancel[ 'message' ] );
   }
   }
   mysqli_close( $gLink );
@@ -259,35 +269,13 @@ function cancelLocalJob( $gfacID, $cluster )
 }
 
 // Function to update the status on an arbitrary lims database
-function updateLimsStatus( $gfacID, $cluster, $status, $message )
+// $job is the job's gfac.analysis row (us3_db, requestID).
+function updateLimsStatus( $gfacID, $job, $status, $message )
 {
-
-  //include 'config.php';
-  global $globaldbhost;
-  global $globaldbuser;
-  global $globaldbpasswd;
-  global $globaldbname;
   global $configs;
   global $dbhost;
 
-  // Connect to the global GFAC database
-  $gLink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
-  if ( ! $gLink )
-    return;
-
-  // Get database name
-  $query  = "SELECT us3_db FROM analysis " .
-            "WHERE gfacID = ? AND cluster = ?";
-  $stmt = mysqli_prepare( $gLink, $query );
-  $stmt->bind_param( 'ss', $gfacID, $cluster );
-  $stmt->execute();
-  $result = $stmt->get_result();
-  if ( ! $result ) return;
-  if ( mysqli_num_rows( $result ) == 0 ) return;
-  list( $db ) = mysqli_fetch_array( $result );
-  $stmt->close();
-  $result->close();
-  mysqli_close( $gLink );
+  $db = $job[ 'us3_db' ];
 
   // Using credentials that will work for all databases
   $upasswd = $configs[ 'us3php' ][ 'password' ];
@@ -310,6 +298,12 @@ function updateLimsStatus( $gfacID, $cluster, $status, $message )
     $args  = [ $status, $message, $gfacID ];
     $types = 'sss';
   }
+  if ( $job[ 'requestID' ] !== null )
+  {
+    $query .= "AND HPCAnalysisRequestID = ? ";
+    $args[] = (int) $job[ 'requestID' ];
+    $types .= 'i';
+  }
 
   $stmt = mysqli_prepare( $us3link, $query );
   $stmt->bind_param( $types, ...$args );
@@ -321,7 +315,7 @@ function updateLimsStatus( $gfacID, $cluster, $status, $message )
 }
 
 // Function to update the GFAC status, mostly because job is canceled
-function updateGFACStatus( $gfacID, $cluster, $status, $message )
+function updateGFACStatus( $analysisID, $status, $message )
 {
   global $globaldbhost;
   global $globaldbuser;
@@ -336,18 +330,18 @@ function updateGFACStatus( $gfacID, $cluster, $status, $message )
   // A null status updates queue_msg while preserving the analysis status enum.
   if ( $status === null )
   {
-    $query = "UPDATE analysis SET queue_msg = ? WHERE gfacID = ? AND cluster = ? ";
-    $args  = [ $message, $gfacID, $cluster ];
-    $types = 'sss';
+    $query = "UPDATE analysis SET queue_msg = ? WHERE id = ? ";
+    $args  = [ $message, $analysisID ];
+    $types = 'si';
   }
   else
   {
     $query = "UPDATE analysis " .
              "SET status = ?, " .
              "queue_msg = ? " .
-             "WHERE gfacID = ? AND cluster = ? ";
-    $args  = [ strtoupper( $status ), $message, $gfacID, $cluster ];
-    $types = 'ssss';
+             "WHERE id = ? ";
+    $args  = [ strtoupper( $status ), $message, $analysisID ];
+    $types = 'ssi';
   }
 
   $stmt = mysqli_prepare( $gLink, $query );
@@ -391,12 +385,13 @@ function get_gfacIDs_authorized()
 
     $submitterGUID = preg_replace( '/^.*_/', '', $_SESSION["user_id"] );
     $query =
-            "SELECT analysis.gfacID as gfacID, analysis.us3_db, analysis.cluster, analysis.status"
+            "SELECT analysis.gfacID as gfacID, analysis.us3_db, analysis.status,"
+            . " COALESCE( NULLIF( analysis.metaschedulerClusterExecuting, '' ), analysis.cluster ) AS cluster"
             . " FROM gfac.analysis";
 
     if ( $is_local_deploy  ||  $_SESSION['userlevel'] < 4 ) {
 
-        $query .= " INNER JOIN $dbname.HPCAnalysisResult ON $dbname.HPCAnalysisResult.gfacID = analysis.gfacID"
+        $query .= " INNER JOIN $dbname.HPCAnalysisResult ON " . gfac_result_match( $globaldb, "$dbname.HPCAnalysisResult" )
         . " INNER JOIN $dbname.HPCAnalysisRequest ON $dbname.HPCAnalysisResult.HPCAnalysisRequestID = $dbname.HPCAnalysisRequest.HPCAnalysisRequestID"
         . " WHERE analysis.us3_db = '$dbname'";
     }

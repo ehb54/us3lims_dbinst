@@ -78,6 +78,17 @@ if ( $submit_stopped ) {
 // Create the payload manager and restore the data
 $payload = new Payload_PCSA( $_SESSION );
 $payload->restore();
+
+// A pool submission is recorded for the dispatch queue in one transaction; a
+// repeated post of an already received submission shows its original receipt.
+include_once 'lib/dispatch_intake.php';
+$dispatch_prior = dispatch_intake_active() ? dispatch_intake_begin( $link, $dbname, $payload->get() ) : array();
+if ( $dispatch_prior )
+{
+  include 'lib/dispatch_receipt.php';
+  if ( $is_cli ) return;
+  exit();
+}
 elogrs( __FILE__ . " after payload_restore" );
 
 // Create the HPC analysis agent and file writer
@@ -144,6 +155,7 @@ if ( $separate_datasets > 0 )
       $stmt->execute()
             or die( "Query failed : $query<br />\n" . $stmt->error );
       $stmt->close();
+      dispatch_intake_note( $link, $dbname, $HPCAnalysisRequestID, $filenames[ $kr ], $files_ok, $missit_msg );
 
     }
 
@@ -184,9 +196,11 @@ else
     $stmt->execute()
           or die( "Query failed : $query<br />\n" . $stmt->error );
     $stmt->close();
+    dispatch_intake_note( $link, $dbname, $HPCAnalysisRequestID, $filenames[ 0 ], $files_ok, $missit_msg );
   }
 }
 
+$files_ok = dispatch_intake_close( $link, $dbname, $files_ok, $missit_msg );
 if ( $files_ok )
 {
   $output_msg = <<<HTML
@@ -196,6 +210,8 @@ if ( $files_ok )
   completed.
 
 HTML;
+  if ( dispatch_intake_received() )
+    $output_msg = dispatch_intake_receipt_html( $GLOBALS['dispatch_intake_rows'], $GLOBALS['dispatch_intake_pool'] );
 
   // EXEC COMMAND FOR TIGRE 
   if ( isset($_SESSION['cluster']) )
@@ -259,6 +275,7 @@ HTML;
 
 // Start displaying page
 $page_title = 'PCSA Analysis Submitted';
+$page_title = dispatch_intake_title( $page_title );
 include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";

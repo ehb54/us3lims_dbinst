@@ -70,6 +70,17 @@ $advanceLevel = $_SESSION['advancelevel'] ?? 0;
 $payload = new Payload_DMGA( $_SESSION );
 $payload->restore();
 
+// A pool submission is recorded for the dispatch queue in one transaction; a
+// repeated post of an already received submission shows its original receipt.
+include_once 'lib/dispatch_intake.php';
+$dispatch_prior = dispatch_intake_active() ? dispatch_intake_begin( $link, $dbname, $payload->get() ) : array();
+if ( $dispatch_prior )
+{
+  include 'lib/dispatch_receipt.php';
+  if ( $is_cli ) return;
+  exit();
+}
+
 // Create the HPC analysis agent and file writer
 $HPC       = new HPC_DMGA();
 $file      = new File_DMGA();
@@ -116,6 +127,7 @@ if ( $_SESSION[ 'separate_datasets' ] )
       $stmt->execute()
             or die("Query failed : $query<br />\n" . $stmt->error);
       $stmt->close();
+      dispatch_intake_note( $link, $dbname, $HPCAnalysisRequestID, $filenames[ $ii ], $files_ok, $missit_msg );
     }
   }
 }
@@ -157,9 +169,11 @@ else
     $stmt->execute()
           or die("Query failed : $query<br />\n" . $stmt->error);
     $stmt->close();
+    dispatch_intake_note( $link, $dbname, $HPCAnalysisRequestID, $filenames[ 0 ], $files_ok, $missit_msg );
   }
 }
 
+$files_ok = dispatch_intake_close( $link, $dbname, $files_ok, $missit_msg );
 if ( $files_ok )
 {
   $output_msg = <<<HTML
@@ -169,6 +183,8 @@ if ( $files_ok )
   completed.
 
 HTML;
+  if ( dispatch_intake_received() )
+    $output_msg = dispatch_intake_receipt_html( $GLOBALS['dispatch_intake_rows'], $GLOBALS['dispatch_intake_pool'] );
 
   // EXEC COMMAND FOR TIGRE 
   if ( isset( $_SESSION[ 'cluster' ] ) )
@@ -239,6 +255,7 @@ HTML;
 
 // Start displaying page
 $page_title = 'Discrete Model GA Analysis Submitted';
+$page_title = dispatch_intake_title( $page_title );
 include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";

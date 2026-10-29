@@ -210,6 +210,30 @@ function is_single_tenant_deployment()
     return isset( $single_tenant_deployment ) ? (bool) $single_tenant_deployment : true;
 }
 
+// Whether the gfac database on $gfac_link records each job's request
+// (added by the 4.3.0 upgrade; two clusters can reuse a job number).
+function gfac_analysis_has_request_id( $gfac_link )
+{
+    try {
+        $result = mysqli_query( $gfac_link, "SHOW COLUMNS FROM analysis LIKE 'HPCAnalysisRequestID'" );
+    } catch ( mysqli_sql_exception $e ) {
+        $result = false;
+    }
+
+    return $result && mysqli_num_rows( $result ) > 0;
+}
+
+// SQL condition matching gfac.analysis to the HPCAnalysisResult alias $result.
+function gfac_result_match( $gfac_link, $result )
+{
+    $match = "$result.gfacID = analysis.gfacID";
+    if ( gfac_analysis_has_request_id( $gfac_link ) )
+        $match .= " AND ( analysis.HPCAnalysisRequestID IS NULL"
+                . " OR analysis.HPCAnalysisRequestID = $result.HPCAnalysisRequestID )";
+
+    return $match;
+}
+
 if ( empty( $admin_list ) || !is_array( $admin_list ) ) {
     ## admin_list must be set in global_config.php or cluster_config.php
     error_log( "ERROR: lib/utility.php: \$admin_list is not set or empty; check global_config.php" );
@@ -564,15 +588,13 @@ function cluster_is_authorized( $shortname )
      }
    }
 
-   ## Still gated on userlevel and on the cluster actually being configured
-   ## above -- only the clusterAuth list requirement below is skipped for
-   ## the host's own node.
-   if ( $configured
-        && remote_exec::localhost_flag( $global_cluster_details[ $shortname ][ 'localhost' ] ?? false ) )
-     return true;
-
    if ( ! $configured )
      return false;
+
+   ## Still gated on userlevel and configuration above; only the clusterAuth
+   ## list is skipped for the host's own node. A configured string 'false' is false.
+   if ( remote_exec::localhost_flag( $global_cluster_details[ $shortname ][ 'localhost' ] ?? false ) )
+     return true;
 
    return isset( $_SESSION[ 'clusterAuth' ] )
           && is_array( $_SESSION[ 'clusterAuth' ] )
@@ -789,14 +811,10 @@ function tigre( $force_pmg = false )
 
 HTML;
 
-    $checked  = " checked='checked'";      // check the first one
-    $gamcnms  = "";
-    $ngamc    = 0;
-  
-    foreach ( $clusters as $cluster )
-    {
-        ## Only list clusters that are authorized for the user
-        if (
+    // An active metascheduler pool, when one is listed and usable, is the
+    // preselected destination; otherwise the first usable cluster, as before.
+    $listed = function ( $cluster ) use ( $pmg_job, $global_cluster_details ) {
+      return (
             in_array( $cluster->short_name, $_SESSION['clusterAuth'] )
             && array_key_exists( $cluster->short_name, $global_cluster_details )
             && (
@@ -816,7 +834,28 @@ HTML;
                  )
                 )
             )
-            )
+            );
+    };
+    $preselect = null;
+    foreach ( $clusters as $cluster )
+    {
+      if ( ! $listed( $cluster ) || $cluster->status == 'down' || $cluster->status == 'draining' )
+        continue;
+      if ( $preselect === null )
+        $preselect = $cluster->short_name;
+      if ( isset( $global_cluster_details[ $cluster->short_name ]['clusters'] ) )
+      {
+        $preselect = $cluster->short_name;
+        break;
+      }
+    }
+    $gamcnms  = "";
+    $ngamc    = 0;
+  
+    foreach ( $clusters as $cluster )
+    {
+        ## Only list clusters that are authorized for the user
+        if ( $listed( $cluster ) )
         {
         $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
         $disabled = ( $cluster->status == 'draining' ) ? " disabled='disabled'" : $disabled;
@@ -880,6 +919,7 @@ HTML;
         }
 
         $value = "$clname:$cluster->short_name:$cluster->queue";
+        $checked = $cluster->short_name === $preselect ? " checked='checked'" : "";
         $text .= "     <tr><td class='cluster' width=150 >" .
                  "<input type='radio' name='cluster' " .
                  "value='$value'$checked$disabled />" .
@@ -888,9 +928,6 @@ HTML;
                  "<td>$cluster->queue</td>"   .
                  "<td>$cluster->running / $cluster->queued</td> " .
                  "$clload</tr>\n";
-
-        if ( $disabled == "" )
-           $checked = "";
       }
     }
     $mctext = "";

@@ -883,6 +883,93 @@ else
   }
 }
 
+/* --------------------------------------------------------- dispatch service */
+
+/*
+ * The metascheduler dispatch worker runs inside submitctl.php as us3. On disk:
+ * its receipt spool and the independent heartbeat check. With --deep, as the
+ * daemon's own database account from listen-config.php: the worker's
+ * heartbeat, the gfac and instance dispatch tables (seeing an instance's
+ * tables through the gfac connection also shows the one-server requirement
+ * holds), and open urgent alert items.
+ */
+check_section( 'Dispatch service' );
+
+$us3_entry = function_exists( 'posix_getpwnam' ) ? posix_getpwnam( 'us3' ) : false;
+$us3_lims  = ( $us3_entry ? $us3_entry[ 'dir' ] : '/home/us3' ) . '/lims';
+$us3_bin   = is_file( "$us3_lims/bin/gridctl/listen-config.php" ) ? "$us3_lims/bin/gridctl" : "$us3_lims/bin";
+
+$spool = "$us3_lims/etc/dispatch-spool";
+if ( !is_dir( $spool ) )
+  check_warn( 'dispatch receipt spool exists', "$spool is absent; the worker creates it on first use" );
+else
+{
+  $mode = check_mode( $spool );
+  ( $mode & 0077 ) === 0 && check_owner( $spool ) === 'us3'
+    ? check_pass( 'dispatch receipt spool is private to us3', $spool )
+    : check_fail( 'dispatch receipt spool is private to us3',
+                  sprintf( '%s is %04o %s; it holds submission receipts', $spool, $mode, check_owner( $spool ) ) );
+  $held = glob( "$spool/*.json" ) ?: array();
+  $held
+    ? check_warn( 'no unreplayed dispatch receipts', count( $held ) . " in $spool; the worker replays them once the database is back" )
+    : check_pass( 'no unreplayed dispatch receipts' );
+}
+
+is_file( "$us3_bin/dispatch_heartbeat_check.php" ) || is_file( "$us3_lims/bin/dispatch_heartbeat_check.php" )
+  ? check_pass( 'dispatch heartbeat check installed' )
+  : check_warn( 'dispatch heartbeat check installed', "dispatch_heartbeat_check.php is not under $us3_lims/bin" );
+
+if ( $deep )
+{
+  $common_class = $global_config !== '' ? dirname( $global_config ) . '/class' : '';
+  $probe = check_subprocess(
+      "<?php\n"
+    . "\$us3bin = " . var_export( $us3_bin, true ) . ";\n"
+    . "include " . var_export( "$us3_bin/listen-config.php", true ) . ";\n"
+    . "require " . var_export( "$common_class/dispatch_alerts.php", true ) . ";\n"
+    . "require " . var_export( "$common_class/dispatch_schema.php", true ) . ";\n"
+    . "mysqli_report(MYSQLI_REPORT_OFF);\n"
+    . "\$l = @mysqli_connect(\$dbhost, \$user, \$passwd, 'gfac');\n"
+    . "if (!\$l) { echo json_encode(array('connect' => mysqli_connect_error())); exit; }\n"
+    . "\$inst = array_column(dispatch_rows(\$l, \"SELECT SCHEMA_NAME FROM information_schema.SCHEMATA\n"
+    . "  WHERE SCHEMA_NAME LIKE 'uslims3\\\\_%'\"), 'SCHEMA_NAME');\n"
+    . "\$missing = array();\n"
+    . "foreach (\$inst as \$db) if (!dispatch_rows(\$l, \"SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?\n"
+    . "  AND TABLE_NAME = 'people'\", 's', array(\$db))) continue;\n"
+    . "  else if (dispatch_schema_problems(\$l, \$db, array_keys(dispatch_instance_table_ddl(\$db)))) \$missing[] = \$db;\n"
+    . "echo json_encode(array('connect' => '', 'heartbeat' => dispatch_heartbeat_status(\$l, 'gfac'),\n"
+    . "  'gfac' => dispatch_schema_problems(\$l, 'gfac', array_keys(dispatch_gfac_table_ddl('gfac'))),\n"
+    . "  'instances' => \$missing,\n"
+    . "  'urgent' => dispatch_rows(\$l, \"SELECT kind, destination, instanceDb FROM dispatch_alert\n"
+    . "     WHERE openFlag = 1 AND urgency = 'urgent'\")));\n" );
+
+  if ( !$probe[ 'ok' ] )
+    check_fail( 'dispatch database checks run', $probe[ 'error' ] );
+  elseif ( $probe[ 'data' ][ 'connect' ] !== '' )
+    check_fail( 'the daemon account connects to gfac', $probe[ 'data' ][ 'connect' ] );
+  else
+  {
+    $d = $probe[ 'data' ];
+    $d[ 'gfac' ]
+      ? check_fail( 'gfac dispatch tables', implode( '; ', $d[ 'gfac' ] ) . '; run uslims_upgrade.php' )
+      : check_pass( 'gfac dispatch tables' );
+    $d[ 'instances' ]
+      ? check_fail( 'instance dispatch tables on the gfac server', implode( ', ', $d[ 'instances' ] )
+                    . ' lack them or are on another server; run uslims_upgrade.php' )
+      : check_pass( 'instance dispatch tables on the gfac server' );
+    $beat = $d[ 'heartbeat' ];
+    $beat[ 'ok' ]
+      ? check_pass( 'dispatch worker heartbeat', "{$beat['age']} s ago from {$beat['worker']}" )
+      : check_fail( 'dispatch worker heartbeat', $beat[ 'age' ] === null ? 'never recorded; is submitctl.php running under us3-listen?'
+                    : "last {$beat['age']} s ago; check submitctl.php under us3-listen" );
+    $urgent = array_map( function ( $a ) { return $a[ 'kind' ] . ( $a[ 'destination' ] ? " at {$a['destination']}" : '' )
+                                                  . ( $a[ 'instanceDb' ] ? " ({$a['instanceDb']})" : '' ); }, $d[ 'urgent' ] );
+    $urgent
+      ? check_warn( 'no urgent dispatch alerts open', implode( '; ', $urgent ) . '; see the dispatch dashboard' )
+      : check_pass( 'no urgent dispatch alerts open' );
+  }
+}
+
 /* ------------------------------------------------------------------ summary */
 
 $counts = $GLOBALS[ 'check_counts' ];
