@@ -10,9 +10,8 @@
 // (lib/utility.php): a direct submission to the appliance's co-located
 // node is always authorized regardless of clusterAuth, since it's inherent
 // site infrastructure, not an external allocation a site admin grants per
-// account. Without this, going through a pool that happens to contain that
-// same node disagreed with a direct submission to it -- round-12
-// should-fix, dbinst#82.
+// account. Without this, going through a pool that contains that same node
+// would disagree with a direct submission to it.
 function require_cluster_expand_localhost_authorized( $candidates, $global_cluster_details, $authorized )
 {
   foreach ( $candidates as $candidate_name )
@@ -78,8 +77,8 @@ if ( $require_cluster_is_pool )
     // gridctl's files directly into bin itself, with no 'gridctl'
     // subdirectory at all. Probe for the subdirectory shape first and fall
     // back to the flat shape, rather than assuming either -- the same spirit
-    // as submitone.php's own is_file()/class_exists() guards (round-12,
-    // gridctl#33-era fix) for resolving its own pooling code.
+    // as submitone.php's own is_file()/class_exists() guards for resolving
+    // its own pooling code.
     $require_cluster_gridctl_dir = is_file( "$require_cluster_us3_bin/gridctl/pick_cluster_reserve.php" )
       ? "$require_cluster_us3_bin/gridctl"
       : $require_cluster_us3_bin;

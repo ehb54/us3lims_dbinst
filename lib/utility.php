@@ -333,7 +333,7 @@ function mark_clusters_without_status( &$clusters, $have_row, $reason = '', $glo
    return $marked;
 }
 
-// Round 15 nit, dbinst#82: the 'warn' tooltip ("last health check failed")
+// The 'warn' tooltip ("last health check failed")
 // is accurate for a real cluster, but a metascheduler pool's own 'warn'
 // (pool_status_from_members()) means "some members down/draining/warn or
 // unauthorized", not that anything was ever probed for the pool entry
@@ -386,12 +386,10 @@ function pool_status_from_members( array $member_statuses )
 // $clusters (not independently active, or filtered out upstream) is treated as 'down' --
 // absent data is not evidence of health.
 //
-// Round 15 nit, dbinst#82: a member this account is not authorized to use
-// (cluster_is_authorized()) is treated as 'down' here too, the same as an
-// absent one -- a pool whose only healthy member is one this account can
-// never actually be routed to was reporting 'warn' (implying "degraded
-// but usable") and leaving the row pre-checked, when picking it always
-// landed on the stop page for this account. $is_authorized defaults to
+// A member this account is not authorized to use (cluster_is_authorized())
+// is treated as 'down' here too, the same as an absent one, so a pool whose
+// only healthy member this account can never be routed to does not report
+// 'warn' (implying "degraded but usable") and stay pre-checked. $is_authorized defaults to
 // cluster_is_authorized() itself (the real, session-based check);
 // injectable so a test can drive this without a session.
 function resolve_pool_statuses( array &$clusters, $global_cluster_details, ?callable $is_authorized = null )
@@ -660,7 +658,7 @@ HTML;
           // A failed health probe reports 'warn' for a real cluster; a
           // degraded pool (some members down/draining/warn/unauthorized)
           // reports it too, for a different reason -- cluster_warn_tooltip()
-          // tells them apart (round 15 nit, dbinst#82).
+          // tells them apart.
           $clstat   = ( $cluster->status == 'warn' )
                     ? "<td class='text-darkorange' title='" . cluster_warn_tooltip( $cluster->short_name, $global_cluster_details ) . "'>$cluster->status</td>"
                     : "<td class='text-green'>$cluster->status</td>";
@@ -831,7 +829,7 @@ HTML;
           // A failed health probe reports 'warn' for a real cluster; a
           // degraded pool (some members down/draining/warn/unauthorized)
           // reports it too, for a different reason -- cluster_warn_tooltip()
-          // tells them apart (round 15 nit, dbinst#82).
+          // tells them apart.
           $clstat   = ( $cluster->status == 'warn' )
                     ? "<td class='text-darkorange' title='" . cluster_warn_tooltip( $cluster->short_name, $global_cluster_details ) . "'>$cluster->status</td>"
                     : "<td class='text-green'>$cluster->status</td>";
