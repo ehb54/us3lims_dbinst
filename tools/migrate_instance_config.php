@@ -174,6 +174,7 @@ $differences = 0;
 echo "Instance: $instance\n";
 echo "Legacy: $legacy_path\n";
 echo "Base: $config_root/" . us3_dbinst_config_base_filename() . "\n";
+$differing = array();
 foreach ( $expected as $key => $value )
 {
   if ( $key === 'timezone' )
@@ -217,7 +218,10 @@ foreach ( $expected as $key => $value )
   $status = $equal ? 'equal' : ( array_key_exists( $key, $legacy ) ? 'DIFFERENT' : 'MISSING' );
   echo sprintf( "%-22s %s\n", $key, $status );
   if ( !$equal )
+  {
     $differences++;
+    $differing[] = "$key $status";
+  }
 }
 
 $credential_equal = isset( $legacy[ 'cfgfile' ] ) &&
@@ -225,7 +229,10 @@ $credential_equal = isset( $legacy[ 'cfgfile' ] ) &&
 echo sprintf( "%-22s %s\n", 'credential_ini',
               $credential_equal ? 'equal' : 'DIFFERENT' );
 if ( !$credential_equal )
+{
   $differences++;
+  $differing[] = 'credential_ini DIFFERENT';
+}
 
 /*
  * Reverse pass. The comparison above only walks the keys the v1 contract knows
@@ -282,7 +289,9 @@ if ( $unreviewed )
 
 if ( $differences )
 {
-  echo "Result: NOT EQUIVALENT ($differences differences, "
+  ## Names and statuses only; the values may be site secrets.
+  echo "Result: NOT EQUIVALENT ($differences differences"
+     . ( $differing ? ': ' . implode( ', ', $differing ) : '' ) . '; '
      . count( $unreviewed ) . " needing review); no files written.\n";
   exit( 2 );
 }
