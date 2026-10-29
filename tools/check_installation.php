@@ -174,36 +174,28 @@ function check_writable_mode( $path, $label )
   return check_pass( "$label permissions", $printable );
 }
 
-## Which of the base's own 'org_name'/'site_author'/'ipa_ext' fields still
-## carry a shipped template placeholder (config-base.v1.php.template) --
-## pure (no I/O), so a test can drive it directly against a constructed
-## $base_values array. Returns [ key => null ] for a field that was
-## actually configured, [ key => placeholder value ] for one that was
-## not -- the caller decides PASS/FAIL per key from that, same as every
-## other check in this file.
-function check_base_placeholder_fields( array $base_values )
+## [ key => null ] for a configured field, [ key => value ] for one still holding a shipped
+## placeholder, in any case: a value starting with CHANGE-ME, one using config.php.template's
+## placeholder domain CHANGE-ME.example.org (us3-admin@CHANGE-ME.example.org), or ipa_ext's
+## documentation address 203.0.113.1. A real name merely containing the word is not flagged.
+function check_placeholder_fields( array $values, array $keys )
 {
   $result = array();
-  foreach ( array( 'org_name', 'site_author' ) as $key )
+  foreach ( $keys as $key )
   {
-    $value = (string) ( $base_values[ $key ] ?? '' );
-    ## Round 15 should-fix, dbinst#57: a leading space ("CHANGE-ME" typed
-    ## after an accidental space) or a lowercase spelling ("change-me")
-    ## both still name an unedited field, but the old check (strpos ===
-    ## 0, exact case, no trim) missed both.
-    $result[ $key ] = ( stripos( ltrim( $value ), 'CHANGE-ME' ) === 0 ) ? $value : null;
+    $value = (string) ( $values[ $key ] ?? '' );
+    $placeholder = $key === 'ipa_ext'
+                 ? trim( $value ) === '203.0.113.1'
+                 : stripos( ltrim( $value ), 'CHANGE-ME' ) === 0 || stripos( $value, 'CHANGE-ME.example.org' ) !== false;
+    $result[ $key ] = $placeholder ? $value : null;
   }
-
-  ## ipa_ext's own shipped placeholder is a specific value, not a
-  ## CHANGE-ME-prefixed string: config-base.v1.php.template ships
-  ## '203.0.113.1', an RFC 5737 documentation address that is never real
-  ## on any actual network. An unedited site had every GMP e-signature UDP
-  ## packet claim this fake address as its own host, with nothing here
-  ## ever flagging it.
-  $ipa_ext = (string) ( $base_values[ 'ipa_ext' ] ?? '' );
-  $result[ 'ipa_ext' ] = ( trim( $ipa_ext ) === '203.0.113.1' ) ? $ipa_ext : null;
-
   return $result;
+}
+
+## The host base's placeholder fields.
+function check_base_placeholder_fields( array $base_values )
+{
+  return check_placeholder_fields( $base_values, array( 'org_name', 'site_author', 'ipa_ext' ) );
 }
 
 /* ---------------------------------------------------------------- options */
@@ -653,6 +645,21 @@ else
     $code === 0
       ? check_pass( "$instance config.php parses" )
       : check_fail( "$instance config.php parses", implode( ' ', $lint ) );
+
+    /* The same placeholder scan as the host base, over the values the legacy file sets. */
+    if ( $code === 0 && strpos( $source, 'us3_dbinst_config_bootstrap' ) === false )
+    {
+      $fields = array( 'org_name', 'org_site', 'site_author', 'admin', 'admin_email' );
+      $probe  = check_subprocess( '<?php chdir(' . var_export( $dir, true ) . '); $is_cli = true; '
+                                  . '@include ' . var_export( $config_php, true ) . '; '
+                                  . 'echo json_encode( compact( ' . var_export( $fields, true ) . ' ) );' );
+      if ( !$probe[ 'ok' ] )
+        check_warn( "$instance config.php values readable", $probe[ 'error' ] );
+      else
+        foreach ( check_placeholder_fields( $probe[ 'data' ], $fields ) as $key => $value )
+          if ( $value !== null )
+            check_fail( "$instance $key is configured", "still the shipped placeholder: $value" );
+    }
   }
 
   check_pass( 'unmigrated instances scanned', "$legacy on legacy config.php" );
@@ -781,8 +788,10 @@ else
                       : rtrim( (string) @shell_exec( 'ls -d ~us3/lims/bin 2>/dev/null' ) )
                         . '/cluster_config.php';
       $active_names = array();
+      ## A metascheduler pool derives its status from its members; only real clusters need a probe.
       foreach ( $clusters as $name => $details )
-        if ( is_array( $details ) && ! empty( $details[ 'active' ] ) )
+        if ( is_array( $details ) && ! empty( $details[ 'active' ] )
+             && ! ( isset( $details[ 'clusters' ] ) && is_array( $details[ 'clusters' ] ) ) )
           $active_names[] = $name;
 
       if ( ! is_file( $cluster_config ) )
