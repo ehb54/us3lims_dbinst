@@ -57,8 +57,7 @@ function motd_isblocked()
 function motd_block()
 {
   // $common_dir is set in config.php's global scope; a function doesn't see
-  // it without this -- round-12 blocker, dbinst#57: footer silently didn't
-  // load here even with $common_dir configured correctly.
+  // it without this, and the footer would silently fail to load.
   global $common_dir;
 
   // First, check to see if job submission is blocked

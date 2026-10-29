@@ -530,7 +530,7 @@ include "db.php";
 // was accepted. The rule here is the one the list applies, kept in one place so
 // the two cannot drift: userlevel 2 or above, the cluster configured, and the
 // cluster named in this session's authorizations -- except for the entry
-// flagged 'localhost' => true (common#24's own flag for "this is the
+// flagged 'localhost' => true (common's flag for "this is the
 // appliance's own co-located node", not an external HPC resource), which is
 // always authorized regardless of clusterAuth.
 //
@@ -592,32 +592,17 @@ function require_authorized_cluster( $shortname )
               . ( $_SESSION[ 'email' ] ?? 'unknown' )
               . " posted unauthorized cluster '" . (string) $shortname . "'" );
 
-   ## Round 15 should-fix, dbinst#57 (see ehb54/us3lims_gridctl#33): this
-   ## exit() is one of the "a page this script include()s can exit() with
-   ## its own specific, already-known reason" paths gridctl's own
-   ## submitone_shutdown_handler() is written to read -- but nothing here
-   ## ever set it, so a refusal during an autoflow submission recorded
-   ## whatever incidental PHP warning happened to fire instead (observed:
-   ## "Undefined index: authenticatePAM" on a PAM+GMP site), never the
-   ## actual reason. Harmless to set unconditionally even when this
-   ## function is reached from a direct, interactive web submission
-   ## instead (gridctl's shutdown handler is not registered there, so
-   ## nothing ever reads this global in that path).
+   ## gridctl's submitone_shutdown_handler() reads this global to record why
+   ## an include()d page exit()ed; without it an autoflow refusal records
+   ## whatever incidental PHP warning fired instead of the actual reason.
+   ## Harmless on a direct web submission, where no handler reads it.
    $GLOBALS[ 'gridctl_submission_failure_reason' ] =
        "cluster '" . (string) $shortname . "' is not authorized for this account";
 
-   ## Round-13 nit (dbinst#57): a bare one-line refusal, with no heading,
-   ## explanation of why, or way back, left a user staring at an otherwise
-   ## unstyled page. Names the cluster and points back to queue setup,
-   ## where a different (authorized) cluster can be chosen instead.
-   ##
-   ## Round 15 nit, dbinst#57: still a bare fragment (567 bytes observed)
-   ## even after that fix, because only the footer was ever included --
-   ## every other "stop" page in this codebase (lib/submit_stop.php,
-   ## DMGA_2.php, 2DSA_2.php, ...) includes the LOCAL 'header.php' first,
-   ## giving the page its <html>/<head>, navigation and CSS; this one
-   ## never did, so the heading/explanation above rendered with nothing
-   ## around it.
+   ## Names the cluster and points back to queue setup, where a different
+   ## (authorized) cluster can be chosen. Includes the local 'header.php'
+   ## first, like every other stop page (lib/submit_stop.php, DMGA_2.php,
+   ## 2DSA_2.php, ...), for the page's <html>/<head>, navigation and CSS.
    include 'header.php';
    echo "<div id='content'>\n"
       . "<h3>Cluster not available</h3>\n"
@@ -627,8 +612,7 @@ function require_authorized_cluster( $shortname )
       . " if this one should be authorized for you.</p>\n"
       . "</div>\n";
    // $common_dir is set in config.php's global scope; a function doesn't see
-   // it without this -- round-12 blocker, dbinst#57: footer silently didn't
-   // load here even with $common_dir configured correctly.
+   // it without this, and the footer would silently fail to load.
    global $common_dir;
    include $common_dir . 'footer.php';
    exit();

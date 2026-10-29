@@ -165,8 +165,8 @@ function elog( $msg ) {
         ## ...) would otherwise create it under the process's own umask
         ## (commonly 0644 or 0640, leaving the other account locked out)
         ## until the chmod() below runs, and elog.txt holds debug detail
-        ## even after filtering. 0666 & ~0007 = 0660, matching dbutils#45
-        ## step 5's own fresh-provisioning mode.
+        ## even after filtering. 0666 & ~0007 = 0660, matching dbutils'
+        ## fresh-provisioning mode.
         $old_umask = umask( 0007 );
         ## Lock the log file itself rather than a separate lock file:
         ## whichever account created a separate lock file first would be the
@@ -308,7 +308,7 @@ function elog( $msg ) {
         if ( ! $existed_before ) {
             ## Genuinely new: fopen('c+', ...) above already created it at
             ## 0660 under the umask(0007) set for that window, matching
-            ## dbutils#45 step 5's own fresh-provisioning mode. This chmod
+            ## dbutils' fresh-provisioning mode. This chmod
             ## is defense in depth against anything that left the umask
             ## window differently, not the only thing narrowing the file.
             ##
@@ -340,7 +340,7 @@ function elog( $msg ) {
             ## directory itself setgid-writable by both accounts is a
             ## larger change (a dedicated elog subdirectory, provisioned
             ## 2770 us3:<web group>, is the clean version of that) that
-            ## dbutils#45's step 5 does not attempt.
+            ## dbutils provisioning does not attempt.
             @chmod( $elogfile, $path_stat[ 'mode' ] & 0777 & ~0007 );
         }
 
