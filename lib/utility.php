@@ -326,8 +326,8 @@ function makeRandomPassword($fixed_length = 0 ): string
 // own row carries a 'clusters' array rather than a real sshport/queue) from
 // this: a pool has no real host to probe status on, by design -- cluster_status
 // .php never writes a row for one -- so having no row is expected there, not a
-// down/unhealthy signal. Mirrors pick_cluster_is_metascheduler_entry()'s shape
-// check (gridctl's pick_cluster.php) and require_cluster.php's own copy of it.
+// down/unhealthy signal. Mirrors dispatch_is_pool_entry()'s shape check
+// (gridctl's dispatch_policy.php) and require_cluster.php's own copy of it.
 function mark_clusters_without_status( &$clusters, $have_row, $reason = '', $global_cluster_details = null )
 {
    if ( !is_array( $clusters ) )
@@ -362,8 +362,8 @@ function mark_clusters_without_status( &$clusters, $have_row, $reason = '', $glo
 // (pool_status_from_members()) means "some members down/draining/warn or
 // unauthorized", not that anything was ever probed for the pool entry
 // itself -- cluster_status.php never writes a row for one. Same shape
-// check as mark_clusters_without_status()/pick_cluster_is_metascheduler_
-// entry() (gridctl's pick_cluster.php).
+// check as mark_clusters_without_status()/dispatch_is_pool_entry()
+// (gridctl's dispatch_policy.php).
 function cluster_warn_tooltip( $short_name, $global_cluster_details )
 {
    $entry = is_array( $global_cluster_details )
@@ -377,9 +377,9 @@ function cluster_warn_tooltip( $short_name, $global_cluster_details )
 // constructor default ('*') once exempted above, since nothing ever
 // derived it from the pool's actual members -- so a pool row looked
 // selectable on the submission page even with every member down. 'down'
-// only when every member is down/draining, since pick_cluster() can still
-// route a real submission to any one healthy member regardless of the
-// others; 'warn' when some but not all are down/draining/warn, so an
+// only when every member is down/draining, since the dispatch worker can
+// still route a real submission to any one healthy member regardless of
+// the others; 'warn' when some but not all are down/draining/warn, so an
 // operator sees degraded capacity before it is a full outage; otherwise
 // left alone (every member already reports its own healthy status).
 //
