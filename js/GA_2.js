@@ -130,9 +130,13 @@ function trapEnterKey(evt)
     if ((evt.keyCode != 13) || (node.type != "text")) 
         return true;
 
-    // Enter key is pressed; see if solute count has changed
+    // Enter key is pressed; see if solute count has changed.
+    // The count the page was rendered with arrives in a data- attribute; this
+    // file used to interpolate it with a PHP tag, which never ran because
+    // the file is served statically as .js -- the raw PHP tag reached the
+    // browser and made the whole script a syntax error.
     sol_count = document.getElementById("sol");
-    if (sol_count.value != <?php echo $sol_count; ?>)
+    if (sol_count.value != sol_count.dataset.renderedCount)
     {
         // count has changed; redraw screen
         location.href = 'GA_2.php?count=' + sol_count.value;

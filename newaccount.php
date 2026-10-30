@@ -6,7 +6,11 @@
  *
  */
 
-session_start();
+// checkinstance.php (not a bare session_start()): sets the same Secure/
+// HttpOnly/SameSite cookie flags and HTTPS enforcement every other page
+// gets, which this page -- reachable by a not-yet-logged-in visitor --
+// used to skip entirely.
+include 'checkinstance.php';
 
 include_once 'config.php';
 include_once 'db.php';
@@ -51,27 +55,32 @@ else                  // Just display the captcha
 
 <?php
 
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 function enter_record( $message = '' )
 {
   if ( isset($message) && isset($_SESSION['POST']) )
   {
-    // Get posted information from register.php
-    $lname        = $_SESSION['POST']['lname'];
-    $fname        = $_SESSION['POST']['fname'];
-    $organization = $_SESSION['POST']['organization'];
-    $address      = $_SESSION['POST']['address'];
-    $city         = $_SESSION['POST']['city'];
-    $state        = $_SESSION['POST']['state'];
-    $zip          = $_SESSION['POST']['zip'];
-    $country      = $_SESSION['POST']['country'];
-    $phone        = $_SESSION['POST']['phone'];
+    // Get posted information from register.php. Escaped here, once, right
+    // after reading it back -- these values are re-shown below as HTML
+    // attribute values (value='...'), and this re-show path never used to
+    // run at all (the old session mismatch lost the values before it could),
+    // so a quote or markup in any of them -- a last name like "O'Brien", or
+    // a deliberate payload -- never had to be escaped before. It does now.
+    $lname        = htmlspecialchars( $_SESSION['POST']['lname'], ENT_QUOTES );
+    $fname        = htmlspecialchars( $_SESSION['POST']['fname'], ENT_QUOTES );
+    $organization = htmlspecialchars( $_SESSION['POST']['organization'], ENT_QUOTES );
+    $address      = htmlspecialchars( $_SESSION['POST']['address'], ENT_QUOTES );
+    $city         = htmlspecialchars( $_SESSION['POST']['city'], ENT_QUOTES );
+    $state        = htmlspecialchars( $_SESSION['POST']['state'], ENT_QUOTES );
+    $zip          = htmlspecialchars( $_SESSION['POST']['zip'], ENT_QUOTES );
+    $country      = htmlspecialchars( $_SESSION['POST']['country'], ENT_QUOTES );
+    $phone        = htmlspecialchars( $_SESSION['POST']['phone'], ENT_QUOTES );
 
     // email might have been unset
     if ( isset( $_SESSION['POST']['email'] ) )
-      $email = $_SESSION['POST']['email'];
+      $email = htmlspecialchars( $_SESSION['POST']['email'], ENT_QUOTES );
 
     unset( $_SESSION['POST'] );
 
@@ -88,7 +97,7 @@ function enter_record( $message = '' )
        mail information to you.</p>
 
     <form action="register.php" method="post"
-          onsubmit='return validate( this );'>
+          class='onsubmit-return-validate-this'>
     <table cellspacing='0' cellpadding='10'>
       <thead>
         <tr><th colspan='2'>Personal Information</th></tr>
@@ -142,7 +151,7 @@ HTML;
 // Function to display a captcha and request human input
 function do_captcha( $msg = "" )
 {
-  $message = ( empty( $msg ) ) ? "" : "<p style='color:red;'>$msg</p>";
+  $message = ( empty( $msg ) ) ? "" : "<p class='text-red'>$msg</p>";
   $act     = htmlentities($_SERVER['PHP_SELF']);
   // Let's just use the random password function we already have
   $pw      = makeRandomPassword(6);

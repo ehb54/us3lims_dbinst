@@ -3,7 +3,14 @@
 include 'config.php';
 global $dbhost, $dbusername, $dbpasswd, $dbname;
 
-$link = mysqli_connect($dbhost, $dbusername, $dbpasswd, $dbname) or die("Could not connect to $dbname on database server.");
+## A caller that already opened its own connection (checkuser.php's own
+## pre-connect, routed through login_db_unavailable() instead of this file's
+## own die() on a down database) sets $link first; reused here instead of
+## connecting a second time and die()ing on the same outage again.
+if ( ! isset( $link ) || ! ( $link instanceof mysqli ) )
+{
+   $link = mysqli_connect($dbhost, $dbusername, $dbpasswd, $dbname) or die("Could not connect to $dbname on database server.");
+}
 if (!function_exists('mysqli_prep_query'))
 {
     function mysqli_prep_query($link, $sql, $typeDef = false, $params = false, $asGenerator = false) {

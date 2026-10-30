@@ -18,20 +18,35 @@ $start_time = dt_now();
 include_once 'config.php';
 include_once 'lib/utility.php';
 
-// Start by getting info from global db
-$globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname )
-    or die( "Connect failed :  $globaldbhost  $globaldbuser $globaldbpasswd  $globaldbname " );
+// Handle both mysqli exception and false-return modes. Log connection
+// diagnostics server-side and keep credentials out of the response.
+$globaldb       = false;
+$globaldb_error = '';
+
+try
+{
+  $globaldb = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+  if ( ! $globaldb )
+    $globaldb_error = mysqli_connect_error();
+}
+catch ( mysqli_sql_exception $e )
+{
+  $globaldb_error = $e->getMessage();
+}
 
 if ( ! $globaldb )
 {
-  echo "<p>Cannot open global database on $globaldbhost  mysqli_error($globaldb)</p>\n";
+  error_log( "queue_content.php: cannot connect to global database "
+             . "$globaldbname on $globaldbhost as $globaldbuser: $globaldb_error" );
+  echo "<p>Cannot open the global database. See the server error log.</p>\n";
   return;
 }
 
-$is_uiab = ( $ipaddr === '127.0.0.1' ) ? 1 : 0;
+// Single-tenant deployments restrict level-4 admins to the current database.
+$is_local_deploy = is_single_tenant_deployment();
 
 $query  = "SELECT gfacID, us3_db, cluster, status, metaschedulerClusterExecuting FROM analysis ";
-if ( $is_uiab  ||  $_SESSION['userlevel'] < 4 ) {
+if ( $is_local_deploy  ||  $_SESSION['userlevel'] < 4 ) {
   $query .= "WHERE us3_db = '$dbname' ";
 }
 
@@ -83,7 +98,10 @@ while ( list( $gfacID, $us3_db, $cluster, $status, $clusterExecuting ) = mysqli_
 }
 $batch_results = array();
 foreach ( $gfac_IDs_per_db as $us3_db => $gfacIDs ) {
-    $db_gfacIDs = implode(',', $gfacIDs);
+    // gfacIDs are strings (Airavata IDs are not numeric), so quote each one
+    $db_gfacIDs = implode(',', array_map(function($id) use ($globaldb) {
+        return "'" . mysqli_real_escape_string($globaldb, $id) . "'";
+    }, $gfacIDs));
     $query = "SELECT r.gfacID, r.HPCAnalysisRequestID, queueStatus, lastMessage, updateTime, editXMLFilename, " .
         "investigatorGUID, submitterGUID, submitTime, clusterName, method, runID, analType, inv.email as inv_email, sub.email as sub_email " .
         "FROM $us3_db.HPCAnalysisResult r ".
@@ -150,10 +168,10 @@ uasort( $display_info, 'cmp' );
 $content = "<div class='queue_content'>\n";
 // Add summary table
 $content .= "<h3>Queue Summary</h3>\n";
-$content .= "<div id='selection_controls' style='margin-bottom: 10px; display: flex; align-items: center; gap: 20px;'>\n";
-$content .= "  <input type='checkbox' id='select_all_jobs' onchange='toggle_all_selection(this)' /> Select All <span id='count_all'>(0/0)</span>\n";
+$content .= "<div id='selection_controls'>\n";
+$content .= "  <input type='checkbox' id='select_all_jobs' /> Select All <span id='count_all'>(0/0)</span>\n";
 $content .= "  <span id='global_select_count'>Selected Jobs: 0</span>\n";
-$content .= "  <input type='button' id='bulk_delete_button' value='Delete Selected Jobs' onclick='bulk_delete_jobs()' style='display: none;' />\n";
+$content .= "  <input type='button' id='bulk_delete_button' class='d-none' value='Delete Selected Jobs' />\n";
 $content .= "</div>\n";
 $content .= "<table class='summary_table'>\n";
 $content .= "<tr><th>Run ID</th><th>Analysis Type</th><th>Status</th></tr>\n";
@@ -178,14 +196,14 @@ foreach ( $summary_data as $runID => $run_info ) {
             $statusEsc    = htmlspecialchars( (string) $status, ENT_QUOTES, 'UTF-8' );
             $content .= "<tr>";
             if ( $first_run ) {
-                $content .= "<td rowspan='$run_rowspan'><input type='checkbox' class='select_runID' data-runid='$runIDEsc' onchange='toggle_runid_selection(this, \"$runIDEsc\")' /> $runIDEsc <span class='count_runID' data-runid='$runIDEsc'>(0/{$run_info['count']})</span></td>";
+                $content .= "<td rowspan='$run_rowspan'><input type='checkbox' class='select_runID' data-runid='$runIDEsc' /> $runIDEsc <span class='count_runID' data-runid='$runIDEsc'>(0/{$run_info['count']})</span></td>";
                 $first_run = false;
             }
             if ( $first_anal ) {
-                $content .= "<td rowspan='$anal_rowspan'><input type='checkbox' class='select_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc' onchange='toggle_runid_anal_selection(this, \"$runIDEsc\", \"$analTypeEsc\")' /> $analTypeEsc <span class='count_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc'>(0/{$anal_info['count']})</span></td>";
+                $content .= "<td rowspan='$anal_rowspan'><input type='checkbox' class='select_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc' /> $analTypeEsc <span class='count_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc'>(0/{$anal_info['count']})</span></td>";
                 $first_anal = false;
             }
-            $content .= "<td><input type='checkbox' class='select_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc' onchange='toggle_runid_anal_status_selection(this, \"$runIDEsc\", \"$analTypeEsc\", \"$statusEsc\")' /> $statusEsc <span class='count_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc'>(0/$count)</span></td>";
+            $content .= "<td><input type='checkbox' class='select_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc' /> $statusEsc <span class='count_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc'>(0/$count)</span></td>";
             $content .= "</tr>\n";
         }
     }
@@ -225,7 +243,7 @@ foreach( $display_info as $display )
 
   $db_info = ( $_SESSION['userlevel'] >= 2 ) ? "$database (ID: $HPCAnalysisRequestID)" : "";
 
-  $content .= "<tr><th><input type='checkbox' class='select_job' data-gfacid='$gfacID' data-runid='$runID' data-analtype='$analType' data-status='$queueStatus' onchange='toggle_job_selection(this, \"$gfacID\")' />Run ID:</th>\n" .
+  $content .= "<tr><th><input type='checkbox' class='select_job' data-gfacid='$gfacID' data-cluster='$cluster' data-runid='$runID' data-analtype='$analType' data-status='$queueStatus' />Run ID:</th>\n" .
             "<td colspan='3'>$runID $triple $db_info</td>\n" .
             "<td rowspan='6'>\n" .
             display_buttons( $database, $cluster, $gfacID, $jobEmail ) .
@@ -357,6 +375,7 @@ function display_buttons( $current_db, $cluster, $gfacID, $jobEmail )
                "  <input type='hidden' name='cluster' value='$cluster' />\n" .
                "  <input type='hidden' name='gfacID' value='$gfacID' />\n" .
                "  <input type='hidden' name='jobEmail' value='$jobEmail' />\n" .
+               "  <input type='hidden' name='csrf_token' value='" . csrf_token() . "' />\n" .
                "  <input type='submit' name='delete' value='Delete' />\n" .
                "</form>\n";
 

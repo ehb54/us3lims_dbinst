@@ -10,7 +10,7 @@
 $userlevel = $_SESSION['userlevel'] ?? -1;
 
 $home_menu = <<<HTML
-            <li><a href="http://$org_site/index.php">Home</a></li>
+            <li><a href="https://$org_site/index.php">Home</a></li>
 
 HTML;
 
@@ -19,7 +19,7 @@ $projects_menu = <<<HTML
               <ul class='level2'>
                 <li><a href='view_projects.php'>View/Edit Projects</a></li>
                 <li class='separator'></li>
-                <li><a href='#' onclick='construction();'>Enter Image</a></li>
+                <li><a href='#' class='onclick-construction'>Enter Image</a></li>
               </ul></li>
 
 HTML;

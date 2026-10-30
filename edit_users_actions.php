@@ -11,6 +11,36 @@
  */
 
 // ---------------------------------------------------------------------------
+// Repost on validation failure
+// ---------------------------------------------------------------------------
+
+/**
+ * Stash this request's $_POST so the redirect that a validation failure
+ * sends the browser to can redisplay the form with what was actually
+ * typed, instead of the blank/stale defaults edit_record()/do_new() would
+ * otherwise show. 'type' tells edit_users.php's dispatcher which form to
+ * route back into.
+ */
+function _eu_stash_repost( $type, array $post )
+{
+  $_SESSION[ 'edit_users_repost' ] = array( 'type' => $type, 'post' => $post );
+}
+
+/**
+ * One field's value from a stashed repost, HTML-escaped for use in a
+ * value='...' attribute the same way the rest of this file's form markup
+ * is built. $override is the 'post' array from _eu_stash_repost(), or null
+ * when there is nothing to restore (the normal, non-error case).
+ */
+function eu_restored_value( $override, $key, $default = '' )
+{
+  if ( $override === null || ! array_key_exists( $key, $override ) ) {
+    return $default;
+  }
+  return htmlentities( trim( (string) $override[ $key ] ), ENT_QUOTES );
+}
+
+// ---------------------------------------------------------------------------
 // Redirect-and-exit wrapper
 // ---------------------------------------------------------------------------
 
@@ -93,6 +123,35 @@ function audit_diff( $old_row, $new_row )
   return [ 'old' => $old_diff, 'new' => $new_diff ];
 }
 
+// Makes sure people_audit has its created_at_utc column, adding it on a host the upgrade has not
+// reached yet. Called before a save's transaction: ALTER TABLE commits implicitly, so inside one
+// it would commit the user change before the audit row is written. False when the column is
+// missing and this account cannot add it; the save is then refused rather than written unflagged.
+function ensure_audit_flag_column( $link )
+{
+  try
+  {
+    $res = mysqli_query( $link, "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()"
+                              . " AND TABLE_NAME = 'people_audit' AND COLUMN_NAME = 'created_at_utc'" );
+    if ( $res && (int) mysqli_fetch_row( $res )[ 0 ] > 0 )
+      return true;
+    return (bool) mysqli_query( $link, "ALTER TABLE people_audit ADD COLUMN IF NOT EXISTS created_at_utc TINYINT(1) NOT NULL DEFAULT 0" );
+  }
+  catch ( mysqli_sql_exception $e )
+  {
+    error_log( 'people_audit created_at_utc column: ' . $e->getMessage() );
+    return false;
+  }
+}
+
+// Refuses the save when ensure_audit_flag_column() could not provide the column.
+function _eu_refuse_without_audit_column()
+{
+  $_SESSION['message'] = 'The change was not saved: the people_audit table lacks its created_at_utc column and'
+                       . ' this account cannot add it. Ask the administrator to run uslims_upgrade.php --apply.';
+  _eu_redirect_and_exit( $_SERVER['PHP_SELF'] );
+}
+
 // Inserts one row into people_audit.
 //
 // Parameters:
@@ -116,10 +175,30 @@ function write_audit_row( $link, $personID, $user_email, $user_name, $action, $o
   $old_json = ( $old_values !== null ) ? json_encode( audit_filter_values( $old_values ) ) : null;
   $new_json = ( $new_values !== null ) ? json_encode( audit_filter_values( $new_values ) ) : null;
 
+  // created_at is written explicitly as UTC_TIMESTAMP(), not left to the
+  // column's own DEFAULT CURRENT_TIMESTAMP: CURRENT_TIMESTAMP is the
+  // session's time zone, which on a host whose MySQL session is not UTC
+  // records audit events under local time while every other timestamp this
+  // table is read against (view_people_audit.php's filters and display) is
+  // documented and labeled as UTC. Unconditional, not gated on whether
+  // this instance's migration boundary has been recorded yet: a
+  // newinst-created instance never gets a boundary row at all, so gating
+  // on one would leave every row a fresh instance writes in local time.
+  //
+  // created_at_utc = 1 is dbutils' own per-row signal (utility.php's
+  // ensure_people_audit_utc_flag_column()/migrate_people_audit_created_at_
+  // to_utc()) that this row is already correct and must never be shifted
+  // by the local-time-to-UTC migration -- set here, at the moment of
+  // writing, rather than inferred later from timing or an auditID
+  // snapshot, which is exactly what let a row written in the gap between
+  // this code going live and uslims_upgrade.php actually completing get
+  // wrongly reconverted. The caller ensures the column before its
+  // transaction (ensure_audit_flag_column()).
+
   $sql = "INSERT INTO people_audit
-            ( personID,  user_email,  user_name,  changed_by_personID,  changed_by_email,  changed_by_name,  action,  old_values,  new_values,  notes )
+            ( personID,  user_email,  user_name,  changed_by_personID,  changed_by_email,  changed_by_name,  action,  old_values,  new_values,  notes,  created_at,      created_at_utc )
           VALUES
-            ( ?,         ?,           ?,          ?,                    ?,                 ?,                ?,       ?,           ?,           ? )";
+            ( ?,         ?,           ?,          ?,                    ?,                 ?,                ?,       ?,           ?,           ?,      UTC_TIMESTAMP(), 1 )";
 
   $stmt = $link->prepare( $sql );
   if ( !$stmt )
@@ -296,7 +375,20 @@ function do_delete($link)
     return;
   }
 
+  // Without $admin_list the admin accounts cannot be protected, so refuse.
+  if ( empty( $admin_list ) || !is_array( $admin_list ) ) {
+    $_SESSION['message'] = "Account deletion is disabled: \$admin_list is not set in global_config.php.";
+    _eu_redirect_and_exit( $_SERVER['PHP_SELF'] );
+    return;
+  }
+
   $admins = implode( "','", $admin_list );
+
+  if ( !ensure_audit_flag_column( $link ) )
+  {
+    _eu_refuse_without_audit_column();
+    return;
+  }
 
   $link->begin_transaction();
   try
@@ -441,6 +533,12 @@ function do_update($link)
         $instrumentIDs[] = $instrumentID;
       }
     }
+  }
+
+  if ( empty($message) && !ensure_audit_flag_column( $link ) )
+  {
+    _eu_refuse_without_audit_column();
+    return;
   }
 
   if ( empty($message) )
@@ -588,6 +686,7 @@ function do_update($link)
       $link->rollback();
       error_log( $e->getMessage() );
       $_SESSION['message'] = 'An error occurred and the account was not updated. Please try again.';
+      _eu_stash_repost( 'update', $_POST );
       _eu_redirect_and_exit( $_SERVER['PHP_SELF'] . "?personID=$personID" );
       return;
     }
@@ -609,10 +708,12 @@ function do_update($link)
     }
   }
 
-  else
+  else {
     $_SESSION['message'] = "The following errors were noted:<br />" .
                            $message .
                            "Changes were not recorded.";
+    _eu_stash_repost( 'update', $_POST );
+  }
 
   _eu_redirect_and_exit( $_SERVER['PHP_SELF'] . "?personID=$personID" );
 }
@@ -669,6 +770,12 @@ function do_create($link)
     $stmt = $link->prepare( $query );
     $stmt->bind_param( $args_type, ...$args );
 
+    if ( !ensure_audit_flag_column( $link ) )
+    {
+      _eu_refuse_without_audit_column();
+      return;
+    }
+
     $link->begin_transaction();
     try
     {
@@ -706,6 +813,7 @@ function do_create($link)
       $link->rollback();
       error_log( $e->getMessage() );
       $_SESSION['message'] = 'An error occurred and the account was not created. Please try again.';
+      _eu_stash_repost( 'create', $_POST );
       _eu_redirect_and_exit( $_SERVER['PHP_SELF'] );
       return;
     }
@@ -722,10 +830,12 @@ function do_create($link)
     return;
   }
 
-  else
+  else {
     $_SESSION['message'] = "The following errors were noted:<br />" .
                            $message .
                            "New user was not created!";
+    _eu_stash_repost( 'create', $_POST );
+  }
 
   _eu_redirect_and_exit( $_SERVER['PHP_SELF'] );
 }
@@ -802,7 +912,7 @@ function display_record($link)
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
-                  "        onchange='get_person(this);' >" .
+                  "class='onchange-get-person' >" .
                   "  <option value='null'>None selected...</option>\n";
   $querywhere = "";
   if ( $_SESSION['userlevel'] == 0 ) {
@@ -830,7 +940,7 @@ function display_record($link)
 
   $extrasPAM =
     $enable_PAM
-    ? "<tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Authentication</th></tr>"
+    ? "<tr><th colspan='2' class='form-section-header'>Authentication</th></tr>"
       . "<tr><th>Authenticate via PAM:</th>"
       . "<td>" . ( $authenticatePAM ? "yes" : "no" ) . "</td></tr>"
       . "<tr><th>User name (PAM):</th>"
@@ -855,7 +965,7 @@ echo<<<HTML
           </td></tr>
     </tfoot>
     <tbody>
-      <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Profile Information</th></tr>
+      <tr><th colspan='2' class='form-section-header'>Profile Information</th></tr>
       <tr><th>First Name:</th>
           <td>$fname</td></tr>
       <tr><th>Last Name:</th>
@@ -876,19 +986,19 @@ echo<<<HTML
           <td>$phone</td></tr>
       <tr><th>Email:</th>
           <td>$email</td></tr>
-      <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Account Access</th></tr>
+      <tr><th colspan='2' class='form-section-header'>Account Access</th></tr>
       <tr><th>Registration:</th>
           <td>$activated</td></tr>
       <tr><th>Account status:</th>
           <td>$account_enabled_disp</td></tr>
-      <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Authorization</th></tr>
+      <tr><th colspan='2' class='form-section-header'>Authorization</th></tr>
       <tr><th>User Level:</th>
           <td>$userlevel</td></tr>
       <tr><th>Advance Level:</th>
           <td>$advancelevel</td></tr>
       $extrasGMP
       $extrasPAM
-      <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>System Access</th></tr>
+      <tr><th colspan='2' class='form-section-header'>System Access</th></tr>
       <tr><th>Cluster Authorizations:</th>
           <td>$clusterAuthorizations</td></tr>
       <tr><th>Instrument Permissions:</th>
@@ -952,13 +1062,15 @@ HTML;
 // ---------------------------------------------------------------------------
 
 // Function to edit a record
-function edit_record($link)
+function edit_record($link, $override = null)
 {
   global $enable_GMP;
   global $enable_PAM;
 
-  // Get the record we need to edit
-  $personID = $_POST['personID'];
+  // Get the record we need to edit. $override (a failed update's own
+  // $_POST, stashed by _eu_stash_repost()) still names the record by its
+  // own personID, same as a normal edit request would.
+  $personID = $override['personID'] ?? $_POST['personID'];
 
   $query  = "SELECT lname, fname, organization, " .
       "address, city, state, zip, country, phone, email, " .
@@ -1000,6 +1112,47 @@ function edit_record($link)
   $result->close();
   $stmt->close();
 
+  // A validation failure on the last attempt to save this record: show what
+  // was actually typed, not the database's still-unchanged values, so the
+  // only thing the user has to fix is whatever the error message named.
+  global $clusters;
+  if ( $override !== null )
+  {
+    $lname           = eu_restored_value( $override, 'lname', $lname );
+    $fname           = eu_restored_value( $override, 'fname', $fname );
+    $organization    = eu_restored_value( $override, 'organization', $organization );
+    $address         = eu_restored_value( $override, 'address', $address );
+    $city            = eu_restored_value( $override, 'city', $city );
+    $state           = eu_restored_value( $override, 'state', $state );
+    $zip             = eu_restored_value( $override, 'zip', $zip );
+    $country         = eu_restored_value( $override, 'country', $country );
+    $phone           = eu_restored_value( $override, 'phone', $phone );
+    $email           = eu_restored_value( $override, 'email', $email );
+    $userlevel       = isset( $override['userlevel'] ) ? intval( $override['userlevel'] ) : $userlevel;
+    $advancelevel    = $override['advancelevel'] ?? $advancelevel;
+    $row['activated']       = ( isset( $override['activated'] ) && $override['activated'] == 'on' ) ? 1 : 0;
+    $row['account_enabled'] = ( isset( $override['account_enabled'] ) && $override['account_enabled'] == 'on' ) ? 1 : 0;
+
+    if ( $enable_GMP ) {
+      $gmpReviewerRole = $override['gmpReviewerRole'] ?? $gmpReviewerRole;
+    }
+    if ( $enable_PAM ) {
+      $authenticatePAM = ( isset( $override['authenticatePAM'] ) && $override['authenticatePAM'] == 'on' ) ? 1 : 0;
+      $userNamePAM     = eu_restored_value( $override, 'userNamePAM', $userNamePAM );
+    }
+
+    // Same checkbox names do_update() itself reads -- rebuild the colon-
+    // delimited list from what was actually posted, not what is still
+    // saved in the database.
+    $checked_clusters = array();
+    foreach ( $clusters as $cluster ) {
+      if ( isset( $override[ $cluster->short_name ] ) && $override[ $cluster->short_name ] == 'on' ) {
+        $checked_clusters[] = $cluster->short_name;
+      }
+    }
+    $clusterAuth = implode( ':', $checked_clusters );
+  }
+
   // Create dropdowns
   $userlevel_text    = userlevel_select( $userlevel );
   $advancelevel_text = advancelevel_select( $advancelevel );
@@ -1009,7 +1162,6 @@ function edit_record($link)
   $acct_enabled_text = "<label><input type='checkbox' name='account_enabled'$acct_enabled_chk /> Enabled</label>";
 
   // Figure out checks for cluster authorizations
-  global $clusters;
   foreach ( $clusters as $cluster )
   {
     $checked_cluster  = "checked_$cluster->short_name";
@@ -1054,6 +1206,20 @@ function edit_record($link)
   $result->close();
   $instrAuth_text = implode( ":", $instrAuth );
 
+  // Same as the cluster checkboxes above: on a repost, what was actually
+  // posted (do_update() reads these as 'inst_<id>') wins over what the
+  // database still has on file.
+  if ( $override !== null )
+  {
+    $checked_instruments = array();
+    foreach ( $instruments as $instrumentID => $instName ) {
+      if ( isset( $override[ "inst_$instrumentID" ] ) && $override[ "inst_$instrumentID" ] == 'on' ) {
+        $checked_instruments[] = $instrumentID;
+      }
+    }
+    $instrAuth_text = implode( ":", $checked_instruments );
+  }
+
   foreach ( $instruments as $instrumentID => $instName )
   {
     $checked_instr  = "checked_$instrumentID";
@@ -1093,10 +1259,13 @@ function edit_record($link)
 
   $extrasPAM =
     $enable_PAM
-    ? "<tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Authentication</th></tr>"
+    ? "<tr><th colspan='2' class='form-section-header'>Authentication</th></tr>"
       . "<tr><th>Authenticate via PAM:</th>"
       .  "<td>$authenticatePAM_text</td></tr>"
       .  "<tr><th>User name (PAM):</th>"
+      // Not marked required: get_user_info.php only enforces this when
+      // "Authenticate via PAM" above is checked -- otherwise it silently
+      // falls back to the email address, by design.
       .  "<td><input type='text' name='userNamePAM' size='40'"
       .  "          maxlength='64' value='$userNamePAM' /></td></tr>"
     : ""
@@ -1104,7 +1273,7 @@ function edit_record($link)
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"
-        onsubmit="return validate(this);">
+        class='onsubmit-return-validate-this' >
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
       <tr><th colspan='2'>Edit Profile</th></tr>
@@ -1116,45 +1285,46 @@ echo<<<HTML
     </tfoot>
     <tbody>
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Profile Information</th></tr>
-    <tr><th>First Name:</th>
+    <tr><th colspan='2' class='form-section-header'>Profile Information</th></tr>
+    <tr><td colspan='2' class='required-note'>* required</td></tr>
+    <tr><th>First Name: *</th>
         <td><input type='text' name='fname' size='40'
-                   maxlength='64' value='$fname' /></td></tr>
-    <tr><th>Last Name:</th>
+                   maxlength='64' value='$fname' required /></td></tr>
+    <tr><th>Last Name: *</th>
         <td><input type='text' name='lname' size='40'
-                   maxlength='64' value='$lname' /></td></tr>
-    <tr><th>Organization:</th>
+                   maxlength='64' value='$lname' required /></td></tr>
+    <tr><th>Organization: *</th>
         <td><input type='text' name='organization' size='40'
-                   maxlength='128' value='$organization' /></td></tr>
-    <tr><th>Address:</th>
+                   maxlength='128' value='$organization' required /></td></tr>
+    <tr><th>Address: *</th>
         <td><input type='text' name='address' size='40'
-                   maxlength='128' value='$address' /></td></tr>
-    <tr><th>City:</th>
+                   maxlength='128' value='$address' required /></td></tr>
+    <tr><th>City: *</th>
         <td><input type='text' name='city' size='40'
-                   maxlength='64' value='$city' /></td></tr>
-    <tr><th>State (Province):</th>
+                   maxlength='64' value='$city' required /></td></tr>
+    <tr><th>State (Province): *</th>
         <td><input type='text' name='state' size='40'
-                   maxlength='64' value='$state' /></td></tr>
-    <tr><th>Postal Code:</th>
+                   maxlength='64' value='$state' required /></td></tr>
+    <tr><th>Postal Code: *</th>
         <td><input type='text' name='zip' size='40'
-                   maxlength='16' value='$zip' /></td></tr>
-    <tr><th>Country:</th>
+                   maxlength='16' value='$zip' required /></td></tr>
+    <tr><th>Country: *</th>
         <td><input type='text' name='country' size='40'
-                   maxlength='64' value='$country' /></td></tr>
-    <tr><th>Phone:</th>
+                   maxlength='64' value='$country' required /></td></tr>
+    <tr><th>Phone: *</th>
         <td><input type='text' name='phone' size='40'
-                   maxlength='64' value='$phone' /></td></tr>
-    <tr><th>Email:</th>
+                   maxlength='64' value='$phone' required /></td></tr>
+    <tr><th>Email: *</th>
         <td><input type='text' name='email' size='40'
-                   maxlength='64' value='$email' /></td></tr>
+                   maxlength='64' value='$email' required /></td></tr>
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Account Access</th></tr>
+    <tr><th colspan='2' class='form-section-header'>Account Access</th></tr>
     <tr><th>Registration:</th>
         <td>$activated_text</td></tr>
     <tr><th>Account status:</th>
         <td>$acct_enabled_text</td></tr>
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Authorization</th></tr>
+    <tr><th colspan='2' class='form-section-header'>Authorization</th></tr>
     <tr><th>User Level:</th>
         <td>$userlevel_text</td></tr>
     <tr><th>Advance Level:</th>
@@ -1162,7 +1332,7 @@ echo<<<HTML
     $extrasGMP
     $extrasPAM
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>System Access</th></tr>
+    <tr><th colspan='2' class='form-section-header'>System Access</th></tr>
     <tr><th>Cluster Authorizations:</th>
         <td>$cluster_table</td></tr>
     <tr><th>Instrument Permissions:</th>
@@ -1176,19 +1346,38 @@ HTML;
 }
 
 // Function to create a new record
-function do_new($link)
+function do_new($link, $override = null)
 {
    global $enable_GMP;
    global $enable_PAM;
+
+   // A validation failure on the last attempt to create this record: show
+   // what was actually typed, same as edit_record() does for an update.
+   $fname           = eu_restored_value( $override, 'fname' );
+   $lname           = eu_restored_value( $override, 'lname' );
+   $organization    = eu_restored_value( $override, 'organization' );
+   $address         = eu_restored_value( $override, 'address' );
+   $city            = eu_restored_value( $override, 'city' );
+   $state           = eu_restored_value( $override, 'state' );
+   $zip             = eu_restored_value( $override, 'zip' );
+   $country         = eu_restored_value( $override, 'country' );
+   $phone           = eu_restored_value( $override, 'phone' );
+   $email           = eu_restored_value( $override, 'email' );
+   $gmpReviewerRole = $override['gmpReviewerRole'] ?? 'NONE';
+   // Checked by default on a fresh form, same as before; a repost reflects
+   // whatever was actually submitted instead.
+   $authenticatePAM_checked = ( $override === null || ( isset( $override['authenticatePAM'] ) && $override['authenticatePAM'] == 'on' ) )
+                            ? ' checked' : '';
+   $userNamePAM     = eu_restored_value( $override, 'userNamePAM' );
 
    $extrasGMP =
     $enable_GMP
     ? "<tr><th>GMP Reviewer Role:</th>"
       . "<td>"
       . "<select name='gmpReviewerRole'>"
-      . "<option value='NONE'>None</option>"
-      . "<option value='REVIEWER'>Reviewer</option>"
-      . "<option value='APPROVER'>Approver</option>"
+      . "<option value='NONE'"     . ( $gmpReviewerRole == 'NONE'     ? ' selected' : '' ) . ">None</option>"
+      . "<option value='REVIEWER'" . ( $gmpReviewerRole == 'REVIEWER' ? ' selected' : '' ) . ">Reviewer</option>"
+      . "<option value='APPROVER'" . ( $gmpReviewerRole == 'APPROVER' ? ' selected' : '' ) . ">Approver</option>"
       . "</select>"
       . "</td>"
       . "</tr>"
@@ -1198,17 +1387,19 @@ function do_new($link)
    $extrasPAM =
     $enable_PAM
     ? "<tr><th>Authenticate via PAM:</th>"
-      . "<td><input type='checkbox' name='authenticatePAM' checked>"
+      . "<td><input type='checkbox' name='authenticatePAM'$authenticatePAM_checked>"
       . "</td></tr>"
+      // Not marked required: left blank with "Authenticate via PAM"
+      // unchecked, get_user_info.php falls back to the email address.
       . "<tr><th>User name (PAM):</th>"
       . "<td><input type='text' name='userNamePAM' size='40'"
-      . "               maxlength='64'></td></tr>"
+      . "               maxlength='64' value='$userNamePAM'></td></tr>"
     : ""
     ;
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"
-        onsubmit="return validate(this);">
+        class='onsubmit-return-validate-this' >
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
       <tr><th colspan='2'>Create a New Profile</th></tr>
@@ -1219,39 +1410,40 @@ echo<<<HTML
     </tfoot>
     <tbody>
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Profile Information</th></tr>
-    <tr><th>First Name:</th>
+    <tr><th colspan='2' class='form-section-header'>Profile Information</th></tr>
+    <tr><td colspan='2' class='required-note'>* required</td></tr>
+    <tr><th>First Name: *</th>
         <td><input type='text' name='fname' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>Last Name:</th>
+                   maxlength='64' value='$fname' required /></td></tr>
+    <tr><th>Last Name: *</th>
         <td><input type='text' name='lname' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>Organization:</th>
+                   maxlength='64' value='$lname' required /></td></tr>
+    <tr><th>Organization: *</th>
         <td><input type='text' name='organization' size='40'
-                   maxlength='128' /></td></tr>
-    <tr><th>Address:</th>
+                   maxlength='128' value='$organization' required /></td></tr>
+    <tr><th>Address: *</th>
         <td><input type='text' name='address' size='40'
-                   maxlength='128' /></td></tr>
-    <tr><th>City:</th>
+                   maxlength='128' value='$address' required /></td></tr>
+    <tr><th>City: *</th>
         <td><input type='text' name='city' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>State (Province):</th>
+                   maxlength='64' value='$city' required /></td></tr>
+    <tr><th>State (Province): *</th>
         <td><input type='text' name='state' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>Postal Code:</th>
+                   maxlength='64' value='$state' required /></td></tr>
+    <tr><th>Postal Code: *</th>
         <td><input type='text' name='zip' size='40'
-                   maxlength='16' /></td></tr>
-    <tr><th>Country:</th>
+                   maxlength='16' value='$zip' required /></td></tr>
+    <tr><th>Country: *</th>
         <td><input type='text' name='country' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>Phone:</th>
+                   maxlength='64' value='$country' required /></td></tr>
+    <tr><th>Phone: *</th>
         <td><input type='text' name='phone' size='40'
-                   maxlength='64' /></td></tr>
-    <tr><th>Email:</th>
+                   maxlength='64' value='$phone' required /></td></tr>
+    <tr><th>Email: *</th>
         <td><input type='text' name='email' size='40'
-                   maxlength='64' /></td></tr>
+                   maxlength='64' value='$email' required /></td></tr>
 
-    <tr><th colspan='2' style='background:#3a3a3a;color:#fff;font-weight:bold;font-size:0.82em;letter-spacing:0.06em;text-transform:uppercase;padding:6px 10px;'>Authentication</th></tr>
+    <tr><th colspan='2' class='form-section-header'>Authentication</th></tr>
     $extrasGMP
     $extrasPAM
 

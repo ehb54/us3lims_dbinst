@@ -1,0 +1,904 @@
+<?php
+/*
+ * Post-upgrade installation check.
+ *
+ * Read-only. Answers "we changed things and believe they are right; prove it"
+ * for the configuration surface: the versioned base, per-instance overlays,
+ * the compatibility shims, credentials, and the deployment globals whose keys
+ * moved. It writes nothing, connects to no cluster, and prints no secret.
+ *
+ * Exit status: 0 when nothing failed (warnings allowed), 1 when any check
+ * failed, 2 when the check tool could not run at all.
+ *
+ * Usage:
+ *   php tools/check_installation.php [options]
+ *
+ *   --config-root=PATH        default: the loader's compiled-in root
+ *   --credentials-file=PATH   default: ~us3/lims/.us3lims.ini
+ *   --global-config=PATH      deployment global_config.php to inspect
+ *   --cluster-config=PATH     gridctl cluster_config.php, for the status probes
+ *                             (default ~us3/lims/bin/cluster_config.php)
+ *   --instance=NAME           check only this instance; repeatable
+ *   --dbinst-root=PATH        where instance checkouts live, for the
+ *                             unmigrated-instance scan
+ *   --deep                    also open each database with its real credentials
+ *   --quiet                   print only WARN and FAIL lines
+ *   --help                    print this text
+ */
+
+if ( php_sapi_name() !== 'cli' )
+{
+  header( 'HTTP/1.1 403 Forbidden' );
+  exit( "check_installation.php is a command line tool\n" );
+}
+
+require_once __DIR__ . '/../lib/dbinst_config_loader.php';
+
+/* ------------------------------------------------------------------ report */
+
+$GLOBALS[ 'check_counts' ]  = array( 'PASS' => 0, 'WARN' => 0, 'FAIL' => 0 );
+$GLOBALS[ 'check_quiet' ]   = false;
+$GLOBALS[ 'check_section' ] = '';
+
+function check_section( $title )
+{
+  $GLOBALS[ 'check_section' ] = $title;
+  if ( !$GLOBALS[ 'check_quiet' ] )
+    echo "\n== $title\n";
+}
+
+function check_report( $status, $name, $detail = '' )
+{
+  $GLOBALS[ 'check_counts' ][ $status ]++;
+
+  if ( $GLOBALS[ 'check_quiet' ] && $status === 'PASS' )
+    return $status === 'PASS';
+
+  if ( $GLOBALS[ 'check_quiet' ] && $GLOBALS[ 'check_section' ] !== '' )
+  {
+    echo "\n== " . $GLOBALS[ 'check_section' ] . "\n";
+    $GLOBALS[ 'check_section' ] = '';
+  }
+
+  printf( "  [%-4s] %-46s %s\n", $status, $name, $detail );
+  return $status === 'PASS';
+}
+
+function check_pass( $name, $detail = '' ) { return check_report( 'PASS', $name, $detail ); }
+function check_warn( $name, $detail = '' ) { return check_report( 'WARN', $name, $detail ); }
+function check_fail( $name, $detail = '' ) { return check_report( 'FAIL', $name, $detail ); }
+
+function check_abort( $message )
+{
+  fwrite( STDERR, "ERROR: $message\n" );
+  exit( 2 );
+}
+
+/* ------------------------------------------------------------- small tools */
+
+/*
+ * A subprocess that dies reports a fatal with a stack trace. The useful part
+ * is the exception message; the frames are noise in a one-line report and
+ * would push the rest of the check off screen.
+ */
+function check_condense_error( $text )
+{
+  if ( preg_match( '/Uncaught \w+(?:\\\\\w+)*: (.+?) in \//s', $text, $m ) )
+    return trim( $m[ 1 ] );
+
+  $first = strtok( trim( $text ), "\n" );
+  return $first === false ? 'failed with no output' : $first;
+}
+
+/*
+ * Run PHP in a clean process and decode its JSON.
+ *
+ * Needed for two independent reasons: the loader refuses to load a second
+ * instance in one process, and a deployment global_config.php is executable
+ * code we do not want in the checker's own scope.
+ */
+function check_subprocess( $source )
+{
+  // The source goes in on stdin, so nothing is written to a shared temp directory
+  $process = proc_open( escapeshellarg( PHP_BINARY ) . ' 2>&1',
+                        array( 0 => array( 'pipe', 'r' ), 1 => array( 'pipe', 'w' ) ),
+                        $pipes );
+  if ( !is_resource( $process ) )
+    check_abort( 'could not start ' . PHP_BINARY );
+
+  fwrite( $pipes[ 0 ], $source );
+  fclose( $pipes[ 0 ] );
+  $text = trim( stream_get_contents( $pipes[ 1 ] ) );
+  fclose( $pipes[ 1 ] );
+  $code = proc_close( $process );
+
+  if ( $code !== 0 )
+    return array( 'ok' => false, 'error' => check_condense_error( $text ) );
+
+  $decoded = json_decode( $text, true );
+  if ( !is_array( $decoded ) )
+    return array( 'ok' => false, 'error' => $text );
+
+  return array( 'ok' => true, 'data' => $decoded );
+}
+
+function check_mode( $path )
+{
+  $perms = @fileperms( $path );
+  return $perms === false ? null : ( $perms & 0777 );
+}
+
+function check_owner( $path )
+{
+  $uid = @fileowner( $path );
+  if ( $uid === false )
+    return '?';
+
+  $entry = function_exists( 'posix_getpwuid' ) ? posix_getpwuid( $uid ) : false;
+  return $entry ? $entry[ 'name' ] : (string) $uid;
+}
+
+/* Reject anything readable beyond its owner and group. */
+function check_secret_mode( $path, $label )
+{
+  $mode = check_mode( $path );
+  if ( $mode === null )
+    return check_fail( "$label permissions", "cannot stat $path" );
+
+  $printable = sprintf( '%04o owner=%s', $mode, check_owner( $path ) );
+
+  if ( $mode & 0004 )
+    return check_fail( "$label permissions", "world readable ($printable): $path" );
+  if ( $mode & 0002 )
+    return check_fail( "$label permissions", "world writable ($printable): $path" );
+  if ( $mode & 0020 )
+    return check_warn( "$label permissions", "group writable ($printable): $path" );
+
+  return check_pass( "$label permissions", $printable );
+}
+
+/* The base holds no secrets, so only writability beyond the owner matters. */
+function check_writable_mode( $path, $label )
+{
+  $mode = check_mode( $path );
+  if ( $mode === null )
+    return check_fail( "$label permissions", "cannot stat $path" );
+
+  $printable = sprintf( '%04o owner=%s', $mode, check_owner( $path ) );
+
+  if ( $mode & 0002 )
+    return check_fail( "$label permissions", "world writable ($printable): $path" );
+  if ( $mode & 0020 )
+    return check_warn( "$label permissions", "group writable ($printable): $path" );
+
+  return check_pass( "$label permissions", $printable );
+}
+
+## [ key => null ] for a configured field, [ key => value ] for one still holding a shipped
+## placeholder, in any case: a value starting with CHANGE-ME, one using config.php.template's
+## placeholder domain CHANGE-ME.example.org (us3-admin@CHANGE-ME.example.org), or ipa_ext's
+## documentation address 203.0.113.1. A real name merely containing the word is not flagged.
+function check_placeholder_fields( array $values, array $keys )
+{
+  $result = array();
+  foreach ( $keys as $key )
+  {
+    $value = (string) ( $values[ $key ] ?? '' );
+    $placeholder = $key === 'ipa_ext'
+                 ? trim( $value ) === '203.0.113.1'
+                 : stripos( ltrim( $value ), 'CHANGE-ME' ) === 0 || stripos( $value, 'CHANGE-ME.example.org' ) !== false;
+    $result[ $key ] = $placeholder ? $value : null;
+  }
+  return $result;
+}
+
+## The host base's placeholder fields.
+function check_base_placeholder_fields( array $base_values )
+{
+  return check_placeholder_fields( $base_values, array( 'org_name', 'site_author', 'ipa_ext' ) );
+}
+
+/* ---------------------------------------------------------------- options */
+
+$options = getopt( '', array(
+  'cluster-config::', 'config-root::', 'credentials-file::', 'global-config::',
+  'instance::', 'dbinst-root::', 'deep', 'quiet', 'help'
+) );
+
+if ( isset( $options[ 'help' ] ) )
+{
+  // Print the header comment, not the source
+  preg_match( '~/\*(.*?)\*/~s', file_get_contents( __FILE__ ), $m );
+  echo preg_replace( '/^ ?\* ?/m', '', trim( $m[ 1 ] ) ) . "\n";
+  exit( 0 );
+}
+
+$GLOBALS[ 'check_quiet' ] = isset( $options[ 'quiet' ] );
+$deep = isset( $options[ 'deep' ] );
+
+$config_root_given = isset( $options[ 'config-root' ] );
+$config_root = $config_root_given
+             ? rtrim( $options[ 'config-root' ], '/' )
+             : us3_dbinst_config_root();
+
+$credentials = isset( $options[ 'credentials-file' ] )
+             ? $options[ 'credentials-file' ]
+             : us3_dbinst_config_credentials_file();
+
+$only = array();
+if ( isset( $options[ 'instance' ] ) )
+  $only = is_array( $options[ 'instance' ] )
+        ? $options[ 'instance' ] : array( $options[ 'instance' ] );
+
+echo "UltraScan LIMS installation check\n";
+echo "Config root:  $config_root\n";
+echo "Credentials:  " . ( $credentials === '' ? '(unresolved)' : $credentials ) . "\n";
+echo "Checker from: " . realpath( __DIR__ . '/..' ) . "\n";
+echo "Contract:     v" . us3_dbinst_config_contract_version()
+   . ' (' . us3_dbinst_config_base_filename() . ")\n";
+
+/* ------------------------------------------------------------- host base */
+
+check_section( 'Host base' );
+
+$base_values = null;
+
+if ( !is_dir( $config_root ) )
+{
+  /*
+   * Migration is opt-in per instance, so a site with nothing migrated has no
+   * config root and is not broken. Only an explicit --config-root asserts that
+   * one should be there.
+   */
+  $config_root_given
+    ? check_fail( 'config root exists', $config_root )
+    : check_warn( 'base and overlay configuration installed',
+                  "none at $config_root; every instance is on a legacy "
+                  . 'config.php, which is a supported state' );
+}
+else
+{
+  check_pass( 'config root exists', $config_root );
+
+  $base_path = $config_root . '/' . us3_dbinst_config_base_filename();
+  if ( !is_file( $base_path ) )
+  {
+    check_fail( 'base file exists', $base_path );
+
+    /* A base for another contract version is the likely upgrade mistake. */
+    foreach ( glob( $config_root . '/dbinst-base.v*.php' ) ?: array() as $other )
+      check_warn( 'base file version', 'found ' . basename( $other )
+                  . ', this code wants ' . us3_dbinst_config_base_filename() );
+  }
+  else
+  {
+    check_pass( 'base file exists', $base_path );
+    check_writable_mode( $base_path, 'base file' );
+
+    try
+    {
+      $base_values = us3_dbinst_config_load_base( $config_root );
+      check_pass( 'base validates against the v'
+                  . us3_dbinst_config_contract_version() . ' contract',
+                  count( $base_values ) . ' values' );
+
+      ## The shipped base template's own
+      ## placeholder values ('CHANGE-ME: your organization's name', etc.)
+      ## are valid strings as far as the v1 contract's own type-checking
+      ## is concerned, so an unedited base passes every check above this
+      ## one and renders every page with the literal placeholder text --
+      ## nothing here ever flagged that until now.
+      foreach ( check_base_placeholder_fields( $base_values ) as $key => $value )
+      {
+        $value === null
+          ? check_pass( "base $key is configured", (string) $base_values[ $key ] )
+          : check_fail( "base $key is configured", "still the shipped placeholder: $value" );
+      }
+
+      foreach ( array( 'submit_dir', 'class_dir' ) as $key )
+      {
+        $dir = $base_values[ $key ];
+        is_dir( $dir )
+          ? check_pass( "base $key exists", $dir )
+          : check_warn( "base $key exists", "not a directory: $dir" );
+      }
+
+      $dbinst_root = rtrim( $base_values[ 'dbinst_root' ], '/' );
+      is_dir( $dbinst_root )
+        ? check_pass( 'base dbinst_root exists', $dbinst_root )
+        : check_fail( 'base dbinst_root exists', "not a directory: $dbinst_root" );
+
+      /* Configuration under the dbinst root is inside the served tree. */
+      if ( strpos( realpath( $config_root ) . '/', $dbinst_root . '/' ) === 0 )
+        check_fail( 'base is outside the served tree',
+                    "$config_root is under $dbinst_root" );
+      else
+        check_pass( 'base is outside the served tree' );
+    }
+    catch ( RuntimeException $e )
+    {
+      check_fail( 'base validates', $e->getMessage() );
+    }
+  }
+
+  $instances_dir = $config_root . '/instances';
+  if ( !is_dir( $instances_dir ) )
+    check_fail( 'instances directory exists', $instances_dir );
+  else
+  {
+    check_pass( 'instances directory exists', $instances_dir );
+
+    /*
+     * Expected 2750 us3:<web group>. Overlays are PHP that us3 later includes,
+     * so a group- or world-writable directory lets the web tier replace them.
+     */
+    $perms = @fileperms( $instances_dir ) & 07777;
+    $group = @filegroup( $instances_dir );
+    $entry = function_exists( 'posix_getgrgid' ) ? posix_getgrgid( $group ) : false;
+    $printable = sprintf( '%04o owner=%s group=%s', $perms, check_owner( $instances_dir ),
+                          $entry ? $entry[ 'name' ] : $group );
+
+    if ( $perms & 0022 )
+      check_fail( 'instances directory permissions', "writable beyond its owner ($printable)" );
+    elseif ( function_exists( 'posix_getpwnam' ) && posix_getpwnam( 'us3' ) &&
+             check_owner( $instances_dir ) !== 'us3' )
+      check_fail( 'instances directory permissions', "not owned by us3 ($printable)" );
+    elseif ( $perms !== 02750 )
+      check_warn( 'instances directory permissions', "expected 2750 ($printable)" );
+    elseif ( isset( $base_path ) && is_file( $base_path ) && @filegroup( $base_path ) !== $group )
+      check_warn( 'instances directory permissions', "group differs from the base file's ($printable)" );
+    else
+      check_pass( 'instances directory permissions', $printable );
+  }
+}
+
+/* ----------------------------------------------------------- credentials */
+
+check_section( 'Credentials' );
+
+if ( $credentials === '' )
+  check_fail( 'credential file resolved',
+              'no us3 account found and no --credentials-file given' );
+elseif ( !is_file( $credentials ) )
+  check_fail( 'credential file exists', $credentials );
+elseif ( !is_readable( $credentials ) )
+  check_fail( 'credential file readable by this account', $credentials );
+else
+{
+  check_pass( 'credential file exists', $credentials );
+  check_secret_mode( $credentials, 'credential file' );
+
+  $parsed = @parse_ini_file( $credentials, true );
+  if ( !is_array( $parsed ) )
+    check_fail( 'credential file parses', $credentials );
+  elseif ( !isset( $parsed[ 'gfac' ][ 'password' ] ) ||
+           !is_string( $parsed[ 'gfac' ][ 'password' ] ) ||
+           $parsed[ 'gfac' ][ 'password' ] === '' )
+    check_fail( 'credential file has a gfac password',
+                'migrated instances fail every request without it' );
+  else
+    check_pass( 'credential file has a gfac password' );
+
+  /*
+   * The file is resolved from the us3 account's home while web requests
+   * usually run as another account. A legacy config.php degraded quietly when
+   * the web account could not read it; a migrated instance fails outright, so
+   * this is worth naming rather than leaving to discovery.
+   */
+  $mode = check_mode( $credentials );
+  if ( $mode !== null && !( $mode & 0040 ) )
+    check_warn( 'credential file readable by the web account',
+                sprintf( 'mode %04o is owner-only; confirm the web account is '
+                         . 'the owner (%s)', $mode, check_owner( $credentials ) ) );
+  else
+    check_warn( 'credential file readable by the web account',
+                'verify from the web account; this check runs as '
+                . ( function_exists( 'posix_geteuid' )
+                    ? check_owner( $credentials ) . '-readable, uid '
+                      . posix_geteuid() : 'an unknown uid' ) );
+}
+
+/* -------------------------------------------------------------- instances */
+
+check_section( 'Instances' );
+
+$overlays = array();
+foreach ( glob( $config_root . '/instances/*.php' ) ?: array() as $path )
+  $overlays[] = basename( $path, '.php' );
+
+if ( $only )
+  $overlays = array_values( array_intersect( $overlays, $only ) );
+
+if ( !$overlays )
+  check_warn( 'migrated instances found',
+              'none; every instance is still on a legacy config.php' );
+
+foreach ( $overlays as $instance )
+{
+  check_section( "Instance $instance" );
+  $overlay_path = $config_root . '/instances/' . $instance . '.php';
+  check_secret_mode( $overlay_path, 'overlay' );
+
+  /* The loader refuses a second instance per process, so isolate each one. */
+  $probe = check_subprocess(
+      "<?php\n"
+    . 'define(' . var_export( 'US3_DBINST_CONFIG_ROOT', true ) . ', '
+    . var_export( $config_root, true ) . ");\n"
+    . 'define(' . var_export( 'US3_DBINST_CREDENTIALS_FILE', true ) . ', '
+    . var_export( $credentials, true ) . ");\n"
+    . 'require ' . var_export( __DIR__ . '/../lib/dbinst_config_loader.php', true ) . ";\n"
+    . '$v = us3_dbinst_config_load(' . var_export( $instance, true ) . ", null, true);\n"
+      /* Names and paths only. Nothing here may carry a credential. */
+    . "echo json_encode(array(\n"
+    . "  'dbname' => \$v['dbname'], 'dbhost' => \$v['dbhost'],\n"
+    . "  'full_path' => \$v['full_path'], 'data_dir' => \$v['data_dir'],\n"
+    . "  'org_site' => \$v['org_site'],\n"
+    . "  'has_globaldbpasswd' => \$v['globaldbpasswd'] !== '',\n"
+    . "));\n" );
+
+  if ( !$probe[ 'ok' ] )
+  {
+    check_fail( 'effective configuration loads', $probe[ 'error' ] );
+    continue;
+  }
+
+  $effective = $probe[ 'data' ];
+  check_pass( 'effective configuration loads',
+              'db=' . $effective[ 'dbname' ] . ' site=' . $effective[ 'org_site' ] );
+
+  $effective[ 'dbname' ] === $instance
+    ? check_pass( 'database name matches the instance' )
+    : check_fail( 'database name matches the instance',
+                  $effective[ 'dbname' ] . " != $instance" );
+
+  $effective[ 'has_globaldbpasswd' ]
+    ? check_pass( 'global database password resolved' )
+    : check_fail( 'global database password resolved', 'empty' );
+
+  foreach ( array( 'full_path' => 'FAIL', 'data_dir' => 'FAIL' ) as $key => $severity )
+  {
+    $dir = $effective[ $key ];
+    if ( !is_dir( $dir ) )
+      check_fail( "$key exists", $dir );
+    elseif ( $key === 'data_dir' && !is_writable( $dir ) )
+      check_warn( "$key writable", "not writable by this account: $dir" );
+    else
+      check_pass( "$key exists", $dir );
+  }
+
+  /* The shim, and the marker gridctl/submitctl.php greps for. */
+  $config_php = rtrim( $effective[ 'full_path' ], '/' ) . '/config.php';
+  if ( !is_file( $config_php ) )
+  {
+    check_fail( 'config.php present', $config_php );
+    continue;
+  }
+
+  $source = (string) file_get_contents( $config_php );
+  $is_shim = strpos( $source, 'us3_dbinst_config_bootstrap' ) !== false;
+
+  check_pass( 'config.php present',
+              $is_shim ? 'base+overlay shim' : 'legacy complete file' );
+
+  if ( strpos( $source, '$is_cli' ) === false )
+    check_fail( 'config.php declares $is_cli literally',
+                'submitctl.php greps for it and skips instances without it' );
+  else
+    check_pass( 'config.php declares $is_cli literally' );
+
+  if ( $is_shim )
+  {
+    if ( strpos( $source, var_export( $instance, true ) ) === false )
+      check_fail( 'shim names this instance', $config_php );
+    else
+      check_pass( 'shim names this instance' );
+
+    $loader = rtrim( $effective[ 'full_path' ], '/' ) . '/lib/dbinst_config_loader.php';
+    if ( !is_file( $loader ) )
+      check_fail( 'instance ships a loader', $loader );
+    else
+    {
+      $declared = @file_get_contents( $loader );
+      if ( preg_match( '/function\s+us3_dbinst_config_contract_version\s*\(\s*\)'
+                       . '\s*\{\s*return\s+(\d+)\s*;/', (string) $declared, $m ) )
+      {
+        (int) $m[ 1 ] === us3_dbinst_config_contract_version()
+          ? check_pass( 'instance loader contract version', 'v' . $m[ 1 ] )
+          : check_fail( 'instance loader contract version',
+                        'instance is v' . $m[ 1 ] . ', base is v'
+                        . us3_dbinst_config_contract_version() );
+      }
+      else
+        check_fail( 'instance loader declares a contract version', $loader );
+    }
+  }
+  else
+    check_warn( 'instance is migrated',
+                'an overlay exists but config.php is still the legacy file' );
+
+  /* migrate_instance_config.php --activate backs up the legacy config.php it
+   * replaces; before 5682b3f that backup landed in the instance docroot
+   * itself, next to config.php, with the database passwords it held, named
+   * plain config.php.legacy-<timestamp> (no instance prefix). A host that
+   * ran --activate before that fix still has it sitting there under that
+   * older name -- checked for here too, since the newer, prefixed name this
+   * glob checked alone would never match it. */
+  $stale_backups = array_merge(
+      glob( rtrim( $effective[ 'full_path' ], '/' )
+          . '/' . $instance . '.config.php.legacy-*' ) ?: array(),
+      glob( rtrim( $effective[ 'full_path' ], '/' )
+          . '/config.php.legacy-*' ) ?: array()
+  );
+  if ( $stale_backups )
+    check_warn( 'no legacy config.php backup left in the docroot',
+                count( $stale_backups ) . ' found, e.g. ' . $stale_backups[ 0 ]
+                . ' -- move it under ' . $config_root . '/instances, outside'
+                . ' anything the web server serves' );
+  else
+    check_pass( 'no legacy config.php backup left in the docroot' );
+
+  if ( $deep )
+  {
+    $connect = check_subprocess(
+        "<?php\n"
+      . 'define(' . var_export( 'US3_DBINST_CONFIG_ROOT', true ) . ', '
+      . var_export( $config_root, true ) . ");\n"
+      . 'define(' . var_export( 'US3_DBINST_CREDENTIALS_FILE', true ) . ', '
+      . var_export( $credentials, true ) . ");\n"
+      . 'require ' . var_export( __DIR__ . '/../lib/dbinst_config_loader.php', true ) . ";\n"
+      . '$v = us3_dbinst_config_load(' . var_export( $instance, true ) . ", null, true);\n"
+      . "\$r = array('instance' => false, 'global' => false);\n"
+      . "foreach (array('instance' => array('dbhost','dbusername','dbpasswd','dbname'),\n"
+      . "               'global' => array('globaldbhost','globaldbuser','globaldbpasswd','globaldbname'))\n"
+      . "         as \$which => \$k) {\n"
+      . "  try { \$c = @mysqli_connect(\$v[\$k[0]], \$v[\$k[1]], \$v[\$k[2]], \$v[\$k[3]]);\n"
+      . "        \$r[\$which] = (bool) \$c; if (\$c) mysqli_close(\$c); }\n"
+      . "  catch (Throwable \$e) { \$r[\$which] = false; }\n"
+      . "}\n"
+      . "echo json_encode(\$r);\n" );
+
+    if ( !$connect[ 'ok' ] )
+      check_fail( 'database connections', $connect[ 'error' ] );
+    else
+    {
+      $connect[ 'data' ][ 'instance' ]
+        ? check_pass( 'instance database connects', $effective[ 'dbname' ] )
+        : check_fail( 'instance database connects', $effective[ 'dbname' ]
+                      . ' on ' . $effective[ 'dbhost' ] );
+      $connect[ 'data' ][ 'global' ]
+        ? check_pass( 'global database connects' )
+        : check_fail( 'global database connects', 'gfac' );
+    }
+  }
+}
+
+/* ------------------------------------------------- unmigrated instances */
+
+/*
+ * Most instances are still on a complete config.php, and they can be broken by
+ * an upgrade too. The one thing worth asserting without executing them is the
+ * marker gridctl/submitctl.php greps for: an instance whose config.php lacks a
+ * literal $is_cli is skipped by the submission daemon, and nothing surfaces
+ * that in the web UI or the job logs.
+ */
+check_section( 'Unmigrated instances' );
+
+$dbinst_root = '';
+if ( isset( $options[ 'dbinst-root' ] ) )
+  $dbinst_root = rtrim( $options[ 'dbinst-root' ], '/' );
+elseif ( is_array( $base_values ) )
+  $dbinst_root = rtrim( $base_values[ 'dbinst_root' ], '/' );
+else
+  foreach ( array( '/srv/www/htdocs/uslims3', '/var/www/html/uslims3' ) as $candidate )
+    if ( is_dir( $candidate ) ) { $dbinst_root = $candidate; break; }
+
+if ( $dbinst_root === '' || !is_dir( $dbinst_root ) )
+  check_warn( 'dbinst root located',
+              'pass --dbinst-root=PATH to check instances that are not migrated' );
+else
+{
+  check_pass( 'dbinst root located', $dbinst_root );
+  $legacy = 0;
+
+  foreach ( glob( $dbinst_root . '/uslims3_*', GLOB_ONLYDIR ) ?: array() as $dir )
+  {
+    $instance = basename( $dir );
+
+    /* newlims is the metadata application and uslims3_data the shared submit area. */
+    if ( $instance === 'uslims3_newlims' || $instance === 'uslims3_data' )
+      continue;
+    if ( in_array( $instance, $overlays, true ) )
+      continue;
+    if ( $only && !in_array( $instance, $only, true ) )
+      continue;
+
+    $config_php = $dir . '/config.php';
+    if ( !is_file( $config_php ) )
+    {
+      check_fail( "$instance config.php present", $config_php );
+      continue;
+    }
+
+    $source = (string) file_get_contents( $config_php );
+
+    /*
+     * A shim with no overlay behind it is the one state that looks unmigrated
+     * from here but is not: every request to the instance fatals in the loader.
+     * Classifying by the file's content rather than by the overlay's presence
+     * is what tells the two apart.
+     */
+    if ( strpos( $source, 'us3_dbinst_config_bootstrap' ) !== false )
+      check_fail( "$instance overlay present",
+                  "config.php is a base+overlay shim but $config_root/instances/"
+                  . "$instance.php is missing; every request will fail" );
+    else
+      $legacy++;
+
+    strpos( $source, '$is_cli' ) === false
+      ? check_fail( "$instance declares \$is_cli literally",
+                    'submitctl.php will skip this instance' )
+      : check_pass( "$instance declares \$is_cli literally" );
+
+    $lint = array();
+    $code = 0;
+    exec( escapeshellarg( PHP_BINARY ) . ' -l ' . escapeshellarg( $config_php ) . ' 2>&1', $lint, $code );
+    $code === 0
+      ? check_pass( "$instance config.php parses" )
+      : check_fail( "$instance config.php parses", implode( ' ', $lint ) );
+
+    /* The same placeholder scan as the host base, over the values the legacy file sets. */
+    if ( $code === 0 && strpos( $source, 'us3_dbinst_config_bootstrap' ) === false )
+    {
+      $fields = array( 'org_name', 'org_site', 'site_author', 'admin', 'admin_email' );
+      $probe  = check_subprocess( '<?php chdir(' . var_export( $dir, true ) . '); $is_cli = true; '
+                                  . '@include ' . var_export( $config_php, true ) . '; '
+                                  . 'echo json_encode( compact( ' . var_export( $fields, true ) . ' ) );' );
+      if ( !$probe[ 'ok' ] )
+        check_warn( "$instance config.php values readable", $probe[ 'error' ] );
+      else
+        foreach ( check_placeholder_fields( $probe[ 'data' ], $fields ) as $key => $value )
+          if ( $value !== null )
+            check_fail( "$instance $key is configured", "still the shipped placeholder: $value" );
+    }
+  }
+
+  check_pass( 'unmigrated instances scanned', "$legacy on legacy config.php" );
+}
+
+/* ------------------------------------------------------ deployment globals */
+
+check_section( 'Deployment globals' );
+
+$global_config = isset( $options[ 'global-config' ] ) ? $options[ 'global-config' ] : '';
+if ( $global_config === '' )
+{
+  foreach ( array( '/srv/www/htdocs/common/global_config.php',
+                   '/var/www/html/common/global_config.php' ) as $candidate )
+    if ( is_file( $candidate ) ) { $global_config = $candidate; break; }
+}
+
+if ( $global_config === '' || !is_file( $global_config ) )
+  check_warn( 'global_config.php found',
+              'not found; pass --global-config=PATH to check it' );
+else
+{
+  check_pass( 'global_config.php found', $global_config );
+
+  $probe = check_subprocess(
+      "<?php\n"
+    . 'include ' . var_export( $global_config, true ) . ";\n"
+    . "\$globals = array();\n"
+    . "foreach (get_defined_vars() as \$k => \$x)\n"
+    . "  if (strpos(\$k, 'global_') === 0) \$globals[] = \$k;\n"
+    . "echo json_encode(array(\n"
+    . "  'globals' => \$globals,\n"
+    . "  'clusters' => isset(\$cluster_details) && is_array(\$cluster_details)\n"
+    . "                ? \$cluster_details : null,\n"
+    . "  'breaker_dir' => isset(\$global_circuit_breaker_dir)\n"
+    . "                   ? \$global_circuit_breaker_dir : null,\n"
+    . "));\n" );
+
+  if ( !$probe[ 'ok' ] )
+    check_fail( 'global_config.php loads', $probe[ 'error' ] );
+  else
+  {
+    check_pass( 'global_config.php loads',
+                count( $probe[ 'data' ][ 'globals' ] ) . ' global_* settings' );
+
+    /*
+     * Keys retired when remote timeout, retry, and breaker policy moved into
+     * remote_exec. A deployment that still sets one is not broken by it, but
+     * the operator believes they have configured something that no longer
+     * has a reader.
+     */
+    $retired = array(
+      'global_ssh_connect_timeout_seconds', 'global_ssh_command_timeout_seconds',
+      'global_ssh_copy_timeout_seconds', 'global_ssh_retries',
+      'global_ssh_retry_wait_seconds', 'global_circuit_breaker_failures',
+      'global_circuit_breaker_cooldown_seconds', 'global_circuit_breaker_disabled',
+      'global_timeout_bin', 'global_cluster_down_after_failures',
+    );
+    ## Not retired, despite sitting next to those: $global_sbatch_submit_retries
+    ## and $global_sbatch_submit_retry_wait_seconds are read by submit_slurm when
+    ## sbatch provably never started, and the shipped template sets both, so
+    ## listing them here warned about a standard installation's own defaults.
+    $found = array_values( array_intersect( $retired, $probe[ 'data' ][ 'globals' ] ) );
+    $found
+      ? check_warn( 'no retired global keys are set', implode( ', ', $found ) )
+      : check_pass( 'no retired global keys are set' );
+
+    /*
+     * These are different: remote_exec throws on a cluster entry that still
+     * carries one, so every call to that cluster fails.
+     */
+    $legacy_cluster = array( 'ssh_connect_timeout', 'ssh_command_timeout',
+                             'ssh_copy_timeout', 'ssh_retries', 'ssh_retry_wait' );
+    $limits = array( 'connect_timeout_seconds' => array( 1, 300 ),
+                     'command_timeout_seconds' => array( 1, 3600 ),
+                     'copy_timeout_seconds'    => array( 1, 86400 ) );
+
+    $clusters = $probe[ 'data' ][ 'clusters' ];
+    if ( !is_array( $clusters ) )
+      check_warn( 'cluster_details defined', 'not an array or not defined' );
+    else
+    {
+      $bad = array();
+      foreach ( $clusters as $name => $details )
+      {
+        if ( !is_array( $details ) )
+          continue;
+
+        foreach ( $legacy_cluster as $key )
+          if ( array_key_exists( $key, $details ) )
+            $bad[] = "$name.$key";
+
+        if ( array_key_exists( 'remote_exec_overrides', $details ) )
+        {
+          $over = $details[ 'remote_exec_overrides' ];
+          if ( !is_array( $over ) || $over === array() )
+            $bad[] = "$name.remote_exec_overrides must be a non-empty array";
+          else
+            foreach ( $over as $key => $value )
+            {
+              if ( !isset( $limits[ $key ] ) )
+                $bad[] = "$name.remote_exec_overrides.$key is not a known key";
+              elseif ( !is_int( $value ) || $value < $limits[ $key ][ 0 ] ||
+                       $value > $limits[ $key ][ 1 ] )
+                $bad[] = "$name.remote_exec_overrides.$key out of range";
+            }
+        }
+      }
+
+      $bad
+        ? check_fail( 'cluster entries use the current key surface',
+                      implode( '; ', $bad ) )
+        : check_pass( 'cluster entries use the current key surface',
+                      count( $clusters ) . ' clusters' );
+
+      /*
+       * An active cluster needs an active status probe, or cluster_status.php
+       * writes no row for it and the web tier treats a cluster with no row as
+       * down. The two files are edited separately, so activating a cluster in
+       * global_config.php alone leaves it permanently greyed out with nothing
+       * saying why. That is the state an operator lands in after enabling a
+       * converted national HPC entry.
+       */
+      $cluster_config = isset( $options[ 'cluster-config' ] )
+                      ? $options[ 'cluster-config' ]
+                      : rtrim( (string) @shell_exec( 'ls -d ~us3/lims/bin 2>/dev/null' ) )
+                        . '/cluster_config.php';
+      $active_names = array();
+      ## A metascheduler pool derives its status from its members; only real clusters need a probe.
+      foreach ( $clusters as $name => $details )
+        if ( is_array( $details ) && ! empty( $details[ 'active' ] )
+             && ! ( isset( $details[ 'clusters' ] ) && is_array( $details[ 'clusters' ] ) ) )
+          $active_names[] = $name;
+
+      if ( ! is_file( $cluster_config ) )
+        check_warn( 'active clusters have a status probe',
+                    "cluster_config.php not found at $cluster_config;"
+                    . ' pass --cluster-config=PATH to check it' );
+      elseif ( ! $active_names )
+        check_warn( 'active clusters have a status probe', 'no cluster is active' );
+      else {
+        $cc = check_subprocess(
+            "<?php\n"
+          . 'include ' . var_export( $cluster_config, true ) . ";\n"
+          . "echo json_encode( isset( \$cluster_configuration )\n"
+          . "                  && is_array( \$cluster_configuration )\n"
+          . "                  ? \$cluster_configuration : null );\n" );
+        $probes = is_array( $cc ) && isset( $cc[ 'data' ] ) ? $cc[ 'data' ] : null;
+        if ( ! is_array( $probes ) )
+          check_warn( 'active clusters have a status probe',
+                      "could not read \$cluster_configuration from $cluster_config" );
+        else {
+          $unprobed = array();
+          foreach ( $active_names as $name ) {
+            if ( ! is_array( isset( $probes[ $name ] ) ? $probes[ $name ] : null ) )
+              $unprobed[] = "$name has no cluster_config.php entry";
+            elseif ( empty( $probes[ $name ][ 'active' ] ) )
+              $unprobed[] = "$name has an inactive status probe";
+            elseif ( trim( (string) ( isset( $probes[ $name ][ 'status' ] )
+                                      ? $probes[ $name ][ 'status' ] : '' ) ) === '' )
+              $unprobed[] = "$name has an active probe with no status command";
+          }
+          $unprobed
+            ? check_fail( 'active clusters have a status probe',
+                          implode( '; ', $unprobed )
+                          . '; the web tier greys out a cluster with no cluster_status row' )
+            : check_pass( 'active clusters have a status probe',
+                          count( $active_names ) . ' active' );
+        }
+      }
+    }
+
+    /*
+     * The breaker is cross-process memory. If the directory is unusable it
+     * silently disables itself and every call reverts to per-process retry.
+     *
+     * State is kept per account in a subdirectory of this one, at 0700 with files
+     * at 0600, so the web tier and the us3 daemons do not share a file that
+     * decides whether a cluster is contacted. What matters here is only that the
+     * parent is writable, since each account creates its own subdirectory.
+     */
+    $breaker = $probe[ 'data' ][ 'breaker_dir' ];
+    if ( $breaker === null )
+    {
+      /*
+       * remote_exec::default_breaker_dir(): ~us3/lims/etc/circuit-breaker, or
+       * the BREAKER_DIR constant when there is no us3 account. This used to
+       * assume /var/tmp/us3-circuit-breaker, which is the one location the code
+       * deliberately avoids, so the tool reported a path nothing would use.
+       */
+      $us3     = function_exists( 'posix_getpwnam' ) ? @posix_getpwnam( 'us3' ) : false;
+      $breaker = ( is_array( $us3 ) && isset( $us3[ 'dir' ] ) ? $us3[ 'dir' ] : '/home/us3' )
+                 . '/lims/etc/circuit-breaker';
+      check_pass( 'breaker directory owner', "code default ($breaker)" );
+    }
+    elseif ( preg_match( '#^/var/tmp(/|$)#', $breaker ) )
+      /*
+       * systemd PrivateTmp gives each service its own /var/tmp, so state written
+       * there is invisible to the other side and aged out underneath both.
+       */
+      check_fail( 'breaker directory owner',
+                  "$breaker is under /var/tmp, which PrivateTmp splits per service"
+                  . " and tmpfiles ages out; use a path under ~us3/lims/etc" );
+    else
+      check_warn( 'breaker directory owner',
+                  "global_config.php overrides the code default: $breaker" );
+
+    if ( is_dir( $breaker ) )
+      is_writable( $breaker )
+        ? check_pass( 'breaker directory writable', $breaker )
+        : check_fail( 'breaker directory writable',
+                      "not writable by this account: $breaker" );
+    else
+    {
+      $parent = dirname( $breaker );
+      is_dir( $parent ) && is_writable( $parent )
+        ? check_pass( 'breaker directory creatable', "parent $parent is writable" )
+        : check_fail( 'breaker directory creatable',
+                      "$breaker is absent and $parent is not writable" );
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ summary */
+
+$counts = $GLOBALS[ 'check_counts' ];
+echo "\n";
+echo "Summary: {$counts['PASS']} passed, {$counts['WARN']} warnings, "
+   . "{$counts['FAIL']} failed\n";
+
+if ( $counts[ 'FAIL' ] )
+{
+  echo "Result: NOT READY. Resolve the failures above before serving traffic.\n";
+  exit( 1 );
+}
+
+echo $counts[ 'WARN' ]
+   ? "Result: OK with warnings. Review each warning; several are checks this\n"
+     . "        tool cannot make on your behalf, such as access from the web\n"
+     . "        account rather than the account running this command.\n"
+   : "Result: OK.\n";
+exit( 0 );
