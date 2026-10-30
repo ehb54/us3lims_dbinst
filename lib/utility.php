@@ -210,6 +210,30 @@ function is_single_tenant_deployment()
     return isset( $single_tenant_deployment ) ? (bool) $single_tenant_deployment : true;
 }
 
+// Whether the gfac database on $gfac_link records each job's request
+// (added by the 4.3.0 upgrade; two clusters can reuse a job number).
+function gfac_analysis_has_request_id( $gfac_link )
+{
+    try {
+        $result = mysqli_query( $gfac_link, "SHOW COLUMNS FROM analysis LIKE 'HPCAnalysisRequestID'" );
+    } catch ( mysqli_sql_exception $e ) {
+        $result = false;
+    }
+
+    return $result && mysqli_num_rows( $result ) > 0;
+}
+
+// SQL condition matching gfac.analysis to the HPCAnalysisResult alias $result.
+function gfac_result_match( $gfac_link, $result )
+{
+    $match = "$result.gfacID = analysis.gfacID";
+    if ( gfac_analysis_has_request_id( $gfac_link ) )
+        $match .= " AND ( analysis.HPCAnalysisRequestID IS NULL"
+                . " OR analysis.HPCAnalysisRequestID = $result.HPCAnalysisRequestID )";
+
+    return $match;
+}
+
 if ( empty( $admin_list ) || !is_array( $admin_list ) ) {
     ## admin_list must be set in global_config.php or cluster_config.php
     error_log( "ERROR: lib/utility.php: \$admin_list is not set or empty; check global_config.php" );
@@ -298,7 +322,13 @@ function makeRandomPassword($fixed_length = 0 ): string
 
 // Marks every cluster with no cluster_status row as down, and returns their short
 // names. $reason, when given, says why no row was found at all.
-function mark_clusters_without_status( &$clusters, $have_row, $reason = '' )
+// $global_cluster_details, when given, exempts a metascheduler pool entry (its
+// own row carries a 'clusters' array rather than a real sshport/queue) from
+// this: a pool has no real host to probe status on, by design -- cluster_status
+// .php never writes a row for one -- so having no row is expected there, not a
+// down/unhealthy signal. Mirrors dispatch_is_pool_entry()'s shape check
+// (gridctl's dispatch_policy.php) and require_cluster.php's own copy of it.
+function mark_clusters_without_status( &$clusters, $have_row, $reason = '', $global_cluster_details = null )
 {
    if ( !is_array( $clusters ) )
      return array();
@@ -307,6 +337,11 @@ function mark_clusters_without_status( &$clusters, $have_row, $reason = '' )
    foreach ( $clusters as $cluster )
    {
      if ( in_array( $cluster->short_name, $have_row ) )
+       continue;
+
+     $entry = is_array( $global_cluster_details )
+            ? ( $global_cluster_details[ $cluster->short_name ] ?? null ) : null;
+     if ( is_array( $entry ) && array_key_exists( 'clusters', $entry ) && is_array( $entry[ 'clusters' ] ) )
        continue;
 
      $cluster->status = 'down';
@@ -320,6 +355,93 @@ function mark_clusters_without_status( &$clusters, $have_row, $reason = '' )
                 . " Check that cluster_status.php is still running from cron." );
 
    return $marked;
+}
+
+// The 'warn' tooltip ("last health check failed")
+// is accurate for a real cluster, but a metascheduler pool's own 'warn'
+// (pool_status_from_members()) means "some members down/draining/warn or
+// unauthorized", not that anything was ever probed for the pool entry
+// itself -- cluster_status.php never writes a row for one. Same shape
+// check as mark_clusters_without_status()/dispatch_is_pool_entry()
+// (gridctl's dispatch_policy.php).
+function cluster_warn_tooltip( $short_name, $global_cluster_details )
+{
+   $entry = is_array( $global_cluster_details )
+          ? ( $global_cluster_details[ $short_name ] ?? null ) : null;
+   return ( is_array( $entry ) && array_key_exists( 'clusters', $entry ) && is_array( $entry[ 'clusters' ] ) )
+        ? 'one or more pool members are down, draining, degraded, or not authorized for this account'
+        : 'last health check failed';
+}
+
+// A pool's own cluster_info stayed at the
+// constructor default ('*') once exempted above, since nothing ever
+// derived it from the pool's actual members -- so a pool row looked
+// selectable on the submission page even with every member down. 'down'
+// only when every member is down/draining, since the dispatch worker can
+// still route a real submission to any one healthy member regardless of
+// the others; 'warn' when some but not all are down/draining/warn, so an
+// operator sees degraded capacity before it is a full outage; otherwise
+// left alone (every member already reports its own healthy status).
+//
+// Pure: takes the already-resolved member statuses as plain strings, not
+// the pool's own name or $clusters, so it is testable without constructing
+// cluster_info objects at all.
+function pool_status_from_members( array $member_statuses )
+{
+   if ( empty( $member_statuses ) )
+     return 'down'; // no members configured at all: nothing a submission could ever reach
+
+   $down_like = function( $status ) { return $status === 'down' || $status === 'draining'; };
+
+   $down_count = count( array_filter( $member_statuses, $down_like ) );
+
+   if ( $down_count === count( $member_statuses ) )
+     return 'down';
+
+   if ( $down_count > 0 || in_array( 'warn', $member_statuses, true ) )
+     return 'warn';
+
+   return 'up';
+}
+
+// Applies pool_status_from_members() to every pool entry in $clusters, once every real
+// cluster's own status is already resolved (i.e. after mark_clusters_without_status() and
+// the cluster_status query loop above have both run). A pool member not itself present in
+// $clusters (not independently active, or filtered out upstream) is treated as 'down' --
+// absent data is not evidence of health.
+//
+// A member this account is not authorized to use (cluster_is_authorized())
+// is treated as 'down' here too, the same as an absent one, so a pool whose
+// only healthy member this account can never be routed to does not report
+// 'warn' (implying "degraded but usable") and stay pre-checked. $is_authorized defaults to
+// cluster_is_authorized() itself (the real, session-based check);
+// injectable so a test can drive this without a session.
+function resolve_pool_statuses( array &$clusters, $global_cluster_details, ?callable $is_authorized = null )
+{
+   if ( !is_array( $global_cluster_details ) )
+     return;
+
+   if ( $is_authorized === null )
+     $is_authorized = 'cluster_is_authorized';
+
+   $status_by_name = array();
+   foreach ( $clusters as $cluster )
+     $status_by_name[ $cluster->short_name ] = $cluster->status;
+
+   foreach ( $clusters as $cluster )
+   {
+      $entry = $global_cluster_details[ $cluster->short_name ] ?? null;
+      if ( !is_array( $entry ) || !isset( $entry[ 'clusters' ] ) || !is_array( $entry[ 'clusters' ] ) )
+        continue;
+
+      $member_statuses = array();
+      foreach ( $entry[ 'clusters' ] as $member_name )
+        $member_statuses[] = $is_authorized( $member_name )
+                            ? ( $status_by_name[ $member_name ] ?? 'down' )
+                            : 'down';
+
+      $cluster->status = pool_status_from_members( $member_statuses );
+   }
 }
 
 // A class to keep track of cluster information, and what clusters are available
@@ -409,8 +531,12 @@ while ( $result && list( $cluster, $running, $queued, $status, $age ) = mysqli_f
 
 // A cluster with no cluster_status row has never been probed, or its probe has
 // stopped writing. That is the same unknown as an expired row, so treat it the
-// same way rather than leaving it selectable on a constructor default.
-mark_clusters_without_status( $clusters, $have_row, $gfac_link ? '' : 'the gfac database is unreachable' );
+// same way rather than leaving it selectable on a constructor default -- except
+// a metascheduler pool, which has no probe of its own by design (exempted
+// above) and gets its own status derived from its members, below, instead.
+mark_clusters_without_status( $clusters, $have_row, $gfac_link ? '' : 'the gfac database is unreachable',
+                               $global_cluster_details );
+resolve_pool_statuses( $clusters, $global_cluster_details );
 
 if ( $gfac_link )
   mysqli_close( $gfac_link );
@@ -462,15 +588,13 @@ function cluster_is_authorized( $shortname )
      }
    }
 
-   ## Still gated on userlevel and on the cluster actually being configured
-   ## above -- only the clusterAuth list requirement below is skipped for
-   ## the host's own node.
-   if ( $configured
-        && remote_exec::localhost_flag( $global_cluster_details[ $shortname ][ 'localhost' ] ?? false ) )
-     return true;
-
    if ( ! $configured )
      return false;
+
+   ## Still gated on userlevel and configuration above; only the clusterAuth
+   ## list is skipped for the host's own node. A configured string 'false' is false.
+   if ( remote_exec::localhost_flag( $global_cluster_details[ $shortname ][ 'localhost' ] ?? false ) )
+     return true;
 
    return isset( $_SESSION[ 'clusterAuth' ] )
           && is_array( $_SESSION[ 'clusterAuth' ] )
@@ -518,6 +642,7 @@ function require_authorized_cluster( $shortname )
 function showClusters()
 {
   global $clusters;
+  global $global_cluster_details;
 
   if ( $_SESSION['userlevel'] < 2 )
     return( "" );
@@ -552,9 +677,12 @@ HTML;
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
-          // A failed health probe reports 'warn'; the cluster remains selectable.
+          // A failed health probe reports 'warn' for a real cluster; a
+          // degraded pool (some members down/draining/warn/unauthorized)
+          // reports it too, for a different reason -- cluster_warn_tooltip()
+          // tells them apart.
           $clstat   = ( $cluster->status == 'warn' )
-                    ? "<td class='text-darkorange' title='last health check failed'>$cluster->status</td>"
+                    ? "<td class='text-darkorange' title='" . cluster_warn_tooltip( $cluster->short_name, $global_cluster_details ) . "'>$cluster->status</td>"
                     : "<td class='text-green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
@@ -683,14 +811,10 @@ function tigre( $force_pmg = false )
 
 HTML;
 
-    $checked  = " checked='checked'";      // check the first one
-    $gamcnms  = "";
-    $ngamc    = 0;
-  
-    foreach ( $clusters as $cluster )
-    {
-        ## Only list clusters that are authorized for the user
-        if (
+    // An active metascheduler pool, when one is listed and usable, is the
+    // preselected destination; otherwise the first usable cluster, as before.
+    $listed = function ( $cluster ) use ( $pmg_job, $global_cluster_details ) {
+      return (
             in_array( $cluster->short_name, $_SESSION['clusterAuth'] )
             && array_key_exists( $cluster->short_name, $global_cluster_details )
             && (
@@ -710,7 +834,28 @@ HTML;
                  )
                 )
             )
-            )
+            );
+    };
+    $preselect = null;
+    foreach ( $clusters as $cluster )
+    {
+      if ( ! $listed( $cluster ) || $cluster->status == 'down' || $cluster->status == 'draining' )
+        continue;
+      if ( $preselect === null )
+        $preselect = $cluster->short_name;
+      if ( isset( $global_cluster_details[ $cluster->short_name ]['clusters'] ) )
+      {
+        $preselect = $cluster->short_name;
+        break;
+      }
+    }
+    $gamcnms  = "";
+    $ngamc    = 0;
+  
+    foreach ( $clusters as $cluster )
+    {
+        ## Only list clusters that are authorized for the user
+        if ( $listed( $cluster ) )
         {
         $disabled = ( $cluster->status == 'down' ) ? " disabled='disabled'" : "";
         $disabled = ( $cluster->status == 'draining' ) ? " disabled='disabled'" : $disabled;
@@ -720,9 +865,12 @@ HTML;
         // Color-code entry based on status and queue counts
         if ( $cluster->status != 'down'  &&  $cluster->status != 'draining' )
         {
-          // A failed health probe reports 'warn'; the cluster remains selectable.
+          // A failed health probe reports 'warn' for a real cluster; a
+          // degraded pool (some members down/draining/warn/unauthorized)
+          // reports it too, for a different reason -- cluster_warn_tooltip()
+          // tells them apart.
           $clstat   = ( $cluster->status == 'warn' )
-                    ? "<td class='text-darkorange' title='last health check failed'>$cluster->status</td>"
+                    ? "<td class='text-darkorange' title='" . cluster_warn_tooltip( $cluster->short_name, $global_cluster_details ) . "'>$cluster->status</td>"
                     : "<td class='text-green'>$cluster->status</td>";
           $cque     = $cluster->queued;
           $crun     = $cluster->running;
@@ -771,6 +919,7 @@ HTML;
         }
 
         $value = "$clname:$cluster->short_name:$cluster->queue";
+        $checked = $cluster->short_name === $preselect ? " checked='checked'" : "";
         $text .= "     <tr><td class='cluster' width=150 >" .
                  "<input type='radio' name='cluster' " .
                  "value='$value'$checked$disabled />" .
@@ -779,9 +928,6 @@ HTML;
                  "<td>$cluster->queue</td>"   .
                  "<td>$cluster->running / $cluster->queued</td> " .
                  "$clload</tr>\n";
-
-        if ( $disabled == "" )
-           $checked = "";
       }
     }
     $mctext = "";

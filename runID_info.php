@@ -703,7 +703,7 @@ HTML;
     while ( list( $ID, $requestID, $gfacID, $status, $updated ) = mysqli_fetch_array( $result ) )
     {
       if ( $status != 'completed' )
-        $incomplete[] = $gfacID;
+        $incomplete[] = array( $gfacID, $requestID );
 
       $text .= <<<HTML
       <tr><td>$ID</td>
@@ -755,12 +755,16 @@ HTML;
 HTML;
 
   $in_queue = 0;
-  foreach ( $incomplete as $gfacID )
+  // Two clusters can reuse a job number: match this instance and request too.
+  global $dbname;
+  $by_request = gfac_analysis_has_request_id( $globaldb );
+  foreach ( $incomplete as list( $gfacID, $requestID ) )
   {
-    
     $query  = "SELECT cluster, us3_db, status, queue_msg, time " .
               "FROM analysis " .
-              "WHERE gfacID = '$gfacID' ";
+              "WHERE gfacID = '" . mysqli_real_escape_string( $globaldb, $gfacID ) . "' " .
+              "AND us3_db = '" . mysqli_real_escape_string( $globaldb, $dbname ) . "' " .
+              ( $by_request ? "AND ( HPCAnalysisRequestID IS NULL OR HPCAnalysisRequestID = " . (int) $requestID . " ) " : "" );
     $result = mysqli_query( $globaldb, $query )
               or die( "Query failed : $query<br />\n" . mysqli_error($globaldb) );
   

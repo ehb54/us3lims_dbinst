@@ -79,6 +79,17 @@ if ( $submit_stopped ) {
 $payload = new Payload_2DSA_CG( $_SESSION );
 $payload->restore();
 
+// A pool submission is recorded for the dispatch queue in one transaction; a
+// repeated post of an already received submission shows its original receipt.
+include_once 'lib/dispatch_intake.php';
+$dispatch_prior = dispatch_intake_active() ? dispatch_intake_begin( $link, $dbname, $payload->get() ) : array();
+if ( $dispatch_prior )
+{
+  include 'lib/dispatch_receipt.php';
+  if ( $is_cli ) return;
+  exit();
+}
+
 // Create the HPC analysis agent and file writer
 $HPC       = new HPC_2DSA_CG();
 $file      = new File_2DSA_CG();
@@ -144,6 +155,7 @@ if ( $separate_datasets > 0 )
       $stmt->execute()
             or die("Query failed : $query<br />\n" .$stmt->error);
       $stmt->close();
+      dispatch_intake_note( $link, $dbname, $HPCAnalysisRequestID, $filenames[ $kr ], $files_ok, $missit_msg );
     }
 
     $index        += $reqds_count;
@@ -184,10 +196,12 @@ else
     $stmt->execute()
           or die("Query failed : $query<br />\n" . $stmt->error);
     $stmt->close();
+    dispatch_intake_note( $link, $dbname, $HPCAnalysisRequestID, $filenames[ 0 ], $files_ok, $missit_msg );
     
   }
 }
 
+$files_ok = dispatch_intake_close( $link, $dbname, $files_ok, $missit_msg );
 if ( $files_ok )
 {
   $output_msg = <<<HTML
@@ -197,11 +211,14 @@ if ( $files_ok )
   completed.
 
 HTML;
+  if ( dispatch_intake_received() )
+    $output_msg = dispatch_intake_receipt_html( $GLOBALS['dispatch_intake_rows'], $GLOBALS['dispatch_intake_pool'] );
 
   // EXEC COMMAND FOR TIGRE 
   if ( isset($_SESSION['cluster']) )
   {
     $cluster = $_SESSION['cluster']['shortname'];
+    $metaschedulerClusterExecuting = $_SESSION['cluster']['metaschedulerClusterExecuting'] ?? null;
     unset( $_SESSION['cluster'] );
 
     $job = new submit_slurm();
@@ -216,6 +233,10 @@ HTML;
 
       $job-> clear();
       $job-> parse_input( basename( $filename ) );
+      if ( isset( $metaschedulerClusterExecuting ) && $metaschedulerClusterExecuting !== null )
+      {
+        $job-> set_metascheduler_cluster_executing( $metaschedulerClusterExecuting );
+      }
       if ( ! DEBUG ) $job-> submit();
       $retval = $job->get_messages();
 
@@ -272,6 +293,7 @@ HTML;
 
 // Start displaying page
 $page_title = '2DSA-CG Analysis Submitted';
+$page_title = dispatch_intake_title( $page_title );
 include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";
