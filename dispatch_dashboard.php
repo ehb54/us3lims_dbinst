@@ -21,6 +21,7 @@ include 'db.php';
 include 'lib/utility.php';
 include_once $class_dir . 'dispatch_alerts.php';
 include_once $class_dir . 'dispatch_messages.php';
+include_once $class_dir . 'dispatch_schema.php';
 
 $operator = 'person ' . (int) $_SESSION['loginID'];
 $gdb = 'gfac';
@@ -109,6 +110,11 @@ else
   }
   echo "</table>\n";
 }
+
+$missing_tables = dispatch_schema_problems( $link, $dbname, array_keys( dispatch_instance_table_ddl( $dbname ) ) );
+if ( $missing_tables )
+  echo "<p class='message text-red'>This instance cannot record dispatch requests: " . $h( implode( '; ', $missing_tables ) )
+     . ". Run uslims_upgrade.php --apply on the LIMS host to create the tables.</p>\n";
 
 // Requests needing action.
 $attention = dispatch_rows( $link, "SELECT r.*, (SELECT attemptToken FROM `$dbname`.dispatch_attempt a
