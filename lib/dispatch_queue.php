@@ -14,6 +14,15 @@ function dispatch_queue_states()
                 'ACCEPTED', 'FAILED', 'EXPIRED', 'CANCELLED' );
 }
 
+// Finished without a job: listed for a day after they finish, so the submitter sees why.
+function dispatch_queue_finished_states()
+{
+  return array( 'FAILED', 'EXPIRED', 'CANCELLED' );
+}
+
+// The most requests one page lists.
+const DISPATCH_QUEUE_MAX_ROWS = 500;
+
 // What a state means for the submitter, escaped. Operators (level 4 and up)
 // also see the recorded detail, correlated by request and attempt.
 function dispatch_queue_message( array $row )
@@ -33,7 +42,8 @@ function dispatch_queue_rows( $link, $dbname )
   if ( ! dispatch_db_name_ok( $dbname ) || ! dispatch_rows( $link, "SELECT 1 FROM information_schema.TABLES
          WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'dispatch_request'", 's', array( $dbname ) ) )
     return array();
-  $states = "'" . implode( "','", dispatch_queue_states() ) . "'";
+  $states = "'" . implode( "','", array_diff( dispatch_queue_states(), dispatch_queue_finished_states() ) ) . "'";
+  $done   = "'" . implode( "','", dispatch_queue_finished_states() ) . "'";
   $own = (int) $_SESSION['userlevel'] < 3;
   return dispatch_rows( $link, "SELECT r.dispatchRequestID, r.HPCAnalysisRequestID, r.pool, r.state, r.reason, r.reasonCode,
         r.selectedCluster, r.retryAt, r.deadlineAt, r.createdAt, r.cancelRequested, r.parentBatchKey, r.notifiedAt,
@@ -45,8 +55,8 @@ function dispatch_queue_rows( $link, $dbname )
       FROM `$dbname`.dispatch_request r
       LEFT JOIN `$dbname`.HPCAnalysisRequest h ON h.HPCAnalysisRequestID = r.HPCAnalysisRequestID
       LEFT JOIN `$dbname`.people p ON p.personID = r.submitterID
-      WHERE r.state IN ($states)" . ( $own ? ' AND r.submitterID = ?' : '' ) . "
-      ORDER BY r.createdAt, r.dispatchRequestID", $own ? 'i' : '', $own ? array( (int) $_SESSION['loginID'] ) : array() );
+      WHERE ( r.state IN ($states) OR ( r.state IN ($done) AND r.updatedAt >= UTC_TIMESTAMP() - INTERVAL 1 DAY ) )" . ( $own ? ' AND r.submitterID = ?' : '' ) . "
+      ORDER BY r.createdAt, r.dispatchRequestID LIMIT " . DISPATCH_QUEUE_MAX_ROWS, $own ? 'i' : '', $own ? array( (int) $_SESSION['loginID'] ) : array() );
 }
 
 function dispatch_queue_may_cancel( array $row )
