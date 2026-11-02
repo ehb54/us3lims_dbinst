@@ -145,8 +145,11 @@ function ensure_audit_flag_column( $link )
 }
 
 // Refuses the save when ensure_audit_flag_column() could not provide the column.
-function _eu_refuse_without_audit_column()
+// $repost_type ('update' or 'create') keeps the form the admin typed for the redisplay.
+function _eu_refuse_without_audit_column( $repost_type = null )
 {
+  if ( $repost_type !== null )
+    _eu_stash_repost( $repost_type, $_POST );
   $_SESSION['message'] = 'The change was not saved: the people_audit table lacks its created_at_utc column and'
                        . ' this account cannot add it. Ask the administrator to run uslims_upgrade.php --apply.';
   _eu_redirect_and_exit( $_SERVER['PHP_SELF'] );
@@ -537,7 +540,7 @@ function do_update($link)
 
   if ( empty($message) && !ensure_audit_flag_column( $link ) )
   {
-    _eu_refuse_without_audit_column();
+    _eu_refuse_without_audit_column( 'update' );
     return;
   }
 
@@ -772,7 +775,7 @@ function do_create($link)
 
     if ( !ensure_audit_flag_column( $link ) )
     {
-      _eu_refuse_without_audit_column();
+      _eu_refuse_without_audit_column( 'create' );
       return;
     }
 
