@@ -936,9 +936,9 @@ if ( $deep )
     . "\$missing = array();\n"
     . "foreach (\$inst as \$db) if (!dispatch_rows(\$l, \"SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?\n"
     . "  AND TABLE_NAME = 'people'\", 's', array(\$db))) continue;\n"
-    . "  else if (dispatch_schema_problems(\$l, \$db, array_keys(dispatch_instance_table_ddl(\$db)))) \$missing[] = \$db;\n"
+    . "  else if (dispatch_schema_problems(\$l, \$db, dispatch_instance_tables())) \$missing[] = \$db;\n"
     . "echo json_encode(array('connect' => '', 'heartbeat' => dispatch_heartbeat_status(\$l, 'gfac'),\n"
-    . "  'gfac' => dispatch_schema_problems(\$l, 'gfac', array_keys(dispatch_gfac_table_ddl('gfac'))),\n"
+    . "  'gfac' => dispatch_schema_problems(\$l, 'gfac', dispatch_gfac_tables()),\n"
     . "  'instances' => \$missing,\n"
     . "  'urgent' => dispatch_rows(\$l, \"SELECT kind, destination, instanceDb FROM dispatch_alert\n"
     . "     WHERE openFlag = 1 AND urgency = 'urgent'\")));\n" );

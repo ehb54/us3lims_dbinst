@@ -111,7 +111,7 @@ else
   echo "</table>\n";
 }
 
-$missing_tables = dispatch_schema_problems( $link, $dbname, array_keys( dispatch_instance_table_ddl( $dbname ) ) );
+$missing_tables = dispatch_schema_problems( $link, $dbname, dispatch_instance_tables() );
 if ( $missing_tables )
   echo "<p class='message text-red'>This instance cannot record dispatch requests: " . $h( implode( '; ', $missing_tables ) )
      . ". Run uslims_upgrade.php --apply on the LIMS host to create the tables.</p>\n";
