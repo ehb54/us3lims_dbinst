@@ -43,7 +43,7 @@ if ( $glink && $_SERVER['REQUEST_METHOD'] === 'POST'
   if ( isset( $_POST['retry'] ) )
     dispatch_operator_retry( $link, $dbname, $id, $operator );
   elseif ( isset( $_POST['resolve_unknown'] ) )
-    dispatch_resolve_unknown( $glink, $gdb, $dbname, $id, trim( (string) ( $_POST['job_id'] ?? '' ) ),
+    dispatch_resolve_unknown( $glink, $dbname, $id, trim( (string) ( $_POST['job_id'] ?? '' ) ),
                               trim( (string) ( $_POST['evidence'] ?? '' ) ) . " ($operator)" );
   elseif ( isset( $_POST['close_alert'] ) )
   {
