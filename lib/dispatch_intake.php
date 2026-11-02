@@ -151,20 +151,28 @@ function dispatch_intake_close( $link, $dbname, $files_ok, &$missit_msg )
   if ( $ok && count( $rows ) === 1 )
     $ok = dispatch_affected( $link, "UPDATE `$dbname`.dispatch_request SET parentBatchKey = NULL WHERE parentBatchKey = ?",
                              's', array( dispatch_intake_batch_key( $dbname, $_SESSION['loginID'], $nonce ) ) ) === 1;
+  ## By primary key: a LEFT(logicalKey) match scanned the table and waited on other pages' open intakes.
   if ( $ok )
   {
-    $prefix = dispatch_intake_prefix( $dbname, $_SESSION['loginID'], $nonce );
-    $ok = dispatch_affected( $link, "UPDATE `$dbname`.dispatch_request SET batchSealed = 1 WHERE LEFT(logicalKey, ?) = ?",
-                             'is', array( strlen( $prefix ), $prefix ) ) === count( $rows );
+    $ids = array_map( 'intval', array_column( $rows, 'dispatchRequestID' ) );
+    $ok = dispatch_affected( $link, "UPDATE `$dbname`.dispatch_request SET batchSealed = 1 WHERE dispatchRequestID IN ("
+                             . implode( ',', $ids ) . ")" ) === count( $rows );
   }
   ## The stage holds as READY until the worker reports acceptance or failure.
   if ( $ok && $is_cli && ! empty( $ID ) )
     $ok = dispatch_affected( $link, "UPDATE `$dbname`.autoflowAnalysis SET currentHPCARID = ?, status = 'READY',
                                      statusMsg = 'Analysis received; waiting for dispatch' WHERE requestID = ?",
                              'ii', array( (int) $rows[0]['HPCAnalysisRequestID'], (int) $ID ) ) >= 0;
+  $db_error = $ok ? '' : mysqli_error( $link );
   $ok ? mysqli_commit( $link ) : mysqli_rollback( $link );
   if ( ! $ok && $files_ok )
+  {
     $missit_msg .= '<br/>The analysis could not be recorded for dispatch; nothing was submitted.';
+    ## gridctl's notice names this, not an unrelated notice from a page included later.
+    if ( $is_cli )
+      $GLOBALS['gridctl_submission_failure_reason'] = 'the analysis could not be recorded for dispatch'
+                                                    . ( $db_error !== '' ? ": $db_error" : '' );
+  }
   $GLOBALS['dispatch_intake_committed'] = $ok;
   unset( $_SESSION['cluster'] );
   return $ok;
