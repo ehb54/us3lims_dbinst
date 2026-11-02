@@ -652,13 +652,20 @@ else
       $fields = array( 'org_name', 'org_site', 'site_author', 'admin', 'admin_email' );
       $probe  = check_subprocess( '<?php chdir(' . var_export( $dir, true ) . '); $is_cli = true; '
                                   . '@include ' . var_export( $config_php, true ) . '; '
-                                  . 'echo json_encode( compact( ' . var_export( $fields, true ) . ' ) );' );
+                                  . '$v = array(); foreach ( ' . var_export( $fields, true ) . ' as $f ) if ( isset( $$f ) ) $v[ $f ] = $$f; '
+                                  . 'echo json_encode( $v );' );
       if ( !$probe[ 'ok' ] )
         check_warn( "$instance config.php values readable", $probe[ 'error' ] );
       else
-        foreach ( check_placeholder_fields( $probe[ 'data' ], $fields ) as $key => $value )
+      {
+        /* A variable the file does not set is named; the others are still scanned. */
+        foreach ( array_diff( $fields, array_keys( (array) $probe[ 'data' ] ) ) as $key )
+          check_warn( "$instance $key is configured", "config.php does not set \$$key" );
+        $present = array_values( array_intersect( $fields, array_keys( (array) $probe[ 'data' ] ) ) );
+        foreach ( check_placeholder_fields( (array) $probe[ 'data' ], $present ) as $key => $value )
           if ( $value !== null )
             check_fail( "$instance $key is configured", "still the shipped placeholder: $value" );
+      }
     }
   }
 
