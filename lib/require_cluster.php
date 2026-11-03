@@ -6,6 +6,35 @@
 // clusterAuthorizations, so an account authorized for no configured cluster
 // posts no 'cluster' and the job would otherwise be reported as accepted.
 
+// Whether the dispatch worker can take a pool submission: gfac's dispatch tables present and
+// InnoDB. A hand upgrade can leave them out; receiving the analysis then would have it wait a day.
+function require_cluster_dispatch_ready()
+{
+  global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname, $class_dir;
+  include_once $class_dir . 'dispatch_schema.php';
+  try
+  {
+    $glink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+  }
+  catch ( mysqli_sql_exception $e )
+  {
+    $glink = false;
+  }
+  if ( ! $glink )
+  {
+    error_log( 'pool submission refused: the gfac database could not be reached' );
+    return false;
+  }
+  $problems = dispatch_schema_problems( $glink, $globaldbname, dispatch_gfac_tables() );
+  mysqli_close( $glink );
+  if ( $problems )
+  {
+    error_log( 'pool submission refused, the dispatch worker cannot run: ' . implode( '; ', $problems ) );
+    return false;
+  }
+  return true;
+}
+
 $submit_stopped = false;
 if ( ! isset( $_SESSION['cluster'] ) )
 {
@@ -53,35 +82,4 @@ if ( $require_cluster_is_pool )
   {
     $_SESSION['cluster']['dispatch'] = true;
   }
-}
-
-// Whether the dispatch worker can take a pool submission: gfac's dispatch tables present and
-// InnoDB. A hand upgrade can leave them out; receiving the analysis then would have it wait a day.
-if ( ! function_exists( 'require_cluster_dispatch_ready' ) ) {
-function require_cluster_dispatch_ready()
-{
-  global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname, $class_dir;
-  include_once $class_dir . 'dispatch_schema.php';
-  try
-  {
-    $glink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
-  }
-  catch ( mysqli_sql_exception $e )
-  {
-    $glink = false;
-  }
-  if ( ! $glink )
-  {
-    error_log( 'pool submission refused: the gfac database could not be reached' );
-    return false;
-  }
-  $problems = dispatch_schema_problems( $glink, $globaldbname, dispatch_gfac_tables() );
-  mysqli_close( $glink );
-  if ( $problems )
-  {
-    error_log( 'pool submission refused, the dispatch worker cannot run: ' . implode( '; ', $problems ) );
-    return false;
-  }
-  return true;
-}
 }
