@@ -653,7 +653,7 @@ else
       $probe  = check_subprocess( '<?php chdir(' . var_export( $dir, true ) . '); $is_cli = true; '
                                   . '@include ' . var_export( $config_php, true ) . '; '
                                   . '$v = array(); foreach ( ' . var_export( $fields, true ) . ' as $f ) if ( isset( $$f ) ) $v[ $f ] = $$f; '
-                                  . 'echo json_encode( $v );' );
+                                  . 'echo json_encode( $v, JSON_INVALID_UTF8_SUBSTITUTE );' );
       if ( !$probe[ 'ok' ] )
         check_warn( "$instance config.php values readable", $probe[ 'error' ] );
       else
