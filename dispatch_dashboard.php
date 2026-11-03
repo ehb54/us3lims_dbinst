@@ -22,6 +22,7 @@ include 'lib/utility.php';
 include_once $class_dir . 'dispatch_alerts.php';
 include_once $class_dir . 'dispatch_messages.php';
 include_once $class_dir . 'dispatch_schema.php';
+include_once 'lib/dispatch_dashboard_actions.php';
 
 $operator = 'person ' . (int) $_SESSION['loginID'];
 $gdb = 'gfac';
@@ -39,28 +40,9 @@ catch ( mysqli_sql_exception $e )
 if ( $glink && $_SERVER['REQUEST_METHOD'] === 'POST'
      && hash_equals( csrf_token(), (string) ( $_POST['csrf_token'] ?? '' ) ) )
 {
-  $id = (int) ( $_POST['dispatchRequestID'] ?? 0 );
-  if ( isset( $_POST['retry'] ) )
-    dispatch_operator_retry( $link, $dbname, $id, $operator );
-  elseif ( isset( $_POST['resolve_unknown'] ) )
-    dispatch_resolve_unknown( $glink, $dbname, $id, trim( (string) ( $_POST['job_id'] ?? '' ) ),
-                              trim( (string) ( $_POST['evidence'] ?? '' ) ) . " ($operator)" );
-  elseif ( isset( $_POST['close_alert'] ) )
-  {
-    $alert = (int) ( $_POST['alertID'] ?? 0 );
-    if ( dispatch_dashboard_alert_visible( $glink, $gdb, $dbname, $alert ) )
-      dispatch_alert_close( $glink, $gdb, $alert, "closed by $operator" );
-  }
+  dispatch_dashboard_post( $link, $glink, $gdb, $dbname, $_POST, $operator );
   header( "Location: {$_SERVER['PHP_SELF']}" );
   exit();
-}
-
-// An item belongs to this instance, or is controller-level and lists one of its requests.
-function dispatch_dashboard_alert_visible( $glink, $gdb, $db, $alert )
-{
-  return dispatch_rows( $glink, "SELECT 1 FROM `$gdb`.dispatch_alert a WHERE a.alertID = ? AND ( a.instanceDb = ?
-      OR ( a.instanceDb IS NULL AND ( a.kind = 'worker_heartbeat' OR EXISTS ( SELECT 1 FROM `$gdb`.dispatch_alert_request q
-           WHERE q.alertID = a.alertID AND q.instanceDb = ? ) ) ) )", 'iss', array( (int) $alert, $db, $db ) ) !== array();
 }
 
 // The menu's open-item count is cached per session; this page shows it fresh.

@@ -84,11 +84,16 @@ function dispatch_intake_note( $link, $dbname, $HPCAnalysisRequestID, $filename,
 {
   if ( ! dispatch_intake_active() || ! $files_ok )
     return;
+  dispatch_last_error( '' );
   $error = dispatch_intake_add( $link, $dbname, $HPCAnalysisRequestID, $filename );
   if ( $error !== '' )
   {
     $files_ok = false;
     $missit_msg .= '<br/>' . htmlspecialchars( $error, ENT_QUOTES );
+    ## gridctl's notice names this, not an unrelated notice from a page included later.
+    if ( $GLOBALS['is_cli'] ?? false )
+      $GLOBALS['gridctl_submission_failure_reason'] = rtrim( $error, '.' )
+        . ( dispatch_last_error() !== '' ? ': ' . dispatch_last_error() : '' );
   }
 }
 
@@ -148,6 +153,7 @@ function dispatch_intake_close( $link, $dbname, $files_ok, &$missit_msg )
   $rows = $GLOBALS['dispatch_intake_rows'];
   $ok = $files_ok && $rows;
   $nonce = dispatch_intake_nonce();
+  dispatch_last_error( '' );
   if ( $ok && count( $rows ) === 1 )
     $ok = dispatch_affected( $link, "UPDATE `$dbname`.dispatch_request SET parentBatchKey = NULL WHERE parentBatchKey = ?",
                              's', array( dispatch_intake_batch_key( $dbname, $_SESSION['loginID'], $nonce ) ) ) === 1;
@@ -163,7 +169,8 @@ function dispatch_intake_close( $link, $dbname, $files_ok, &$missit_msg )
     $ok = dispatch_affected( $link, "UPDATE `$dbname`.autoflowAnalysis SET currentHPCARID = ?, status = 'READY',
                                      statusMsg = 'Analysis received; waiting for dispatch' WHERE requestID = ?",
                              'ii', array( (int) $rows[0]['HPCAnalysisRequestID'], (int) $ID ) ) >= 0;
-  $db_error = $ok ? '' : mysqli_error( $link );
+  ## A failed statement is already closed, so mysqli_error() no longer has its error.
+  $db_error = $ok ? '' : ( mysqli_error( $link ) !== '' ? mysqli_error( $link ) : dispatch_last_error() );
   $ok ? mysqli_commit( $link ) : mysqli_rollback( $link );
   if ( ! $ok && $files_ok )
   {

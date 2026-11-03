@@ -36,8 +36,9 @@ function dispatch_queue_message( array $row )
 }
 
 // This instance's dispatch requests the viewer may see: their own (level 2)
-// or every one in the instance (level 3 and up).
-function dispatch_queue_rows( $link, $dbname )
+// or every one in the instance (level 3 and up). The newest $max, oldest first, plus
+// one more when there are older ones; or only request $id.
+function dispatch_queue_rows( $link, $dbname, $id = null, $max = DISPATCH_QUEUE_MAX_ROWS )
 {
   if ( ! dispatch_db_name_ok( $dbname ) || ! dispatch_rows( $link, "SELECT 1 FROM information_schema.TABLES
          WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'dispatch_request'", 's', array( $dbname ) ) )
@@ -45,7 +46,9 @@ function dispatch_queue_rows( $link, $dbname )
   $states = "'" . implode( "','", array_diff( dispatch_queue_states(), dispatch_queue_finished_states() ) ) . "'";
   $done   = "'" . implode( "','", dispatch_queue_finished_states() ) . "'";
   $own = (int) $_SESSION['userlevel'] < 3;
-  return dispatch_rows( $link, "SELECT r.dispatchRequestID, r.HPCAnalysisRequestID, r.pool, r.state, r.reason, r.reasonCode,
+  $types = ( $own ? 'i' : '' ) . ( $id !== null ? 'i' : '' );
+  $args = array_merge( $own ? array( (int) $_SESSION['loginID'] ) : array(), $id !== null ? array( (int) $id ) : array() );
+  $rows = dispatch_rows( $link, "SELECT r.dispatchRequestID, r.HPCAnalysisRequestID, r.pool, r.state, r.reason, r.reasonCode,
         r.selectedCluster, r.retryAt, r.deadlineAt, r.createdAt, r.cancelRequested, r.parentBatchKey, r.notifiedAt,
         (SELECT schedulerJobID FROM `$dbname`.dispatch_attempt a WHERE a.dispatchRequestID = r.dispatchRequestID
           AND a.phase = 'ACCEPTED' LIMIT 1) AS schedulerJobID,
@@ -55,8 +58,10 @@ function dispatch_queue_rows( $link, $dbname )
       FROM `$dbname`.dispatch_request r
       LEFT JOIN `$dbname`.HPCAnalysisRequest h ON h.HPCAnalysisRequestID = r.HPCAnalysisRequestID
       LEFT JOIN `$dbname`.people p ON p.personID = r.submitterID
-      WHERE ( r.state IN ($states) OR ( r.state IN ($done) AND r.updatedAt >= UTC_TIMESTAMP() - INTERVAL 1 DAY ) )" . ( $own ? ' AND r.submitterID = ?' : '' ) . "
-      ORDER BY r.createdAt, r.dispatchRequestID LIMIT " . DISPATCH_QUEUE_MAX_ROWS, $own ? 'i' : '', $own ? array( (int) $_SESSION['loginID'] ) : array() );
+      WHERE ( r.state IN ($states) OR ( r.state IN ($done) AND r.updatedAt >= UTC_TIMESTAMP() - INTERVAL 1 DAY ) )"
+      . ( $own ? ' AND r.submitterID = ?' : '' ) . ( $id !== null ? ' AND r.dispatchRequestID = ?' : '' ) . "
+      ORDER BY r.createdAt DESC, r.dispatchRequestID DESC LIMIT " . ( (int) $max + 1 ), $types, $args );
+  return array_reverse( $rows );
 }
 
 function dispatch_queue_may_cancel( array $row )
@@ -65,11 +70,17 @@ function dispatch_queue_may_cancel( array $row )
          && ( (int) $_SESSION['userlevel'] >= 3 || (string) $row['email'] === (string) $_SESSION['email'] );
 }
 
-function dispatch_queue_html( array $rows )
+function dispatch_queue_html( array $rows, $max = DISPATCH_QUEUE_MAX_ROWS )
 {
   if ( ! $rows )
     return '';
-  $html = "<h4>Waiting for dispatch</h4>\n<table class='dispatch_queue'>\n"
+  ## dispatch_queue_rows() returns one more than $max when older requests are not listed.
+  $more = count( $rows ) > $max;
+  if ( $more )
+    $rows = array_slice( $rows, -$max );
+  $html = "<h4>Waiting for dispatch</h4>\n"
+        . ( $more ? "<p class='dispatch_queue_more'>Only the newest $max requests are listed.</p>\n" : '' )
+        . "<table class='dispatch_queue'>\n"
         . "<tr><th>Request</th><th>Pool</th><th>Type</th><th>Received (UTC)</th><th>Status</th><th></th></tr>\n";
   foreach ( $rows as $r )
   {
@@ -95,7 +106,7 @@ function dispatch_queue_html( array $rows )
 // allowed to see and cancel it. Returns the ledger's answer, or 'denied'.
 function dispatch_queue_cancel( $link, $dbname, $id )
 {
-  foreach ( dispatch_queue_rows( $link, $dbname ) as $r )
+  foreach ( dispatch_queue_rows( $link, $dbname, (int) $id ) as $r )
   {
     if ( (int) $r['dispatchRequestID'] === (int) $id )
       return dispatch_queue_may_cancel( $r ) ? dispatch_request_cancel( $link, $dbname, (int) $id ) : 'denied';
