@@ -41,8 +41,47 @@ if ( $require_cluster_is_pool )
     include __DIR__ . '/submit_stop.php';
     $submit_stopped = true;
   }
+  elseif ( ! require_cluster_dispatch_ready() )
+  {
+    $submit_stop_msg = "<b>Automatic cluster selection ('" . htmlspecialchars( $pseudo_cluster, ENT_QUOTES )
+                     . "') is not available on this server right now.</b><br/>"
+                     . "Nothing was submitted. Choose a cluster and submit again, and let your administrator know.";
+    include __DIR__ . '/submit_stop.php';
+    $submit_stopped = true;
+  }
   else
   {
     $_SESSION['cluster']['dispatch'] = true;
   }
+}
+
+// Whether the dispatch worker can take a pool submission: gfac's dispatch tables present and
+// InnoDB. A hand upgrade can leave them out; receiving the analysis then would have it wait a day.
+if ( ! function_exists( 'require_cluster_dispatch_ready' ) ) {
+function require_cluster_dispatch_ready()
+{
+  global $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname, $class_dir;
+  include_once $class_dir . 'dispatch_schema.php';
+  try
+  {
+    $glink = mysqli_connect( $globaldbhost, $globaldbuser, $globaldbpasswd, $globaldbname );
+  }
+  catch ( mysqli_sql_exception $e )
+  {
+    $glink = false;
+  }
+  if ( ! $glink )
+  {
+    error_log( 'pool submission refused: the gfac database could not be reached' );
+    return false;
+  }
+  $problems = dispatch_schema_problems( $glink, $globaldbname, dispatch_gfac_tables() );
+  mysqli_close( $glink );
+  if ( $problems )
+  {
+    error_log( 'pool submission refused, the dispatch worker cannot run: ' . implode( '; ', $problems ) );
+    return false;
+  }
+  return true;
+}
 }
