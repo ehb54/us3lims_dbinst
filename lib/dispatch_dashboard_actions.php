@@ -31,3 +31,19 @@ function dispatch_dashboard_alert_visible( $glink, $gdb, $db, $alert )
       OR ( a.instanceDb IS NULL AND ( a.kind = 'worker_heartbeat' OR EXISTS ( SELECT 1 FROM `$gdb`.dispatch_alert_request q
            WHERE q.alertID = a.alertID AND q.instanceDb = ? ) ) ) )", 'iss', array( (int) $alert, $db, $db ) ) !== array();
 }
+
+// What is missing for dispatch to work here: this instance's tables, and gfac's, which a hand
+// upgrade leaves out until the gfac account's grant is fixed.
+function dispatch_dashboard_schema_messages( $link, $glink, $dbname, $gdb )
+{
+  $messages = array();
+  $instance = dispatch_schema_problems( $link, $dbname, dispatch_instance_tables() );
+  if ( $instance )
+    $messages[] = 'This instance cannot record dispatch requests: ' . implode( '; ', $instance )
+                . '. Run uslims_upgrade.php --apply on the LIMS host to create the tables.';
+  $gfac = $glink ? dispatch_schema_problems( $glink, $gdb, dispatch_gfac_tables() ) : array();
+  if ( $gfac )
+    $messages[] = 'The dispatch worker cannot run: ' . implode( '; ', $gfac )
+                . '. Give the gfac account CREATE on gfac and run uslims_upgrade.php --apply on the LIMS host.';
+  return $messages;
+}

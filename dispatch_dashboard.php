@@ -93,10 +93,8 @@ else
   echo "</table>\n";
 }
 
-$missing_tables = dispatch_schema_problems( $link, $dbname, dispatch_instance_tables() );
-if ( $missing_tables )
-  echo "<p class='message text-red'>This instance cannot record dispatch requests: " . $h( implode( '; ', $missing_tables ) )
-     . ". Run uslims_upgrade.php --apply on the LIMS host to create the tables.</p>\n";
+foreach ( dispatch_dashboard_schema_messages( $link, $glink, $dbname, $gdb ) as $message )
+  echo "<p class='message text-red'>" . $h( $message ) . "</p>\n";
 
 // Requests needing action.
 $attention = dispatch_rows( $link, "SELECT r.*, (SELECT attemptToken FROM `$dbname`.dispatch_attempt a
