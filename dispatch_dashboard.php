@@ -41,8 +41,9 @@ if ( $glink && $_SERVER['REQUEST_METHOD'] === 'POST'
      && hash_equals( csrf_token(), (string) ( $_POST['csrf_token'] ?? '' ) ) )
 {
   $done = dispatch_dashboard_post( $link, $glink, $gdb, $dbname, $_POST, $operator );
-  $refused = ! $done && isset( $_POST['resolve_unknown'] ) ? '?refused=' . (int) ( $_POST['dispatchRequestID'] ?? 0 ) : '';
-  header( "Location: {$_SERVER['PHP_SELF']}$refused" );
+  if ( ! $done && ( isset( $_POST['resolve_unknown'] ) || isset( $_POST['close_unknown'] ) ) )
+    $_SESSION['dispatch_refusal'] = dispatch_dashboard_refusal( $link, $dbname, (int) ( $_POST['dispatchRequestID'] ?? 0 ), $_POST );
+  header( "Location: {$_SERVER['PHP_SELF']}" );
   exit();
 }
 
@@ -65,8 +66,10 @@ if ( ! $glink )
 $beat = dispatch_heartbeat_status( $glink, $gdb );
 echo "<h3>Dispatch worker</h3>\n<p>" . ( $beat['ok']
      ? "Running: last heartbeat {$beat['age']} seconds ago (" . $h( $beat['worker'] ) . ")."
-     : "<span class='message text-red'>Not running: " . ( $beat['age'] === null ? 'no heartbeat recorded'
-       : "last heartbeat {$beat['age']} seconds ago" ) . ".</span>" ) . "</p>\n";
+     : ( ! dispatch_dashboard_worker_expected( $link, $dbname, (array) ( $global_cluster_details ?? $cluster_details ?? array() ) )
+       ? "Not needed: no active pool and no unsettled request here, so the worker does not run."
+       : "<span class='message text-red'>Not running: " . ( $beat['age'] === null ? 'no heartbeat recorded'
+       : "last heartbeat {$beat['age']} seconds ago" ) . ".</span>" ) ) . "</p>\n";
 
 // Open alert items.
 $alerts = dispatch_rows( $glink, "SELECT a.* FROM `$gdb`.dispatch_alert a WHERE a.openFlag = 1 AND ( a.instanceDb = ?
@@ -103,11 +106,11 @@ $attention = dispatch_rows( $link, "SELECT r.*, (SELECT attemptToken FROM `$dbna
     FROM `$dbname`.dispatch_request r
     WHERE r.state IN ('BLOCKED','SUBMISSION_UNKNOWN','ACCEPTED') OR (r.state = 'WAITING' AND r.notifiedAt IS NOT NULL)
     ORDER BY r.createdAt" );
-if ( isset( $_GET['refused'] ) )
-  echo "<p class='message text-red'>Request " . (int) $_GET['refused'] . " was not resolved. Evidence is required. Recording"
-     . " that nothing was submitted also needs an automatic check, at least " . round( DISPATCH_SUBMIT_LEASE_SECONDS / 60 )
-     . " minutes after the submission, that reached the cluster and found no job, and no check that found one."
-     . " Until then the job may be running or still landing.</p>\n";
+if ( isset( $_SESSION['dispatch_refusal'] ) )
+{
+  echo "<p class='message text-red'>" . $h( $_SESSION['dispatch_refusal'] ) . "</p>\n";
+  unset( $_SESSION['dispatch_refusal'] );
+}
 echo "<h3>Requests needing attention (" . count( $attention ) . ")</h3>\n";
 if ( $attention )
 {
@@ -118,11 +121,10 @@ if ( $attention )
     $form = "<form method='post'>$csrf<input type='hidden' name='dispatchRequestID' value='$id' />";
     if ( $r['state'] === 'SUBMISSION_UNKNOWN' )
       $action = $form . "Job ID <input type='text' name='job_id' size='8' /> Evidence <input type='text' name='evidence' size='24' />"
-              . "<input type='submit' name='resolve_unknown' value='Resolve' /></form>"
-              . ( dispatch_resolve_empty_allowed( $link, $dbname, $id )
-                  ? "<small>A job ID records acceptance; no job ID records that nothing was submitted.</small>"
-                  : "<small>A job ID records acceptance. Nothing-was-submitted is available once an automatic check, at least "
-                    . round( DISPATCH_SUBMIT_LEASE_SECONDS / 60 ) . " minutes after the submission, has found no job.</small>" );
+              . "<input type='submit' name='resolve_unknown' value='Resolve' />"
+              . "<input type='submit' name='close_unknown' value='Close as failed' /></form>"
+              . "<small>Resolve records the job you found at the cluster. Close ends the request and tells its submitter to"
+              . " resubmit; finding no job does not prove none ran, so check the cluster first. Nothing is submitted again.</small>";
     elseif ( in_array( $r['state'], array( 'BLOCKED', 'WAITING' ), true ) )
       $action = $form . "<input type='submit' name='retry' value='Retry assessment' /></form>";
     else

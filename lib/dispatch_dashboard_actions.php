@@ -1,5 +1,5 @@
 <?php
-// The dispatch dashboard's operator actions: retry a blocked request, resolve an
+// The dispatch dashboard's operator actions: retry a blocked request, resolve or close an
 // uncertain submission, close an alert item. The page includes common's dispatch_alerts.php.
 
 // One POSTed action, already checked for level and CSRF by the page.
@@ -15,6 +15,11 @@ function dispatch_dashboard_post( $link, $glink, $gdb, $dbname, array $post, $op
     return dispatch_resolve_unknown( $glink, $dbname, $id, trim( (string) ( $post['job_id'] ?? '' ) ),
                                      $evidence !== '' ? "$evidence ($operator)" : '' );
   }
+  if ( isset( $post['close_unknown'] ) )
+  {
+    $evidence = trim( (string) ( $post['evidence'] ?? '' ) );
+    return dispatch_close_unknown( $glink, $dbname, $id, $evidence !== '' ? "$evidence ($operator)" : '' );
+  }
   if ( isset( $post['close_alert'] ) )
   {
     $alert = (int) ( $post['alertID'] ?? 0 );
@@ -22,6 +27,31 @@ function dispatch_dashboard_post( $link, $glink, $gdb, $dbname, array $post, $op
         && dispatch_alert_close( $glink, $gdb, $alert, "closed by $operator" );
   }
   return false;
+}
+
+// Why a Resolve or Close changed nothing, read after the refusal.
+function dispatch_dashboard_refusal( $link, $dbname, $id, array $post )
+{
+  $req = dispatch_get( $link, $dbname, $id );
+  if ( ! $req )
+    return "Request $id does not exist in this instance.";
+  if ( $req['state'] !== DISPATCH_SUBMISSION_UNKNOWN )
+    return "Request $id is no longer held; it is {$req['state']}.";
+  if ( trim( (string) ( $post['evidence'] ?? '' ) ) === '' )
+    return "Request $id was not changed: evidence is required.";
+  if ( isset( $post['resolve_unknown'] ) && trim( (string) ( $post['job_id'] ?? '' ) ) === '' )
+    return "Request $id was not changed: Resolve needs the job ID. If you cannot find a job, use Close.";
+  return "Request $id was not changed: an automatic check is running. Try again in a minute.";
+}
+
+// Whether a worker should be running here: an active pool, or a request of this instance not yet settled.
+function dispatch_dashboard_worker_expected( $link, $dbname, array $cluster_details )
+{
+  foreach ( $cluster_details as $entry )
+    if ( is_array( $entry ) && is_array( $entry['clusters'] ?? null ) && ( ! array_key_exists( 'active', $entry ) || $entry['active'] ) )
+      return true;
+  return dispatch_rows_checked( $link, "SELECT 1 FROM `$dbname`.dispatch_request
+      WHERE state NOT IN ('CLOSED','FAILED','EXPIRED','CANCELLED') LIMIT 1" ) !== array();
 }
 
 // An item belongs to this instance, or is controller-level and lists one of its requests.
