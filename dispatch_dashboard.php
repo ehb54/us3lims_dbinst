@@ -40,8 +40,9 @@ catch ( mysqli_sql_exception $e )
 if ( $glink && $_SERVER['REQUEST_METHOD'] === 'POST'
      && hash_equals( csrf_token(), (string) ( $_POST['csrf_token'] ?? '' ) ) )
 {
-  dispatch_dashboard_post( $link, $glink, $gdb, $dbname, $_POST, $operator );
-  header( "Location: {$_SERVER['PHP_SELF']}" );
+  $done = dispatch_dashboard_post( $link, $glink, $gdb, $dbname, $_POST, $operator );
+  $refused = ! $done && isset( $_POST['resolve_unknown'] ) ? '?refused=' . (int) ( $_POST['dispatchRequestID'] ?? 0 ) : '';
+  header( "Location: {$_SERVER['PHP_SELF']}$refused" );
   exit();
 }
 
@@ -102,6 +103,11 @@ $attention = dispatch_rows( $link, "SELECT r.*, (SELECT attemptToken FROM `$dbna
     FROM `$dbname`.dispatch_request r
     WHERE r.state IN ('BLOCKED','SUBMISSION_UNKNOWN','ACCEPTED') OR (r.state = 'WAITING' AND r.notifiedAt IS NOT NULL)
     ORDER BY r.createdAt" );
+if ( isset( $_GET['refused'] ) )
+  echo "<p class='message text-red'>Request " . (int) $_GET['refused'] . " was not resolved. Evidence is required. Recording"
+     . " that nothing was submitted also needs an automatic check, at least " . round( DISPATCH_SUBMIT_LEASE_SECONDS / 60 )
+     . " minutes after the submission, that reached the cluster and found no job, and no check that found one."
+     . " Until then the job may be running or still landing.</p>\n";
 echo "<h3>Requests needing attention (" . count( $attention ) . ")</h3>\n";
 if ( $attention )
 {
@@ -113,7 +119,10 @@ if ( $attention )
     if ( $r['state'] === 'SUBMISSION_UNKNOWN' )
       $action = $form . "Job ID <input type='text' name='job_id' size='8' /> Evidence <input type='text' name='evidence' size='24' />"
               . "<input type='submit' name='resolve_unknown' value='Resolve' /></form>"
-              . "<small>A job ID records acceptance; no job ID records that nothing was submitted.</small>";
+              . ( dispatch_resolve_empty_allowed( $link, $dbname, $id )
+                  ? "<small>A job ID records acceptance; no job ID records that nothing was submitted.</small>"
+                  : "<small>A job ID records acceptance. Nothing-was-submitted is available once an automatic check, at least "
+                    . round( DISPATCH_SUBMIT_LEASE_SECONDS / 60 ) . " minutes after the submission, has found no job.</small>" );
     elseif ( in_array( $r['state'], array( 'BLOCKED', 'WAITING' ), true ) )
       $action = $form . "<input type='submit' name='retry' value='Retry assessment' /></form>";
     else
