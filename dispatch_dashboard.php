@@ -73,7 +73,7 @@ echo "<h3>Dispatch worker</h3>\n<p>" . ( $beat['ok']
 
 // Open alert items.
 $alerts = dispatch_rows( $glink, "SELECT a.* FROM `$gdb`.dispatch_alert a WHERE a.openFlag = 1 AND ( a.instanceDb = ?
-    OR ( a.instanceDb IS NULL AND ( a.kind = 'worker_heartbeat' OR EXISTS ( SELECT 1 FROM `$gdb`.dispatch_alert_request q
+    OR ( a.instanceDb IS NULL AND ( a.kind IN ('worker_heartbeat','pool_list') OR EXISTS ( SELECT 1 FROM `$gdb`.dispatch_alert_request q
          WHERE q.alertID = a.alertID AND q.instanceDb = ? ) ) ) ) ORDER BY a.urgency = 'urgent' DESC, a.firstAt",
   'ss', array( $dbname, $dbname ) );
 echo "<h3>Open alerts (" . count( $alerts ) . ")</h3>\n";

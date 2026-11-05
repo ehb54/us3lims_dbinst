@@ -58,7 +58,7 @@ function dispatch_dashboard_worker_expected( $link, $dbname, array $cluster_deta
 function dispatch_dashboard_alert_visible( $glink, $gdb, $db, $alert )
 {
   return dispatch_rows( $glink, "SELECT 1 FROM `$gdb`.dispatch_alert a WHERE a.alertID = ? AND ( a.instanceDb = ?
-      OR ( a.instanceDb IS NULL AND ( a.kind = 'worker_heartbeat' OR EXISTS ( SELECT 1 FROM `$gdb`.dispatch_alert_request q
+      OR ( a.instanceDb IS NULL AND ( a.kind IN ('worker_heartbeat','pool_list') OR EXISTS ( SELECT 1 FROM `$gdb`.dispatch_alert_request q
            WHERE q.alertID = a.alertID AND q.instanceDb = ? ) ) ) )", 'iss', array( (int) $alert, $db, $db ) ) !== array();
 }
 
