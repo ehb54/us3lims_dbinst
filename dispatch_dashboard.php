@@ -123,8 +123,9 @@ if ( $attention )
       $action = $form . "Job ID <input type='text' name='job_id' size='8' /> Evidence <input type='text' name='evidence' size='24' />"
               . "<input type='submit' name='resolve_unknown' value='Resolve' />"
               . "<input type='submit' name='close_unknown' value='Close as failed' /></form>"
-              . "<small>Resolve records the job you found at the cluster. Close ends the request and tells its submitter to"
-              . " resubmit; finding no job does not prove none ran, so check the cluster first. Nothing is submitted again.</small>";
+              . "<small>Resolve records the job you found at the cluster. Close ends the request and tells its submitter a job may"
+              . " exist; finding no job does not prove none ran, so check the cluster first. The close waits while the cluster"
+              . " cannot be asked. If it is gone for good, remove it from the configuration. Nothing is submitted again.</small>";
     elseif ( in_array( $r['state'], array( 'BLOCKED', 'WAITING' ), true ) )
       $action = $form . "<input type='submit' name='retry' value='Retry assessment' /></form>";
     else
