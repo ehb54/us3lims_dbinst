@@ -58,14 +58,15 @@ function do_getDoc( $link, $documentID )
 <html>
 <head>
   <title>US Lims Database - Report Detail</title>
-  <link rel="stylesheet" type="text/css" href="css/main.css" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css" />
+  <script src="js/main.js" type="text/javascript"></script>
 </head>
 
 <body>
 
   $header
   $content
-  <p><a href='javascript:window.close();'>Close Window</a></p>
+  <p><a href='#' class='onclick-window-close'>Close Window</a></p>
 
 </body></html>
 HTML;
@@ -156,8 +157,11 @@ function get_document_content( $link, $documentID )
 
   else if ( $doctype == 'html' )
   {
-    $text = "<div>\n" .
-              $contents .
+    // Stored reports are whole documents; show the body only, since CSP blocks their <style>.
+    $body = preg_match( '~<body[^>]*>(.*)</body>~is', $contents, $m ) ? $m[1] : $contents;
+    $body = preg_replace( '~<style\b[^>]*>.*?</style>~is', '', $body );
+    $text = "<div class='stored-report'>\n" .
+              $body .
             "</div>\n";
   }
 
@@ -231,7 +235,7 @@ function display_error( $error_text )
 <head>
   <title>US Lims Database - display file error</title>
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
-  <link rel="stylesheet" type="text/css" href="css/main.css" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css" />
 </head>
 
 <body>

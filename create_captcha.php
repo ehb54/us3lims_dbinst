@@ -5,7 +5,12 @@
  * Creates a captcha text string onto a jpeg background and sends it back
  *
  */
-session_start();
+// checkinstance.php (not a bare session_start()): sets the same Secure/
+// HttpOnly/SameSite cookie flags and HTTPS enforcement every other page
+// gets. Without this, the captcha image and the signup form it belongs to
+// (newaccount.php) read each other's session under two different cookie
+// policies.
+include 'checkinstance.php';
 
 if ( ! isset( $_SESSION['captcha'] ) )
 {

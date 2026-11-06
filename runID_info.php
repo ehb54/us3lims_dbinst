@@ -20,7 +20,6 @@ include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 global $class_dir, $link;
-include_once $class_dir . 'experiment_status.php';
 // ini_set('display_errors', 'On');
 
 // Start displaying page
@@ -28,7 +27,6 @@ $page_title = "Info by Run ID";
 $css = 'css/admin.css';
 include 'header.php';
 
-global $uses_thrift;
 
 ?>
 <!-- Begin page content -->
@@ -61,7 +59,7 @@ global $uses_thrift;
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 // Function to create a dropdown for available runIDs
@@ -83,7 +81,7 @@ function experiment_select( $link, $select_name, $current_ID = NULL )
   if ( mysqli_num_rows( $result ) == 0 ) return "";
 
   $text = "<form action='{$_SERVER['PHP_SELF']}' method='get'>\n" .
-          "  <select name='$select_name' size='1' onchange='form.submit();'>\n" .
+          "  <select class='onchange-form-submit' name='$select_name' size='1'>\n" .
           "    <option value=-1>Please select...</option>\n";
   while ( list( $experimentID, $runID, $lname ) = mysqli_fetch_array( $result ) )
   {
@@ -705,7 +703,7 @@ HTML;
     while ( list( $ID, $requestID, $gfacID, $status, $updated ) = mysqli_fetch_array( $result ) )
     {
       if ( $status != 'completed' )
-        $incomplete[] = $gfacID;
+        $incomplete[] = array( $gfacID, $requestID );
 
       $text .= <<<HTML
       <tr><td>$ID</td>
@@ -757,12 +755,16 @@ HTML;
 HTML;
 
   $in_queue = 0;
-  foreach ( $incomplete as $gfacID )
+  // Two clusters can reuse a job number: match this instance and request too.
+  global $dbname;
+  $by_request = gfac_analysis_has_request_id( $globaldb );
+  foreach ( $incomplete as list( $gfacID, $requestID ) )
   {
-    
     $query  = "SELECT cluster, us3_db, status, queue_msg, time " .
               "FROM analysis " .
-              "WHERE gfacID = '$gfacID' ";
+              "WHERE gfacID = '" . mysqli_real_escape_string( $globaldb, $gfacID ) . "' " .
+              "AND us3_db = '" . mysqli_real_escape_string( $globaldb, $dbname ) . "' " .
+              ( $by_request ? "AND ( HPCAnalysisRequestID IS NULL OR HPCAnalysisRequestID = " . (int) $requestID . " ) " : "" );
     $result = mysqli_query( $globaldb, $query )
               or die( "Query failed : $query<br />\n" . mysqli_error($globaldb) );
   
@@ -799,7 +801,6 @@ HTML;
 
 function HPCDetail( $link, $requestID )
 {
-  global $thr_clust_excls, $thr_clust_incls;
   // Check if the user has access to this request by either being the investigator, submitter,
   // an entry in the experimentPerson table, an entry in the projectPerson table, or an user level of greater 2
   // language=MariaDB
@@ -823,7 +824,7 @@ function HPCDetail( $link, $requestID )
   $row = mysqli_fetch_assoc( $result );
   $result->close();
   $requestID = $row['HPCAnalysisRequestID'];
-  $row['requestXMLFile'] = '<pre>' . htmlentities( $row['requestXMLFile'] ) . '</pre>';
+  $row['requestXMLFile'] = '<pre class="wrapped">' . htmlentities( $row['requestXMLFile'] ) . '</pre>';
 
   // Save for later
   $requestGUID  = $row['HPCAnalysisRequestGUID'];
@@ -846,24 +847,10 @@ HTML;
   $result = mysqli_query( $link, $query )
            or die( "Query failed : $query<br />\n" . mysqli_error($link));
   $row = mysqli_fetch_assoc( $result );
-  $row['jobfile'] = '<pre>' . htmlentities( $row['jobfile'] ) . '</pre>';
+  $row['jobfile'] = '<pre class="wrapped">' . htmlentities( $row['jobfile'] ) . '</pre>';
 
-  // Get GFAC job status
-  global $uses_thrift;
-  $clus_thrift   = $uses_thrift;
-  if ( in_array( $cluster, $thr_clust_excls ) )
-    $clus_thrift   = false;
-  if ( in_array( $cluster, $thr_clust_incls ) )
-    $clus_thrift   = true;
-
-  if ( $clus_thrift === true )
-  {
-    $row['gfacStatus'] = nl2br( getExperimentStatus( $row['gfacID'] ) );
-  }
-  else
-  {
-    $row['gfacStatus'] = nl2br( getJobstatus( $row['gfacID'] ) );
-  }
+  // Populate the status display from the recorded LIMS queue status.
+  $row['gfacStatus'] = htmlspecialchars( $row['queueStatus'] ?? 'n/a' );
 
   // Get queue messages from disk directory, if it still exists
   global $submit_dir;
@@ -876,7 +863,7 @@ HTML;
   {
     $queue_msgs   = file_get_contents( $msg_filename );
     $len_msgs     = strlen( $queue_msgs );
-    $queue_msgs   = '<pre>' . $queue_msgs . '</pre>';
+    $queue_msgs   = '<pre class="wrapped">' . $queue_msgs . '</pre>';
   }
 
   // Get resulting model and noise information

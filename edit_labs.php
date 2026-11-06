@@ -91,7 +91,7 @@ else
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 // Function to redirect to prior record
@@ -294,7 +294,7 @@ function display_record($link)
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
-                  "        onchange='get_lab(this);' >" .
+                  "        class='onchange-get-lab' >" .
                   "  <option value='null'>None selected...</option>\n";
   $query  = "SELECT labID, name FROM lab ORDER BY name";
   $result = mysqli_query($link, $query)
@@ -356,7 +356,7 @@ function get_id($link)
 
   // If we're here, there aren't any records
 echo<<<HTML
-  <form action='{$_SERVER[PHP_SELF]}' method='post'>
+  <form action='{$_SERVER['PHP_SELF']}' method='post'>
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
       <tr><th colspan='2'>Edit Labs</th></tr>

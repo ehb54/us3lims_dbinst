@@ -56,6 +56,10 @@ function motd_isblocked()
 // function to block job submission and display message
 function motd_block()
 {
+  // $common_dir is set in config.php's global scope; a function doesn't see
+  // it without this, and the footer would silently fail to load.
+  global $common_dir;
+
   // First, check to see if job submission is blocked
   if ( ! motd_isblocked() )
     return;
@@ -69,12 +73,12 @@ function motd_block()
   {
     // Display message
     if ($message)
-      echo "<p class='message' style='padding-bottom:30em;'>$message</p>\n";
+      echo "<p class='message pb-30em' >$message</p>\n";
     else
-      echo "<p class='message' style='padding-bottom:40em;'>Job submission is blocked.</p>\n";
+      echo "<p class='message pb-40em' >Job submission is blocked.</p>\n";
 
     echo "</div>\n";
-    include 'footer.php';
+    include $common_dir . 'footer.php';
     exit();
   }
 

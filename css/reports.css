@@ -34,3 +34,9 @@ table.solution_info table th {
 table.solution_info table td {
   text-align       : center;
 }
+
+/* Replaces the <style> block that report_detail.php strips from stored reports */
+.stored-report td
+{
+  padding-right    : 1em;
+}

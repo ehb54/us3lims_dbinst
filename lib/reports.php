@@ -284,10 +284,6 @@ function tripleDetail( $link, $tripleID, $selected_docTypes = array() )
       $checkboxes
     </div>
 
-    <script>
-      $(":checkbox").on( 'click', change_docType );
-    </script>
-
 HTML;
 
   // Now create a list of available analysis types
@@ -388,7 +384,7 @@ HTML;
       }
 
       // Add the entry for a document
-      $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>" .
+      $text .= "  <li><a href='#$atype' class='onclick-show-report-detail-arg' data-arg='$docID'>" .
                "$subanal{$include_doctype}</a></li>\n";
     }
 
@@ -423,21 +419,16 @@ HTML;
   list ( $experimentID, $triple_desc ) = mysqli_fetch_array( $result );
   $result->close();
   $stmt->close();
-  $text .= <<<HTML
-    <p class='reporthead'><a name='solution'></a>Solution Data</p>
-    <ul>
-        <li><a href='#solution'
-               onclick="show_solution_detail( 'solution', $experimentID, '$triple_desc' );">
-               Solution Information</a></li>
-        <li><a href='#solution'
-               onclick="show_solution_detail( 'analyte', $experimentID, '$triple_desc' );">
-               Analyte Information</a></li>
-        <li><a href='#solution'
-               onclick="show_solution_detail( 'buffer', $experimentID, '$triple_desc' );">
-               Buffer Information</a></li>
-
-    </ul>
-HTML;
+  $text .= "    <p class='reporthead'><a name='solution'></a>Solution Data</p>\n" .
+           "    <ul>\n";
+  foreach ( [ 'solution', 'analyte', 'buffer' ] as $type )
+  {
+    $args  = htmlspecialchars( json_encode( [ $type, (int)$experimentID, (string)$triple_desc ] ), ENT_QUOTES );
+    $label = ucfirst( $type );
+    $text .= "        <li><a href='#solution' class='onclick-show-solution-detail-args' data-args='$args'>" .
+             "$label Information</a></li>\n";
+  }
+  $text .= "    </ul>\n";
 
   // Let's add links to make things easier to get around
   $self = $_SERVER['PHP_SELF'];
@@ -514,7 +505,7 @@ function comboDetail( $link, $tripleID )
     while ( list( $docID, $label ) = mysqli_fetch_array( $result ) )
     {
       list( $anal, $subanal, $doctype ) = explode( ":", $label );
-      $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>$subanal ($doctype)</a></li>\n";
+      $text .= "  <li><a href='#$atype' class='onclick-show-report-detail-arg' data-arg='$docID'>$subanal ($doctype)</a></li>\n";
     }
     $result->close();
     $text .= "</ul>\n";
