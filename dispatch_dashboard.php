@@ -125,7 +125,7 @@ if ( $attention )
               . "<input type='submit' name='close_unknown' value='Close as failed' /></form>"
               . "<small>Resolve records the job you found at the cluster. Close ends the request and tells its submitter a job may"
               . " exist; finding no job does not prove none ran, so check the cluster first. The close waits while the cluster"
-              . " cannot be asked. If it is gone for good, remove it from the configuration. Nothing is submitted again.</small>";
+              . " cannot be asked. If it is gone for good, remove it from \$cluster_details in global_config.php; it settles at its next check. Nothing is submitted again.</small>";
     elseif ( in_array( $r['state'], array( 'BLOCKED', 'WAITING' ), true ) )
       $action = $form . "<input type='submit' name='retry' value='Retry assessment' /></form>";
     else
