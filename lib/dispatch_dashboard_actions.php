@@ -41,6 +41,8 @@ function dispatch_dashboard_refusal( $link, $dbname, $id, array $post )
     return "Request $id was not changed: evidence is required.";
   if ( isset( $post['resolve_unknown'] ) && trim( (string) ( $post['job_id'] ?? '' ) ) === '' )
     return "Request $id was not changed: Resolve needs the job ID. If you cannot find a job, use Close.";
+  if ( isset( $post['resolve_unknown'] ) && ! dispatch_job_id_valid( trim( (string) $post['job_id'] ) ) )
+    return "Request $id was not changed: the job ID must be the Slurm job number, digits only.";
   return "Request $id was not changed: an automatic check is running. Try again in a minute.";
 }
 

@@ -96,6 +96,8 @@ $global_clusters_executing = [];
 $gfac_IDs_per_db = array();
 $global_jobs = [];
 while ( list( $analysisID, $gfacID, $us3_db, $cluster, $status, $clusterExecuting, $requestID ) = mysqli_fetch_array( $result ) ) {
+    // us3_db is put into SQL as a database name: only names the job monitor accepts.
+    if ( ! preg_match( '/^uslims3_[A-Za-z0-9_]+\z/', (string) $us3_db ) ) continue;
     $gfac_IDs_per_db[$us3_db][] = (string)$gfacID;
     $global_info[ $analysisID ]               = $us3_db;
     $global_jobs[ $analysisID ]               = [ 'gfacID' => (string)$gfacID, 'requestID' => $requestID ];
