@@ -1,0 +1,318 @@
+# Dbinst base and instance overlays
+
+Dbinst supports two configuration forms during migration:
+
+- an existing complete `config.php`; or
+- a small `config.php` shim that loads a versioned host base and one validated
+  instance overlay.
+
+Existing complete files remain valid. There is no automatic fallback from a
+broken overlay to a legacy file because that could select the wrong database.
+
+## Installed layout
+
+```text
+/home/us3/lims/etc/config/
+|-- dbinst-base.v1.php        0640 (or 0644) us3:<web group>
+`-- instances/                2750 us3:<web group>
+    `-- uslims3_NAME.php      0640 us3:<web group>
+```
+
+`instances/` must not be writable by the web group: overlays are PHP that the
+`us3` daemons include, so a writable directory would let the web tier replace
+them. The setgid bit gives new overlays the web group.
+
+The tree lives under the `us3` account's home (`~us3/lims/etc/config`). On
+SELinux-enforcing hosts that home is labeled `user_home_t`, which the web server
+cannot read, so label the tree and the credential file for httpd:
+
+```text
+semanage fcontext -a -t httpd_sys_content_t '/home/us3/lims/etc/config(/.*)?'
+semanage fcontext -a -t httpd_sys_content_t '/home/us3/lims/\.us3lims\.ini'
+restorecon -Rv /home/us3/lims/etc/config /home/us3/lims/.us3lims.ini
+```
+
+Use the `us3` account's actual home if it is not `/home/us3`.
+
+Install and customize `config-base.v1.php.template` as the host base. The base
+contains shared portal, global-database, host, path, and default feature
+values. It must not contain instance database or secure-user credentials.
+
+`common_dir` (one of those path values) is the host's shared `common/`
+checkout -- the source every instance's rendered pages splice `header.php`
+and `footer.php` from, and the one `/common/{css,images,js}` Apache alias
+serves static assets out of. It belongs in the base, not an overlay: every
+instance on a host shares the same one. An instance whose config predates
+`common_dir` being added to the contract (a pre-4.3.0 legacy `config.php`, or
+a base+overlay instance converted before this key landed) has every page
+missing its shared header, footer and CSS until it is backfilled -- see
+`uslims_upgrade.php` step 9's `$common_dir` catch-up and the
+`4.3.0_common_dir_backfill`/`4.3.0_dbinst_base_common_dir_backfill` migrations
+in dbutils.
+
+Each overlay is a PHP file that returns a schema-v1 array. The loader rejects
+unknown keys, missing values, invalid types, path traversal, mismatched
+instance/database names, and all base overrides except the explicitly allowed
+`enable_GMP`, `enable_PAM`, and `trust_proxy_https_header` feature
+exceptions.
+
+The loader is `lib/dbinst_config_loader.php` in the dbinst checkout. Keeping it
+with application code allows old and new dbinst versions to coexist. A
+breaking future schema must add a new versioned base instead of changing v1
+under already-deployed instances, and must bump the number returned by
+`us3_dbinst_config_contract_version()`.
+
+That function is the only place the contract number is written. The
+`schema_version` stamped into generated overlays, the `schema_version` that
+base and overlay files are validated against, and the versioned base filename
+(`us3_dbinst_config_base_filename()`) all derive from it, so a bump is one
+edit. Do not reintroduce a literal in any of them: a loader that stamps v2 and
+validates as v1, or that reads the v1 base under v2 rules, is the failure this
+arrangement exists to prevent.
+
+The number is deliberately not the component `VERSION` file. `VERSION` is a
+release identifier that moves every release whether or not this contract
+changed, so keying anything to it would reject two checkouts whose loaders are
+identical.
+
+That version is what lets newinst tell whether an already-loaded loader can
+stand in for the one shipping with the checkout it is generating for. Each
+instance has its own checkout, so a process generating a second instance
+cannot load that instance's loader (PHP will not redeclare the functions).
+Generation reuses the loaded contract when the versions match and refuses when
+they do not, rather than validating an overlay against the wrong version's
+rules. The remedy for a refusal is one generation process per instance, which
+is what the generated setup script already does.
+
+The shim publishes values into whatever scope included `config.php`, which is
+what the legacy file's plain assignments did. Included at global scope it sets
+globals; included from inside a function it sets function locals and touches no
+globals. `lib/controls.php`'s `check_filesize()` depends on the second case, so
+the shim must not export to `$GLOBALS`: that would be invisible at global scope
+and would make a routine helper call rewrite every config global, `$configs`
+(the parsed `.us3lims.ini`) included.
+
+## Migration
+
+Run the comparison from a trusted dbinst checkout:
+
+```text
+php tools/migrate_instance_config.php \
+  --instance=uslims3_NAME \
+  --legacy=/srv/www/htdocs/uslims3/uslims3_NAME/config.php
+```
+
+The default is dry-run. It reports only equal/different/missing status and
+never prints credential values. Differences block output.
+
+The comparison runs in both directions. Every contract key is checked against
+the legacy file, and every legacy assignment the v1 contract does not account
+for is listed as `NEEDS REVIEW` and blocks migration. Deployed `config.php`
+files are hand-maintained, so a site-added variable is the expected case, not
+an exotic one; without the second direction such a variable would be dropped
+while the report still read `EQUIVALENT`. Only names are printed, since a
+site-local value may itself be a secret. Each one must be recognized as a base
+value, an overlay value, or a deliberate removal before the instance can be
+migrated. Constants other than `HOME_DIR` and `DEBUG`, and ini settings the
+legacy file changes (`ini_set()`, `error_reporting()`), are listed the same way.
+Record a deliberate removal with `--drop=name,name`. The retired GFAC/Thrift
+keys (`$svcport`, `$uses_thrift`, `$thr_clust_excls`, `$thr_clust_incls`) are
+not read by anything and are not listed.
+
+`--write-candidate` creates the overlay `0640` with the group of `instances/`,
+so the web server can read it.
+
+`full_path` and `data_dir` are derived from the base's `dbinst_root` and the
+instance name, and are not overlay keys. An instance installed somewhere other
+than `<dbinst_root>/<instance>/` therefore reports both as `DIFFERENT` and
+cannot migrate under v1. That is intended: the alternative is an override key
+that would wave through exactly the instances whose paths a person should look
+at. Such an instance stays on its complete legacy `config.php` until it is
+either relocated under the standard root or the contract gains reviewed
+exception keys in a later version.
+
+After an equivalent dry run, `--write-candidate` may create:
+
+- `/home/us3/lims/etc/config/instances/uslims3_NAME.php`; and
+- `<dbinst>/config.php.base-overlay-candidate`.
+
+It never replaces the active `config.php` by itself. Activation is a separate
+deployment step, `--activate`, after web and CLI checks on the candidate pair
+above.
+
+`--activate` re-proves equivalence against the live legacy file, checks the
+overlay and candidate shim still match what this run would generate (not an
+earlier run, and not a hand edit), and proves the candidate shim actually
+loads and publishes the expected `$dbname` -- in a subprocess, so a fatal
+error in it cannot take the migration down or leave `config.php` half
+replaced. Only then does it back up the legacy file and put the shim in its
+place:
+
+- the legacy `config.php` is copied to
+  `<config-root>/instances/<instance>.config.php.legacy-<YYYYMMDDHHMMSS>`,
+  with `@chmod`/`@chown`/`@chgrp` attempting to keep its original owner,
+  group and mode -- `@chown`/`@chgrp` only actually succeed run as root;
+  run as any other account, the backup's owner becomes that account, silently.
+  Its group comes from the setgid `instances/` directory it is created in,
+  not from the `@chgrp` call or from the creating account belonging to the
+  legacy file's group -- a root:root legacy file backed up by a non-root
+  account still comes out owned by that account with the directory's own
+  group, not root's. This is outside the docroot and
+  not named `.php`, so it is never served as text or run as PHP, unlike a
+  backup left in the instance directory itself (the state a host that ran
+  `--activate` before 5682b3f can still be in -- `check_installation.php`
+  flags that).
+- `config.php` is then replaced with the candidate shim via `rename()`,
+  atomic within the directory, so a concurrent web request sees either the
+  old complete file or the new shim, never a partial one.
+
+`--activate` prints the backup's path and the exact rollback command on
+success (`cp <backup> <instance>/config.php`); there is no separate rollback
+tool. Running that command overwrites the candidate shim with the restored
+legacy content -- the shim is not left in place once you roll back. The
+overlay `--write-candidate` created *is* left in place either way,
+since the rollback command never touches it; retrying the whole migration
+needs that overlay file deleted first, because `--write-candidate` refuses
+to replace an existing one rather than overwrite it.
+
+Use `--config-root` and `--credentials-file` only when validating a deployment
+whose installed paths differ from the defaults.
+
+## Turning PAM or GMP on for one instance
+
+newinst's `--base-overlay` does not write `enable_GMP` or `enable_PAM` into a
+new instance's overlay -- it has no creation-time flag for choosing either, so
+a new instance always inherits whatever the base itself configures. A host
+whose base says `false` still has no flag to set at creation time for a
+single PAM/GMP instance without changing every instance on the host (editing
+the base) or hand-editing `config.php` (not an option
+once migrated).
+
+The overlay itself is the supported place for this: it is one of the three
+base values an overlay may replace (see the allowlist above), and the loader
+revalidates it on every load, so a schema-invalid edit fails to load rather
+than silently corrupting state. The "do not edit by hand" comment at the top
+of a generated overlay is about *replacing* it wholesale (that is what
+`--write-candidate` does, and why it refuses to overwrite an existing one) --
+adding or changing one of the three allowed keys in its `values` array is a
+normal, supported edit, not the thing that comment warns against.
+
+To enable PAM or GMP for an instance whose base does not: add
+`'enable_PAM' => true` (or `'enable_GMP'`) to that instance's overlay
+`values` array and confirm it still loads (`tools/check_installation.php` as
+`us3`). There is no equivalent newinst flag yet for setting this at creation
+time; create the instance normally, then make this edit.
+
+## Credential loading fails loudly
+
+Migrating an instance changes what a missing, unreadable, or incomplete
+`~us3/lims/.us3lims.ini` does. The migration report will not show this, since
+it compares values on a host where the file is fine.
+
+A legacy `config.php` warned and carried on: `$globaldbpasswd` became `NULL`
+and only code that opens the global database failed, later, at
+`mysqli_connect`. Login and ordinary pages kept working.
+
+The loader validates the file before publishing any value and fails with
+`credential INI file is missing or unreadable` or `credential INI has no gfac
+password`. Nothing catches it, so every web request and CLI invocation for
+that instance fails at once. A deployment that cannot read its credentials is
+broken, and the loader says so rather than presenting a portal whose queue
+pages happen to be down.
+
+Check this before activating, because the path is resolved from the `us3`
+account's home directory while web requests usually run as a different
+account. An instance whose ini is readable by the CLI account but not by the
+web account degraded quietly before and will not now. Unmigrated instances are
+unaffected, and restoring the legacy `config.php` restores the old behavior.
+
+## Checking an installation after an upgrade
+
+`tools/check_installation.php` verifies the configuration surface of a
+deployment. It is read-only: it writes nothing, contacts no cluster, and prints
+no credential.
+
+```text
+php tools/check_installation.php \
+  --dbinst-root=/srv/www/htdocs/uslims3 \
+  --global-config=/srv/www/htdocs/common/global_config.php
+```
+
+Exit status is 0 when nothing failed, 1 when something did, and 2 when the tool
+could not run. Warnings do not fail the run; several of them mark checks the
+tool cannot make for you, such as whether the web account can read a file when
+the command is running as `us3`.
+
+It covers the host base and its permissions, each overlay and the effective
+configuration it produces, the shim and its `$is_cli` marker, contract-version
+agreement between the base and each instance's loader, the credential file, the
+`$is_cli` marker in unmigrated instances, retired global keys, cluster entries
+still carrying keys `remote_exec` now rejects, whether every active cluster has
+an active status probe, and the circuit breaker directory.
+
+Useful options:
+
+- `--config-root=PATH` asserts a base and overlay installation is present. Left
+  out, a site with nothing migrated reports a warning rather than a failure.
+- `--instance=NAME` limits the run to one instance; repeatable.
+- `--deep` additionally opens the instance and global databases with their real
+  credentials.
+- `--quiet` prints only warnings and failures.
+- `--cluster-config=PATH` points at gridctl's `cluster_config.php` when it is not
+  at `~us3/lims/bin/cluster_config.php`. The tool checks that every cluster
+  active in `global_config.php` has an active status probe there, since the two
+  files are edited separately and a cluster active in only the first is greyed
+  out by the web tier with nothing saying why.
+
+Run it as the `us3` account for the CLI view, and once more as the web account
+where possible: the two see different file permissions, which is the difference
+that matters most for the credential file.
+
+## Cluster health after an upgrade
+
+`cluster_status.php` writes the `gfac.cluster_status` rows the web tier reads to
+decide which clusters a user may select. Run it once by hand before handing the
+host back:
+
+```text
+sudo -u us3 php /home/us3/lims/bin/cluster_status.php
+```
+
+It is also on a crontab every 12 minutes, so the rows refresh on their own
+**once that entry is active** -- `us3`'s own crontab on a hand-built host, or
+`/etc/crontab` on a host the us3lims-roles Ansible roles built, which is also
+where `uslims_upgrade.php`'s idle check for a commented-out LIMS cron looks.
+An upgrade comments out the LIMS cron entries, including this one, for the
+duration; confirm it was uncommented again, in whichever of the two locations
+applies, before relying on the 12-minute self-heal below, or every cluster
+stays greyed out indefinitely rather than just for one upgrade window.
+
+An upgrade also leaves a window where every cluster looks unavailable even with
+cron running. Two rules produce that:
+
+- a row older than `$global_cluster_status_max_age_seconds` (default 1800, two
+  cron runs) is treated as down. Nothing probed the clusters during the
+  maintenance window, so every row is stale when the host comes back;
+- a cluster with no row at all is treated as down as well, since an unprobed
+  cluster is the same unknown as an expired one.
+
+Both are intended: an unknown cluster is not offered for submission. Skipping the
+manual run is not harmful, it just greys every cluster out until the next cron
+run. `uslims_upgrade.php` prints this as step 3 of its closing instructions.
+
+## Required verification
+
+Before activating an instance:
+
+1. require an equivalent migration report;
+2. run `tools/check_installation.php` with no failures, as both the `us3`
+   account and the web account;
+3. confirm `~us3/lims/.us3lims.ini` is present, readable by both the web
+   account and the `us3` CLI account, and has a `gfac` password;
+4. verify web login, session database identity, and instance isolation;
+5. verify gridctl `submitctl.php` recognizes the literal `$is_cli` marker;
+6. exercise submission, status, cancellation, and result handling; and
+7. demonstrate restoration of the preserved legacy file; and
+8. refresh cluster health with `cluster_status.php`, then confirm the intended
+   clusters are selectable rather than greyed out.
+

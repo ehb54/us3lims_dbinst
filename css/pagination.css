@@ -1,0 +1,3 @@
+/* Shared Previous/Next pagination strip. See lib/pagination.php. */
+.pagination-controls   { margin: 12px 0; }
+.pagination-controls a { margin: 0 6px; }

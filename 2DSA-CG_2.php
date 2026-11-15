@@ -45,20 +45,50 @@ include_once 'lib/utility.php';
 include_once 'lib/payload_manager.php';
 include_once 'lib/HPC_analysis.php';
 include_once 'lib/file_writer.php';
-include_once $class_dir . 'submit_local.php';
-include_once $class_dir . 'submit_gfac.php';
-include_once $class_dir . 'submit_airavata.php';
+include_once $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
+
+## submit_progress() comes from common. With an older common the include above is
+## only a warning and the call would be fatal, taking the submission with it, so
+## fall back to a minimal stand-in: a bare flush() with nothing written sends
+## Apache nothing, so a long batch would hit the proxy's idle timeout again,
+## the exact failure the old echo+flush_output() pairs here existed to avoid.
+if ( ! function_exists( 'submit_progress' ) ) {
+    function submit_progress( $msg ) {
+        if ( PHP_SAPI === 'cli' )
+            return;
+        echo "<!-- progress -->\n";
+        flush_output();
+    }
+}
 
 // A large batch takes minutes to submit; finish it even if the browser or
 // the web server gives up on this request (ultrascan-tickets#1115)
 ignore_user_abort( true );
 set_time_limit( 0 );
 
+$submit_method = '2DSA-CG';
+include 'lib/require_cluster.php';
+if ( $submit_stopped ) {
+  if ( $is_cli ) return;
+  exit();
+}
+
 // Create the payload manager and restore the data
 $payload = new Payload_2DSA_CG( $_SESSION );
 $payload->restore();
+
+// A pool submission is recorded for the dispatch queue in one transaction; a
+// repeated post of an already received submission shows its original receipt.
+include_once 'lib/dispatch_intake.php';
+$dispatch_prior = dispatch_intake_active() ? dispatch_intake_begin( $link, $dbname, $payload->get() ) : array();
+if ( $dispatch_prior )
+{
+  include 'lib/dispatch_receipt.php';
+  if ( $is_cli ) return;
+  exit();
+}
 
 // Create the HPC analysis agent and file writer
 $HPC       = new HPC_2DSA_CG();
@@ -90,14 +120,11 @@ if ( $separate_datasets > 0 )
   $index         = 0;               // Input datasets index
   $kr            = 0;               // Output request index
 
-  echo "<script>us_submit_prog.show();</script>";
-  flush_output();
   priority( "2DSA-CG", $dataset_count, $job_params );
 
   while ( $ds_remain > 0 )
   { // Loop to build HPC requests of composite jobs
-    echo "<script>us_submit_prog.msg.prep('$ds_remain');</script>";
-    flush_output();
+    submit_progress( "preparing datasets - $ds_remain remaining" );
 
     if ( ( $ds_remain - $reqds_count ) < $mgroup_count )
       $reqds_count   = $ds_remain;
@@ -128,6 +155,7 @@ if ( $separate_datasets > 0 )
       $stmt->execute()
             or die("Query failed : $query<br />\n" .$stmt->error);
       $stmt->close();
+      dispatch_intake_note( $link, $dbname, $HPCAnalysisRequestID, $filenames[ $kr ], $files_ok, $missit_msg );
     }
 
     $index        += $reqds_count;
@@ -168,55 +196,47 @@ else
     $stmt->execute()
           or die("Query failed : $query<br />\n" . $stmt->error);
     $stmt->close();
+    dispatch_intake_note( $link, $dbname, $HPCAnalysisRequestID, $filenames[ 0 ], $files_ok, $missit_msg );
     
   }
 }
 
+$files_ok = dispatch_intake_close( $link, $dbname, $files_ok, $missit_msg );
 if ( $files_ok )
 {
   $output_msg = <<<HTML
-  <script>us_submit_prog.hide()</script>
   <pre>
   Thank you, your job was accepted and is currently processing. An
   email will be sent to {$_SESSION['submitter_email']} when the job is
   completed.
 
 HTML;
+  if ( dispatch_intake_received() )
+    $output_msg = dispatch_intake_receipt_html( $GLOBALS['dispatch_intake_rows'], $GLOBALS['dispatch_intake_pool'] );
 
   // EXEC COMMAND FOR TIGRE 
   if ( isset($_SESSION['cluster']) )
   {
     $cluster = $_SESSION['cluster']['shortname'];
+    $metaschedulerClusterExecuting = $_SESSION['cluster']['metaschedulerClusterExecuting'] ?? null;
     unset( $_SESSION['cluster'] );
 
-    if ( isset( $global_cluster_details )
-         && is_array( $global_cluster_details )
-         && array_key_exists( $cluster, $global_cluster_details ) 
-         && array_key_exists( 'airavata', $global_cluster_details[$cluster] ) ) {
-           if ( $global_cluster_details[$cluster]['airavata' ] ) {
-               $job = new submit_airavata();
-           } else {
-               $job = new submit_local();
-           }
-    } else {
-        error_log( "$cluster not properly setup\n" );
-        $msg = "<br /><span class='message'>Configuration error: Unsupported cluster $cluster</span><br />\n";
-        echo $msg;
-        exit;
-    }
+    $job = new submit_slurm();
    
     $save_cwd = getcwd();         // So we can come back to the current 
                                   // working directory later
 
     foreach ( $filenames as $filename )
     {
-      echo "<script>us_submit_prog.msg.submit('" . basename( $filename ) . "');</script>";
-      flush_output();
-
+      submit_progress( 'submitting ' . basename( $filename ) );
       chdir( dirname( $filename ) );
 
       $job-> clear();
       $job-> parse_input( basename( $filename ) );
+      if ( isset( $metaschedulerClusterExecuting ) && $metaschedulerClusterExecuting !== null )
+      {
+        $job-> set_metascheduler_cluster_executing( $metaschedulerClusterExecuting );
+      }
       if ( ! DEBUG ) $job-> submit();
       $retval = $job->get_messages();
 
@@ -229,7 +249,7 @@ HTML;
         {
           if ( is_string( $rmsg ) && preg_match( '/^ERROR:/', $rmsg ) )
           {
-            $output_msg .= "<br /><span class='message' style='color:red;font-weight:bold;'>" .
+            $output_msg .= "<br /><span class='message text-red font-bold'>" .
                             "WARNING: job submission failed - $rmsg</span><br />\n";
             break;
           }
@@ -273,6 +293,7 @@ HTML;
 
 // Start displaying page
 $page_title = '2DSA-CG Analysis Submitted';
+$page_title = dispatch_intake_title( $page_title );
 include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";
@@ -296,7 +317,7 @@ echo <<<HTML
 
 HTML;
 
-include 'footer.php';
+include $common_dir . 'footer.php';
 if ( $is_cli ) {
   return;
 }

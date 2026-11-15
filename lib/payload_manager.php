@@ -42,6 +42,24 @@ abstract class Payload_manager
         }
     }
 
+    /**
+     * get() for a key whose value is a list of datasets.
+     *
+     * get() returns false both when the payload has no 'payload' array yet and
+     * when the key is simply absent, and every caller below immediately
+     * indexes into what it gets back. On PHP 8.1 that indexing silently
+     * converts the false to an array and emits "Automatic conversion of false
+     * to array is deprecated"; on PHP 9 it is an error. The value the callers
+     * want in that case is an empty list, so say so here rather than in five
+     * places.
+     */
+    function get_array( $key )
+    {
+        $val = $this->get( $key );
+
+        return is_array( $val ) ? $val : array();
+    }
+
     function get_dataset( $index = 0 )
     {
         $dataset = $this->payload['queue']['payload'];
@@ -620,7 +638,7 @@ class Payload_2DSA extends Payload_manager
                                 = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
-    $dataset                    = $this->get('dataset');
+    $dataset                    = $this->get_array( 'dataset' );
     // Add new datasets
     $dataset[$dataset_id]       = $parameters;
     $this->add( 'dataset', $dataset );
@@ -774,7 +792,7 @@ class Payload_2DSA_CG extends Payload_manager
                                 = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
-    $dataset                    = $this->get('dataset');
+    $dataset                    = $this->get_array( 'dataset' );
     // Add new datasets
     $dataset[$dataset_id]       = $parameters;
     $this->add( 'dataset', $dataset );
@@ -931,7 +949,7 @@ class Payload_GA extends Payload_manager
                                 = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
-    $dataset                    = $this->get('dataset');
+    $dataset                    = $this->get_array( 'dataset' );
     // Add new datasets
     $dataset[$dataset_id]       = $parameters;
     $this->add( 'dataset', $dataset );
@@ -1096,7 +1114,7 @@ class Payload_DMGA extends Payload_manager
                                 = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
-    $dataset                    = $this->get('dataset');
+    $dataset                    = $this->get_array( 'dataset' );
     // Add new datasets
     $dataset[$dataset_id]       = $parameters;
     $this->add( 'dataset', $dataset );
@@ -1248,7 +1266,7 @@ class Payload_PCSA extends Payload_manager
                                 = $this->model_concentration( $editedDataID );
 
     // Get arrays with multiple dataset data
-    $dataset                    = $this->get('dataset');
+    $dataset                    = $this->get_array( 'dataset' );
     // Add new datasets
     $dataset[$dataset_id]       = $parameters;
     $this->add( 'dataset', $dataset );

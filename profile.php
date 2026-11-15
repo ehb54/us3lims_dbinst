@@ -17,7 +17,7 @@ if ( !isset( $enable_PAM ) ) {
 if ( $enable_PAM
      && $_SESSION['authenticatePAM'] == true ) {
   include 'header.php';
-  include 'footer.php';
+  include $common_dir . 'footer.php';
   exit();
 }
 
@@ -61,7 +61,7 @@ else
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 // Function to update the current record
@@ -79,11 +79,23 @@ function do_update($link)
     $message .= "--password must be less than 128 characters long.<br />";
   }
   // We can't use any sanitization here, because it would alter the password potentially
-  $pw1 = $_POST['pw1'];
-  $pw2 = $_POST['pw2'];
+  // -- except trim(), to match checkuser.php's own trim() of the submitted login
+  // password: without it, a password set here with a leading/trailing space could
+  // never be used to log in again (checkuser.php trims before hashing, so the
+  // re-typed password's hash would never match what was stored here untrimmed).
+  $pw1 = trim($_POST['pw1']);
+  $pw2 = trim($_POST['pw2']);
 
   if ( $pw1 != $pw2 )
     $message .= "--passwords do not match.";
+  // An all-spaces entry trims to '', the same as the field being left blank
+  // -- so below, nothing distinguishes "did not try to change the
+  // password" from "tried to, but it was silently dropped", and the
+  // all-spaces case got the same "Personal information updated." as a
+  // real change. $_POST['pw1'] (untrimmed) is checked here instead of
+  // $pw1, specifically to catch that case before it is lost.
+  elseif ( $pw1 === '' && $_POST['pw1'] !== '' )
+    $message .= "--password cannot be all spaces.";
 
   if ( empty($message) )
   {
@@ -224,7 +236,7 @@ function edit_record($link)
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post"
-        onsubmit="return validate(this);">
+        class='onsubmit-return-validate-this'>
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
       <tr><th colspan='8'>Edit My Information</th></tr>
@@ -267,10 +279,10 @@ echo<<<HTML
                    maxlength='64' value='$email' /></td></tr>
     <tr><th>New Password (or leave blank to leave password unchanged):</th>
         <td><input type='password' name='pw1' size='40'
-                   maxlength='128' /></td></tr>
+                   maxlength='127' /></td></tr>
     <tr><th>New Password Again (must match):</th>
         <td><input type='password' name='pw2' size='40'
-                   maxlength='128' /></td></tr>
+                   maxlength='127' /></td></tr>
 
     </tbody>
   </table>

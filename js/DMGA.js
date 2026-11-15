@@ -556,7 +556,7 @@ function validate( f, advanceLevel, count_datasets )
     return( validate_single(f) );
 
   else
-    return( validate_multiple(f) );
+    return( validate_multiple( f, advanceLevel ) );
 
   return( true );
 }
@@ -569,17 +569,13 @@ function validate_single( f )
   return( true );
 }
 
-function validate_multiple( f )
+function validate_multiple( f, advanceLevel )
 {
   // Advanced users don't go through these tests
   if ( advanceLevel > 0 ) return( true );
 
-  var contact_bo = "\nIf you have any questions about this policy, please " +
-                   "contact Borries Demeler (borries.demeler@umontana.edu).";
-
-  // Let's only produce this message the first time. On subsequent pages
-  // most of the controls are absent, so...
-  if ( valid_field(f.simpoints-value) )
+  // Ask once: mc_iterations is only on the first dataset's page
+  if ( valid_field(f.mc_iterations) )
   {
     var multiple_ok = confirm( "You have selected more than one dataset " +
                       "to be fitted in this analysis. Are you sure you want " +

@@ -8,7 +8,7 @@
 include 'checkinstance.php';
 
 $page_title = "Welcome!";
-$css = 'css/index.css';
+$css = '/common/css/index.css';
 
 include 'header.php';
 
@@ -46,5 +46,5 @@ workflows for optimization.
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 ?>
