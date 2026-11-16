@@ -127,7 +127,6 @@ function display_error( $error_text )
 <head>
   <title>Graduate Student Applications Database - display file error</title>
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
-  <link rel="stylesheet" type="text/css" href="css/main.css" />
 </head>
 
 <body>

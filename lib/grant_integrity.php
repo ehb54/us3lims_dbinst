@@ -59,7 +59,14 @@ function do_db_remove( $db_handle, $db, $user ) {
 
 function get_grants( $db_handle, $user, $host = '%' ) {
 
-    $res2 = db_obj_result( $db_handle, "show grants for '$user'@'$host'", true, true );
+    // SHOW GRANTS throws mysqli_sql_exception when the MariaDB user does not exist.
+    // Treat that as zero grants — analyze_grants() will schedule the needed repairs
+    // (add_usage + add_grants) to recreate the user and its permissions.
+    try {
+        $res2 = db_obj_result( $db_handle, "show grants for '$user'@'$host'", true, true );
+    } catch ( mysqli_sql_exception $e ) {
+        $res2 = false;
+    }
 
     # build grant info tables for user
     $grants                         = (object)[];

@@ -37,6 +37,7 @@ Released      : 6/30/2011
 
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>$page_title -
          $org_name $title_devel</title>
   <meta name="Author" content="$site_author" />
@@ -45,7 +46,7 @@ Released      : 6/30/2011
   <meta name="robots" content="index, follow" />
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
   <link rel="shortcut icon" href="images/favicon.ico" />
-  <link href="css/common.css" rel="stylesheet" type="text/css" />
+  <link href="/common/css/common.css" rel="stylesheet" type="text/css" />
   <script src="js/main.js" type="text/javascript"></script>
   <script type='text/javascript' src='js/jquery.js'></script>
   <script type='text/javascript' src='js/jquery-ui.js'></script>
@@ -67,28 +68,25 @@ if ( isset( $js ) )
     echo "  <script src='$javascript' type='text/javascript'></script>\n";
 }
 
-if ( ! isset( $onload ) )
-  $onload = '';
-
 echo<<<HTML
 
 </head>
 
-<body $onload>
+<body>
 
 <!-- begin header -->
-<div id="header" style='text-align:center;'>
+<div id="header" class='text-center'>
    <table class='noborder'>
    <tr><td><img src='images/USLIMS3-banner.png' alt='USLims 3 banner' /></td>
-       <td style='vertical-align:middle;width:400px;'></td>
+       <td class='w-400px-valign-middle'></td>
    </tr>
    </table>
-   <span style='font-size:20px;font-weight:bold;color:white;padding:0 1em;'>
+   <span class='font-bold-white-20px'>
     $org_name ($dbname)$title_devel</span>
 
 HTML;
 
-include 'topmenu.php';
+include $common_dir . 'topmenu.php';
 
 echo<<<HTML
 </div>

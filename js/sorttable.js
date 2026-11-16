@@ -342,17 +342,11 @@ if (document.addEventListener) {
     document.addEventListener("DOMContentLoaded", sorttable.init, false);
 }
 
-/* for Internet Explorer */
-/*@cc_on @*/
-/*@if (@_win32)
-    document.write("<script id=__ie_onload defer src=javascript:void(0)><\/script>");
-    var script = document.getElementById("__ie_onload");
-    script.onreadystatechange = function() {
-        if (this.readyState == "complete") {
-            sorttable.init(); // call the onload handler
-        }
-    };
-/*@end @*/
+/* The Internet Explorer branch that used to live here relied on JScript
+   conditional compilation (/*@cc_on), which no browser has supported since
+   IE11 dropped it in 2013, so it was dead code everywhere.  It has been
+   removed because it document.write()'s a script element whose source is a
+   javascript URL, which CSP flags even though it can never run. */
 
 /* for Safari */
 if (/WebKit/i.test(navigator.userAgent)) { // sniff

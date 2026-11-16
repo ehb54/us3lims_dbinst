@@ -311,12 +311,37 @@ abstract class File_writer
 
     chdir( $current_dir );
 
-    $fileList = implode( " ", $files );
+    // Payload filenames include user-supplied model descriptions. Pass them to
+    // tar NUL-separated in a file: escapeshellarg() drops non-ASCII bytes under
+    // the C locale the web server runs in.
+    $listFile = tempnam( $current_dir, '.tarlist-' );
+    file_put_contents( $listFile, implode( "\0", $files ) . "\0" );
     $tarFilename = sprintf( "hpcinput-%s-%s-%05d.tar",
                              $job['database']['host'],
                              $job['database']['name'],
                              $HPCAnalysisRequestID );
-    shell_exec( "/bin/tar -cf $tarFilename " . $fileList );
+
+    // Capture stderr and exit status for archive failure diagnostics.
+    $tar_output = [];
+    $tar_status = 0;
+    exec(
+        "/bin/tar -cf " . escapeshellarg( $tarFilename ) . " --null -T " . escapeshellarg( $listFile ) . " 2>&1",
+        $tar_output,
+        $tar_status
+    );
+    @unlink( $listFile );
+
+    if ( $tar_status !== 0 )
+    {
+        $tar_msg = "ERROR: file_writer: tar failed (status $tar_status) for "
+                 . "$tarFilename: " . implode( '; ', $tar_output );
+        error_log( $tar_msg );
+        if ( function_exists( 'elog' ) ) elog( $tar_msg );
+        // submitone.php scans CLI output for ERROR: lines.
+        if ( PHP_SAPI === 'cli' ) echo "$tar_msg\n";
+        chdir( $save_cwd );
+        return false;
+    }
 
     chdir( $save_cwd );
 
@@ -578,45 +603,6 @@ abstract class File_writer
     echo "Session variables: \n";
     print_r( $_SESSION );
     echo "</pre>\n";
-  }
-
-  // This function provides email logging without interrupting
-  //  the jobs themselves
-  function email_log( $job )
-  {
-    $to = "dzollars@gmail.com";
-    $subject = "Logging from {$job['database']['name']} ";
-    $message = "job files---\n";
-    $message .= $this->__multiarray( $job );
-    $message .= "\nSESSION variables---\n";
-    $message .= $this->__multiarray( $_SESSION );
-    mail($to, $subject, $message);
-  }
-
-  // This function parses values in an array, calling itself recursively
-  //  as needed for multilevel arrays
-  function __multiarray( $job )
-  {
-    $msg = "";
-    static $level = 0;       // to keep track of some indentation
-
-    foreach ($job as $key => $value)
-    {
-      if (is_array($value))
-      {
-        $level++;
-        $msg .= "$key data:\n";
-        $msg .= $this->__multiarray( $value );
-      }
-      else
-      {
-        for ($x = 0; $x < $level; $x++)
-          $msg .= "  ";
-        $msg .= "$key: $value\n";
-      }
-    }
-    $level--;
-    return $msg;
   }
 
 }

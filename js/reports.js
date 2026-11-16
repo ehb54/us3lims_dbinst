@@ -20,7 +20,7 @@ function show_solution_detail( compType, eID, triple )
    const properType = compType.charAt(0).toUpperCase() +
                     compType.substr(1);
 
-   window.open("solution_detail.php?type=" + compType + "&expID=" + eID + "&triple=" + triple,
+   window.open("solution_detail.php?type=" + compType + "&expID=" + encodeURIComponent( eID ) + "&triple=" + encodeURIComponent( triple ),
                properType,
                "toobar=no,location=no,directories=no,status=no," +
                "scrollbars=yes,resizable=yes,copyhistory=no,"    +
@@ -37,7 +37,7 @@ const change_person = function ()
    if (!ID) {
        ID = urlParams.get('personID') || "";
    }
-   $peopleSelect.unbind('change');
+   $peopleSelect.off('change');
    // Update the URL with the current personID and reportID selections.
    const newUrl = new URL(window.location.href);
    newUrl.searchParams.set('personID', ID);
@@ -49,15 +49,15 @@ const change_person = function ()
      {
        // personID selection setup
        // make sure change event is bound after data is loaded
-       $('#people_select').change( change_person );
+       $('#people_select').on( 'change', change_person );
      });
 
-   $('#run_select').unbind('change');
+   $('#run_select').off('change');
    $('#runID').load( 'report_getInfo.php?type=r&pID=' + ID,
      function()
      {
        // runID selection setup
-       $('#run_select').change( change_run_select );
+       $('#run_select').on( 'change', change_run_select );
      });
 
    $('#tripleID').html( '' );
@@ -77,7 +77,7 @@ const change_run_select = function ()
        rID = urlParams.get('reportID') || "";
    }
 
-    $runSelect.unbind('change');
+    $runSelect.off('change');
 
    // Update the URL with the current personID and reportID selections.
    const newUrl = new URL(window.location.href);
@@ -99,7 +99,7 @@ const change_run_select = function ()
      {
        // runID selection setup
        // make sure change event is bound after data is loaded
-       $('#run_select').change( change_run_select );
+       $('#run_select').on( 'change', change_run_select );
      });
 }
 
@@ -125,3 +125,7 @@ const change_docType = function () {
     location.href = 'view_reports.php?triple=' + tripleID + '&a=' + types;
 };
 
+// Report fragments are replaced by jQuery.load(). Bind once on the document
+// instead of loading a script from the fragment (jQuery evaluates it inline,
+// which script-src 'self' blocks).
+$(document).on('click', 'input[type="checkbox"][id^="image_"]', change_docType);
