@@ -208,8 +208,8 @@ function do_delete($link)
 function do_update($link)
 {
   $labID       =                         $_POST['labID'];
-  $name        = addslashes(htmlentities($_POST['name']));
-  $contact     = addslashes(htmlentities($_POST['contact']));
+  $name        = addslashes(htmlentities($_POST['name'], ENT_COMPAT | ENT_HTML401));
+  $contact     = addslashes(htmlentities($_POST['contact'], ENT_COMPAT | ENT_HTML401));
   // language=MariaDB
   $query = "UPDATE lab " .
            "SET name  = ?, " .
@@ -232,8 +232,8 @@ function do_create($link)
 {
   $guid = uuid();
 
-  $name        = addslashes(htmlentities($_POST['name']));
-  $contact     = addslashes(htmlentities($_POST['contact']));
+  $name        = addslashes(htmlentities($_POST['name'], ENT_COMPAT | ENT_HTML401));
+  $contact     = addslashes(htmlentities($_POST['contact'], ENT_COMPAT | ENT_HTML401));
   $query = "INSERT INTO lab " .
            "SET labGUID = ?, " .
            "name  = ?, " .
@@ -254,7 +254,7 @@ function do_create($link)
 function display_record($link)
 {
   // Find a record to display
-  $labID = htmlentities(get_id($link));
+  $labID = htmlentities(get_id($link), ENT_COMPAT | ENT_HTML401);
   if ($labID === false)
     return;
 
@@ -409,8 +409,8 @@ function edit_record($link)
   $stmt->close();
 
 
-  $name    = html_entity_decode( stripslashes( $row['name'] ) );
-  $contact = html_entity_decode( stripslashes( $row['contact'] ) );
+  $name    = html_entity_decode( stripslashes( $row['name'] ), ENT_COMPAT | ENT_HTML401 );
+  $contact = html_entity_decode( stripslashes( $row['contact'] ), ENT_COMPAT | ENT_HTML401 );
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method="post">
