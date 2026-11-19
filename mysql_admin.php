@@ -64,7 +64,7 @@ if (isset($_POST['do_sql']))
     // First, table headers with column names
     for ($i = 0; $i < $num_cols; $i++)
     {
-      $field_name = mysqli_field_name($result, $i);
+      $field_name = mysqli_fetch_field_direct($result, $i)->name;
       echo "    <th>$field_name</th>\n";
     }
     echo "</tr>\n";
