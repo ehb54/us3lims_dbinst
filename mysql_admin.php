@@ -42,7 +42,7 @@ if (isset($_POST['do_sql']))
   else if ($result === TRUE)
   {
     // The result of an UPDATE, DELETE, DROP, INSERT, etc.
-    $rows = mysqli_affected_rows();
+    $rows = mysqli_affected_rows($link);
     echo "<p class='m-2em-0-20em'>$rows rows affected</p>\n";
   }
     

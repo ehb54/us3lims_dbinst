@@ -877,7 +877,7 @@ HTML;
     $result = mysqli_query( $link, $query )
              or die( "Query failed : $query<br />\n" . mysqli_error($link));
     $models = mysqli_fetch_row( $result );         // An array with all of them
-    if ( $models !== false )
+    if ( $models )    // null, not false, when there are no rows
       $row['modelIDs'] = implode( ", ", $models );
 
     $query  = "SELECT resultID FROM HPCAnalysisResultData " .
@@ -886,7 +886,7 @@ HTML;
     $result = mysqli_query( $link, $query )
              or die( "Query failed : $query<br />\n" . mysqli_error($link));
     $noise  = mysqli_fetch_row( $result );         // An array with all of them
-    if ( $noise !== false )
+    if ( $noise )     // null, not false, when there are no rows
       $row['noiseIDs'] = implode( ", ", $noise );
   }
 
