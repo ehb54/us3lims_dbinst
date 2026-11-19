@@ -306,7 +306,7 @@ function render_project_runs( $link, $projectID )
 function do_update( $link )
 {
   $ID        = $_SESSION['id'];
-  $projectID = htmlentities($_POST['projectID']);
+  $projectID = htmlentities($_POST['projectID'], ENT_COMPAT | ENT_HTML401);
 
   if ( ! is_numeric( $projectID ) || ! user_may_access_project( $link, $projectID ) )
   {
@@ -378,16 +378,16 @@ HTML;
   }
 
   // Now update the database with the new information
-  $goals               =        addslashes(htmlentities($_POST['goals']));
-  $molecules           =        addslashes(htmlentities($_POST['molecules']));
-  $purity              = substr(addslashes(htmlentities($_POST['purity'])), 0,10);
-  $expense             =        addslashes(htmlentities($_POST['expense']));
-  $bufferComponents    =        addslashes(htmlentities($_POST['bufferComponents']));
-  $saltInformation     =        addslashes(htmlentities($_POST['saltInformation']));
-  $AUC_questions       =        addslashes(htmlentities($_POST['AUC_questions']));
-  $expDesign           =        addslashes(htmlentities($_POST['expDesign']));
-  $notes               =        addslashes(htmlentities($_POST['notes']));
-  $description         =        addslashes(htmlentities($_POST['description']));
+  $goals               =        addslashes(htmlentities($_POST['goals'], ENT_COMPAT | ENT_HTML401));
+  $molecules           =        addslashes(htmlentities($_POST['molecules'], ENT_COMPAT | ENT_HTML401));
+  $purity              = substr(addslashes(htmlentities($_POST['purity'], ENT_COMPAT | ENT_HTML401)), 0,10);
+  $expense             =        addslashes(htmlentities($_POST['expense'], ENT_COMPAT | ENT_HTML401));
+  $bufferComponents    =        addslashes(htmlentities($_POST['bufferComponents'], ENT_COMPAT | ENT_HTML401));
+  $saltInformation     =        addslashes(htmlentities($_POST['saltInformation'], ENT_COMPAT | ENT_HTML401));
+  $AUC_questions       =        addslashes(htmlentities($_POST['AUC_questions'], ENT_COMPAT | ENT_HTML401));
+  $expDesign           =        addslashes(htmlentities($_POST['expDesign'], ENT_COMPAT | ENT_HTML401));
+  $notes               =        addslashes(htmlentities($_POST['notes'], ENT_COMPAT | ENT_HTML401));
+  $description         =        addslashes(htmlentities($_POST['description'], ENT_COMPAT | ENT_HTML401));
   // language=MariaDB
   $query = "UPDATE project " .
            "SET goals  = ?, " .
@@ -490,7 +490,7 @@ function get_xdiff( $old, $new, $label )
 function display_record( $link )
 {
   // Find a record to display
-  $projectID = htmlentities( get_id( $link ) );
+  $projectID = htmlentities( get_id( $link ), ENT_COMPAT | ENT_HTML401 );
   if ($projectID === false)
     return;
 
@@ -681,10 +681,10 @@ function edit_record( $link )
 {
   // Get the record we need to edit
   if ( isset( $_POST['edit'] ) )
-    $projectID = htmlentities($_POST['projectID']);
+    $projectID = htmlentities($_POST['projectID'], ENT_COMPAT | ENT_HTML401);
 
   else if ( isset( $_GET['edit'] ) )
-    $projectID = htmlentities($_GET['edit']);
+    $projectID = htmlentities($_GET['edit'], ENT_COMPAT | ENT_HTML401);
 
   else
   {

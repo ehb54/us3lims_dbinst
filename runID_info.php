@@ -824,7 +824,7 @@ function HPCDetail( $link, $requestID )
   $row = mysqli_fetch_assoc( $result );
   $result->close();
   $requestID = $row['HPCAnalysisRequestID'];
-  $row['requestXMLFile'] = '<pre class="wrapped">' . htmlentities( $row['requestXMLFile'] ) . '</pre>';
+  $row['requestXMLFile'] = '<pre class="wrapped">' . htmlentities( $row['requestXMLFile'], ENT_COMPAT | ENT_HTML401 ) . '</pre>';
 
   // Save for later
   $requestGUID  = $row['HPCAnalysisRequestGUID'];
@@ -847,10 +847,10 @@ HTML;
   $result = mysqli_query( $link, $query )
            or die( "Query failed : $query<br />\n" . mysqli_error($link));
   $row = mysqli_fetch_assoc( $result );
-  $row['jobfile'] = '<pre class="wrapped">' . htmlentities( $row['jobfile'] ) . '</pre>';
+  $row['jobfile'] = '<pre class="wrapped">' . htmlentities( $row['jobfile'], ENT_COMPAT | ENT_HTML401 ) . '</pre>';
 
   // Populate the status display from the recorded LIMS queue status.
-  $row['gfacStatus'] = htmlspecialchars( $row['queueStatus'] ?? 'n/a' );
+  $row['gfacStatus'] = htmlspecialchars( $row['queueStatus'] ?? 'n/a', ENT_COMPAT | ENT_HTML401 );
 
   // Get queue messages from disk directory, if it still exists
   global $submit_dir;
@@ -877,7 +877,7 @@ HTML;
     $result = mysqli_query( $link, $query )
              or die( "Query failed : $query<br />\n" . mysqli_error($link));
     $models = mysqli_fetch_row( $result );         // An array with all of them
-    if ( $models !== false )
+    if ( $models )    // null, not false, when there are no rows
       $row['modelIDs'] = implode( ", ", $models );
 
     $query  = "SELECT resultID FROM HPCAnalysisResultData " .
@@ -886,7 +886,7 @@ HTML;
     $result = mysqli_query( $link, $query )
              or die( "Query failed : $query<br />\n" . mysqli_error($link));
     $noise  = mysqli_fetch_row( $result );         // An array with all of them
-    if ( $noise !== false )
+    if ( $noise )     // null, not false, when there are no rows
       $row['noiseIDs'] = implode( ", ", $noise );
   }
 

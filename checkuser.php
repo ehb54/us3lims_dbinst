@@ -93,7 +93,7 @@ function login_db_query( $link, $query, $types, array $args )
   return array( $stmt, $result );
 }
 
-$loginname  = htmlentities(trim($_POST['email']));
+$loginname  = htmlentities(trim($_POST['email']), ENT_COMPAT | ENT_HTML401);
 $passwd = trim($_POST['password']);
 if ( !isset( $enable_PAM ) ) {
   $enable_PAM = false;
