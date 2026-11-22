@@ -392,15 +392,19 @@ if ( $activate )
                                    ? US3_DBINST_CREDENTIALS_FILE : '' )
            . ' ' . escapeshellarg( $candidate_path )
            . ' ' . escapeshellarg( $expected[ 'dbname' ] );
-  $command = ( function_exists( 'posix_geteuid' ) && posix_geteuid() === 0 )
-           ? 'runuser -l us3 -s /bin/sh -c ' . escapeshellarg( $probe_inner ) . ' 2>&1'
-           : $probe_inner . ' 2>&1';
+  ## stderr apart from the "ok": a login profile that prints a notice must not fail the check.
+  $probe_err = tempnam( sys_get_temp_dir(), 'us3-probe-' );
+  $command = ( ( function_exists( 'posix_geteuid' ) && posix_geteuid() === 0 )
+             ? 'runuser -l us3 -s /bin/sh -c ' . escapeshellarg( $probe_inner )
+             : $probe_inner ) . ' 2>' . escapeshellarg( (string) $probe_err );
   $probe_out = array();
   $probe_rc = 0;
   exec( $command, $probe_out, $probe_rc );
+  $probe_errors = trim( (string) @file_get_contents( (string) $probe_err ) );
+  @unlink( (string) $probe_err );
   if ( $probe_rc !== 0 || trim( implode( "\n", $probe_out ) ) !== 'ok' )
     migration_fail( "the candidate shim does not load, so config.php was left alone: "
-                  . trim( implode( ' ', $probe_out ) ) );
+                  . trim( implode( ' ', $probe_out ) . ' ' . $probe_errors ) );
   echo "Candidate shim loads and reports the expected database.\n";
 
   /* Keep the legacy file under a name that says what it is, and never overwrite
