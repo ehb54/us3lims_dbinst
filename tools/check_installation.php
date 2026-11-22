@@ -523,12 +523,16 @@ foreach ( $overlays as $instance )
    * ran --activate before that fix still has it sitting there under that
    * older name -- checked for here too, since the newer, prefixed name this
    * glob checked alone would never match it. */
-  $stale_backups = array_merge(
+  ## Any other copy of config.php (an editor's config.php~, .save, .bak) holds the same passwords.
+  $stale_backups = array_values( array_filter( array_merge(
       glob( rtrim( $effective[ 'full_path' ], '/' )
           . '/' . $instance . '.config.php.legacy-*' ) ?: array(),
       glob( rtrim( $effective[ 'full_path' ], '/' )
-          . '/config.php.legacy-*' ) ?: array()
-  );
+          . '/config.php?*' ) ?: array()
+  ), function ( $path ) {
+    return !in_array( basename( $path ),
+                      array( 'config.php.template', 'config.php.base-overlay-candidate' ), true );
+  } ) );
   if ( $stale_backups )
     check_warn( 'no legacy config.php backup left in the docroot',
                 count( $stale_backups ) . ' found, e.g. ' . $stale_backups[ 0 ]
