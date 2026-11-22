@@ -179,11 +179,28 @@ foreach ( $expected as $key => $value )
 {
   if ( $key === 'timezone' )
   {
-    $equal = date_default_timezone_get() === $value;
+    ## Set by date_default_timezone_set(), not a variable, so show both zones.
+    $legacy_zone = date_default_timezone_get();
+    if ( $legacy_zone !== $value )
+    {
+      echo sprintf( "%-22s %s\n", $key, "DIFFERENT (legacy sets $legacy_zone, base $value)" );
+      $differences++;
+      $differing[] = "$key DIFFERENT";
+      continue;
+    }
+    $equal = true;
   }
   else
   {
     $equal = array_key_exists( $key, $legacy ) && $legacy[ $key ] === $value;
+  }
+  ## An optional switch a legacy config never set reads as off everywhere, so it
+  ## matches a false value.
+  if ( !$equal && !array_key_exists( $key, $legacy ) && $value === false
+       && ( $optional[ $key ] ?? null ) === 'boolean' )
+  {
+    echo sprintf( "%-22s %s\n", $key, 'MISSING (unset is false, as in the base)' );
+    continue;
   }
   ## MISSING, not just DIFFERENT, when the legacy config never set this key
   ## at all (e.g. no $enable_GMP line) -- a value that collides with what
