@@ -166,7 +166,7 @@ function display_record($link)
 
   foreach ($row as $key => $value)
   {
-    $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( $value ));
+    $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( $value ), ENT_COMPAT | ENT_HTML401);
   }
 
 echo<<<HTML
@@ -223,14 +223,14 @@ function edit_record($link)
 
   $row = mysqli_fetch_array($result);
 
-  $lname           = html_entity_decode(stripslashes($row['lname']));
-  $fname           = html_entity_decode(stripslashes($row['fname']));
-  $organization    = html_entity_decode(stripslashes($row['organization']));
-  $address         = html_entity_decode(stripslashes($row['address']));
-  $city            = html_entity_decode(stripslashes($row['city']));
-  $state           = html_entity_decode(stripslashes($row['state']));
-  $zip             = html_entity_decode(stripslashes($row['zip']));
-  $country         = html_entity_decode(stripslashes($row['country']));
+  $lname           = html_entity_decode(stripslashes($row['lname']), ENT_COMPAT | ENT_HTML401);
+  $fname           = html_entity_decode(stripslashes($row['fname']), ENT_COMPAT | ENT_HTML401);
+  $organization    = html_entity_decode(stripslashes($row['organization']), ENT_COMPAT | ENT_HTML401);
+  $address         = html_entity_decode(stripslashes($row['address']), ENT_COMPAT | ENT_HTML401);
+  $city            = html_entity_decode(stripslashes($row['city']), ENT_COMPAT | ENT_HTML401);
+  $state           = html_entity_decode(stripslashes($row['state']), ENT_COMPAT | ENT_HTML401);
+  $zip             = html_entity_decode(stripslashes($row['zip']), ENT_COMPAT | ENT_HTML401);
+  $country         = html_entity_decode(stripslashes($row['country']), ENT_COMPAT | ENT_HTML401);
   $phone           =                                 $row['phone'];
   $email           =                    stripslashes($row['email']);
 

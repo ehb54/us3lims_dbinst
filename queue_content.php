@@ -253,7 +253,7 @@ foreach( $display_info as $display )
 {
   foreach ( $display as $key => $value )
   {
-    $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( nl2br($value)) );
+    $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( nl2br($value)), ENT_COMPAT | ENT_HTML401 );
   }
 
   $db_info = ( $_SESSION['userlevel'] >= 2 ) ? "$database (ID: $HPCAnalysisRequestID)" : "";

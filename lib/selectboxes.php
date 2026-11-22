@@ -124,8 +124,8 @@ function person_select( $link, $select_name, $current_ID = NULL )
           "  <select class='onchange-form-submit' name='$select_name' size='1'>\n";
   while ( list( $personID, $lname, $fname ) = mysqli_fetch_array( $result ) )
   {
-    $t_last  = html_entity_decode( stripslashes( $lname ) );
-    $t_first = html_entity_decode( stripslashes( $fname ) );
+    $t_last  = html_entity_decode( stripslashes( $lname ), ENT_COMPAT | ENT_HTML401 );
+    $t_first = html_entity_decode( stripslashes( $fname ), ENT_COMPAT | ENT_HTML401 );
     $selected = ( $current_ID == $personID ) ? " selected='selected'" : "";
     $text .= "    <option value='$personID'$selected>$t_last, $t_first</option>\n";
   }

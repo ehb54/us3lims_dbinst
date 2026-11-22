@@ -97,7 +97,7 @@ HTML;
 else
 {
    // Get details about the request
-  $reqID = htmlentities($_GET[ 'RequestID' ]);
+  $reqID = htmlentities($_GET[ 'RequestID' ], ENT_COMPAT | ENT_HTML401);
 
   if ( $stmt = mysqli_prepare( $link, "SELECT clusterName, HPCAnalysisRequestGUID, investigatorGUID, submitterGUID, email, experimentID, editXMLFilename, submitTime, clusterName, method, requestXMLFile FROM HPCAnalysisRequest WHERE HPCAnalysisRequestID=?" ) )
   {
@@ -126,7 +126,7 @@ else
    echo "Submit Time           : $submitTime\n";
    echo "Cluster Name          : $clusterName\n";
    echo "Method                : $method\n";
-   $xmlFile = htmlentities( $requestXMLFile );
+   $xmlFile = htmlentities( $requestXMLFile, ENT_COMPAT | ENT_HTML401 );
    echo "Request XML File      : \n$xmlFile\n";
 
    // Save for later
