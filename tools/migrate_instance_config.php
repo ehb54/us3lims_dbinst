@@ -445,8 +445,17 @@ if ( $activate )
   exit( 0 );
 }
 
+/* The printed rollback leaves the overlay in place, so a later migration finds it: one that
+ * is exactly what would be written, at 0640, is kept; anything else is still refused. */
+$overlay_source = us3_dbinst_config_overlay_source( $contract );
+$overlay_kept = is_file( $overlay_path ) && !is_link( $overlay_path )
+  && file_get_contents( $overlay_path ) === $overlay_source
+  && ( fileperms( $overlay_path ) & 0777 ) === 0640;
+
 foreach ( array( $overlay_path, $candidate_path ) as $path )
 {
+  if ( $path === $overlay_path && $overlay_kept )
+    continue;
   if ( file_exists( $path ) )
     migration_fail( "refusing to replace existing file: $path" );
   if ( !is_dir( dirname( $path ) ) || !is_writable( dirname( $path ) ) )
@@ -467,19 +476,22 @@ if ( !$us3_pw )
   migration_fail( "could not resolve the us3 account; the overlay must be"
                 . " owned by it, not by whoever runs this tool" );
 
-$overlay_temp = migration_write_temp(
-  $overlay_path, us3_dbinst_config_overlay_source( $contract ), 0640,
-  filegroup( dirname( $overlay_path ) ), $us3_pw[ 'uid' ] );
+if ( !$overlay_kept )
+  $overlay_temp = migration_write_temp(
+    $overlay_path, $overlay_source, 0640,
+    filegroup( dirname( $overlay_path ) ), $us3_pw[ 'uid' ] );
 $candidate_temp = migration_write_temp(
   $candidate_path, us3_dbinst_config_shim_source( $instance ), 0644 );
 // link() never replaces an existing file; the temporaries are removed at exit
-if ( !@link( $overlay_temp, $overlay_path ) )
+if ( !$overlay_kept && !@link( $overlay_temp, $overlay_path ) )
   migration_fail( "could not install candidate overlay" );
 if ( !@link( $candidate_temp, $candidate_path ) )
 {
-  @unlink( $overlay_path );
+  if ( !$overlay_kept )
+    @unlink( $overlay_path );
   migration_fail( "could not install candidate shim" );
 }
-echo "Created: $overlay_path\n";
+echo ( $overlay_kept ? "Kept: $overlay_path (identical to the overlay this migration writes)\n"
+                     : "Created: $overlay_path\n" );
 echo "Created: $candidate_path\n";
 echo "The active legacy config.php was not changed.\n";
