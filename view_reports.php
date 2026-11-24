@@ -7,6 +7,12 @@
  */
 include_once 'checkinstance.php';
 
+if ( ! isset( $_SESSION['id'] ) )
+{
+  header('Location: index.php');
+  exit();
+}
+
 $myID = $_SESSION['id'];
 
 include 'config.php';
