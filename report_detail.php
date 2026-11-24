@@ -224,6 +224,7 @@ function send_file( $contents, $filename, $mime_type, $disposition )
 {
   $safe_name = preg_replace( '/[^A-Za-z0-9._-]/', '_', $filename );
 
+  session_write_close();   // So a long download does not hold up the user's other pages
   header( "Cache-Control: private, no-store" );
   header( "Content-Type: $mime_type" );
   header( "Content-Disposition: $disposition; filename=\"$safe_name\"" );

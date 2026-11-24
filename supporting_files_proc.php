@@ -103,19 +103,18 @@ function sf_set_link( $link, $PID, $imageID, $class, $oldID, $newID )
                                 'ii', $newID, $PID );
     if ( ! $rows ) return "Error : not permitted";
   }
-  if ( $oldID !== null )
-  {
+
+  $error = null;
+  if ( $oldID !== null && $newID !== null )
+    list( $error ) = sf_query( $link, "UPDATE $linkTable SET $column = ? WHERE imageID = ? AND $column = ? ",
+                               'iii', $newID, $imageID, $oldID );
+  else if ( $oldID !== null )
     list( $error ) = sf_query( $link, "DELETE FROM $linkTable WHERE imageID = ? AND $column = ? ",
                                'ii', $imageID, $oldID );
-    if ( $error !== null ) return "Error : $error";
-  }
-  if ( $newID !== null )
-  {
+  else if ( $newID !== null )
     list( $error ) = sf_query( $link, "INSERT INTO $linkTable SET imageID = ?, $column = ? ",
                                'ii', $imageID, $newID );
-    if ( $error !== null ) return "Error : $error";
-  }
-  return "OK";
+  return ( $error === null ) ? "OK" : "Error : $error";
 }
 
 function sf_choices( $link, $PID, $class )
@@ -140,7 +139,7 @@ function sf_documents( $link, $PID )
     list( , $links ) = sf_query( $link,
         "SELECT L.imageID, L.$column FROM $table AS L, imagePerson AS IP " .
         "WHERE L.imageID = IP.imageID AND IP.personID = ? ", 'i', $PID );
-    $linked = array_column( $links, $column, 'imageID' );
+    $linked = array_column( array_reverse( $links ), $column, 'imageID' );   // The first link wins
     foreach ( $rows as $i => $row )
       $rows[ $i ][ $column ] = $linked[ $row['imageID'] ] ?? null;
   }
@@ -343,13 +342,14 @@ function sf_delete( $link, $PID )
 function sf_locate( $link, $PID )
 {
   $imageID = (int) sf_post( 'docID' );
-  $doc     = array( "error" => null, "path" => null, "size" => null );
+  $doc     = array( "error" => "Not found", "path" => null, "size" => null );
   if ( ! sf_owns_document( $link, $PID, $imageID ) ) return $doc;
 
   list( $error, $rows ) = sf_query( $link, "SELECT LENGTH( gelPicture ) AS size FROM image WHERE imageID = ? ", 'i', $imageID );
-  $doc["error"] = $error;
+  if ( $error !== null ) $doc["error"] = $error;
   if ( $rows && $rows[0]['size'] )
   {
+    $doc["error"] = null;
     $doc["path"] = "supporting_files_proc.php?docID=$imageID";
     $doc["size"] = (int) $rows[0]['size'];
   }
@@ -367,6 +367,7 @@ function sf_send( $link, $PID )
     http_response_code( 403 );
     return;
   }
+  session_write_close();   // So a long download does not hold up the user's other pages
   header( "Content-Type: application/octet-stream" );
   header( "Content-Disposition: attachment" );
   header( "X-Content-Type-Options: nosniff" );
