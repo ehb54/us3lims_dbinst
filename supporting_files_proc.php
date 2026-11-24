@@ -149,11 +149,13 @@ function sf_documents( $link, $PID )
 }
 
 // Uploads wait outside the web folder, under a name that carries their user
+// Returns null if the folder is a link or open to other accounts
 function sf_upload_dir()
 {
   global $dbname;
   $dir = sys_get_temp_dir() . '/us3_supporting_files_' . $dbname;
   if ( ! is_dir( $dir ) ) @mkdir( $dir, 0700 );
+  if ( is_link( $dir ) || ! is_dir( $dir ) || ( fileperms( $dir ) & 0077 ) ) return null;
   return $dir;
 }
 
@@ -161,7 +163,8 @@ function sf_upload_dir()
 function sf_upload_path( $PID, $name )
 {
   if ( ! is_string( $name ) || ! preg_match( '/^[0-9]{1,40}$/D', $name ) ) return null;
-  return sf_upload_dir() . "/{$PID}_$name";
+  $dir = sf_upload_dir();
+  return ( $dir === null ) ? null : "$dir/{$PID}_$name";
 }
 
 function sf_receive_chunk( $PID )
@@ -204,7 +207,9 @@ function sf_take_upload( $PID, $name )
 // Function to remove uploads that were never finished
 function sf_clean_uploads()
 {
-  foreach ( glob( sf_upload_dir() . '/*' ) ?: array() as $file )
+  $dir = sf_upload_dir();
+  if ( $dir === null ) return;
+  foreach ( glob( "$dir/*" ) ?: array() as $file )
     if ( time() - (int) @filemtime( $file ) >= 1800 ) @unlink( $file );
 }
 
