@@ -63,7 +63,7 @@ function do_getImage( $link, $imageID )
   $row      = mysqli_fetch_array( $result );
   $data     = $row['gelPicture'];
   $filename = $row['filename'];
-  $csize    = mb_strlen( $data, '8bit' );
+  $csize    = strlen( $data );
   $result->close();
   $stmt->close();
 
