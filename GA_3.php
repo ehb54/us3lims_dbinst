@@ -33,6 +33,7 @@ include 'lib/utility.php';
 include 'lib/payload_manager.php';
 include 'lib/HPC_analysis.php';
 include 'lib/file_writer.php';
+include_once 'lib/submit_result.php';
 include $class_dir . 'submit_slurm.php';
 include_once $class_dir . 'progress.php';
 include_once $class_dir . 'priority.php';
@@ -142,7 +143,7 @@ else
   else if ( $filenames[ 0 ] === '2DSA-IT-MISSING' )
   {
     $files_ok = false;
-    $missit_msg = "<br/><b>Global Fit without all needed 2DSA-IT models</b/>";
+    $missit_msg = "<br/><b>Global Fit without all needed 2DSA-IT models</b>";
   }
 
   else
@@ -169,86 +170,48 @@ else
 $files_ok = dispatch_intake_close( $link, $dbname, $files_ok, $missit_msg );
 if ( $files_ok )
 {
-  $output_msg = <<<HTML
-  <pre>
-  Thank you, your job was accepted and is currently processing. An
-  email will be sent to {$_SESSION[ 'submitter_email' ]} when the job is
-  completed.
-
-HTML;
-  if ( dispatch_intake_received() )
-    $output_msg = dispatch_intake_receipt_html( $GLOBALS['dispatch_intake_rows'], $GLOBALS['dispatch_intake_pool'] );
+  $output_msg     = '';
+  $submit_results = array();
+  $submit_cluster = '';
 
   // EXEC COMMAND FOR TIGRE 
   if ( isset( $_SESSION[ 'cluster' ] ) )
   {
-    $cluster     = $_SESSION[ 'cluster' ][ 'shortname' ];
-    $metaschedulerClusterExecuting = $_SESSION[ 'cluster' ][ 'metaschedulerClusterExecuting' ] ?? null;
-    unset( $_SESSION[ 'cluster' ] );
-
-    $job = new submit_slurm();
-
-    $save_cwd = getcwd();         // So we can come back to the current 
-                                  // working directory later
-
-//print_r( $filenames );echo "</pre>";
-//exit();
-
-    foreach ( $filenames as $filename )
-    {
-      submit_progress( 'submitting ' . basename( $filename ) );
-
-      chdir( dirname( $filename ) );
-
-      $job-> clear();
-      $job-> parse_input( basename( $filename ) );
-      if ( isset( $metaschedulerClusterExecuting ) && $metaschedulerClusterExecuting !== null )
-      {
-        $job-> set_metascheduler_cluster_executing( $metaschedulerClusterExecuting );
-      }
-
-      if ( ! DEBUG ) $job->submit();
-      
-      $retval = $job->get_messages();
-
-      if ( ! empty( $retval ) )
-      {
-        $output_msg .= "<br /><span class='message'>Message from the queue...</span><br />\n" .
-                        print_r( $retval, true ) . " <br />\n";
-
-        foreach ( $retval as $rmsg )
-        {
-          if ( is_string( $rmsg ) && preg_match( '/^ERROR:/', $rmsg ) )
-          {
-            $output_msg .= "<br /><span class='message text-red font-bold'>" .
-                            "WARNING: job submission failed - $rmsg</span><br />\n";
-            break;
-          }
-        }
-      }
-    }
-
-    $job->close_transport();
-    chdir( $save_cwd );
+    $submit_cluster = $_SESSION['cluster']['shortname'];
+    $metaschedulerClusterExecuting = $_SESSION['cluster']['metaschedulerClusterExecuting'] ?? null;
+    unset( $_SESSION['cluster'] );
+    $submit_results = submit_requests( $filenames, $metaschedulerClusterExecuting, $is_cli, $output_msg );
   }
 
-  $output_msg .= "</pre>\n";
+  if ( dispatch_intake_received() )
+    $output_msg .= dispatch_intake_receipt_html( $GLOBALS['dispatch_intake_rows'], $GLOBALS['dispatch_intake_pool'] );
+  else
+  {
+    $page_title  = submit_result_title( 'GA Analysis Submitted', $submit_results );
+    $output_msg .= submit_result_html( $submit_results, $submit_cluster, $_SESSION['submitter_email'] ?? '',
+                                       array_column( $_SESSION['request'] ?? array(), 'filename' ) );
+  }
 }
 
 else
 {
   $output_msg = <<<HTML
-  Thank you, there have been one or more problems writing the various files necessary
-  for job submission. Please contact your system administrator.
-  $missit_msg
+  <div id="submit-result" class="submit-result submit-result-bad">
+  <h2>Your analysis was not submitted.</h2>
+  <p>There have been one or more problems writing the files necessary for job submission.
+  Please contact your system administrator.$missit_msg</p>
+  </div>
 
 HTML;
 
 }
 
 // Start displaying page
-$page_title = 'GA Analysis Submitted';
-$page_title = dispatch_intake_title( $page_title );
+if ( ! $files_ok )
+  $page_title = 'GA Analysis Not Submitted';
+elseif ( dispatch_intake_received() )
+  $page_title = dispatch_intake_title( 'GA Analysis Submitted' );
+$css = 'css/submit_result.css';
 include 'header.php';
 
 $message = ( isset( $message ) ) ? "<p class='message'>$message</p>" : "";
@@ -263,7 +226,7 @@ echo <<<HTML
   <!-- Place page content here -->
 
   $message
-  <p>$output_msg</p>
+  $output_msg
 
   <p><a href="queue_setup_1.php">Submit another request</a></p>
 

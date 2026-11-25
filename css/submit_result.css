@@ -1,0 +1,73 @@
+/* The outcome panel of the submit pages */
+
+.submit-result {
+  max-width             : 50em;
+  margin                : 1em 0;
+  padding               : 0.5em 1.5em 1em;
+  border                : 1px solid #C9CED6;
+  border-left           : 6px solid #94BA65;
+  border-radius         : 4px;
+  background-color      : #FFFFFF;
+}
+
+.submit-result-received {
+  border-left-color     : #2B6CB0;
+}
+
+.submit-result-bad {
+  border-left-color     : #CC3333;
+}
+
+.submit-result-check {
+  border-left-color     : #D9962B;
+}
+
+.submit-result h2 {
+  margin                : 0.5em 0;
+  color                 : #1B325F;
+}
+
+.submit-result dl {
+  display               : grid;
+  grid-template-columns : max-content 1fr;
+  gap                   : 0.25em 1.5em;
+  margin                : 0 0 1em;
+}
+
+.submit-result dt {
+  font-weight           : bold;
+  color                 : dimgray;
+}
+
+.submit-result dd {
+  margin                : 0;
+  overflow-wrap         : anywhere;
+}
+
+.submit-result table {
+  width                 : 100%;
+  border-collapse       : collapse;
+}
+
+.submit-result th,
+.submit-result td {
+  padding               : 0.4em 0.75em;
+  border-bottom         : 1px solid #E3E6EB;
+  text-align            : left;
+  vertical-align        : top;
+}
+
+.submit-result th {
+  background-color      : #F1F4F8;
+  font-size             : 12px;
+  color                 : #1B325F;
+}
+
+.submit-result-failed td:last-child {
+  color                 : #CC3333;
+}
+
+.submit-result-unknown td:last-child,
+.submit-result-untracked td:last-child {
+  color                 : #8A5A00;
+}

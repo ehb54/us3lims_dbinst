@@ -19,7 +19,8 @@ function collect_config_info() {
     ## anonymous error message function - local in scope
     $error_msg = function( $msg ) {
         $emsg = "ERROR: lib/utility.php : $msg";
-        echo "$emsg<br>";
+        $GLOBALS[ 'cluster_config_errors' ][] = $msg;
+        if ( PHP_SAPI === 'cli' ) echo "$emsg<br>";
         error_log( $emsg );
     };
 
@@ -134,7 +135,8 @@ function collect_config_info() {
 
 $utility_config_error = function( $msg ) {
     $emsg = "ERROR: lib/utility.php : $msg";
-    echo "$emsg<br>";
+    $GLOBALS[ 'cluster_config_errors' ][] = $msg;
+    if ( PHP_SAPI === 'cli' ) echo "$emsg<br>";
     error_log( $emsg );
 };
 
