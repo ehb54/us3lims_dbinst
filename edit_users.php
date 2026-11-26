@@ -71,7 +71,7 @@ else if (isset($_POST['create']))
 // Start displaying page
 $page_title = 'Edit Users';
 $js = 'js/edit_users.js';
-$css = 'css/edit_users.css';
+$css = 'css/edit_users.css?v=b4c411ab35bb';
 include 'header.php';
 ?>
 <div id='content'>

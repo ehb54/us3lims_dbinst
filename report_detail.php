@@ -58,15 +58,17 @@ function do_getDoc( $link, $documentID )
 <html>
 <head>
   <title>US Lims Database - Report Detail</title>
-  <link rel="stylesheet" type="text/css" href="css/reports.css" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css?v=ae86ae5f0290" />
   <script src="js/main.js" type="text/javascript"></script>
 </head>
 
 <body>
 
+  <main class="document-view">
   $header
   $content
   <p><a href='#' class='onclick-window-close'>Close Window</a></p>
+  </main>
 
 </body></html>
 HTML;
@@ -113,13 +115,14 @@ function get_header_info( $link, $documentID )
           : "Cell $cell, Channel $channel, Wavelength $wl<br />\n";
 
   // Create header information
-  $header = "<div>\n" .
+  $header = "<div class='document-heading'>\n" .
             "<h1>$anal</h1>\n" .
-            "<h2>Run ID: $runID<br />\n" .
+            "<h2>Run ID: $runID</h2>\n" .
+            "<p>" .
             $triple .
-            "Edited Dataset: $edit_profile</h2>\n" .
+            "Edited Dataset: $edit_profile</p>\n" .
             "<p><b>$subanal ($doctype_text)</b><br />\n" .
-            "<b>Filename:</b>$rfilename<br />\n" .
+            "<b>Filename:</b> $rfilename</p>\n" .
             "</div>\n";
 
   // html already has a header in it  
@@ -235,7 +238,7 @@ function display_error( $error_text )
 <head>
   <title>US Lims Database - display file error</title>
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
-  <link rel="stylesheet" type="text/css" href="css/reports.css" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css?v=ae86ae5f0290" />
 </head>
 
 <body>

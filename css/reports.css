@@ -40,3 +40,21 @@ table.solution_info table td {
 {
   padding-right    : 1em;
 }
+
+/* Only the viewer chrome and plain-text preview use these rules. */
+.document-view { margin: 1rem auto; max-width: 64rem; padding: 0 1rem; }
+.document-heading, .document-view > p, .document-view > div:not(.stored-report) > a {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #233533;
+}
+.document-heading { overflow-wrap: anywhere; }
+.document-heading h1 { margin: 0 0 .6rem; font-size: 1.65rem; }
+.document-heading h2 { margin: .4rem 0; font-size: 1.15rem; }
+.document-heading p { margin: .6rem 0; line-height: 1.5; }
+.document-view > div:not(.stored-report) > pre {
+  overflow-x: auto;
+  padding: .8rem;
+  background: #f4f7f6;
+  line-height: 1.5;
+}
+.document-view > div:not(.stored-report) > a { color: #175b57; }
