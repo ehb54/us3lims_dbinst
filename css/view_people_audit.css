@@ -70,3 +70,10 @@
 
 .audit-ts { font-variant-numeric: tabular-nums; }
 .audit-summary { overflow-wrap: anywhere; }
+
+/* Match the shared table palette while preserving audit-specific status colors. */
+.audit-list, .audit-diff { border-color: #cad7d4; }
+.audit-list th, .audit-diff th { background: #e8f0ee; color: #25483f; border-bottom: 1px solid #c9d6d3; }
+.audit-list td, .audit-diff td { border-bottom-color: #d9e1df; }
+.audit-list tr:hover td { background: #f1f7f5; }
+.audit-subtext, .audit-id { color: #52645f; font-size: 11px; }
