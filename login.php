@@ -22,9 +22,10 @@ if ( $enable_PAM ) {
 
 <div id='content' class='account-page'>
 
-  <h1 class="title">Login</h1>
-
-  <h3>Registered users please log in:</h3>
+  <div class="account-card">
+  <p class="account-eyebrow">UltraScan III &middot; LIMS</p>
+  <h1 class="title">Sign in to LIMS</h1>
+  <p class="account-intro">Sign in to access your laboratory workspace.</p>
   <p class='message'>$message</p>
 
   <form method='post' action='checkuser.php'>
@@ -41,10 +42,10 @@ if ( $enable_PAM ) {
     </table>
   </form>
 
-  <p><a href='lost_password.php'>Forget your password?</a></p>
+  <p class='account-recovery'><a href='lost_password.php'>Forgot your password?</a></p>
 
-  <h3>New Users:</h3>
-  <p>Please contact your administrator</p>
+  <p class='account-new'>Need an account? Please contact your administrator.</p>
+  </div>
 
 </div>
 
@@ -54,9 +55,10 @@ HTML;
 
 <div id='content' class='account-page'>
 
-  <h1 class="title">Login</h1>
-
-  <h3>Registered users please log in:</h3>
+  <div class="account-card">
+  <p class="account-eyebrow">UltraScan III &middot; LIMS</p>
+  <h1 class="title">Sign in to LIMS</h1>
+  <p class="account-intro">Sign in to access your laboratory workspace.</p>
   <p class='message'>$message</p>
 
   <form method='post' action='checkuser.php'>
@@ -73,10 +75,10 @@ HTML;
     </table>
   </form>
 
-  <p><a href='lost_password.php'>Forget your password?</a></p>
+  <p class='account-recovery'><a href='lost_password.php'>Forgot your password?</a></p>
 
-  <h3>New Users:</h3>
-  <p><a href='newaccount.php'>Sign up for a new account</a></p>
+  <p class='account-new'>New to UltraScan LIMS? <a href='newaccount.php'>Create an account &rarr;</a></p>
+  </div>
 
 </div>
 HTML;
