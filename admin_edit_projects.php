@@ -54,7 +54,7 @@ include 'lib/selectboxes.php';
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='project-page'>
 
   <h1 class="title">Edit User Projects</h1>
   <!-- Place page content here -->
@@ -390,8 +390,7 @@ echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1' id='fixed'>
     <thead>
-      <tr><th class='w-16p'></th>
-      <th class='w-98p'>Edit User Projects</th></tr>
+      <tr><th colspan='2'>Project details</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>Jump to: $nav_listbox

@@ -55,7 +55,7 @@ include 'lib/selectboxes.php';
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='project-page'>
 
   <h1 class="title">Edit My Projects</h1>
   <!-- Place page content here -->
@@ -236,7 +236,7 @@ function render_project_runs( $link, $projectID )
   $count_stmt->fetch();
   $count_stmt->close();
 
-  echo "<h2>Associated Runs</h2>\n";
+  echo "<h2>Associated Runs ($total)</h2>\n";
 
   if ( $total == 0 )
   {
@@ -564,11 +564,10 @@ function display_record( $link )
 
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
-  <table cellspacing='0' cellpadding='10' class='style1'id='fixed'>
+  <table cellspacing='0' cellpadding='10' class='style1' id='fixed'>
     <thead>
       <tr>
-        <th class='w-16p'></th>
-        <th>Edit My Project</th>
+        <th colspan='2'>Project details</th>
       </tr>
     </thead>
     <tfoot>

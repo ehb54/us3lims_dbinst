@@ -11,7 +11,7 @@ include 'header.php';
 include 'lib/utility.php';
 ?>
 
-<div id='content'>
+<div id='content' class='operations-page'>
 	<h1 class="title">Current Status of Clusters:</h1>
 <p/>
 <div>

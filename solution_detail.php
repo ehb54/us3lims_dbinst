@@ -66,17 +66,19 @@ function do_getInfo( $link, $type, $experimentID, $triple )
 <html>
 <head>
   <title>US Lims Database - $ptype Detail</title>
-  <link rel="stylesheet" type="text/css" href="css/reports.css" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css?v=5855cc374ffa" />
   <script src="js/main.js" type="text/javascript"></script>
 </head>
 
 <body>
 
+  <main class="solution-view">
   $header
   $content
 
   <p><a href='#' class='onclick-window-close'>Close Window</a></p>
 
+</main>
 </body></html>
 HTML;
 
@@ -109,7 +111,7 @@ function get_header_info( $link, $type, $experimentID, $triple )
             "<h1>$ptype Information</h1>\n" .
             "<h2>Run ID: $runID<br />\n" .
             $triple .
-            "</div>\n";
+            "</h2></div>\n";
 
   return $header;
 }

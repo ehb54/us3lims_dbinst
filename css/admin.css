@@ -7,15 +7,15 @@
 
 table.admin
 {
-  margin           : 2em;
+  margin           : 1em 0;
   border-collapse  : collapse;
 }
 
 div#content caption
 {
   font-weight      : bold;
-  margin           : 2em 2em 0em;
-  text-align       : center;
+  margin           : .8em 0 .3em;
+  text-align       : left;
 }
 
 table.admin td, table.admin th
@@ -27,7 +27,7 @@ table.admin td, table.admin th
 
 table.admin thead th
 {
-  background-color : #2790B0; /* teal */
+  background-color : #e8f0ee;
   color            : black;
 }
 
@@ -37,3 +37,5 @@ pre.wrapped
   word-break       : break-all;
 }
 
+
+div#content caption a[href='#top'] { font-size: .85em; font-weight: normal; }

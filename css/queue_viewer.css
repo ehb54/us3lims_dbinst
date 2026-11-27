@@ -101,3 +101,6 @@
     gap: .7em;
     flex-wrap: wrap;
 }
+
+.queue-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 1em; }
+.queue-heading h2, .queue-heading .queue-sort { margin: .5em 0; }

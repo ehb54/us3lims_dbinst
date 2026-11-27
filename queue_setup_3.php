@@ -180,12 +180,12 @@ include 'db.php';
 
 // Start displaying page
 $page_title = "Queue Setup (completed)";
-$css = 'css/queue_setup.css';
+$css = 'css/queue_setup.css?v=524ac2f03a99';
 include 'header.php';
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='workflow-page'>
 
   <h1 class="title">Queue Setup (completed)</h1>
 

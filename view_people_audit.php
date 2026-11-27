@@ -800,7 +800,7 @@ HTML;
 // ---------------------------------------------------------------------------
 
 $page_title = 'User Audit Log';
-$css = 'css/view_people_audit.css';
+$css = 'css/view_people_audit.css?v=40968ca62639';
 include 'header.php';
 ?>
 

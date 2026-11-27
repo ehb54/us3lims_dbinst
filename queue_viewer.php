@@ -51,7 +51,7 @@ $sort_order = $_SESSION['queue_viewer_sort_order'] ?? 'submitTime';
 // Start displaying page
 $page_title = "Queue Viewer";
 $js     = 'js/queue_viewer.js';
-$css    = 'css/queue_viewer.css?v=b8d13aa4e75b';
+$css    = 'css/queue_viewer.css?v=edefcff54eed';
 include 'header.php';
 ?>
 <!-- Begin page content -->
@@ -60,7 +60,7 @@ include 'header.php';
   <h1 class="title">Queue Viewer</h1>
   <!-- Place page content here -->
 
-  <div class="queue-sort"><?php echo order_select( $sort_order ); ?></div>
+  <div class="queue-heading"><h2>Queue Summary</h2><div class="queue-sort"><?php echo order_select( $sort_order ); ?></div></div>
 
   <div id='queue_content' data-csrf='<?php echo csrf_token(); ?>'></div>
 

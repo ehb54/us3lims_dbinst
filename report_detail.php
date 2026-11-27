@@ -58,7 +58,7 @@ function do_getDoc( $link, $documentID )
 <html>
 <head>
   <title>US Lims Database - Report Detail</title>
-  <link rel="stylesheet" type="text/css" href="css/reports.css?v=ae86ae5f0290" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css?v=5855cc374ffa" />
   <script src="js/main.js" type="text/javascript"></script>
 </head>
 
@@ -121,8 +121,7 @@ function get_header_info( $link, $documentID )
             "<p>" .
             $triple .
             "Edited Dataset: $edit_profile</p>\n" .
-            "<p><b>$subanal ($doctype_text)</b><br />\n" .
-            "<b>Filename:</b> $rfilename</p>\n" .
+            "<p><b>$subanal ($doctype_text)</b></p>\n" .
             "</div>\n";
 
   // html already has a header in it  
@@ -155,6 +154,7 @@ function get_document_content( $link, $documentID )
   //$csize   = mb_strlen( $contents, '8bit' );
 
   // Check to see if there was anything
+  $download = "";
   if ( ! $contents )
     $text = "<p>The requested record has no document</p>\n";
 
@@ -179,8 +179,8 @@ function get_document_content( $link, $documentID )
     // Figure out the apache file name, assuming a subdirectory
     $apache_file = substr( $data_dir, strlen( $full_path ) ) . $filename;
 
-    $text = "<div><a href='$apache_file' target=_blank>Download</a></div>";
-    $text .= "<div><pre>\n" .
+    $download = "<a href='$apache_file' target=_blank>Download</a>";
+    $text = "<div><pre>\n" .
               $contents .
             "</pre></div>\n";
   }
@@ -197,10 +197,8 @@ function get_document_content( $link, $documentID )
     $apache_file = substr( $data_dir, strlen( $full_path ) ) . $filename;
 
     // Now create some html that includes the file
+    $download = "<a href='$apache_file' target=_blank>Download</a>";
     $text = <<<HTML
-    <div> 
-      <a href='$apache_file' target=_blank>Download</a>
-    </div>
     <div>
       <img src='$apache_file' alt='UltraScan 3 png file' />
     </div>
@@ -227,6 +225,12 @@ HTML;
   else
     $text = "<p>Unsupported document format</p>\n";
 
+  if ( $doctype != 'html' && $doctype != 'svgz' )
+  {
+    $display_filename = htmlspecialchars( (string) $filename, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
+    $text = "<p class='document-file'><b>Filename:</b> $display_filename $download</p>\n" . $text;
+  }
+
   return $text;
 }
 
@@ -238,7 +242,7 @@ function display_error( $error_text )
 <head>
   <title>US Lims Database - display file error</title>
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
-  <link rel="stylesheet" type="text/css" href="css/reports.css?v=ae86ae5f0290" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css?v=5855cc374ffa" />
 </head>
 
 <body>

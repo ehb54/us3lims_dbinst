@@ -69,7 +69,7 @@ include 'header.php';
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='diagnostic-page'>
 
   <h1 class="title">Global DB Statistics</h1>
   <!-- Place page content here -->
@@ -91,8 +91,8 @@ foreach ( $cluster_list as $key => $value )
 {
   $checked = ( array_key_exists( $key, $selected_clusters ) ) 
            ? " checked='checked'" : "" ;
-  $cluster_boxes .= "  <tr><td><input type='checkbox' name='$key' \n" .
-                    "                $checked />$key</td></tr>\n";
+  $cluster_boxes .= "  <tr><td><label><input type='checkbox' name='$key' \n" .
+                    "                $checked />$key</label></td></tr>\n";
 }
 $count_boxes = count( $cluster_list ) + 1;
 

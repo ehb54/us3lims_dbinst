@@ -41,7 +41,7 @@ $page_title = 'View Users';
 $js = 'js/view_users.js';
 include 'header.php';
 ?>
-<div id='content'>
+<div id='content' class='record-page'>
 
   <h1 class="title">View Users</h1>
   <?php if ( isset($_SESSION['message']) )
@@ -169,11 +169,12 @@ function display_record($link)
   }
   $nav_listbox .= "</select>\n";
 
+$record_name = htmlspecialchars( trim( "$fname $lname" ), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
-      <tr><th colspan='8'>View Profile</th></tr>
+      <tr><th colspan='2'>$record_name</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>Jump to: $nav_listbox

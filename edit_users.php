@@ -74,7 +74,7 @@ $js = 'js/edit_users.js';
 $css = 'css/edit_users.css?v=b4c411ab35bb';
 include 'header.php';
 ?>
-<div id='content'>
+<div id='content' class='record-page'>
 
   <h1 class="title">Edit Users</h1>
   <?php if ( isset($_SESSION['message']) )

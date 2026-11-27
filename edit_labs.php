@@ -66,7 +66,7 @@ include 'header.php';
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='record-page'>
 
   <h1 class="title">Edit Labs</h1>
   <!-- Place page content here -->
@@ -306,11 +306,12 @@ function display_record($link)
   }
   $nav_listbox .= "</select>\n";
 
+$record_name = htmlspecialchars( $name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
-      <tr><th colspan='8'>Edit Labs</th></tr>
+      <tr><th colspan='2'>$record_name</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>Jump to: $nav_listbox

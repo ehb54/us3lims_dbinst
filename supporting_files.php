@@ -19,7 +19,7 @@ include 'lib/utility.php';
 
 // Start displaying page
 $page_title = 'Supporting Files';
-$css = 'css/supporting_files.css';
+$css = 'css/supporting_files.css?v=0da80698c9a4';
 $js = 'js/supporting_files.js';
 include 'header.php';
 
@@ -28,6 +28,7 @@ echo <<< HTML
 <div id="sf_content">
   <div class='clear-both'></div>
 
+  <h1 class="title">Supporting Files</h1>
   <div id="sf_navbar" class="sf_item">
     <div class="sf_navbar_item" id="sf_view"> View / Edit</div>
     <div class="sf_navbar_item" id="sf_new"> New </div>

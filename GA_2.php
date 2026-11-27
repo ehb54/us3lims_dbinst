@@ -149,7 +149,7 @@ foreach ( $_SESSION['request'] as $id => $request )
 
 echo <<<HTML
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='workflow-page'>
 
   <h1 class="title">$page_title</h1>
   <!-- Place page content here -->

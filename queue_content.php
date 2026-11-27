@@ -182,7 +182,6 @@ uasort( $display_info, 'cmp' );
 
 $content = "<div class='queue_content'>\n";
 // Add summary table
-$content .= "<h3>Queue Summary</h3>\n";
 $content .= "<div id='selection_controls'>\n";
 $content .= "  <input type='checkbox' id='select_all_jobs' /> Select All <span id='count_all'>(0/0)</span>\n";
 $content .= "  <span id='global_select_count'>Selected Jobs: 0</span>\n";

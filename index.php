@@ -13,7 +13,7 @@ $css = '/common/css/index.css';
 include 'header.php';
 
 ?>
-<div id='content'>
+<div id='content' class='reading-page'>
 
   <h1 class="title">Welcome to the UltraScan Science Gateway!</h1>
 

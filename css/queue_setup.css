@@ -1,25 +1,8 @@
-/* Stylesheet for the queue_setup_?.php programs */
-
-fieldset
-{
-  margin-top             : 2em;
-  width                  : 50em;
+/* Queue setup forms share the width of the content column. */
+.workflow-page fieldset, .workflow-page .multi_notes {
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 1rem 0;
 }
-
-input
-{
-  width                  : 25em;
-}
-
-ul.multi_notes
-{
-  width                  : 50em;
-  padding                : 1em;
-}
-
-ul.multi_notes li
-{
-  padding-top            : 1em;
-  width                  : 50em;
-}
-
+.workflow-page input[name=submitter_email] { width: min(25em, 100%); }
+.workflow-page .multi_notes li { margin-block: .5em; }

@@ -21,12 +21,12 @@ include 'db.php';
 
 // Start displaying page
 $page_title = "Orphans";
-$css = 'css/admin.css';
+$css = 'css/admin.css?v=e6a4f6120f2b';
 $text = "";
 include 'header.php';
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='diagnostic-page'>
 
   <h1 class="title">Orphans</h1>
   <!-- Place page content here -->
@@ -78,9 +78,10 @@ function orphan_projects($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Projects with Missing Ownership</caption>
+  <caption>Projects with Missing Ownership ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>Description</th>
@@ -127,9 +128,10 @@ function orphan_experiments1($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Runs (experiments) with Missing Projects</caption>
+  <caption>Runs (experiments) with Missing Projects ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -182,9 +184,10 @@ function orphan_experiments2($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Runs ( experiments ) with Missing Ownership</caption>
+  <caption>Runs ( experiments ) with Missing Ownership ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>Run ID</th>
@@ -233,9 +236,10 @@ function orphan_experiments3($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Runs ( experiments ) with Missing Solutions</caption>
+  <caption>Runs ( experiments ) with Missing Solutions ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>Run ID</th>
@@ -281,9 +285,10 @@ function orphan_rawdata($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Raw Data with Missing Run Records</caption>
+  <caption>Raw Data with Missing Run Records ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -331,9 +336,10 @@ function orphan_solutionBuffer($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Solutions with Missing Buffers</caption>
+  <caption>Solutions with Missing Buffers ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -381,9 +387,10 @@ function orphan_solutionAnalyte($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Solutions with Missing Analytes</caption>
+  <caption>Solutions with Missing Analytes ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -430,9 +437,10 @@ function orphan_editedData($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Edit Profiles with Missing Raw Data</caption>
+  <caption>Edit Profiles with Missing Raw Data ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -481,9 +489,10 @@ function orphan_models1($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Models with missing Edit Profiles</caption>
+  <caption>Models with missing Edit Profiles ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -536,9 +545,10 @@ function orphan_models2($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Models with missing Ownership</caption>
+  <caption>Models with missing Ownership ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -591,9 +601,10 @@ function orphan_noise1($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Noise Linked to Missing Models</caption>
+  <caption>Noise Linked to Missing Models ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -646,9 +657,10 @@ function orphan_noise2($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>Noise Linked to Missing Edit Profiles</caption>
+  <caption>Noise Linked to Missing Edit Profiles ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -701,9 +713,10 @@ function orphan_HPCRequests($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>HPC Requests</caption>
+  <caption>HPC Requests ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>GUID</th>
@@ -756,9 +769,10 @@ function orphan_HPCResults($link)
   $result = mysqli_query( $link, $query )
             or die( "Query failed : $query<br />\n" . mysqli_error($link) );
 
+  $row_count = mysqli_num_rows( $result );
   $text = <<<HTML
   <table cellspacing='0' cellpadding='0' class='admin'>
-  <caption>HPC Results</caption>
+  <caption>HPC Results ($row_count)</caption>
   <thead>
     <tr><th>ID</th>
         <th>Request ID</th>

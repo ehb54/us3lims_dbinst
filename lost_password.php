@@ -18,7 +18,7 @@ include 'header.php';
 
 if ( $enable_PAM ) {
 echo<<<HTML
-<div id='content'>
+<div id='content' class='account-page'>
 
   <h1 class="title">Lost Password</h1>
 
@@ -32,7 +32,7 @@ HTML;
     : ""
   ;
 echo<<<HTML
-<div id='content'>
+<div id='content' class='account-page'>
 
   <h1 class="title">Lost Password</h1>
 
@@ -43,7 +43,7 @@ echo<<<HTML
   <form action="recover_password.php" method="post">
     <p>Please enter your E-mail address below:</p>
 
-    <p>E-mail address: <input name="email_address" type="text" size='30'/></p>
+    <p><label for="recovery-email">E-mail address:</label> <input id="recovery-email" name="email_address" type="text" size='30'/></p>
 
     <p><input type="submit" name="Submit" value="Reset My Password!"/></p>
   </form>

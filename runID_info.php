@@ -24,13 +24,13 @@ global $class_dir, $link;
 
 // Start displaying page
 $page_title = "Info by Run ID";
-$css = 'css/admin.css';
+$css = 'css/admin.css?v=e6a4f6120f2b';
 include 'header.php';
 
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='diagnostic-page'>
 
   <h1 class="title">Info by Run ID</h1>
   <!-- Place page content here -->

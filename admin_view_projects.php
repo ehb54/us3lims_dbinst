@@ -35,7 +35,7 @@ include 'header.php';
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='project-page'>
 
   <h1 class='title'><?php echo $page_title; ?></h1>
   <!-- Place page content here -->

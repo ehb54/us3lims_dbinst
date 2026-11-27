@@ -275,7 +275,7 @@ $output_msg .= "<br /><span class='message'>Message from the queue...filename=$f
 $output_msg .= "</pre>\n";
 echo <<<HTML
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='workflow-page'>
  <h1 class="title">$page_title</h1>
  <!-- Place page content here -->
  $message
@@ -314,7 +314,7 @@ $show = $payload->show( $HPCAnalysisRequestID, $filenames );  // debugging info,
 
 echo <<<HTML
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='workflow-page'>
 
   <h1 class="title">$page_title</h1>
   <!-- Place page content here -->

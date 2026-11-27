@@ -53,7 +53,7 @@ $page_title = 'Dispatch Dashboard';
 include 'header.php';
 $csrf = "<input type='hidden' name='csrf_token' value='" . csrf_token() . "' />";
 
-echo "<div id='content'>\n<h1 class='title'>Dispatch Dashboard</h1>\n";
+echo "<div id='content' class='operations-page'>\n<h1 class='title'>Dispatch Dashboard</h1>\n";
 
 if ( ! $glink )
 {
