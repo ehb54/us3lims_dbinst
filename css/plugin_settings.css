@@ -1,0 +1,18 @@
+/* plugin_settings.php: the instance's plugin license and enablement. */
+.plugin-settings section { margin: 1em 1em 1.5em; }
+.plugin-settings dl { display: grid; grid-template-columns: max-content auto; gap: 0.3em 1em; margin: 0.5em 0; }
+.plugin-settings dt { font-weight: bold; }
+.plugin-settings dd { margin: 0; }
+.plugin-settings code { font-size: 110%; user-select: all; }
+.plugin-settings textarea { width: 100%; max-width: 46em; font-family: monospace; }
+.plugin-settings table.style1 { width: auto; min-width: 36em; margin: 0.5em 0; }
+.plugin-settings table.style1 td, .plugin-settings table.style1 th { padding: 0.35em 0.6em; vertical-align: middle; }
+.plugin-state { display: inline-block; padding: 0.1em 0.6em; border-radius: 0.8em; font-weight: bold; font-size: 90%; }
+.plugin-state-ok { background: rgb(50, 205, 50); color: #111; }
+.plugin-state-off { background: #ddd; color: #333; }
+.plugin-state-bad { background: rgb(210, 0, 0); color: #fff; }
+.plugin-notice { padding: 0.6em 0.9em; border-radius: 4px; margin: 1em; max-width: 46em; }
+.plugin-notice-ok { background: #e6f6e6; border: 1px solid rgb(50, 160, 50); }
+.plugin-notice-error { background: #fbe9e9; border: 1px solid rgb(200, 0, 0); }
+.plugin-danger { border-top: 1px solid #ccc; padding-top: 0.8em; }
+.plugin-danger label { display: block; margin: 0.4em 0; }

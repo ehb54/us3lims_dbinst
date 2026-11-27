@@ -96,7 +96,7 @@ function change_person_info( $link, $personID )
 
   foreach( $row AS $key => $val )
   {
-     $$key = stripslashes( $val );
+     $$key = stripslashes( (string) $val );
   }
   */
 
@@ -117,7 +117,7 @@ function change_person_info( $link, $personID )
   $row    = mysqli_fetch_assoc($result);
   foreach( $row AS $key => $val )
   {
-     $$key = stripslashes( $val );
+     $$key = stripslashes( (string) $val );
   }
   $clusterAuth = array();
   $clusterAuth = explode(":", $clusterAuthorizations );
@@ -171,7 +171,7 @@ function restore_info($link)
 
   foreach( $row AS $key => $val )
   {
-     $$key = stripslashes( $val );
+     $$key = stripslashes( (string) $val );
   }
   */
 
