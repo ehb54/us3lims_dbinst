@@ -23,7 +23,9 @@ include 'header.php';
 
 <div id='content' class='account-page'>
 
-<h1 class="title">New Account Signup Form</h1>
+<div class="account-card account-card-wide">
+<p class="account-eyebrow">UltraScan III &middot; LIMS</p>
+<h1 class="title">Create an account</h1>
 
 <?php
 // Are we being directed to enter the data?
@@ -51,6 +53,8 @@ else                  // Just display the captcha
 
 ?>
 
+<p class="account-new"><a href="login.php">&larr; Back to sign in</a></p>
+</div>
 </div>
 
 <?php
@@ -92,9 +96,7 @@ function enter_record( $message = '' )
     <p>Please enter your contact information. All fields
        are required.</p>
 
-    <p class='message'>When entering your address, PLEASE MAKE SURE
-       it is a valid mailing address, since this will be used to
-       mail information to you.</p>
+    <p class='account-note'>Please provide a valid mailing address for correspondence.</p>
 
     <form action="register.php" method="post"
           class='onsubmit-return-validate-this'>
@@ -102,11 +104,6 @@ function enter_record( $message = '' )
       <thead>
         <tr><th colspan='2'>Personal Information</th></tr>
       </thead>
-
-      <tfoot>
-        <tr><td colspan='2'><input type='submit' name='create'
-                             value='Create New Account' /></td></tr>
-      </tfoot>
 
       <tbody>
 
@@ -141,6 +138,11 @@ function enter_record( $message = '' )
           <td><input type='text' name='email' id='register-email' size='40'
                      maxlength='64' value='$email' /></td></tr>
       </tbody>
+      <tfoot>
+        <tr><td colspan='2'><input type='submit' name='create'
+                             value='Create New Account' /></td></tr>
+      </tfoot>
+
     </table>
     </form>
 
@@ -168,8 +170,7 @@ echo<<<HTML
     $message
     <p><input type='text' name='captcha' id='captcha-answer' size='40' maxlength='10' /></p>
 
-    <p><input type='submit' name='enter_request' value='Enter Request' />
-       <input type='reset' /></p>
+    <p><input type='submit' name='enter_request' value='Continue' /></p>
 
   </form>
 

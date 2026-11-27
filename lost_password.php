@@ -19,10 +19,14 @@ include 'header.php';
 if ( $enable_PAM ) {
 echo<<<HTML
 <div id='content' class='account-page'>
+<div class="account-card">
 
-  <h1 class="title">Lost Password</h1>
+  <p class="account-eyebrow">UltraScan III &middot; LIMS</p>
+  <h1 class="title">Password recovery</h1>
 
   <p>Please contact your administrator for instructions</p>
+  <p class="account-new"><a href="login.php">&larr; Back to sign in</a></p>
+</div>
 </div>
 HTML;
 } else {
@@ -33,21 +37,25 @@ HTML;
   ;
 echo<<<HTML
 <div id='content' class='account-page'>
+<div class="account-card">
 
-  <h1 class="title">Lost Password</h1>
+  <p class="account-eyebrow">UltraScan III &middot; LIMS</p>
+  <h1 class="title">Password recovery</h1>
 
   $echo_msg
   
-  <h3>Recover Password Form</h3>
+
 
   <form action="recover_password.php" method="post">
-    <p>Please enter your E-mail address below:</p>
+    <p>Enter your email address to recover your password.</p>
 
-    <p><label for="recovery-email">E-mail address:</label> <input id="recovery-email" name="email_address" type="text" size='30'/></p>
+    <p><label for="recovery-email">Email address:</label> <input id="recovery-email" name="email_address" type="text" size='30'/></p>
 
-    <p><input type="submit" name="Submit" value="Reset My Password!"/></p>
+    <p><input type="submit" name="Submit" value="Reset password"/></p>
   </form>
 
+  <p class="account-new"><a href="login.php">&larr; Back to sign in</a></p>
+</div>
 </div>
 HTML;
 }
