@@ -619,7 +619,9 @@ else
       continue;
     if ( !isset( $copy_checked[ realpath( $dir ) ] ) )
       check_docroot_config_copies( $dir, $instance, $config_root );
-    if ( in_array( $instance, $overlays, true ) )
+    // Inspect copy names for any docroot. Execute legacy configuration only
+    // for the conventional instance checkouts covered by the existing scan.
+    if ( in_array( $instance, $overlays, true ) || strpos( $instance, 'uslims3_' ) !== 0 )
       continue;
 
     $config_php = $dir . '/config.php';
