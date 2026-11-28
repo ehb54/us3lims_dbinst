@@ -1,562 +1,376 @@
 <?php
 /*
  * supporting_files_proc.php
+ *
+ * Server side of supporting_files.php: a user's own documents
  */
 include_once 'checkinstance.php';
+
+if ( ! isset( $_SESSION['id'], $_SESSION['userlevel'] ) || $_SESSION['userlevel'] < 1 )
+{
+  http_response_code( 403 );
+  exit();
+}
+
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
 
-function get_tab_col_name($class) {
-    $output = array("table" => null, "column" => null);
-    if ($class == "solution"){
-        $output["table"]  = "imageSolution";
-        $output["column"] = "solutionID";
-    } else if ($class == "buffer"){
-        $output["table"]  = "imageBuffer";
-        $output["column"] = "bufferID";
-    } else if ($class == "analyte"){
-        $output["table"]  = "imageAnalyte";
-        $output["column"] = "analyteID";
-    } 
+const SF_MAX_SIZE = 52428800;   // The limit in js/supporting_files.js
+
+$PID    = (int) $_SESSION['id'];
+$action = $_POST['action'] ?? ( isset( $_GET['docID'] ) ? 'SEND_DOC' : '' );
+
+switch ( $action )
+{
+  case 'GET_BLOB'       : sf_receive_chunk( $PID );               break;
+  case 'DEL_FILE'       : sf_drop_upload( $PID );                 break;
+  case 'NEW_DOC'        : echo json_encode( sf_new( $link, $PID ) );     break;
+  case 'UPDATE_DOC'     : echo json_encode( sf_update( $link, $PID ) );  break;
+  case 'DEL_DOC'        : echo json_encode( sf_delete( $link, $PID ) );  break;
+  case 'GIVE_BLOB'      : echo json_encode( sf_locate( $link, $PID ) );  break;
+  case 'SEND_DOC'       : sf_send( $link, $PID );                 break;
+  case 'GIVE_DOC_INFO'  : echo json_encode( sf_documents( $link, $PID ) ); break;
+  case 'GIVE_INIT_INFO' :
+    $info = array();
+    foreach ( array( 'project', 'solution', 'buffer', 'analyte' ) as $class )
+      $info[ $class ] = sf_choices( $link, $PID, $class );
+    $info['image_info'] = sf_documents( $link, $PID );
+    echo json_encode( $info );
+    break;
+}
+
+sf_clean_uploads();
+exit();
+
+// Function to run a prepared statement; returns array( error or null, rows, insert ID )
+function sf_query( $link, $query, $types, ...$args )
+{
+  $stmt = mysqli_prepare( $link, $query );
+  if ( ! $stmt ) return array( $link->error, array(), 0 );
+  $stmt->bind_param( $types, ...$args );
+  if ( ! $stmt->execute() ) return array( $stmt->error, array(), 0 );
+  $result = $stmt->get_result();
+  $rows   = $result ? $result->fetch_all( MYSQLI_ASSOC ) : array();
+  $ID     = $stmt->insert_id;
+  $stmt->close();
+  return array( null, $rows, $ID );
+}
+
+// Function to return a request value, or null where the page sends none
+function sf_post( $name )
+{
+  $value = $_POST[ $name ] ?? 'null';
+  return ( is_string( $value ) && $value !== 'null' ) ? $value : null;
+}
+
+// Function to split an "old_new" request value into two values, either of them null
+function sf_pair( $value )
+{
+  $parts = array_pad( explode( '_', (string) $value, 2 ), 2, 'null' );
+  foreach ( $parts as $i => $part )
+    if ( $part === 'null' ) $parts[ $i ] = null;
+  return $parts;
+}
+
+// The link table and ID column of each class a document can be attached to
+function sf_link_table( $class )
+{
+  $tables = array( 'project'  => array( 'imageProject',  'projectID',  'projectPerson' ),
+                   'solution' => array( 'imageSolution', 'solutionID', 'solutionPerson' ),
+                   'buffer'   => array( 'imageBuffer',   'bufferID',   'bufferPerson' ),
+                   'analyte'  => array( 'imageAnalyte',  'analyteID',  'analytePerson' ) );
+  return $tables[ $class ] ?? null;
+}
+
+function sf_owns_document( $link, $PID, $imageID )
+{
+  list( , $rows ) = sf_query( $link, "SELECT 1 FROM imagePerson WHERE imageID = ? AND personID = ? ",
+                              'ii', $imageID, $PID );
+  return count( $rows ) > 0;
+}
+
+// Function to add or remove a link; only to something the page offers this user. Returns OK or an error
+function sf_set_link( $link, $PID, $imageID, $class, $oldID, $newID )
+{
+  $table = sf_link_table( $class );
+  if ( $table === null ) return "Error : unknown category";
+  list( $linkTable, $column, $personTable ) = $table;
+
+  if ( $newID !== null )
+  {
+    list( , $rows ) = sf_query( $link, "SELECT 1 FROM $personTable WHERE $column = ? AND personID = ? ",
+                                'ii', $newID, $PID );
+    if ( ! $rows ) return "Error : not permitted";
+  }
+
+  $error = null;
+  if ( $oldID !== null && $newID !== null )
+    list( $error ) = sf_query( $link, "UPDATE $linkTable SET $column = ? WHERE imageID = ? AND $column = ? ",
+                               'iii', $newID, $imageID, $oldID );
+  else if ( $oldID !== null )
+    list( $error ) = sf_query( $link, "DELETE FROM $linkTable WHERE imageID = ? AND $column = ? ",
+                               'ii', $imageID, $oldID );
+  else if ( $newID !== null )
+    list( $error ) = sf_query( $link, "INSERT INTO $linkTable SET imageID = ?, $column = ? ",
+                               'ii', $imageID, $newID );
+  return ( $error === null ) ? "OK" : "Error : $error";
+}
+
+function sf_choices( $link, $PID, $class )
+{
+  list( , $column, $personTable ) = sf_link_table( $class );
+  list( $error, $rows ) = sf_query( $link,
+      "SELECT t.$column, t.description FROM $class AS t, $personTable AS p " .
+      "WHERE p.$column = t.$column AND p.personID = ? ", 'i', $PID );
+  return array( 'error' => $error, 'data' => $rows ? $rows : null );
+}
+
+function sf_documents( $link, $PID )
+{
+  list( $error, $rows ) = sf_query( $link,
+      "SELECT I.imageID, I.imageGUID, I.description, I.filename " .
+      "FROM image AS I, imagePerson AS IP " .
+      "WHERE I.imageID = IP.imageID AND IP.personID = ? ", 'i', $PID );
+
+  foreach ( array( 'project', 'solution', 'buffer', 'analyte' ) as $class )
+  {
+    list( $table, $column ) = sf_link_table( $class );
+    list( , $links ) = sf_query( $link,
+        "SELECT L.imageID, L.$column FROM $table AS L, imagePerson AS IP " .
+        "WHERE L.imageID = IP.imageID AND IP.personID = ? ", 'i', $PID );
+    $linked = array_column( array_reverse( $links ), $column, 'imageID' );   // The first link wins
+    foreach ( $rows as $i => $row )
+      $rows[ $i ][ $column ] = $linked[ $row['imageID'] ] ?? null;
+  }
+
+  return array( 'error' => $error, 'data' => $rows ? $rows : null );
+}
+
+// Uploads wait outside the web folder, under a name that carries their user
+// Returns null if the folder is a link or open to other accounts
+function sf_upload_dir()
+{
+  global $dbname;
+  $dir = sys_get_temp_dir() . '/us3_supporting_files_' . $dbname;
+  if ( ! is_dir( $dir ) ) @mkdir( $dir, 0700 );
+  if ( is_link( $dir ) || ! is_dir( $dir ) || ( fileperms( $dir ) & 0077 ) ) return null;
+  return $dir;
+}
+
+// The page names an upload with digits only; anything else is refused
+function sf_upload_path( $PID, $name )
+{
+  if ( ! is_string( $name ) || ! preg_match( '/^[0-9]{1,40}$/D', $name ) ) return null;
+  $dir = sf_upload_dir();
+  return ( $dir === null ) ? null : "$dir/{$PID}_$name";
+}
+
+function sf_receive_chunk( $PID )
+{
+  $path = sf_upload_path( $PID, $_POST['filename'] ?? null );
+  $data = is_string( $_POST['data'] ?? null ) ? base64_decode( $_POST['data'], true ) : false;
+  if ( $path === null || $data === false ||
+       ( is_file( $path ) ? filesize( $path ) : 0 ) + strlen( $data ) > SF_MAX_SIZE ||
+       file_put_contents( $path, $data, FILE_APPEND ) === false )
+  {
+    http_response_code( 400 );
+    echo "Not accepted";
+    return;
+  }
+  echo "OK";
+}
+
+function sf_drop_upload( $PID )
+{
+  $path = sf_upload_path( $PID, $_POST['filename'] ?? null );
+  if ( $path === null || ! is_file( $path ) )
+  {
+    echo "Not found";
+    return;
+  }
+  unlink( $path );
+  echo "OK";
+}
+
+// Function to read the user's finished upload and remove it, or null
+function sf_take_upload( $PID, $name )
+{
+  $path = sf_upload_path( $PID, $name );
+  if ( $path === null || ! is_file( $path ) ) return null;
+  $blob = file_get_contents( $path );
+  unlink( $path );
+  return $blob;
+}
+
+// Function to remove uploads that were never finished
+function sf_clean_uploads()
+{
+  $dir = sf_upload_dir();
+  if ( $dir === null ) return;
+  foreach ( glob( "$dir/*" ) ?: array() as $file )
+    if ( time() - (int) @filemtime( $file ) >= 1800 ) @unlink( $file );
+}
+
+function sf_new( $link, $PID )
+{
+  $output = array( "blob" => "OK", "image" => "OK", "imagePerson" => "OK",
+                   "imageProject" => "OK", "imageClass" => "OK" );
+
+  $blob = sf_take_upload( $PID, sf_post( 'local_filename' ) );
+  if ( $blob === null )
+  {
+    $output["blob"] = "Error: File not found !";
     return $output;
+  }
+
+  $imageGUID   = uuid();
+  $description = (string) sf_post( 'description' );
+  $filename    = (string) sf_post( 'filename' );
+  list( $error, , $imageID ) = sf_query( $link,
+      "INSERT INTO image SET imageGUID = ?, description = ?, gelPicture = ?, filename = ? ",
+      'ssss', $imageGUID, $description, $blob, $filename );
+  if ( $error !== null )
+  {
+    $output["image"] = "Error : $error";
+    return $output;
+  }
+
+  list( $error ) = sf_query( $link, "INSERT INTO imagePerson SET imageID = ?, personID = ? ", 'ii', $imageID, $PID );
+  if ( $error !== null ) $output["imagePerson"] = "Error : $error";
+
+  if ( sf_post( 'projectID' ) !== null )
+    $output["imageProject"] = sf_set_link( $link, $PID, $imageID, 'project', null, sf_post( 'projectID' ) );
+  if ( sf_post( 'class' ) !== null && sf_post( 'subclassID' ) !== null )
+    $output["imageClass"] = sf_set_link( $link, $PID, $imageID, sf_post( 'class' ), null, sf_post( 'subclassID' ) );
+
+  return $output;
 }
 
-function get_subclass_info($cat_type) {
-    global $link;
-    $PID = $_SESSION['id'];
-    if (strcmp($cat_type, "project") === 0){
-        $table = "imageProject";
-        $column = "projectID";
-    } else if (strcmp($cat_type, "solution") === 0) {
-        $table = "imageSolution";
-        $column = "solutionID";
-    } else if (strcmp($cat_type, "buffer") === 0) {
-        $table = "imageBuffer";
-        $column = "bufferID";
-    } else if (strcmp($cat_type, "analyte") === 0) {
-        $table = "imageAnalyte";
-        $column = "analyteID";
-    } else {
-        return null;
-    }
-    $query = "SELECT tab.imageID, tab.$column " . 
-             "FROM ( SELECT I.imageID AS imageID " . 
-                    "FROM image AS I, imagePerson AS IP " .
-                    "WHERE I.imageID = IP.imageID AND IP.personID = $PID ) AS sel, " .
-             "$table AS tab WHERE sel.imageID = tab.imageID";
-    $sqlret = mysqli_query( $link, $query );
-    $nrows = mysqli_num_rows($sqlret);
-    $result = array("error" => null, "data" => null);
+function sf_update( $link, $PID )
+{
+  $output  = array( "blob" => "OK", "image" => "OK", "imageProject" => "OK", "imageClass" => "OK" );
+  $imageID = (int) sf_post( 'docID' );
 
-    if ($nrows > 0){
-        $content = array();
-        while($row = mysqli_fetch_assoc($sqlret)){
-            array_push($content, $row);
-        }
-        $result["data"] = $content;
-    } else {
-        $result["error"] = mysqli_error($link);
-    }
+  if ( ! sf_owns_document( $link, $PID, $imageID ) )
+  {
+    $output["image"] = "Error : not permitted";
+    return $output;
+  }
 
-    return $result;
+  if ( sf_post( 'local_filename' ) !== null )
+  {
+    $blob = sf_take_upload( $PID, sf_post( 'local_filename' ) );
+    if ( $blob === null )
+    {
+      $output["blob"] = "Error: File not found !";
+      return $output;
+    }
+    $filename = (string) sf_post( 'filename' );
+    list( $error ) = sf_query( $link, "UPDATE image SET filename = ?, gelPicture = ? WHERE imageID = ? ",
+                               'ssi', $filename, $blob, $imageID );
+    if ( $error !== null ) $output["image"] = "Error : $error";
+  }
+
+  $description = sf_post( 'description' );
+  if ( $description !== null )
+  {
+    list( $error ) = sf_query( $link, "UPDATE image SET description = ? WHERE imageID = ? ", 'si', $description, $imageID );
+    if ( $error !== null ) $output["image"] = "Error : $error";
+  }
+
+  if ( sf_post( 'projectID' ) !== null )
+  {
+    list( $oldID, $newID ) = sf_pair( sf_post( 'projectID' ) );
+    $output["imageProject"] = sf_set_link( $link, $PID, $imageID, 'project', $oldID, $newID );
+  }
+
+  if ( sf_post( 'class' ) !== null && sf_post( 'subclassID' ) !== null )
+  {
+    list( $oldClass, $newClass ) = sf_pair( sf_post( 'class' ) );
+    $subclassID = sf_post( 'subclassID' );
+    if ( $oldClass === null )
+      list( $oldID, $newID ) = array( null, $subclassID );
+    else if ( $newClass === null )
+      list( $oldID, $newID ) = array( $subclassID, null );
+    else
+      list( $oldID, $newID ) = sf_pair( $subclassID );
+
+    if ( $oldClass === $newClass )
+      $output["imageClass"] = sf_set_link( $link, $PID, $imageID, $newClass, $oldID, $newID );
+    else
+    {
+      // Add before removing, so a refused new link leaves the old one
+      if ( $newClass !== null )
+        $output["imageClass"] = sf_set_link( $link, $PID, $imageID, $newClass, null, $newID );
+      if ( $oldClass !== null && $output["imageClass"] === "OK" )
+        $output["imageClass"] = sf_set_link( $link, $PID, $imageID, $oldClass, $oldID, null );
+    }
+  }
+
+  return $output;
 }
 
-function get_image_info () {
-    global $link;
-    $PID = $_SESSION['id'];
+function sf_delete( $link, $PID )
+{
+  $output  = array( "image" => "OK", "imagePerson" => "OK", "imageProject" => "OK", "imageClass" => "OK" );
+  $imageID = (int) sf_post( 'docID' );
 
-    $query = "SELECT I.imageID, I.imageGUID, I.description, I.filename " . 
-             "FROM image as I, imagePerson as IP " . 
-             "WHERE I.imageID = IP.imageID AND IP.personID = $PID";
-    $sqlret = mysqli_query( $link, $query );
-    $nrows = mysqli_num_rows($sqlret);
-    $image_info = array("error" => null, "data" => null);
+  if ( ! sf_owns_document( $link, $PID, $imageID ) )
+  {
+    $output["image"] = "Error : not permitted";
+    return $output;
+  }
 
-    if ($nrows > 0){
-        $content = array();
-        while($row = mysqli_fetch_assoc($sqlret)){
-            array_push($content, $row);
-        }
-        $image_info["data"] = $content;
-    } else {
-        $image_info["error"] = mysqli_error($link);
-    }
-    if (is_null($image_info["data"])){
-        return $image_info;
-    }
+  list( $error ) = sf_query( $link,
+      "UPDATE image SET imageGUID = NULL, description = '', gelPicture = '', filename = '' " .
+      "WHERE imageID = ? ", 'i', $imageID );
+  if ( $error !== null ) $output["image"] = "Error : $error";
 
-    $imageProject = get_subclass_info("project");
-    $imageSolution = get_subclass_info("solution");
-    $imageBuffer = get_subclass_info("buffer");
-    $imageAnalyte = get_subclass_info("analyte");
+  list( $error ) = sf_query( $link, "DELETE FROM imagePerson WHERE imageID = ? AND personID = ? ", 'ii', $imageID, $PID );
+  if ( $error !== null ) $output["imagePerson"] = "Error : $error";
 
-    for ($ii = 0; $ii < count($image_info["data"]); $ii++ ){
-        $row = $image_info["data"][$ii];
-        // check imageProject
-        $row["projectID"] = null;
-        for ($jj = 0; $jj < count($imageProject["data"]); $jj++){
-            $data = $imageProject["data"][$jj];
-            if (intval($row["imageID"]) == intval($data["imageID"])) {
-                $row["projectID"] = $data["projectID"];
-                break;
-            }
-        }
-        // check imageSolution
-        $row["solutionID"] = null;
-        for ($jj = 0; $jj < count($imageSolution["data"]); $jj++){
-            $data = $imageSolution["data"][$jj];
-            if (intval($row["imageID"]) == intval($data["imageID"])) {
-                $row["solutionID"] = $data["solutionID"];
-                break;
-            }
-        }
-        // check imageBuffer
-        $row["bufferID"] = null;
-        for ($jj = 0; $jj < count($imageBuffer["data"]); $jj++){
-            $data = $imageBuffer["data"][$jj];
-            if (intval($row["imageID"]) == intval($data["imageID"])) {
-                $row["bufferID"] = $data["bufferID"];
-                break;
-            }
-        }
-        // check imageAnalyte
-        $row["analyteID"] = null;
-        for ($jj = 0; $jj < count($imageAnalyte["data"]); $jj++){
-            $data = $imageAnalyte["data"][$jj];
-            if (intval($row["imageID"]) == intval($data["imageID"])) {
-                $row["analyteID"] = $data["analyteID"];
-                break;
-            }
-        }
-        $image_info["data"][$ii] = $row;
-    } 
-    return $image_info;
+  if ( sf_post( 'projectID' ) !== null )
+    $output["imageProject"] = sf_set_link( $link, $PID, $imageID, 'project', sf_post( 'projectID' ), null );
+  if ( sf_post( 'class' ) !== null && sf_post( 'subclassID' ) !== null )
+    $output["imageClass"] = sf_set_link( $link, $PID, $imageID, sf_post( 'class' ), sf_post( 'subclassID' ), null );
+
+  return $output;
 }
 
-$sf_dir = dirname(__FILE__) . '/sf_data/';
-if (! is_dir($sf_dir)){
-    mkdir($sf_dir);
-}
-$sf_dir = 'sf_data/';
-$delete_file = null;
+// Function to tell the page where to fetch a document; this file sends it
+function sf_locate( $link, $PID )
+{
+  $imageID = (int) sf_post( 'docID' );
+  $doc     = array( "error" => "Not found", "path" => null, "size" => null );
+  if ( ! sf_owns_document( $link, $PID, $imageID ) ) return $doc;
 
-if (isset($_POST['action'])) {
-    $action = $_POST['action'];
-
-    // Store data in MySQL database
-    if ($action === 'NEW_DOC') {
-        // Get the uploaded data
-        $output = array("blob" => "OK", "image" => "OK", "imagePerson" => "OK",
-                        "imageProject" => "OK", "imageClass" => "OK");
-
-        $filepath = $sf_dir . $_POST['local_filename'];
-        $description = $_POST['description'];
-        $filename = $_POST['filename'];
-        $projectID = $_POST["projectID"];
-        $class = $_POST["class"];
-        $subclassID = $_POST["subclassID"];
-        $ID = $_SESSION['id'];
-        $uuid = uuid();
-
-        if (file_exists($filepath)){
-            $delete_file = $filepath;
-            $blob = file_get_contents($filepath);
-        } else {
-            $output["blob"] = "Error: File not found !";
-            mysqli_close($link);
-            echo json_encode($output);
-            exit();
-        }
-
-        if ($class != "null" && $subclassID != "null"){
-            $tabID = $subclassID;
-            if ($class == "solution"){
-                $tab = "imageSolution";
-                $col = "solutionID";
-            } else if ($class == "buffer"){
-                $tab = "imageBuffer";
-                $col = "bufferID";
-            } else if ($class == "analyte"){
-                $tab = "imageAnalyte";
-                $col = "analyteID";
-            } else {
-                $tab = null;
-            }
-        } else {
-            $tab = null;
-        }
-
-        $query = "INSERT INTO image (imageGUID, description, gelPicture, filename) VALUES ( ?, ?, ?, ? )";
-        $smt = mysqli_prepare($link, $query);
-        $smt->bind_param('ssbs', $uuid, $description, $blob, $filename);
-        $smt->send_long_data(2, $blob);
-        if ($smt->execute()){
-            $new_id = $smt->insert_id;
-        } else {
-            $output["image"] = "Error : " . $smt->error;
-            $new_id = -1;
-        }
-        $smt->close();
-
-        if ($new_id != -1){
-            // Add the ownership record
-            $query  = "INSERT INTO imagePerson SET imageID = $new_id, personID = $ID ";
-            if (! mysqli_query( $link, $query )){
-                $output["imagePerson"] = "Error : " . mysqli_error($link);
-            }
-
-            // Add the projectID
-            $query  = "INSERT INTO imageProject SET imageID = $new_id, projectID = $projectID ";
-            if (! mysqli_query( $link, $query )){
-                $output["imageProject"] = "Error : " . mysqli_error($link);
-            }
-
-            // Add class
-            if ($tab != null){
-                $query  = "INSERT INTO $tab SET imageID = $new_id, $col  = $tabID ";
-                if (! mysqli_query( $link, $query )){
-                    $output["imageClass"] = "Error : " . mysqli_error($link);
-                }
-            }
-        }
-        echo json_encode($output);
-
-    // GET project, solution, analyte, buffer information
-    } else if ($action === 'GIVE_INIT_INFO'){
-        $all_data = array();
-        $PID = $_SESSION['id'];
-
-        // fetch project info
-        $query = "SELECT p.projectID, p.description FROM project AS p, projectPerson AS pp " .
-                 "WHERE pp.projectID = p.projectID AND pp.personID = '$PID'";
-        $sqlret = mysqli_query( $link, $query );
-        $nrows = mysqli_num_rows($sqlret);
-        $project = array("error" => null, "data" => null);
-    
-        if ($nrows > 0){
-            $content = array();
-            while($row = mysqli_fetch_assoc($sqlret)){
-                array_push($content, $row);
-            }
-            $project["data"] = $content;
-        } else {
-            $project["error"] = mysqli_error($link);
-        }
-
-        $all_data["project"] = $project;
-
-        // fetch solution info
-        $query = "SELECT s.solutionID, s.description FROM solution AS s, solutionPerson AS sp " .
-                 "WHERE sp.solutionID = s.solutionID AND sp.personID = '$PID'";
-        $sqlret = mysqli_query( $link, $query );
-        $nrows = mysqli_num_rows($sqlret);
-        $solution = array("error" => null, "data" => null);
-    
-        if ($nrows > 0){
-            $content = array();
-            while($row = mysqli_fetch_assoc($sqlret)){
-                array_push($content, $row);
-            }
-            $solution["data"] = $content;
-        } else {
-            $solution["error"] = mysqli_error($link);
-        }
-
-        $all_data["solution"] = $solution;
-
-        // fetch buffer info
-        $query = "SELECT b.bufferID, b.description FROM buffer AS b, bufferPerson AS bp " .
-                 "WHERE bp.bufferID = b.bufferID AND bp.personID = '$PID'";
-        $sqlret = mysqli_query( $link, $query );
-        $nrows = mysqli_num_rows($sqlret);
-        $buffer = array("error" => null, "data" => null);
-    
-        if ($nrows > 0){
-            $content = array();
-            while($row = mysqli_fetch_assoc($sqlret)){
-                array_push($content, $row);
-            }
-            $buffer["data"] = $content;
-        } else {
-            $buffer["error"] = mysqli_error($link);
-        }
-
-        $all_data["buffer"] = $buffer;
-
-        // fetch analyte info
-        $query = "SELECT a.analyteID, a.description FROM analyte AS a, analytePerson AS ap " .
-                 "WHERE ap.analyteID = a.analyteID AND ap.personID = '$PID'";
-        $sqlret = mysqli_query( $link, $query );
-        $nrows = mysqli_num_rows($sqlret);
-        $analyte = array("error" => null, "data" => null);
-    
-        if ($nrows > 0){
-            $content = array();
-            while($row = mysqli_fetch_assoc($sqlret)){
-                array_push($content, $row);
-            }
-            $analyte["data"] = $content;
-        } else {
-            $analyte["error"] = mysqli_error($link);
-        }
-
-        $all_data["analyte"] = $analyte;
-
-        // fetch document info
-        $all_data["image_info"] = get_image_info();
-        
-        echo json_encode($all_data);
-
-    // fetch image info
-    } else if ($action === 'GIVE_DOC_INFO'){
-        $image_info = get_image_info();
-        echo json_encode($image_info);
-    
-    // fetch Data
-    } else if ($action === 'GIVE_BLOB'){
-        $PID = $_SESSION['id'];
-        $imageID = $_POST['docID'];
-        $imageGUID = $_POST['docGUID'];
-
-        $query = "SELECT gelPicture, filename FROM image " .
-                 "WHERE imageID = '$imageID' AND imageGUID = '$imageGUID'";
-        $sqlret = mysqli_query( $link, $query );
-        $nrows = mysqli_num_rows($sqlret);
-        $doc = array("error" => null, "path" => null, "size" => null);
-        if ($nrows > 0){
-            $row = mysqli_fetch_assoc($sqlret);
-            $blobData = $row["gelPicture"];
-            $filename = $row["filename"];
-            $fpath = $sf_dir . $imageGUID;
-            $state = is_file($fpath) && strlen($blobData) != filesize($fpath);
-            $state = $state || (! is_file($fpath));
-            if ($state){
-                file_put_contents($fpath, $blobData);
-                $doc["path"] = $fpath;
-                $doc["size"] = filesize(realpath($fpath));
-            }
-        } else {
-            $doc["error"] = mysqli_error($link);
-        }
-        echo json_encode($doc);
-    } else if ($action === 'DEL_DOC'){
-        $PID = $_SESSION['id'];
-        $imageID = $_POST['docID'];
-        $projectID = $_POST["projectID"];
-        $class = $_POST["class"];
-        $subclassID = $_POST["subclassID"];
-
-        if ($projectID == 'null'){
-            $projectID = null;
-        }
-
-        if ($class != "null" && $subclassID != "null"){
-            $tabID = $subclassID;
-            if ($class == "solution"){
-                $tab = "imageSolution";
-                $col = "solutionID";
-            } else if ($class == "buffer"){
-                $tab = "imageBuffer";
-                $col = "bufferID";
-            } else if ($class == "analyte"){
-                $tab = "imageAnalyte";
-                $col = "analyteID";
-            } else {
-                $tab = null;
-            }
-        } else {
-            $tab = null;
-        }
-
-        $output = array("image" => "OK", "imagePerson" => "OK",
-                        "imageProject" => "OK", "imageClass" => "OK");
-
-        $query = "UPDATE image SET imageGUID = NULL, description = '', gelPicture = '', filename = '' " . 
-                 "WHERE imageID = $imageID";
-        if (! mysqli_query( $link, $query )){
-            $output["image"] = "Error : " . mysqli_error($link);
-        }
-
-        $query = "DELETE FROM imagePerson WHERE imageID = $imageID AND personID = $PID";
-        if (! mysqli_query( $link, $query )){
-            $output["imagePerson"] = "Error : " . mysqli_error($link);
-        }
-
-        if ($projectID != null){
-            $query = "DELETE FROM imageProject WHERE imageID = $imageID AND projectID = $projectID";
-            if (! mysqli_query( $link, $query )){
-                $output["imageProject"] = "Error : " . mysqli_error($link);
-            }
-        }
-
-        if ($tab != null){
-            $query  = "DELETE FROM $tab WHERE imageID = $imageID AND $col  = $tabID ";
-            if (! mysqli_query( $link, $query )){
-                $output["imageClass"] = "Error : " . mysqli_error($link);
-            }
-        }
-
-        echo json_encode($output);
-    } else if ($action === 'UPDATE_DOC'){
-        $output = array("blob" => "OK", "image" => "OK", "imageProject" => "OK", "imageClass" => "OK");
-        $PID = $_SESSION['id'];
-        $imageID = $_POST['docID'];
-        $projectID = $_POST["projectID"];
-        $description = $_POST["description"];
-        $filename = $_POST["filename"];
-        $class = $_POST["class"];
-        $subclassID = $_POST["subclassID"];
-        $filepath = $sf_dir . $_POST['local_filename'];
-        $blob = null;
-        if ($_POST['local_filename'] != 'null'){
-            if (file_exists($filepath)){
-                $delete_file = $filepath;
-                $blob = file_get_contents($filepath);
-            } else {
-                $output["blob"] = "Error: File not found !";
-                mysqli_close($link);
-                echo json_encode($output);
-                exit();
-            }
-        }
-
-        $smt = null;
-        if($description != 'null' && $blob != null){
-            $query = "UPDATE image SET description = ? , filename = ? , gelPicture = ? WHERE imageID = ?";
-            $smt = mysqli_prepare($link, $query);
-            $smt->bind_param('ssbi', $description, $filename, $blob, $imageID);
-            $smt->send_long_data(2, $blob);
-        } else if ($description == 'null' && $blob != null){
-            $query = "UPDATE image SET filename = ? , gelPicture = ? WHERE imageID = ?";
-            $smt = mysqli_prepare($link, $query);
-            $smt->bind_param('sbi', $filename, $blob, $imageID);
-            $smt->send_long_data(1, $blob);
-        } else if ($description != 'null' && $blob == null){
-            $query = "UPDATE image SET description = ? WHERE imageID = ?";
-            $smt = mysqli_prepare($link, $query);
-            $smt->bind_param('si', $description, $imageID);
-        }
-        if ($smt != null){
-            if (! $smt->execute()){
-                $output["image"] = "Error : " . $smt->error;
-            }
-            $smt->close();
-        }
-        
-        if ($projectID != 'null'){
-            $projectID = explode('_', $projectID);
-            if ($projectID[0] == "null"){
-                $query  = "INSERT INTO imageProject SET imageID = $imageID, projectID = $projectID[1] ";
-                if (! mysqli_query( $link, $query )){
-                    $output["imageProject"] = "Error : " . mysqli_error($link);
-                }
-            } else {
-                $query  = "UPDATE imageProject SET projectID = $projectID[1] " . 
-                          "WHERE imageID = $imageID AND projectID = $projectID[0]";
-                if (! mysqli_query( $link, $query )){
-                    $output["imageProject"] = "Error : " . mysqli_error($link);
-                }
-            }
-        }
-
-        if ($class != "null" && $subclassID != "null"){
-            $class = explode('_', $class);
-            if ($class[0] == 'null'){
-                $tab_col = get_tab_col_name($class[1]);
-                $table = $tab_col["table"];
-                $column = $tab_col["column"];
-                $query  = "INSERT INTO $table SET imageID = $imageID, $column = $subclassID ";
-                if (! mysqli_query( $link, $query )){
-                    $output["imageProject"] = "Error : " . mysqli_error($link);
-                }
-            } else if ($class[1] == 'null'){
-                $tab_col = get_tab_col_name($class[0]);
-                $table = $tab_col["table"];
-                $column = $tab_col["column"];
-                $query  = "DELETE FROM $table WHERE imageID = $imageID AND $column = $subclassID ";
-                if (! mysqli_query( $link, $query )){
-                    $output["imageProject"] = "Error : " . mysqli_error($link);
-                }
-
-            } else if ($class[0] != 'null' && $class[1] != 'null' && $class[0] == $class[1]){
-                $subclassID = explode('_', $subclassID);
-                $tab_col = get_tab_col_name($class[0]);
-                $table = $tab_col["table"];
-                $column = $tab_col["column"];
-                $tID_0 = $subclassID[0];
-                $tID_1 = $subclassID[1];
-                $query  = "UPDATE $table SET $column = $tID_1 WHERE imageID = $imageID AND $column = $tID_0 ";
-                if (! mysqli_query( $link, $query )){
-                    $output["imageProject"] = "Error : " . mysqli_error($link);
-                }
-            } else if ($class[0] != 'null' && $class[1] != 'null' && $class[0] != $class[1]){
-                $subclassID = explode('_', $subclassID);
-                $msg = '';
-                $tab_col = get_tab_col_name($class[0]);
-                $table = $tab_col["table"];
-                $column = $tab_col["column"];
-                $tID = $subclassID[0];
-                $query  = "DELETE FROM $table WHERE imageID = $imageID AND $column = $tID ";
-                if (! mysqli_query( $link, $query )){
-                    $msg = $msg . mysqli_error($link) . "\n";
-                }
-
-                $tab_col = get_tab_col_name($class[1]);
-                $table = $tab_col["table"];
-                $column = $tab_col["column"];
-                $tID = $subclassID[1];
-                $query  = "INSERT INTO $table SET imageID = $imageID, $column = $tID ";
-                if (! mysqli_query( $link, $query )){
-                    $output["imageProject"] = $msg . "Error : " . mysqli_error($link);
-                }
-            }
-        } 
-
-        echo json_encode($output);
-    }
-    else if ($action === 'GET_BLOB') {
-        $data = $_POST['data'];
-        $filename = $_POST['filename'];
-        $filepath = $sf_dir . $filename;
-        $file = fopen($filepath, 'a+');
-        fwrite($file, base64_decode($data));
-        fclose($file);
-        echo "OK";
-    }
-    else if ($action === 'DEL_FILE'){
-        $filepath = $sf_dir . $_POST['filename'];
-        if (realpath($filepath)){
-            $delete_file = realpath($filepath);
-            echo "OK";
-        } else {
-            echo "Not found";
-        }
-    }
-
+  list( $error, $rows ) = sf_query( $link, "SELECT LENGTH( gelPicture ) AS size FROM image WHERE imageID = ? ", 'i', $imageID );
+  if ( $error !== null ) $doc["error"] = $error;
+  if ( $rows && $rows[0]['size'] )
+  {
+    $doc["error"] = null;
+    $doc["path"] = "supporting_files_proc.php?docID=$imageID";
+    $doc["size"] = (int) $rows[0]['size'];
+  }
+  return $doc;
 }
 
-// Close connection
-mysqli_close($link);
-if ($delete_file != null){
-    unlink($delete_file);
+function sf_send( $link, $PID )
+{
+  $imageID = is_string( $_GET['docID'] ) ? (int) $_GET['docID'] : 0;
+  list( , $rows ) = sf_owns_document( $link, $PID, $imageID )
+      ? sf_query( $link, "SELECT gelPicture FROM image WHERE imageID = ? ", 'i', $imageID )
+      : array( null, array() );
+  if ( ! $rows )
+  {
+    http_response_code( 403 );
+    return;
+  }
+  session_write_close();   // So a long download does not hold up the user's other pages
+  header( "Content-Type: application/octet-stream" );
+  header( "Content-Disposition: attachment" );
+  header( "X-Content-Type-Options: nosniff" );
+  header( "Cache-Control: private, no-store" );
+  echo $rows[0]['gelPicture'];
 }
-
-// Garbage collector
-$sf_dir = realpath($sf_dir);
-$sf_files = scandir($sf_dir);
-$sf_files = array_diff($sf_files, array('.', '..'));
-foreach ($sf_files as $file) {
-    $file_path = $sf_dir . '/' . $file;
-    if (is_file($file_path)) {
-        $file_time = filemtime($file_path);
-        $current_time = time();
-        $threshold = 30 * 60; // delete files existing over 30 minutes that has not been deleted so far for any reason
-        if ($current_time - $file_time >= $threshold) {
-            unlink($file_path);
-        }
-    }
-}
-
-
-?>

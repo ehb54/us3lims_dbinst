@@ -7,6 +7,8 @@
  *
  */
 
+include_once __DIR__ . '/access.php';
+
 // Function to create a dropdown for people who have given us permission
 function people_select( $link, $select_name, $personID = NULL )
 {
@@ -65,25 +67,10 @@ function run_select( $link, $select_name, $current_ID = NULL, $personID = NULL )
   if ( $personID == NULL ) $personID = $myID;
 
   // Check the permits table to be sure user is authorized to view this report
-  if ( ( $personID != $myID ) && ( $_SESSION['userlevel'] < 3 ) )
+  if ( ! may_view_owner( $link, $personID ) )
   {
-     // language=MariaDB
-     $query  = "SELECT COUNT(*) FROM permits " .
-               "WHERE personID = ? " .
-               "AND collaboratorID = ? ";
-     $stmt = mysqli_prepare( $link, $query );
-     $stmt->bind_param( "ii", $personID, $myID );
-     $stmt->execute();
-     $result = $stmt->get_result()
-         or die( "Query failed : $query<br />" . $stmt->error );
-     list( $count ) = mysqli_fetch_array( $result );
-     $result->close();
-     $stmt->close();
-     if ( $count == 0 )
-     {
-        // Ok, user was not authorized
-        $personID = $myID;
-     }
+     // Ok, user was not authorized
+     $personID = $myID;
   }
 
   // Account for user selecting the Please select... choice
@@ -126,7 +113,7 @@ function tripleList( $link, $current_ID = NULL )
 
   $text = '';
 
-  if ( isset( $current_ID ) )
+  if ( isset( $current_ID ) && may_view_report( $link, $current_ID ) )
   {
     // We have a legit runID, so let's get a list of triples
     //  associated with the run
@@ -173,7 +160,7 @@ function combo_info( $link, $current_ID )
 
   $text = '';
 
-  if ( isset( $current_ID ) )
+  if ( isset( $current_ID ) && may_view_report( $link, $current_ID ) )
   {
     // We have a legit runID, so let's get a list of triples
     //  associated with the run
@@ -213,6 +200,9 @@ function combo_info( $link, $current_ID )
 // A function to retrieve the reportTriple detail
 function tripleDetail( $link, $tripleID, $selected_docTypes = array() )
 {
+  if ( ! may_view_triple( $link, $tripleID ) )
+    return "<p>You do not have access to that report.</p>\n";
+
   // Let's start with header information
   // language=MariaDB
   $query  = "SELECT personID, report.reportID, report.runID, " .
@@ -447,6 +437,9 @@ HTML;
 // A function to retrieve the reportTriple detail for combinations
 function comboDetail( $link, $tripleID )
 {
+  if ( ! may_view_triple( $link, $tripleID ) )
+    return "<p>You do not have access to that report.</p>\n";
+
   // Let's start with header information
   // language=MariaDB
   $query  = "SELECT personID, report.reportID, dataDescription " .
