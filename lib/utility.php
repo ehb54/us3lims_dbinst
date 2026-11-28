@@ -601,6 +601,20 @@ function cluster_is_authorized( $shortname )
           && in_array( $shortname, $_SESSION[ 'clusterAuth' ] );
 }
 
+// Is $shortname a metascheduler pool that is switched off and that this account may use?
+function cluster_is_disabled_pool( $shortname )
+{
+   global $global_cluster_details;
+
+   $entry = $global_cluster_details[ $shortname ] ?? null;
+   return is_array( $entry )
+          && isset( $entry[ 'clusters' ] ) && is_array( $entry[ 'clusters' ] )
+          && array_key_exists( 'active', $entry ) && ! $entry[ 'active' ]
+          && ( $_SESSION[ 'userlevel' ] ?? 0 ) >= 2
+          && is_array( $_SESSION[ 'clusterAuth' ] ?? null )
+          && in_array( $shortname, $_SESSION[ 'clusterAuth' ] );
+}
+
 // Stop with a message when the posted cluster is not this user's to use. The
 // pages that submit call this straight after reading $_POST['cluster'].
 function require_authorized_cluster( $shortname )
@@ -616,20 +630,26 @@ function require_authorized_cluster( $shortname )
    ## an include()d page exit()ed; without it an autoflow refusal records
    ## whatever incidental PHP warning fired instead of the actual reason.
    ## Harmless on a direct web submission, where no handler reads it.
-   $GLOBALS[ 'gridctl_submission_failure_reason' ] =
-       "cluster '" . (string) $shortname . "' is not authorized for this account";
+   $disabled = cluster_is_disabled_pool( $shortname );
+   $GLOBALS[ 'gridctl_submission_failure_reason' ] = $disabled
+       ? "metascheduler '" . (string) $shortname . "' is disabled (active=false)"
+       : "cluster '" . (string) $shortname . "' is not authorized for this account";
 
    ## Names the cluster and points back to queue setup, where a different
    ## (authorized) cluster can be chosen. Includes the local 'header.php'
    ## first, like every other stop page (lib/submit_stop.php, DMGA_2.php,
    ## 2DSA_2.php, ...), for the page's <html>/<head>, navigation and CSS.
    include 'header.php';
+   $name = htmlspecialchars( (string) $shortname, ENT_QUOTES );
+   $text = $disabled
+         ? "<p class='red'>The metascheduler '$name' is disabled (active=false).</p>\n"
+         . "<p>Nothing was submitted. Choose a cluster and submit again.</p>\n"
+         : "<p class='red'>The cluster '$name' is not available to this account.</p>\n"
+         . "<p>Go back and choose a different cluster, or contact your site administrator"
+         . " if this one should be authorized for you.</p>\n";
    echo "<div id='content'>\n"
       . "<h3>Cluster not available</h3>\n"
-      . "<p class='red'>The cluster '" . htmlspecialchars( (string) $shortname, ENT_QUOTES )
-      . "' is not available to this account.</p>\n"
-      . "<p>Go back and choose a different cluster, or contact your site administrator"
-      . " if this one should be authorized for you.</p>\n"
+      . $text
       . "</div>\n";
    // $common_dir is set in config.php's global scope; a function doesn't see
    // it without this, and the footer would silently fail to load.
