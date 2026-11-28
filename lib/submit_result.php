@@ -10,7 +10,43 @@
 // text it collects in $log is for the command line only.
 function submit_requests( array $filenames, $metascheduler_cluster, $is_cli, &$log )
 {
-  $job      = new submit_slurm();
+  if ( $is_cli || method_exists( 'submit_slurm', 'submission_result' ) )
+    $job = new submit_slurm();
+  else
+  {
+    // Older common retains the sbatch outcome internally, but exposes no result method.
+    $job = new class extends submit_slurm {
+      public function clear()
+      {
+        parent::clear();
+        if ( property_exists( $this, 'submitOutcome' ) )
+          $this->submitOutcome = null;
+      }
+
+      public function legacy_web_result()
+      {
+        $messages = $this->get_messages();
+        $outcome  = $this->submitOutcome ?? array();
+        $job_id   = (string) ( $this->data['eprfile'] ?? '' );
+        if ( $job_id !== '' || ( $outcome['certainty'] ?? '' ) === 'ACCEPTED'
+                             || in_array( 'submit complete', $messages, true ) )
+          return array( 'certainty' => 'ACCEPTED', 'job_id' => $job_id !== '' ? $job_id : ( $outcome['job_id'] ?? '' ),
+                        'tracked' => in_array( 'submit complete', $messages, true ) );
+
+        if ( ( $outcome['certainty'] ?? '' ) === 'NOT_ACCEPTED' )
+          return $outcome;
+
+        // Only recognize submit()'s own pre-sbatch refusals. Scheduler output alone
+        // cannot establish whether a job was submitted.
+        if ( !$outcome )
+          foreach ( $messages as $message )
+            if ( is_string( $message ) && preg_match( '/^ERROR: (?:data profile is not defined\\.|stage_files failed - submission aborted|submission configuration invalid:)/', $message ) )
+              return array( 'certainty' => 'NOT_ACCEPTED', 'reason' => 'not_submitted' );
+
+        return null;
+      }
+    };
+  }
   $results  = array();
   $log      = '';
   $save_cwd = getcwd();
@@ -18,14 +54,21 @@ function submit_requests( array $filenames, $metascheduler_cluster, $is_cli, &$l
   {
     foreach ( $filenames as $filename )
     {
-      submit_progress( 'submitting ' . basename( $filename ) );
+      submit_progress( 'Submitting request ' . ( count( $results ) + 1 ) . ' of ' . count( $filenames ) );
       chdir( dirname( $filename ) );
       $job->clear();
       $job->parse_input( basename( $filename ) );
       if ( $metascheduler_cluster !== null )
         $job->set_metascheduler_cluster_executing( $metascheduler_cluster );
-      if ( ! DEBUG ) $job->submit();
-      $outcome = method_exists( $job, 'submission_result' ) ? $job->submission_result() : null;
+      $outcome = null;
+      if ( ! DEBUG )
+      {
+        $job->submit();
+        if ( method_exists( $job, 'submission_result' ) )
+          $outcome = $job->submission_result();
+        elseif ( !$is_cli )
+          $outcome = $job->legacy_web_result();
+      }
       $log    .= submit_result_record( $results, $outcome, $job->get_messages(), $filename, $is_cli );
     }
   }
@@ -37,8 +80,8 @@ function submit_requests( array $filenames, $metascheduler_cluster, $is_cli, &$l
   return $results;
 }
 
-// What the page says about one request. $outcome is submit_slurm's submission_result(), or null from
-// a common without it. state: submitted, untracked (accepted, but recording it had a problem), failed
+// What the page says about one request. A null outcome means submission could not be confirmed.
+// States: submitted, untracked (accepted, but recording it had a problem), failed
 // (nothing was submitted) or unknown (it may have been submitted).
 function submit_result( $outcome, $filename )
 {
@@ -66,7 +109,13 @@ function submit_result( $outcome, $filename )
                     'staging_rejected'   => 'The cluster did not accept the input files.',
                     'plan_rejected'      => "This job does not fit the cluster's limits or settings." );
     $result['state'] = 'failed';
-    $result['text']  = $texts[ $outcome['reason'] ] ?? 'The job could not be prepared for this cluster.';
+    $result['text']  = $texts[ $outcome['reason'] ?? '' ] ?? 'The job could not be prepared for this cluster.';
+    // Carry only the planner's numeric limits to the browser. Other details
+    // can contain site configuration or commands and stay in the log.
+    if ( ( $outcome['reason'] ?? '' ) === 'plan_rejected' &&
+         preg_match( '/(?:^|: )one intact analysis group needs (\d+) tasks, but cluster [a-zA-Z0-9_.-]+ permits at most (\d+)(?:$|:)/',
+                     $outcome['detail'] ?? '', $limits ) )
+      $result['text'] = "One intact analysis group needs {$limits[1]} tasks, but this cluster permits at most {$limits[2]}.";
   }
   return $result;
 }
@@ -92,10 +141,10 @@ function submit_result_record( array &$results, $outcome, array $messages, $file
   $log = implode( "\n", $lines );
   if ( $outcome !== null )
   {
-    // gridctl fails a stage left unrecorded, and names this as why.
+    // Keep the accepted-job warning distinct from a refusal on newer gridctl.
     if ( $result['state'] === 'untracked' )
-      $GLOBALS['gridctl_submission_failure_reason'] = "job {$result['job']} was accepted but not fully recorded; do not resubmit: "
-                                                    . trim( preg_replace( '/\s+/', ' ', $outcome['detail'] ) );
+      $GLOBALS['gridctl_submission_tracking_warning'] = $GLOBALS['gridctl_submission_failure_reason'] = "job {$result['job']} was accepted but not fully recorded; do not resubmit: "
+                                                      . trim( preg_replace( '/\s+/', ' ', $outcome['detail'] ) );
     if ( $result['state'] === 'failed' || $result['state'] === 'unknown' )
       $GLOBALS['cli_errors'][] = 'ERROR: ' . ( trim( preg_replace( '/\s+/', ' ', $outcome['detail'] ) ) ?: $result['text'] );
     // An older gridctl fails a stage on any printed ERROR: line, and cluster output can hold one for an accepted job.
