@@ -19,6 +19,15 @@ $change_my_info_if_not_PAM =
   : "<a href='https://$org_site/profile.php?edit=12'>Change My Info</a>"
   ;
 
+$plugin_links = array();
+$custom_sections = '';
+if ( $userlevel > 0 && isset( $dbname ) )
+{
+  require_once __DIR__ . '/lib/plugins/bootstrap.php';
+  list( $plugin_links, $custom_sections ) = lims_plugin_sidebar( $org_site, (string) $dbname );
+}
+
+$projects_menu = '';
 if ( $userlevel > 0 ) {
 $projects_menu = <<<HTML
   <h4>Project</h4>
@@ -27,8 +36,8 @@ $projects_menu = <<<HTML
   <a href='https://$org_site/supporting_files.php'>Supporting Files</a>
   <a href='https://$org_site/view_reports.php'>Reports</a>
   <a href='https://$org_site/data_sharing.php'>Sharing</a>
-
 HTML;
+  $projects_menu .= ( $plugin_links['project'] ?? '' ) . $custom_sections;
 }
 
 $analysis_menu = <<<HTML
@@ -42,6 +51,7 @@ $analysis_menu = <<<HTML
   <a href='https://$org_site/runID_info.php'>RunID Info</a>
 
 HTML;
+$analysis_menu .= $plugin_links['analysis'] ?? '';
 
 // Administrators also get the dispatch dashboard, with the count of open alert items.
 $dispatch_link = '';
@@ -53,12 +63,16 @@ if ( $userlevel >= 4 )
                  . ( $dispatch_open > 0 ? " <span class='text-red'>($dispatch_open open)</span>" : '' ) . "</a>\n";
 }
 
+$plugin_settings_link = $userlevel >= 4
+  ? "  <a href='https://$org_site/plugin_settings.php'>Plugins and License</a>\n" : '';
+
 $monitor_menu = <<<HTML
   <h4>Status Monitor</h4>
   <a href='https://$org_site/queue_viewer.php'>Queue Status</a>
   <a href='https://$org_site/show_clusters.php'>Cluster Status</a>
-$dispatch_link
+$dispatch_link$plugin_settings_link
 HTML;
+$monitor_menu .= $plugin_links['status-monitor'] ?? '';
 
 $general_menu = <<<HTML
   <h4>General</h4>
@@ -69,6 +83,7 @@ $general_menu = <<<HTML
   <a href='https://$org_site/logout.php'>Logout</a>
 
 HTML;
+$general_menu .= $plugin_links['general'] ?? '';
 
 $general_menu_1 = <<<HTML
   <h4>General</h4>
@@ -78,6 +93,9 @@ $general_menu_1 = <<<HTML
   <a href='https://$org_site/logout.php'>Logout</a>
 
 HTML;
+$general_menu_1 .= $plugin_links['general'] ?? '';
+
+$navigation_links = $plugin_links['navigation'] ?? '';
 
 if ( $userlevel == 5 )  // level 5 = super admin ( developer )
 {
@@ -85,6 +103,7 @@ if ( $userlevel == 5 )  // level 5 = super admin ( developer )
   <h4>Navigation</h4>
   <a href="https://$org_site/index.php">Welcome!</a>
   <a href='https://$org_site/admin_links.php'>Admin Info</a>
+  $navigation_links
   $projects_menu
   $analysis_menu
   $monitor_menu
@@ -99,6 +118,7 @@ else if ( $userlevel == 4 )  // userlevel 4 = admin
   <h4>Navigation</h4>
   <a href="https://$org_site/index.php">Welcome!</a>
   <a href='https://$org_site/admin_links.php'>Admin Info</a>
+  $navigation_links
   $projects_menu
   $analysis_menu
   $monitor_menu
@@ -113,6 +133,7 @@ else if ( $userlevel == 3 )  // userlevel 3 = superuser
   <h4>Navigation</h4>
   <a href="https://$org_site/index.php">Welcome!</a>
   <a href='https://$org_site/admin_links.php'>Admin Info</a>
+  $navigation_links
   $projects_menu
   $analysis_menu
   $monitor_menu
@@ -126,6 +147,7 @@ else if ( $userlevel == 2 )  // userlevel 2 = Data analyst
   $sidebar_menu = <<<HTML
   <h4>Navigation</h4>
   <a href="https://$org_site/index.php">Welcome!</a>
+  $navigation_links
   $projects_menu
   $analysis_menu
   $monitor_menu
@@ -139,6 +161,7 @@ else if ( $userlevel == 1 )  // level 1 = privileged user
   $sidebar_menu = <<<HTML
   <h4>Navigation</h4>
   <a href="https://$org_site/index.php">Welcome!</a>
+  $navigation_links
   $projects_menu
   $general_menu_1
 
@@ -151,6 +174,7 @@ else if ( $userlevel == 0 )  // level 0 = regular user
   <h4>Navigation</h4>
   <a href="https://$org_site/index.php">Welcome!</a>
   <a href='https://$org_site/admin_links.php'>Admin Info</a>
+  $navigation_links
   $projects_menu
   $general_menu_1
 

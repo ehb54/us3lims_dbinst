@@ -169,7 +169,7 @@ if ( $count == 1 )
 {
   foreach( $row AS $key => $val )
   {
-     $$key = stripslashes( $val );
+     $$key = stripslashes( (string) $val );
   }
 
   $_SESSION['id']               = $personID;
