@@ -337,8 +337,7 @@ abstract class File_writer
                  . "$tarFilename: " . implode( '; ', $tar_output );
         error_log( $tar_msg );
         if ( function_exists( 'elog' ) ) elog( $tar_msg );
-        // submitone.php scans CLI output for ERROR: lines.
-        if ( PHP_SAPI === 'cli' ) echo "$tar_msg\n";
+        if ( PHP_SAPI === 'cli' ) $GLOBALS['cli_errors'][] = $tar_msg;
         chdir( $save_cwd );
         return false;
     }
@@ -515,7 +514,8 @@ abstract class File_writer
     $dirPath = $submit_dir . $dir_name;
     if ( ! mkdir( $dirPath, 0770 ) )
     {
-      echo "\nmkdir failed:  $dirPath\n";
+      error_log( "file_writer: mkdir failed: $dirPath" );
+      if ( PHP_SAPI === 'cli' ) $GLOBALS['cli_errors'][] = "ERROR: file_writer: mkdir failed: $dirPath";
       return false;
     }
 

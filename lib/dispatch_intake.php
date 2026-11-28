@@ -103,7 +103,10 @@ function dispatch_intake_add( $link, $dbname, $HPCAnalysisRequestID, $filename )
   global $is_cli, $ID;
 
   if ( ! dispatch_intake_worker_can_read( $filename ) )
-    return "The analysis input $filename cannot be used by the submission service; nothing was submitted.";
+  {
+    error_log( "pool submission refused: the dispatch worker cannot use $filename" );
+    return 'The analysis input cannot be used by the submission service; nothing was submitted.';
+  }
   $nonce = dispatch_intake_nonce();
   list( $id, $created ) = dispatch_intake( $link, $dbname, array(
     'logicalKey'           => dispatch_intake_key( $dbname, $_SESSION['loginID'], $nonce,
@@ -199,6 +202,8 @@ function dispatch_intake_receipt_html( array $rows, $pool )
   $pool = htmlspecialchars( (string) $pool, ENT_QUOTES );
   $which = count( $ids ) === 1 ? "Dispatch request {$ids[0]}"
          : count( $ids ) . ' dispatch requests (' . implode( ', ', $ids ) . ')';
-  return "<pre>\n  Analysis received. Checking available resources in '$pool'.\n"
-       . "  $which. The queue page shows where it is submitted.\n";
+  return "<div id='submit-result' class='submit-result submit-result-received'>\n"
+       . "  <h2>Analysis received. Checking available resources in '$pool'.</h2>\n"
+       . "  <p>$which. The queue page shows where it is submitted.</p>\n"
+       . "  <p><a href='queue_viewer.php'>View the queue</a></p>\n</div>\n";
 }

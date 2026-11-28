@@ -6,8 +6,8 @@
 $dispatch_refused = isset( $dispatch_prior['error'] );
 $page_title = "$submit_method Analysis " . ( $dispatch_refused ? 'Not Submitted' : 'Received' );
 $dispatch_text = $dispatch_refused
-  ? htmlspecialchars( $dispatch_prior['error'], ENT_QUOTES )
-  : dispatch_intake_receipt_html( $dispatch_prior['receipt'], $GLOBALS['dispatch_intake_pool'] ) . "</pre>\n";
+  ? '<p>' . htmlspecialchars( $dispatch_prior['error'], ENT_QUOTES ) . '</p>'
+  : dispatch_intake_receipt_html( $dispatch_prior['receipt'], $GLOBALS['dispatch_intake_pool'] );
 
 if ( $is_cli )
 {
@@ -17,11 +17,12 @@ if ( $is_cli )
 }
 else
 {
+  $css = 'css/submit_result.css';
   include 'header.php';
   echo <<<HTML
 <div id='content'>
   <h1 class="title">$page_title</h1>
-  <p>$dispatch_text</p>
+  $dispatch_text
   <p><a href="queue_setup_1.php">Submit another request</a></p>
 </div>
 HTML;
