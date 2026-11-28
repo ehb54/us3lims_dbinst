@@ -183,7 +183,7 @@ foreach ( $expected as $key => $value )
     $legacy_zone = date_default_timezone_get();
     if ( $legacy_zone !== $value )
     {
-      echo sprintf( "%-22s %s\n", $key, "DIFFERENT (legacy sets $legacy_zone, base $value)" );
+      echo sprintf( "%-22s %s\n", $key, "DIFFERENT (legacy uses $legacy_zone, base $value)" );
       $differences++;
       $differing[] = "$key DIFFERENT";
       continue;
@@ -445,23 +445,6 @@ if ( $activate )
   exit( 0 );
 }
 
-/* The printed rollback leaves the overlay in place, so a later migration finds it: one that
- * is exactly what would be written, at 0640, is kept; anything else is still refused. */
-$overlay_source = us3_dbinst_config_overlay_source( $contract );
-$overlay_kept = is_file( $overlay_path ) && !is_link( $overlay_path )
-  && file_get_contents( $overlay_path ) === $overlay_source
-  && ( fileperms( $overlay_path ) & 0777 ) === 0640;
-
-foreach ( array( $overlay_path, $candidate_path ) as $path )
-{
-  if ( $path === $overlay_path && $overlay_kept )
-    continue;
-  if ( file_exists( $path ) )
-    migration_fail( "refusing to replace existing file: $path" );
-  if ( !is_dir( dirname( $path ) ) || !is_writable( dirname( $path ) ) )
-    migration_fail( "directory is missing or unwritable: " . dirname( $path ) );
-}
-
 /*
  * Group-readable by the web server, which owns the instances directory's
  * group -- but owned by us3 explicitly, not by whoever runs this tool. Run
@@ -476,10 +459,31 @@ if ( !$us3_pw )
   migration_fail( "could not resolve the us3 account; the overlay must be"
                 . " owned by it, not by whoever runs this tool" );
 
+$overlay_group = is_dir( dirname( $overlay_path ) ) ? filegroup( dirname( $overlay_path ) ) : false;
+
+/* The printed rollback leaves the overlay in place, so a later migration finds it: one that
+ * has the expected contents, mode, owner and group is kept; anything else is still refused. */
+$overlay_source = us3_dbinst_config_overlay_source( $contract );
+$overlay_kept = is_file( $overlay_path ) && !is_link( $overlay_path )
+  && file_get_contents( $overlay_path ) === $overlay_source
+  && ( fileperms( $overlay_path ) & 0777 ) === 0640
+  && fileowner( $overlay_path ) === $us3_pw[ 'uid' ]
+  && filegroup( $overlay_path ) === $overlay_group;
+
+foreach ( array( $overlay_path, $candidate_path ) as $path )
+{
+  if ( $path === $overlay_path && $overlay_kept )
+    continue;
+  if ( file_exists( $path ) )
+    migration_fail( "refusing to replace existing file: $path" );
+  if ( !is_dir( dirname( $path ) ) || !is_writable( dirname( $path ) ) )
+    migration_fail( "directory is missing or unwritable: " . dirname( $path ) );
+}
+
 if ( !$overlay_kept )
   $overlay_temp = migration_write_temp(
     $overlay_path, $overlay_source, 0640,
-    filegroup( dirname( $overlay_path ) ), $us3_pw[ 'uid' ] );
+    $overlay_group, $us3_pw[ 'uid' ] );
 $candidate_temp = migration_write_temp(
   $candidate_path, us3_dbinst_config_shim_source( $instance ), 0644 );
 // link() never replaces an existing file; the temporaries are removed at exit

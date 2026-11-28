@@ -398,6 +398,25 @@ else
                       . posix_geteuid() : 'an unknown uid' ) );
 }
 
+/* Report filenames only, since copies may contain database credentials. */
+function check_docroot_config_copies( $dir, $instance, $config_root )
+{
+  $dir = rtrim( $dir, '/' );
+  $copies = array_values( array_filter( array_merge(
+    glob( $dir . '/' . $instance . '.config.php.legacy-*' ) ?: array(),
+    glob( $dir . '/config.php?*' ) ?: array()
+  ), function ( $path ) {
+    return !in_array( basename( $path ),
+                      array( 'config.php.template', 'config.php.base-overlay-candidate' ), true );
+  } ) );
+  $label = "$instance docroot has no config.php copies";
+  if ( $copies )
+    check_warn( $label, count( $copies ) . ' found, e.g. ' . $copies[0]
+                . ' -- move them under ' . $config_root . '/instances, outside the web root' );
+  else
+    check_pass( $label );
+}
+
 /* -------------------------------------------------------------- instances */
 
 check_section( 'Instances' );
@@ -413,6 +432,7 @@ if ( !$overlays )
   check_warn( 'migrated instances found',
               'none; every instance is still on a legacy config.php' );
 
+$copy_checked = array();
 foreach ( $overlays as $instance )
 {
   check_section( "Instance $instance" );
@@ -467,6 +487,8 @@ foreach ( $overlays as $instance )
   }
 
   /* The shim, and the marker gridctl/submitctl.php greps for. */
+  check_docroot_config_copies( $effective[ 'full_path' ], $instance, $config_root );
+  $copy_checked[ realpath( $effective[ 'full_path' ] ) ] = true;
   $config_php = rtrim( $effective[ 'full_path' ], '/' ) . '/config.php';
   if ( !is_file( $config_php ) )
   {
@@ -516,30 +538,6 @@ foreach ( $overlays as $instance )
     check_warn( 'instance is migrated',
                 'an overlay exists but config.php is still the legacy file' );
 
-  /* migrate_instance_config.php --activate backs up the legacy config.php it
-   * replaces; before 5682b3f that backup landed in the instance docroot
-   * itself, next to config.php, with the database passwords it held, named
-   * plain config.php.legacy-<timestamp> (no instance prefix). A host that
-   * ran --activate before that fix still has it sitting there under that
-   * older name -- checked for here too, since the newer, prefixed name this
-   * glob checked alone would never match it. */
-  ## Any other copy of config.php (an editor's config.php~, .save, .bak) holds the same passwords.
-  $stale_backups = array_values( array_filter( array_merge(
-      glob( rtrim( $effective[ 'full_path' ], '/' )
-          . '/' . $instance . '.config.php.legacy-*' ) ?: array(),
-      glob( rtrim( $effective[ 'full_path' ], '/' )
-          . '/config.php?*' ) ?: array()
-  ), function ( $path ) {
-    return !in_array( basename( $path ),
-                      array( 'config.php.template', 'config.php.base-overlay-candidate' ), true );
-  } ) );
-  if ( $stale_backups )
-    check_warn( 'no legacy config.php backup left in the docroot',
-                count( $stale_backups ) . ' found, e.g. ' . $stale_backups[ 0 ]
-                . ' -- move it under ' . $config_root . '/instances, outside'
-                . ' anything the web server serves' );
-  else
-    check_pass( 'no legacy config.php backup left in the docroot' );
 
   if ( $deep )
   {
@@ -604,16 +602,24 @@ else
   check_pass( 'dbinst root located', $dbinst_root );
   $legacy = 0;
 
-  foreach ( glob( $dbinst_root . '/uslims3_*', GLOB_ONLYDIR ) ?: array() as $dir )
+  $docroots = glob( $dbinst_root . '/uslims3_*', GLOB_ONLYDIR ) ?: array();
+  foreach ( glob( $dbinst_root . '/*/config.php' ) ?: array() as $config_php )
+    $docroots[] = dirname( $config_php );
+  if ( is_file( $dbinst_root . '/config.php' ) )
+    $docroots[] = $dbinst_root;
+
+  foreach ( array_unique( $docroots ) as $dir )
   {
-    $instance = basename( $dir );
+    $instance = $dir === $dbinst_root ? 'default' : basename( $dir );
 
     /* newlims is the metadata application and uslims3_data the shared submit area. */
-    if ( $instance === 'uslims3_newlims' || $instance === 'uslims3_data' )
-      continue;
-    if ( in_array( $instance, $overlays, true ) )
+    if ( in_array( $instance, array( 'newlims', 'uslims3_newlims', 'uslims3_data' ), true ) )
       continue;
     if ( $only && !in_array( $instance, $only, true ) )
+      continue;
+    if ( !isset( $copy_checked[ realpath( $dir ) ] ) )
+      check_docroot_config_copies( $dir, $instance, $config_root );
+    if ( in_array( $instance, $overlays, true ) )
       continue;
 
     $config_php = $dir . '/config.php';
