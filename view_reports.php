@@ -7,6 +7,12 @@
  */
 include_once 'checkinstance.php';
 
+if ( ! isset( $_SESSION['id'] ) )
+{
+  header('Location: index.php');
+  exit();
+}
+
 $myID = $_SESSION['id'];
 
 include 'config.php';
@@ -48,10 +54,7 @@ if ( isset( $_POST['change_cell'] ) )
     <div id='combos'>$combo_info</div>
   </div>
 
-  <script>
-    $('#people_select').change( change_person );
-    $('#run_select')   .change( change_run_select );
-  </script>
+  <script src='js/reports_install_change_handlers.js' type='text/javascript'></script>
 HTML;
 }
 
@@ -108,10 +111,7 @@ else
     <div id='combos'>$combo_info</div>
   </div>
 
-  <script>
-    $('#people_select').change( change_person );
-    $('#run_select')   .change( change_run_select );
-  </script>
+  <script src='js/reports_install_change_handlers.js' type='text/javascript'></script>
 HTML;
 }
 
@@ -120,7 +120,7 @@ echo $text;
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 ?>

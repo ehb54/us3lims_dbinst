@@ -59,7 +59,7 @@ display_record($link);
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 // Function to redirect to prior record
@@ -140,14 +140,15 @@ function display_record($link)
 
   foreach ($row as $key => $value)
   {
-    $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( $value ));
+    $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( $value ), ENT_COMPAT | ENT_HTML401);
   }
 
   $userlevel = $row['userlevel']; // 0 translates to null
 
   // Populate a list box to allow user to jump to another record
+
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
-                  "        onchange='get_person(this);' >" .
+                  "class='onchange-get-person' >" .
                   "  <option value='null'>None selected...</option>\n";
 
   $querywhere = "";
@@ -161,8 +162,8 @@ function display_record($link)
             or die("Query failed : $query<br />\n" . mysqli_error($link));
   while (list($t_id, $t_last, $t_first) = mysqli_fetch_array($result))
   {
-    $t_last   = html_entity_decode( stripslashes($t_last)  );
-    $t_first  = html_entity_decode( stripslashes($t_first) );
+    $t_last   = html_entity_decode( stripslashes($t_last), ENT_COMPAT | ENT_HTML401  );
+    $t_first  = html_entity_decode( stripslashes($t_first), ENT_COMPAT | ENT_HTML401 );
     $selected = ($personID == $t_id) ? " selected='selected'" : "";
     $nav_listbox .= "  <option$selected value='$t_id'>$t_last, $t_first</option>\n";
   }

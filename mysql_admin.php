@@ -42,14 +42,14 @@ if (isset($_POST['do_sql']))
   else if ($result === TRUE)
   {
     // The result of an UPDATE, DELETE, DROP, INSERT, etc.
-    $rows = mysqli_affected_rows();
-    echo "<p style='margin:2em 0em 20em;'>$rows rows affected</p>\n";
+    $rows = mysqli_affected_rows($link);
+    echo "<p class='m-2em-0-20em'>$rows rows affected</p>\n";
   }
     
   // Only SELECT, DESCRIBE, etc. here
   else if (mysqli_num_rows($result) < 1)
   {
-    echo "<p style='margin:2em 0em 20em;'>No rows returned</p>\n";
+    echo "<p class='m-2em-0-20em'>No rows returned</p>\n";
   }
 
   else
@@ -64,7 +64,7 @@ if (isset($_POST['do_sql']))
     // First, table headers with column names
     for ($i = 0; $i < $num_cols; $i++)
     {
-      $field_name = mysqli_field_name($result, $i);
+      $field_name = mysqli_fetch_field_direct($result, $i)->name;
       echo "    <th>$field_name</th>\n";
     }
     echo "</tr>\n";
@@ -135,7 +135,7 @@ else
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 function SQL_input_form($last_query = "")

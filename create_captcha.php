@@ -5,7 +5,12 @@
  * Creates a captcha text string onto a jpeg background and sends it back
  *
  */
-session_start();
+// checkinstance.php (not a bare session_start()): sets the same Secure/
+// HttpOnly/SameSite cookie flags and HTTPS enforcement every other page
+// gets. Without this, the captcha image and the signup form it belongs to
+// (newaccount.php) read each other's session under two different cookie
+// policies.
+include 'checkinstance.php';
 
 if ( ! isset( $_SESSION['captcha'] ) )
 {
@@ -43,6 +48,11 @@ $size      = 60;
 
 /* Create Imagick object from background file*/
 $image = new Imagick( 'cap_bg.jpg' );
+
+/* Drop all metadata. ImageMagick >= 6.9.13-45 silently refuses to write an
+ * image that carries an empty EXIF profile (SyncExifProfile() rejects a TIFF
+ * body shorter than 16 bytes) and getImageBlob() then throws. */
+$image->stripImage();
 
 /* Create a drawing object and set the font size */
 $ImagickDraw = new ImagickDraw();

@@ -7,6 +7,8 @@
  *
  */
 
+include_once __DIR__ . '/access.php';
+
 // Function to create a dropdown for people who have given us permission
 function people_select( $link, $select_name, $personID = NULL )
 {
@@ -65,25 +67,10 @@ function run_select( $link, $select_name, $current_ID = NULL, $personID = NULL )
   if ( $personID == NULL ) $personID = $myID;
 
   // Check the permits table to be sure user is authorized to view this report
-  if ( ( $personID != $myID ) && ( $_SESSION['userlevel'] < 3 ) )
+  if ( ! may_view_owner( $link, $personID ) )
   {
-     // language=MariaDB
-     $query  = "SELECT COUNT(*) FROM permits " .
-               "WHERE personID = ? " .
-               "AND collaboratorID = ? ";
-     $stmt = mysqli_prepare( $link, $query );
-     $stmt->bind_param( "ii", $personID, $myID );
-     $stmt->execute();
-     $result = $stmt->get_result()
-         or die( "Query failed : $query<br />" . $stmt->error );
-     list( $count ) = mysqli_fetch_array( $result );
-     $result->close();
-     $stmt->close();
-     if ( $count == 0 )
-     {
-        // Ok, user was not authorized
-        $personID = $myID;
-     }
+     // Ok, user was not authorized
+     $personID = $myID;
   }
 
   // Account for user selecting the Please select... choice
@@ -126,7 +113,7 @@ function tripleList( $link, $current_ID = NULL )
 
   $text = '';
 
-  if ( isset( $current_ID ) )
+  if ( isset( $current_ID ) && may_view_report( $link, $current_ID ) )
   {
     // We have a legit runID, so let's get a list of triples
     //  associated with the run
@@ -173,7 +160,7 @@ function combo_info( $link, $current_ID )
 
   $text = '';
 
-  if ( isset( $current_ID ) )
+  if ( isset( $current_ID ) && may_view_report( $link, $current_ID ) )
   {
     // We have a legit runID, so let's get a list of triples
     //  associated with the run
@@ -213,6 +200,9 @@ function combo_info( $link, $current_ID )
 // A function to retrieve the reportTriple detail
 function tripleDetail( $link, $tripleID, $selected_docTypes = array() )
 {
+  if ( ! may_view_triple( $link, $tripleID ) )
+    return "<p>You do not have access to that report.</p>\n";
+
   // Let's start with header information
   // language=MariaDB
   $query  = "SELECT personID, report.reportID, report.runID, " .
@@ -283,10 +273,6 @@ function tripleDetail( $link, $tripleID, $selected_docTypes = array() )
       <p>Include the following report document types:</p>
       $checkboxes
     </div>
-
-    <script>
-      $(":checkbox").click( change_docType );
-    </script>
 
 HTML;
 
@@ -388,7 +374,7 @@ HTML;
       }
 
       // Add the entry for a document
-      $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>" .
+      $text .= "  <li><a href='#$atype' class='onclick-show-report-detail-arg' data-arg='$docID'>" .
                "$subanal{$include_doctype}</a></li>\n";
     }
 
@@ -423,21 +409,16 @@ HTML;
   list ( $experimentID, $triple_desc ) = mysqli_fetch_array( $result );
   $result->close();
   $stmt->close();
-  $text .= <<<HTML
-    <p class='reporthead'><a name='solution'></a>Solution Data</p>
-    <ul>
-        <li><a href='#solution'
-               onclick="show_solution_detail( 'solution', $experimentID, '$triple_desc' );">
-               Solution Information</a></li>
-        <li><a href='#solution'
-               onclick="show_solution_detail( 'analyte', $experimentID, '$triple_desc' );">
-               Analyte Information</a></li>
-        <li><a href='#solution'
-               onclick="show_solution_detail( 'buffer', $experimentID, '$triple_desc' );">
-               Buffer Information</a></li>
-
-    </ul>
-HTML;
+  $text .= "    <p class='reporthead'><a name='solution'></a>Solution Data</p>\n" .
+           "    <ul>\n";
+  foreach ( [ 'solution', 'analyte', 'buffer' ] as $type )
+  {
+    $args  = htmlspecialchars( json_encode( [ $type, (int)$experimentID, (string)$triple_desc ] ), ENT_QUOTES );
+    $label = ucfirst( $type );
+    $text .= "        <li><a href='#solution' class='onclick-show-solution-detail-args' data-args='$args'>" .
+             "$label Information</a></li>\n";
+  }
+  $text .= "    </ul>\n";
 
   // Let's add links to make things easier to get around
   $self = $_SERVER['PHP_SELF'];
@@ -456,6 +437,9 @@ HTML;
 // A function to retrieve the reportTriple detail for combinations
 function comboDetail( $link, $tripleID )
 {
+  if ( ! may_view_triple( $link, $tripleID ) )
+    return "<p>You do not have access to that report.</p>\n";
+
   // Let's start with header information
   // language=MariaDB
   $query  = "SELECT personID, report.reportID, dataDescription " .
@@ -514,7 +498,7 @@ function comboDetail( $link, $tripleID )
     while ( list( $docID, $label ) = mysqli_fetch_array( $result ) )
     {
       list( $anal, $subanal, $doctype ) = explode( ":", $label );
-      $text .= "  <li><a href='#$atype' onclick='show_report_detail( $docID );'>$subanal ($doctype)</a></li>\n";
+      $text .= "  <li><a href='#$atype' class='onclick-show-report-detail-arg' data-arg='$docID'>$subanal ($doctype)</a></li>\n";
     }
     $result->close();
     $text .= "</ul>\n";

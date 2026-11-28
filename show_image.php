@@ -9,6 +9,7 @@ if ( !isset($_SESSION['id']) )
 }
 
 include 'db.php';
+include 'lib/access.php';
 
 if ( isset( $_GET['ID'] ) )
 {
@@ -44,6 +45,11 @@ HTML;
 // Function to display a file
 function do_getImage( $link, $imageID )
 {
+  if ( ! may_view_image( $link, $imageID ) )
+  {
+    http_response_code( 403 );
+    display_error( "You do not have access to that image." );
+  }
 
   $query  = "SELECT filename, gelPicture " .
             "FROM image " .
@@ -57,7 +63,7 @@ function do_getImage( $link, $imageID )
   $row      = mysqli_fetch_array( $result );
   $data     = $row['gelPicture'];
   $filename = $row['filename'];
-  $csize    = mb_strlen( $data, '8bit' );
+  $csize    = strlen( $data );
   $result->close();
   $stmt->close();
 
@@ -127,7 +133,6 @@ function display_error( $error_text )
 <head>
   <title>Graduate Student Applications Database - display file error</title>
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
-  <link rel="stylesheet" type="text/css" href="css/main.css" />
 </head>
 
 <body>

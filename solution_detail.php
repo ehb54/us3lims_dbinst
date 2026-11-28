@@ -10,6 +10,7 @@ if ( !isset($_SESSION['id']) )
 
 include 'config.php';
 include 'db.php';
+include 'lib/access.php';
 
 if ( isset( $_GET['type']   ) && 
      isset( $_GET['expID']  ) &&
@@ -55,6 +56,12 @@ HTML;
 // Function to display info about a solution, analyte, or buffer
 function do_getInfo( $link, $type, $experimentID, $triple )
 {
+  if ( ! may_view_solution( $link, $experimentID, $triple ) )
+  {
+    http_response_code( 403 );
+    display_error( "You do not have access to that experiment." );
+  }
+
   // Let's start with header information
   $header  = get_header_info( $link, $type, $experimentID, $triple );
   $ptype   = ucwords( $type );
@@ -66,8 +73,8 @@ function do_getInfo( $link, $type, $experimentID, $triple )
 <html>
 <head>
   <title>US Lims Database - $ptype Detail</title>
-  <link rel="stylesheet" type="text/css" href="css/main.css" />
   <link rel="stylesheet" type="text/css" href="css/reports.css" />
+  <script src="js/main.js" type="text/javascript"></script>
 </head>
 
 <body>
@@ -75,7 +82,7 @@ function do_getInfo( $link, $type, $experimentID, $triple )
   $header
   $content
 
-  <p><a href='javascript:window.close();'>Close Window</a></p>
+  <p><a href='#' class='onclick-window-close'>Close Window</a></p>
 
 </body></html>
 HTML;
@@ -398,7 +405,6 @@ function display_error( $error_text )
 <head>
   <title>US Lims Database - display file error</title>
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
-  <link rel="stylesheet" type="text/css" href="css/main.css" />
 </head>
 
 <body>

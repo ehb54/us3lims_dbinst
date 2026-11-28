@@ -10,6 +10,7 @@ if ( !isset($_SESSION['id']) )
 
 include 'config.php';
 include 'db.php';
+include 'lib/access.php';
 
 if ( isset( $_GET['ID'] ) )
 {
@@ -45,27 +46,33 @@ HTML;
 // Function to display a file
 function do_getDoc( $link, $documentID )
 {
-  // Let's start with header information
-  $header  = get_header_info( $link, $documentID );
+  $reportID = viewable_document_report( $link, $documentID );
+  if ( $reportID === NULL )
+  {
+    http_response_code( 403 );
+    display_error( "You do not have access to that document." );
+  }
 
-  // Now the content
   $content = get_document_content( $link, $documentID );
 
   if ( empty( $content ) )    // Then we must be echoing something directly
     return;
 
+  $header  = get_header_info( $link, $documentID, $reportID );
+
   echo <<<HTML
 <html>
 <head>
   <title>US Lims Database - Report Detail</title>
-  <link rel="stylesheet" type="text/css" href="css/main.css" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css" />
+  <script src="js/main.js" type="text/javascript"></script>
 </head>
 
 <body>
 
   $header
   $content
-  <p><a href='javascript:window.close();'>Close Window</a></p>
+  <p><a href='#' class='onclick-window-close'>Close Window</a></p>
 
 </body></html>
 HTML;
@@ -73,17 +80,18 @@ HTML;
 }
 
 // Function to get document header content
-function get_header_info( $link, $documentID )
+function get_header_info( $link, $documentID, $reportID )
 {
   // Let's start with header information
   $query  = "SELECT report.runID, triple, runType " .
             "FROM documentLink, reportTriple, report, experiment " .
             "WHERE reportDocumentID = ? " .
+            "AND report.reportID = ? " .
             "AND documentLink.reportTripleID = reportTriple.reportTripleID " .
             "AND reportTriple.reportID = report.reportID " .
             "AND report.experimentID = experiment.experimentID ";
   $stmt = mysqli_prepare( $link, $query );
-  mysqli_stmt_bind_param( $stmt, "i", $documentID );
+  mysqli_stmt_bind_param( $stmt, "ii", $documentID, $reportID );
   $stmt->execute() or die( "Query failed : $query<br />\n" . $stmt->error );
   $result = $stmt->get_result() or die( "Query failed : $query<br />\n" . $stmt->error );
   list ( $runID, $tripleDesc, $runType ) = mysqli_fetch_array( $result );
@@ -131,8 +139,6 @@ function get_header_info( $link, $documentID )
 // Function to get the document content. Method varies depending on the type
 function get_document_content( $link, $documentID )
 {
-  global $full_path, $data_dir;
-
   // First the document and the document type
   $query  = "SELECT documentType, filename, contents " .
             "FROM reportDocument " .
@@ -150,14 +156,31 @@ function get_document_content( $link, $documentID )
   $contents = $row['contents'];
   //$csize   = mb_strlen( $contents, '8bit' );
 
+  // The same page sends the file itself, so the permission check covers it
+  $file_url   = "report_detail.php?ID=" . (int) $documentID . "&amp;file=1";
+  $file_types = array( 'dat' => 'text/plain',
+                       'rpt' => 'text/plain',
+                       'csv' => 'text/csv',
+                       'png' => 'image/png' );
+
   // Check to see if there was anything
   if ( ! $contents )
     $text = "<p>The requested record has no document</p>\n";
 
+  else if ( isset( $_GET['file'] ) && isset( $file_types[ $doctype ] ) )
+  {
+    send_file( $contents, $filename, $file_types[ $doctype ],
+               ( $doctype == 'png' ) ? 'inline' : 'attachment' );
+    return "";
+  }
+
   else if ( $doctype == 'html' )
   {
-    $text = "<div>\n" .
-              $contents .
+    // Stored reports are whole documents; show the body only, since CSP blocks their <style>.
+    $body = preg_match( '~<body[^>]*>(.*)</body>~is', $contents, $m ) ? $m[1] : $contents;
+    $body = preg_replace( '~<style\b[^>]*>.*?</style>~is', '', $body );
+    $text = "<div class='stored-report'>\n" .
+              $body .
             "</div>\n";
   }
 
@@ -165,14 +188,7 @@ function get_document_content( $link, $documentID )
             $doctype == 'rpt' ||
             $doctype == 'csv' )
   {
-    $file = $data_dir . $filename;
-    $r    = fopen( $file, "w+" );
-    fwrite( $r, $contents );
-    fclose( $r );
-    // Figure out the apache file name, assuming a subdirectory
-    $apache_file = substr( $data_dir, strlen( $full_path ) ) . $filename;
-
-    $text = "<div><a href='$apache_file' target=_blank>Download</a></div>";
+    $text = "<div><a href='$file_url' target=_blank>Download</a></div>";
     $text .= "<div><pre>\n" .
               $contents .
             "</pre></div>\n";
@@ -180,40 +196,20 @@ function get_document_content( $link, $documentID )
 
   else if ( $doctype == 'png' )
   {
-    // Create a new file in the data directory using the known filename
-    $file = $data_dir . $filename;
-    $r    = fopen( $file, "wb+" );
-    fwrite( $r, $contents );
-    fclose( $r );
-
-    // Figure out the apache file name, assuming a subdirectory
-    $apache_file = substr( $data_dir, strlen( $full_path ) ) . $filename;
-
-    // Now create some html that includes the file
+    // Create some html that includes the file
     $text = <<<HTML
     <div> 
-      <a href='$apache_file' target=_blank>Download</a>
+      <a href='$file_url' target=_blank>Download</a>
     </div>
     <div>
-      <img src='$apache_file' alt='UltraScan 3 png file' />
+      <img src='$file_url' alt='UltraScan 3 png file' />
     </div>
 HTML;
   }
 
   else if ( $doctype == 'svgz'  ||  $doctype == 'svg' )
   {
-    // Code to echo the blob out to the user directly.
-  
-    // Send it to the user without writing it out as a file
-    header( "Pragma: public" ); // required
-    header( "Expires: 0" );
-    header( "Cache-Control: must-revalidate, post-check=0, pre-check=0" );
-    header( "Cache-Control: private", false ); // required for certain browsers
-    header( "Content-Type: image/svg+xml" );
-    header( "Content-Disposition: attachment; filename=$filename" );
-    header( "Content-Transfer-Encoding: binary" );
-    // header( "Content-Length: " . $csize );
-    echo $contents;
+    send_file( $contents, $filename, 'image/svg+xml', 'attachment' );
     return "";
   }
 
@@ -221,6 +217,19 @@ HTML;
     $text = "<p>Unsupported document format</p>\n";
 
   return $text;
+}
+
+// Function to send a document to the user without writing it out as a file
+function send_file( $contents, $filename, $mime_type, $disposition )
+{
+  $safe_name = preg_replace( '/[^A-Za-z0-9._-]/', '_', $filename );
+
+  session_write_close();   // So a long download does not hold up the user's other pages
+  header( "Cache-Control: private, no-store" );
+  header( "Content-Type: $mime_type" );
+  header( "Content-Disposition: $disposition; filename=\"$safe_name\"" );
+  header( "X-Content-Type-Options: nosniff" );
+  echo $contents;
 }
 
 // Function to display an error of one sort or another and exit
@@ -231,7 +240,7 @@ function display_error( $error_text )
 <head>
   <title>US Lims Database - display file error</title>
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
-  <link rel="stylesheet" type="text/css" href="css/main.css" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css" />
 </head>
 
 <body>

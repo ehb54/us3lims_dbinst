@@ -18,8 +18,7 @@ if ( ( $_SESSION['userlevel'] != 3 ) &&
 include 'config.php';
 include 'db.php';
 include 'lib/utility.php';
-include $class_dir . 'experiment_status.php';
-include $class_dir . 'experiment_errors.php';
+
 ini_set('display_errors', 'On');
 
 
@@ -98,7 +97,7 @@ HTML;
 else
 {
    // Get details about the request
-  $reqID = htmlentities($_GET[ 'RequestID' ]);
+  $reqID = htmlentities($_GET[ 'RequestID' ], ENT_COMPAT | ENT_HTML401);
 
   if ( $stmt = mysqli_prepare( $link, "SELECT clusterName, HPCAnalysisRequestGUID, investigatorGUID, submitterGUID, email, experimentID, editXMLFilename, submitTime, clusterName, method, requestXMLFile FROM HPCAnalysisRequest WHERE HPCAnalysisRequestID=?" ) )
   {
@@ -127,7 +126,7 @@ else
    echo "Submit Time           : $submitTime\n";
    echo "Cluster Name          : $clusterName\n";
    echo "Method                : $method\n";
-   $xmlFile = htmlentities( $requestXMLFile );
+   $xmlFile = htmlentities( $requestXMLFile, ENT_COMPAT | ENT_HTML401 );
    echo "Request XML File      : \n$xmlFile\n";
 
    // Save for later
@@ -167,8 +166,6 @@ else
    // Get queue messages from disk directory, if it still exists
    global $submit_dir;
    global $dbname;
-   global $uses_thrift;
-   list( $cluster )  = explode( '.', $clusterName );
 
    $msg_filename = "$submit_dir$requestGUID/$dbname-$reqID-messages.txt";
    $queue_msgs = false;
@@ -194,46 +191,12 @@ else
        echo "$linkmsg1         : $len_msgs\n";
    }
 
-   if ( isset( $gfacID ) ) {
-       // If gfacID fits the right format for a GFAC job, a status request link:
-       $link2 = "<a href=\"{$_SERVER['PHP_SELF']}?RequestID=$reqID&jobstatus=t\">Show GFAC Status</a>";
-       $link3 = "<a href=\"{$_SERVER['PHP_SELF']}?RequestID=$reqID\">Hide GFAC Status</a>";
-
-       if ( isset( $_GET['jobstatus'] ) )
-       {
-           $clus_thrift    = $uses_thrift;
-           if ( in_array( $cluster, $thr_clust_excls ) )
-               $clus_thrift    = false;
-           if ( in_array( $cluster, $thr_clust_incls ) )
-               $clus_thrift    = true;
-
-           $gfacID  = $gfacID;
-           echo "$link3\n";
-
-           if ( $clus_thrift )
-           {
-               $expstat = getExperimentStatus( $gfacID );
-               echo $expstat . "\n";
-               if ( ! preg_match( "/COMPLETED/", $expstat ) )
-               {
-                   echo " -- \n";
-                   echo getExperimentErrors( $gfacID );
-               }
-           }
-           else
-           {
-               echo getJobstatus( $gfacID );
-           }
-       } else {
-           echo "$link2\n";
-       }
-   }
 }
 
 
 echo "</pre>\n";
 echo "</div>\n";
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 ?>

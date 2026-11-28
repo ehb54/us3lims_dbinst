@@ -27,21 +27,21 @@ if ( $enable_PAM ) {
   <h3>Registered users please log in:</h3>
   <p class='message'>$message</p>
 
-  <form method='post' action='https://$org_site/checkuser.php'>
+  <form method='post' action='checkuser.php'>
     <table cellspacing='0' cellpadding='7'>
       <tr><td>Username or E-Mail Address:</td>
           <td><input type='text' name='email' maxlength='64' size='20'
-                     style='width:20em;' /></td></tr>
+                     class='w-20em' autocomplete='username' autofocus required /></td></tr>
 
       <tr><td>Password:</td>
-          <td><input type='password' name='password' maxlength='32'
-                     size='20' style='width:20em;'/></td></tr>
+          <td><input type='password' name='password' maxlength='127'
+                     size='20' class='w-20em' autocomplete='current-password' required /></td></tr>
 
       <tr><td><input type='submit' name='Submit' value='Sign In'/></td></tr>
     </table>
   </form>
 
-  <p><a href='https://$org_site/lost_password.php'>Forget your password?</a></p>
+  <p><a href='lost_password.php'>Forget your password?</a></p>
 
   <h3>New Users:</h3>
   <p>Please contact your administrator</p>
@@ -59,27 +59,27 @@ HTML;
   <h3>Registered users please log in:</h3>
   <p class='message'>$message</p>
 
-  <form method='post' action='https://$org_site/checkuser.php'>
+  <form method='post' action='checkuser.php'>
     <table cellspacing='0' cellpadding='7'>
       <tr><td>E-Mail Address:</td>
           <td><input type='text' name='email' maxlength='64' size='20'
-                     style='width:20em;' /></td></tr>
+                     class='w-20em' autocomplete='username' autofocus required /></td></tr>
 
       <tr><td>Password:</td>
-          <td><input type='password' name='password' maxlength='32'
-                     size='20' style='width:20em;'/></td></tr>
+          <td><input type='password' name='password' maxlength='127'
+                     size='20' class='w-20em' autocomplete='current-password' required /></td></tr>
 
       <tr><td><input type='submit' name='Submit' value='Sign In'/></td></tr>
     </table>
   </form>
 
-  <p><a href='https://$org_site/lost_password.php'>Forget your password?</a></p>
+  <p><a href='lost_password.php'>Forget your password?</a></p>
 
   <h3>New Users:</h3>
-  <p><a href='https://$org_site/newaccount.php'>Sign up for a new account</a></p>
+  <p><a href='newaccount.php'>Sign up for a new account</a></p>
 
 </div>
 HTML;
 }
 
-include 'footer.php';
+include $common_dir . 'footer.php';

@@ -1,9 +1,20 @@
 <?php
 
+## Failed mysqli calls return false here, as PHP 7.4 does by default, and the code checks for that.
+## PHP 8.1+ throws mysqli_sql_exception by default instead, which would skip those checks.
+mysqli_report( MYSQLI_REPORT_OFF );
+
 include 'config.php';
 global $dbhost, $dbusername, $dbpasswd, $dbname;
 
-$link = mysqli_connect($dbhost, $dbusername, $dbpasswd, $dbname) or die("Could not connect to $dbname on database server.");
+## A caller that already opened its own connection (checkuser.php's own
+## pre-connect, routed through login_db_unavailable() instead of this file's
+## own die() on a down database) sets $link first; reused here instead of
+## connecting a second time and die()ing on the same outage again.
+if ( ! isset( $link ) || ! ( $link instanceof mysqli ) )
+{
+   $link = mysqli_connect($dbhost, $dbusername, $dbpasswd, $dbname) or die("Could not connect to $dbname on database server.");
+}
 if (!function_exists('mysqli_prep_query'))
 {
     function mysqli_prep_query($link, $sql, $typeDef = false, $params = false, $asGenerator = false) {

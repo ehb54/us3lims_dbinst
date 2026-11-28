@@ -87,7 +87,7 @@ include 'lib/selectboxes.php';
 </div>
 
 <?php
-include 'footer.php';
+include $common_dir . 'footer.php';
 exit();
 
 // Function to redirect to prior record
@@ -229,16 +229,16 @@ HTML;
   }
 
   // Now update the database with the new information
-  $goals               =        addslashes(htmlentities($_POST['goals']));
-  $molecules           =        addslashes(htmlentities($_POST['molecules']));
-  $purity              = substr(addslashes(htmlentities($_POST['purity'])), 0,10);
-  $expense             =        addslashes(htmlentities($_POST['expense']));
-  $bufferComponents    =        addslashes(htmlentities($_POST['bufferComponents']));
-  $saltInformation     =        addslashes(htmlentities($_POST['saltInformation']));
-  $AUC_questions       =        addslashes(htmlentities($_POST['AUC_questions']));
-  $expDesign           =        addslashes(htmlentities($_POST['expDesign']));
-  $notes               =        addslashes(htmlentities($_POST['notes']));
-  $description         =        addslashes(htmlentities($_POST['description']));
+  $goals               =        addslashes(htmlentities($_POST['goals'], ENT_COMPAT | ENT_HTML401));
+  $molecules           =        addslashes(htmlentities($_POST['molecules'], ENT_COMPAT | ENT_HTML401));
+  $purity              = substr(addslashes(htmlentities($_POST['purity'], ENT_COMPAT | ENT_HTML401)), 0,10);
+  $expense             =        addslashes(htmlentities($_POST['expense'], ENT_COMPAT | ENT_HTML401));
+  $bufferComponents    =        addslashes(htmlentities($_POST['bufferComponents'], ENT_COMPAT | ENT_HTML401));
+  $saltInformation     =        addslashes(htmlentities($_POST['saltInformation'], ENT_COMPAT | ENT_HTML401));
+  $AUC_questions       =        addslashes(htmlentities($_POST['AUC_questions'], ENT_COMPAT | ENT_HTML401));
+  $expDesign           =        addslashes(htmlentities($_POST['expDesign'], ENT_COMPAT | ENT_HTML401));
+  $notes               =        addslashes(htmlentities($_POST['notes'], ENT_COMPAT | ENT_HTML401));
+  $description         =        addslashes(htmlentities($_POST['description'], ENT_COMPAT | ENT_HTML401));
   $status              =                                $_POST['status'];
 
   $query = "UPDATE project " .
@@ -360,7 +360,7 @@ function display_record($link)
   // Create local variables; make sure IE displays empty cells properly
   foreach ($row as $key => $value)
   {
-    $$key = (empty($value)) ? "&nbsp;" : html_entity_decode( stripslashes( nl2br($value) ) );
+    $$key = (empty($value)) ? "&nbsp;" : html_entity_decode( stripslashes( nl2br($value) ), ENT_COMPAT | ENT_HTML401 );
   }
 
   global $project_status;               // From lib/selectboxes.php
@@ -370,7 +370,7 @@ function display_record($link)
 
   // Populate a list box to allow user to jump to another record
   $nav_listbox =  "<select name='nav_box' id='nav_box' " .
-                  "        onchange='get_project(this);' >" .
+                  "        class='onchange-get-project' >" .
                   "  <option value='null'>None selected...</option>\n";
   $query  = "SELECT j.projectID, description " .
             "FROM project j, projectPerson p " .
@@ -390,8 +390,8 @@ echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1' id='fixed'>
     <thead>
-      <tr><th style="width: 16%;"></th>
-      <th style="width: 98%;">Edit User Projects</th></tr>
+      <tr><th class='w-16p'></th>
+      <th class='w-98p'>Edit User Projects</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>Jump to: $nav_listbox
@@ -461,7 +461,7 @@ function get_id($link)
 
   // If we're here, there aren't any records
 echo<<<HTML
-  <form action='{$_SERVER[PHP_SELF]}' method='post'>
+  <form action='{$_SERVER['PHP_SELF']}' method='post'>
   <table cellspacing='0' cellpadding='0' class='style1'>
     <thead>
       <tr><th colspan='2'>Edit User Projects</th></tr>
@@ -508,16 +508,16 @@ function edit_record($link)
 
   $row = mysqli_fetch_array($result);
 
-  $goals               = html_entity_decode( stripslashes( $row['goals'] ) );
-  $molecules           = html_entity_decode( stripslashes( $row['molecules'] ) );
-  $purity              = html_entity_decode( stripslashes( $row['purity'] ) );
-  $expense             = html_entity_decode( stripslashes( $row['expense'] ) );
-  $bufferComponents    = html_entity_decode( stripslashes( $row['bufferComponents'] ) );
-  $saltInformation     = html_entity_decode( stripslashes( $row['saltInformation'] ) );
-  $AUC_questions       = html_entity_decode( stripslashes( $row['AUC_questions'] ) );
-  $expDesign           = html_entity_decode( stripslashes( $row['expDesign'] ) );
-  $notes               = html_entity_decode( stripslashes( $row['notes'] ) );
-  $description         = html_entity_decode( stripslashes( $row['description'] ) );
+  $goals               = html_entity_decode( stripslashes( $row['goals'] ), ENT_COMPAT | ENT_HTML401 );
+  $molecules           = html_entity_decode( stripslashes( $row['molecules'] ), ENT_COMPAT | ENT_HTML401 );
+  $purity              = html_entity_decode( stripslashes( $row['purity'] ), ENT_COMPAT | ENT_HTML401 );
+  $expense             = html_entity_decode( stripslashes( $row['expense'] ), ENT_COMPAT | ENT_HTML401 );
+  $bufferComponents    = html_entity_decode( stripslashes( $row['bufferComponents'] ), ENT_COMPAT | ENT_HTML401 );
+  $saltInformation     = html_entity_decode( stripslashes( $row['saltInformation'] ), ENT_COMPAT | ENT_HTML401 );
+  $AUC_questions       = html_entity_decode( stripslashes( $row['AUC_questions'] ), ENT_COMPAT | ENT_HTML401 );
+  $expDesign           = html_entity_decode( stripslashes( $row['expDesign'] ), ENT_COMPAT | ENT_HTML401 );
+  $notes               = html_entity_decode( stripslashes( $row['notes'] ), ENT_COMPAT | ENT_HTML401 );
+  $description         = html_entity_decode( stripslashes( $row['description'] ), ENT_COMPAT | ENT_HTML401 );
 
   $status      = $row['status'];
   $status_text = project_status_select( 'status', $status );
