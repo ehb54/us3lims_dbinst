@@ -54,8 +54,9 @@ unset( $_SESSION['POST'] );
 $page_title = "New Account Registration";
 include 'header.php';
 ?>
-<div id='content'>
-
+<div id='content' class='account-page'>
+<div class='account-card'>
+  <p class='account-eyebrow'>UltraScan III &middot; LIMS</p>
   <h1 class="title">New Account Registration</h1>
 
 <?php
@@ -107,7 +108,7 @@ if ( ! $result )
          'Please contact the system administrator: '          .
          "<a href='mailto:$admin_email'>"              .
          "&lt;$admin_email&gt;</a>.</p>"               .
-         "</div></body></html>";
+         "</div></div></body></html>";
     exit();
 } 
 
@@ -141,6 +142,8 @@ echo "<p>Your login information has been mailed to your email address.\n" .
      "   activate your new account within one week.</p>\n";
 
 ?>
+<p class="account-new"><a href="login.php">&larr; Back to sign in</a></p>
+</div>
 </div>
 
 <?php

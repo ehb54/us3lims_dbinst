@@ -24,13 +24,13 @@ ini_set('display_errors', 'On');
 
 // Start displaying page
 $page_title = "View Reports";
-$css = 'css/reports.css';
+$css = 'css/reports.css?v=5855cc374ffa';
 $js  = 'js/reports.js';
 include 'header.php';
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='selector-page'>
 
   <h1 class="title">View Reports</h1>
   <!-- Place page content here -->

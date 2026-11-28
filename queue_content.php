@@ -182,7 +182,6 @@ uasort( $display_info, 'cmp' );
 
 $content = "<div class='queue_content'>\n";
 // Add summary table
-$content .= "<h3>Queue Summary</h3>\n";
 $content .= "<div id='selection_controls'>\n";
 $content .= "  <input type='checkbox' id='select_all_jobs' /> Select All <span id='count_all'>(0/0)</span>\n";
 $content .= "  <span id='global_select_count'>Selected Jobs: 0</span>\n";
@@ -218,7 +217,7 @@ foreach ( $summary_data as $runID => $run_info ) {
                 $content .= "<td rowspan='$anal_rowspan'><input type='checkbox' class='select_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc' /> $analTypeEsc <span class='count_runID_anal' data-runid='$runIDEsc' data-analtype='$analTypeEsc'>(0/{$anal_info['count']})</span></td>";
                 $first_anal = false;
             }
-            $content .= "<td><input type='checkbox' class='select_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc' /> $statusEsc <span class='count_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc'>(0/$count)</span></td>";
+            $content .= "<td><input type='checkbox' class='select_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc' /> <span class='queue-status $statusEsc'>$statusEsc</span> <span class='count_runID_anal_status' data-runid='$runIDEsc' data-analtype='$analTypeEsc' data-status='$statusEsc'>(0/$count)</span></td>";
             $content .= "</tr>\n";
         }
     }
@@ -269,6 +268,7 @@ foreach( $display_info as $display )
       $clusterName = "metascheduler:" . $display['cluster_executing'];
   }
 
+  $statusEsc = htmlspecialchars( $queueStatus, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
   $content .= <<<HTML
   <tr><th>Owner:</th>
       <td colspan='3'>$jobEmail</td></tr>
@@ -277,7 +277,7 @@ foreach( $display_info as $display )
       <td colspan='3'>$lastMessage</td></tr>
 
   <tr><th>Status:</th>
-      <td class='$queueStatus'>$queueStatus</td>
+      <td><span class='queue-status $statusEsc'>$statusEsc</span></td>
       <th>Analysis Type:</th>
       <td>$analType</td></tr>
 

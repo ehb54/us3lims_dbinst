@@ -24,7 +24,7 @@ $page_title = "Select Another User";
 include 'header.php';
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='selector-page'>
 
   <h1 class="title">Select Another User</h1>
   <!-- Place page content here -->
@@ -46,6 +46,10 @@ include 'header.php';
   else
     $text  = person_select( $link, 'personID', $_SESSION['id'] );
 
+  $name = trim( ($_SESSION['firstname'] ?? '') . ' ' . ($_SESSION['lastname'] ?? '') );
+  $identity = htmlspecialchars( html_entity_decode( $name, ENT_COMPAT | ENT_HTML401, 'UTF-8' ),
+                                ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
+  echo "<h2>$identity</h2>\n";
   echo $text;
 
   echo "<p><a href='{$_SERVER['PHP_SELF']}?restore=true'>Restore my own info</a></p>\n";

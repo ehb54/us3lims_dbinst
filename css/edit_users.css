@@ -15,11 +15,22 @@
 
 /* Section divider rows inside the user profile tables */
 .form-section-header {
-    background: #3a3a3a;
-    color: #fff;
+    background: #e8f0ee;
+    color: #25483f;
     font-weight: bold;
-    font-size: 0.82em;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-size: 1em;
     padding: 6px 10px;
 }
+
+#content .profile-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1em;
+    font-size: 1.25rem;
+    text-align: left;
+}
+.profile-heading span { overflow-wrap: anywhere; }
+.profile-heading input[type=submit] { padding: .4em .9em; }
+#content table.style1 tbody th:not([colspan]) { width: 32%; }
+#content table.style1 :is(select, input, textarea) { max-width: 100%; box-sizing: border-box; }

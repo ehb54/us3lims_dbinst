@@ -9,42 +9,42 @@
 #content table
 {
   border-collapse  : collapse;
-  border           : solid black 1px;
+  border-bottom    : 1px solid #d9e1df;
 }
 
 #content table th
 {
-  background-color : #acf;
+  background-color : #e8f0ee;
   padding          : 4px;
   text-align       : left;
-  border           : solid black 1px;
+  border-bottom    : 1px solid #d9e1df;
 }
 
 #content table td
 {
   padding          : 4px;
-  border           : solid black 1px;
+  border-bottom    : 1px solid #d9e1df;
 }
 
 #content table td.decoration
 {
-  background-color : #bbb;
+  background-color : #f6f8f7;
 }
 
-#content table td.running
-{
-  background-color : #47ff47;
+#content .queue-status {
+  display: inline-block;
+  border-radius: 4px;
+  padding: .1em .5em;
+  background: #edf0ef;
+  color: #243c36;
+  font-weight: bold;
 }
-
-#content table td.queued
-{
-  background-color : #8888ff;
-}
-
-#content table td.canceled
-{
-  background-color : red;
-}
+#content .queue-status.running { background: #daf0e4; color: #205c3a; }
+#content .queue-status.queued { background: #e3ebf7; color: #304e7a; }
+#content .queue-status.canceled, #content .queue-status.failed { background: #f9e3df; color: #80372f; }
+#content .queue_content td { overflow-wrap: anywhere; }
+.queue-sort { margin: .5em 0 1em; }
+.queue-sort select { margin-left: .4em; }
 
 #content table.summary_table
 {
@@ -84,7 +84,7 @@
   margin-bottom    : 0;
 }
 
-#content table.summary_table th span, #content table.summary_table td span
+#content table.summary_table th span[class^=count_], #content table.summary_table td span[class^=count_]
 {
   font-weight      : normal;
   font-size        : 0.9em;
@@ -98,5 +98,12 @@
     margin-bottom: 10px;
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: .7em;
+    flex-wrap: wrap;
 }
+
+.queue-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 1em; }
+.queue-heading h2, .queue-heading .queue-sort { margin: .5em 0; }
+
+/* Keep wide queue data scrollable without expanding the site shell. */
+#queue_content { max-width: 100%; overflow-x: auto; }

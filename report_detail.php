@@ -64,15 +64,17 @@ function do_getDoc( $link, $documentID )
 <html>
 <head>
   <title>US Lims Database - Report Detail</title>
-  <link rel="stylesheet" type="text/css" href="css/reports.css" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css?v=5855cc374ffa" />
   <script src="js/main.js" type="text/javascript"></script>
 </head>
 
 <body>
 
+  <main class="document-view">
   $header
   $content
   <p><a href='#' class='onclick-window-close'>Close Window</a></p>
+  </main>
 
 </body></html>
 HTML;
@@ -120,13 +122,13 @@ function get_header_info( $link, $documentID, $reportID )
           : "Cell $cell, Channel $channel, Wavelength $wl<br />\n";
 
   // Create header information
-  $header = "<div>\n" .
+  $header = "<div class='document-heading'>\n" .
             "<h1>$anal</h1>\n" .
-            "<h2>Run ID: $runID<br />\n" .
+            "<h2>Run ID: $runID</h2>\n" .
+            "<p>" .
             $triple .
-            "Edited Dataset: $edit_profile</h2>\n" .
-            "<p><b>$subanal ($doctype_text)</b><br />\n" .
-            "<b>Filename:</b>$rfilename<br />\n" .
+            "Edited Dataset: $edit_profile</p>\n" .
+            "<p><b>$subanal ($doctype_text)</b></p>\n" .
             "</div>\n";
 
   // html already has a header in it  
@@ -164,6 +166,7 @@ function get_document_content( $link, $documentID )
                        'png' => 'image/png' );
 
   // Check to see if there was anything
+  $download = "";
   if ( ! $contents )
     $text = "<p>The requested record has no document</p>\n";
 
@@ -188,19 +191,16 @@ function get_document_content( $link, $documentID )
             $doctype == 'rpt' ||
             $doctype == 'csv' )
   {
-    $text = "<div><a href='$file_url' target=_blank>Download</a></div>";
-    $text .= "<div><pre>\n" .
+    $download = "<a href='$file_url' target=_blank>Download</a>";
+    $text = "<div><pre>\n" .
               $contents .
             "</pre></div>\n";
   }
 
   else if ( $doctype == 'png' )
   {
-    // Create some html that includes the file
+    $download = "<a href='$file_url' target=_blank>Download</a>";
     $text = <<<HTML
-    <div> 
-      <a href='$file_url' target=_blank>Download</a>
-    </div>
     <div>
       <img src='$file_url' alt='UltraScan 3 png file' />
     </div>
@@ -215,6 +215,12 @@ HTML;
 
   else
     $text = "<p>Unsupported document format</p>\n";
+
+  if ( $doctype != 'html' && $doctype != 'svgz' )
+  {
+    $display_filename = htmlspecialchars( (string) $filename, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
+    $text = "<p class='document-file'><b>Filename:</b> $display_filename $download</p>\n" . $text;
+  }
 
   return $text;
 }
@@ -240,7 +246,7 @@ function display_error( $error_text )
 <head>
   <title>US Lims Database - display file error</title>
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
-  <link rel="stylesheet" type="text/css" href="css/reports.css" />
+  <link rel="stylesheet" type="text/css" href="css/reports.css?v=5855cc374ffa" />
 </head>
 
 <body>

@@ -180,7 +180,7 @@ if ( isset($_SESSION['edit_select_type'])  &&
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='workflow-page'>
 
   <h1 class="title"><?php echo $page_title; ?></h1>
   <!-- Place page content here -->

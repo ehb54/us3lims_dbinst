@@ -103,11 +103,12 @@ include 'header.php';
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='selector-page'>
 
   <h1 class="title">Share Data with Other Investigators</h1>
   <!-- Place page content here -->
 
+  <h2><?php echo htmlspecialchars(html_entity_decode(trim(($_SESSION['firstname'] ?? '') . ' ' . ($_SESSION['lastname'] ?? '')), ENT_COMPAT | ENT_HTML401, 'UTF-8'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?></h2>
   <p>Check other investigators who are permitted to view your reports.</p>
 
   <?php echo "<p id='message' class='message'>$message</p>\n"; ?>
@@ -125,16 +126,16 @@ include 'header.php';
     $e       = $i;
     $inv     = $IDs[$e];
     $checked = ( in_array( $inv, $collaborators ) ) ? " checked='checked'" : "";
-    echo "<tr><td><input type='checkbox' name='cb[$inv]'$checked " .
-         "         class='onclick-reset-message' /> $names[$e]</td>\n";
+    echo "<tr><td><label><input type='checkbox' name='cb[$inv]'$checked " .
+         "         class='onclick-reset-message' /> $names[$e]</label></td>\n";
   /////////
 
     $e       = $rows + $i;
     $inv     = $IDs[$e];
     $checked = ( in_array( $inv, $collaborators ) ) ? " checked='checked'" : "";
     if ( $i < $rows-1  ||  $extra != 1 )
-    echo "<td><input type='checkbox' name='cb[$inv]'$checked " .
-         "     class='onclick-reset-message' /> $names[$e]</td>\n";
+    echo "<td><label><input type='checkbox' name='cb[$inv]'$checked " .
+         "     class='onclick-reset-message' /> $names[$e]</label></td>\n";
   /////////
 
     $e = $rows * 2 + $i;
@@ -143,8 +144,8 @@ include 'header.php';
     $checked = ( in_array( $inv, $collaborators ) ) ? " checked='checked'" : "";
 
     if ( $i < $rows-1  || $extra == 0 )
-    echo "<td><input type='checkbox' name='cb[$inv]'$checked " .
-         "     class='onclick-reset-message' /> $names[$e]</td>\n";
+    echo "<td><label><input type='checkbox' name='cb[$inv]'$checked " .
+         "     class='onclick-reset-message' /> $names[$e]</label></td>\n";
 
     echo "</tr>\n";
 

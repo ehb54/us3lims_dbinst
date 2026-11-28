@@ -3,7 +3,7 @@
   float: left;
   border: none;
   margin: 5px;
-  width: 800px;
+  width: min(750px, calc(100% - 205px));
   padding: 0px;
   box-sizing: border-box;
   /* text-align: left; */
@@ -21,12 +21,12 @@
 
 #sf_content label{
   display: inline-block;
-  background-color: black;
-  color: white;
+  background-color: transparent;
+  color: #25483f;
   font-size: 13px;
   font-weight: bold;
   width: 90px;
-  text-align: right;
+  text-align: left;
   padding: 4px;
   margin: 0px;
 }
@@ -76,12 +76,12 @@
 }
 
 #sf_view:hover, #sf_new:hover {
-  background-color: green;
+  background-color: #dcebe8;
   color: black;
 }
 
 #sf_view.active, #sf_new.active {
-  background-color: black;
+  background-color: #235650;
   color: white;
 }
 
@@ -191,7 +191,7 @@
 #image_viewer, #pdf_viewer {
   display: none;
   max-height: 600px;
-  max-width: 800px;
+  max-width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
@@ -210,3 +210,5 @@
 #image_viewer.active, #pdf_viewer.active, #txt_viewer.active {
   display: block;
 }
+
+#sf_content :is(input, select, textarea) { max-width: 100%; }

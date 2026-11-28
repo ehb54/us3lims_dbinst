@@ -7,7 +7,7 @@
 
 .reporthead
 {
-  background-color : #7DD5F0;  /*#2790B0; teal */
+  background-color : #e8f0ee;  /*#2790B0; teal */
   color            : black;
   font-size        : 120%;
   font-weight      : bold;
@@ -27,8 +27,8 @@ table.solution_info th {
 }
 
 table.solution_info table th {
-  background-color : #7DD5F0;
-  border           : 1px solid black;
+  background-color : #e8f0ee;
+  border           : 1px solid #c9d6d3;
 }
 
 table.solution_info table td {
@@ -40,3 +40,37 @@ table.solution_info table td {
 {
   padding-right    : 1em;
 }
+
+/* Only the viewer chrome and plain-text preview use these rules. */
+.document-view { margin: 1rem auto; max-width: 64rem; padding: 0 1rem; }
+.document-heading, .document-view > p, .document-view > div:not(.stored-report) > a {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #233533;
+}
+.document-heading { overflow-wrap: anywhere; }
+.document-heading h1 { margin: 0 0 .6rem; font-size: 1.65rem; }
+.document-heading h2 { margin: .4rem 0; font-size: 1.15rem; }
+.document-heading p { margin: .6rem 0; line-height: 1.5; }
+.document-view > div:not(.stored-report) > pre {
+  overflow-x: auto;
+  padding: .8rem;
+  background: #f4f7f6;
+  line-height: 1.5;
+}
+.document-view > div:not(.stored-report) > a { color: #175b57; }
+
+table.solution_info { max-width: 100%; border-collapse: collapse; overflow-wrap: anywhere; }
+table.solution_info :is(td, th) { padding: .35em .6em; border-bottom: 1px solid #d9e1df; }
+@media print {
+  .document-view > div:not(.stored-report) > pre { white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; }
+  .document-heading { break-after: avoid; }
+  .document-view > p:has(.onclick-window-close) { display: none; }
+}
+
+.solution-view { margin: 1rem auto; max-width: 64rem; padding-inline: 1rem; }
+.solution-view h2 { font-size: 1.15rem; }
+.document-view > div:not(.stored-report) > img { max-width: 100%; height: auto; }
+.document-view .document-heading p:last-child { margin-bottom: .25em; }
+
+.document-file { overflow-wrap: anywhere; }
+.document-file a { margin-inline-start: .5em; color: #175b57; }

@@ -14,7 +14,7 @@ $page_title = "Data Security";
 include 'header.php';
 ?>
     <!-- Begin page content -->
-    <div id='content'>
+    <div id='content' class='reading-page'>
 
         <h1 class="title">Data Security</h1>
 

@@ -951,18 +951,19 @@ function display_record($link)
     : ""
     ;
 
+$profile_name = htmlspecialchars( trim( "$fname $lname" ), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
-      <tr><th colspan='2'>Edit Profile</th></tr>
+      <tr><th colspan='2'><div class='profile-heading'><span>$profile_name</span>
+        <input type='submit' name='edit' value='Edit' /></div></th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>Jump to: $nav_listbox
                           <input type='submit' name='prior' value='&lt;' />
                           <input type='submit' name='next' value='&gt;' />
                           <input type='submit' name='new' value='New' />
-                          <input type='submit' name='edit' value='Edit' />
                           <input type='submit' name='delete' value='Delete' />
                           <input type='hidden' name='personID' value='$personID' />
           </td></tr>

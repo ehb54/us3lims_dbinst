@@ -48,10 +48,17 @@ $admin3_menu = <<<HTML
 
 HTML;
 
+$projects_menu = <<<HTML
+    <li>Projects
+      <ul>
+      <li><a href='https://$org_site/admin_view_projects.php'>View Users&rsquo; Projects</a></li>
+      </ul>
+    </li>
+HTML;
+
 $user_menu_no_edit = <<<HTML
       <li><a href='https://$org_site/view_users.php'>View User Info</a></li>
       <li><a href='https://$org_site/view_all.php'>View All Users</a></li>
-      <li><a href='https://$org_site/admin_view_projects.php'>View Users&rsquo; Projects</a></li>
       <li><a href='https://$org_site/select_user.php'>Select Data from Another User</a></li>
 
 HTML;
@@ -60,7 +67,6 @@ $edituser_menu = <<<HTML
       <li><a href='https://$org_site/edit_users.php'>Edit User Info</a></li>
       <li><a href='https://$org_site/view_users.php'>View User Info</a></li>
       <li><a href='https://$org_site/view_all.php'>View All Users</a></li>
-      <li><a href='https://$org_site/admin_view_projects.php'>View Users&rsquo; Projects</a></li>
       <li><a href='https://$org_site/select_user.php'>Select Data from Another User</a></li>
       <li><a href='https://$org_site/view_people_audit.php'>User Audit Log</a></li>
 
@@ -78,12 +84,12 @@ $hardware_menu = <<<HTML
 HTML;
 
 // Start building different link menus for different userlevels
-$admin_menu = "<ol>\n";
+$admin_menu = "<ol class='admin-groups'>\n";
 
 if ( $userlevel == 5 )  // level 5 = super admin ( developer )
 {
   $admin_menu .= <<<HTML
-    <li>Administrator Functions<br />
+    <li>Database and diagnostics<br />
       <ul>
         $admin5_menu
       </ul>
@@ -95,7 +101,7 @@ HTML;
 else if ( $userlevel == 4 )  // userlevel 4 = admin
 {
   $admin_menu .= <<<HTML
-    <li>Administrator Functions<br />
+    <li>Database and diagnostics<br />
       <ul>
         $admin4_menu
       </ul>
@@ -107,7 +113,7 @@ HTML;
 else if ( $userlevel == 3 )  // userlevel 3 = local admin
 {
   $admin_menu .= <<<HTML
-    <li>Administrator Functions<br />
+    <li>Database and diagnostics<br />
       <ul>
         $admin3_menu
       </ul>
@@ -124,6 +130,7 @@ if ( $userlevel == 4 || $userlevel == 5 )
         $edituser_menu
       </ul>
     </li>
+    $projects_menu
 
 HTML;
 }
@@ -136,6 +143,7 @@ else if ( $userlevel == 3 )
         $user_menu_no_edit
       </ul>
     </li>
+    $projects_menu
 
 HTML;
 }

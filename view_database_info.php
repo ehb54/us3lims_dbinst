@@ -30,12 +30,12 @@ if ( preg_match( "/novalocal/", $hostaddr ) )
 
 // Start displaying page
 $page_title = "Database Login Info";
-$css = 'css/view_database_info.css';
+$css = 'css/view_database_info.css?v=02eff082ef44';
 include 'header.php';
 ?>
 <!-- Begin page content -->
 <script src="./js/copyButton.js"></script>
-<div id='content'>
+<div id='content' class='reading-page'>
 
   <h1 class="title">Database Login Info</h1>
   <!-- Place page content here -->
@@ -71,19 +71,19 @@ which can be opened by selecting:</p>
       <td>You are free to put what you like here</td></tr>
 
   <tr><th>User Name:</th>
-      <td>$userNamePAM</td></tr>
+      <td><code>$userNamePAM</code></td></tr>
 
   <tr><th>Password:</th>
       <td>The password you logged in here with</td></tr>
 
   <tr><th>Database Name:</th>
-      <td>$dbname</td></tr>
+      <td><code>$dbname</code></td></tr>
 
   <tr><th>Host Address:</th>
-      <td>$hostaddr</td></tr>
+      <td><code>$hostaddr</code></td></tr>
 
   <tr><th>Investigator Email:</th>
-      <td>{$_SESSION['email']}</td></tr>
+      <td><code>{$_SESSION['email']}</code></td></tr>
 
   <tr><th>Investigator Password:</th>
       <td>Not used for this database</td></tr>
@@ -122,19 +122,19 @@ which can be opened by selecting:</p>
       <td>You are free to put what you like here</td></tr>
 
   <tr><th>User Name:</th>
-      <td>$secure_user</td></tr>
+      <td><code>$secure_user</code></td></tr>
 
   <tr><th>Password:</th>
-      <td>$secure_pw</td></tr>
+      <td><code>$secure_pw</code></td></tr>
 
   <tr><th>Database Name:</th>
-      <td>$dbname</td></tr>
+      <td><code>$dbname</code></td></tr>
 
   <tr><th>Host Address:</th>
-      <td>$hostaddr</td></tr>
+      <td><code>$hostaddr</code></td></tr>
 
   <tr><th>Investigator Email:</th>
-      <td>{$_SESSION['email']}</td></tr>
+      <td><code>{$_SESSION['email']}</code></td></tr>
 
   <tr><th>Investigator Password:</th>
       <td>The password you logged in here with</td></tr>

@@ -131,7 +131,7 @@ table.style1 tbody td table tr.even td
 table.style1 tbody td table thead th
 {
   text-align       : center;
-  background-color : white
+  background-color : white;
   color            : black;
   font-weight      : bold;
   border           : 0px;
@@ -143,3 +143,11 @@ table.style1 tbody td table thead th
 }
 
 
+
+@media print {
+  #content_print { width: auto; }
+  #content_print table { max-width: 100%; overflow-wrap: anywhere; }
+  thead { display: table-header-group; }
+  tr, h1, h2, h3 { break-inside: avoid; }
+  h1, h2, h3 { break-after: avoid; color: black; }
+}

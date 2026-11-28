@@ -51,7 +51,7 @@ $sort_order = $_SESSION['queue_viewer_sort_order'] ?? 'submitTime';
 // Start displaying page
 $page_title = "Queue Viewer";
 $js     = 'js/queue_viewer.js';
-$css    = 'css/queue_viewer.css';
+$css    = 'css/queue_viewer.css?v=1e51adc1d2c0';
 include 'header.php';
 ?>
 <!-- Begin page content -->
@@ -60,12 +60,7 @@ include 'header.php';
   <h1 class="title">Queue Viewer</h1>
   <!-- Place page content here -->
 
-  <h3>LIMS v3 Queue</h3>
-
-  <table>
-  <tr><th>Sort order</th>
-      <td><?php echo order_select( $sort_order ); ?></td>
-  </table>
+  <div class="queue-heading"><h2>Queue Summary</h2><div class="queue-sort"><?php echo order_select( $sort_order ); ?></div></div>
 
   <div id='queue_content' data-csrf='<?php echo csrf_token(); ?>'></div>
 
@@ -89,7 +84,7 @@ function order_select( $current_order = NULL )
   $sortorder['clusterName']  = 'Cluster';
 
   $text  = "<form action='{$_SERVER['PHP_SELF']}' method='post'>\n";
-  $text .= "<select name='sort_order' size='1'
+  $text .= "<label>Sort order <select name='sort_order' size='1'
                     class='onchange-form-submit' >\n";
   foreach ( $sortorder as $order => $display )
   {
@@ -97,7 +92,7 @@ function order_select( $current_order = NULL )
     $text .= "  <option value='$order'$selected>$display</option>\n";
   }
 
-  $text .= "</select>\n" .
+  $text .= "</select></label>\n" .
            "</form>\n";
 
   return $text;

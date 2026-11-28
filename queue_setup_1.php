@@ -114,13 +114,13 @@ if ( isset( $_POST['next'] ) )
 
 // Start displaying page
 $page_title = "Queue Setup (part 1)";
-$css = 'css/queue_setup.css';
+$css = 'css/queue_setup.css?v=524ac2f03a99';
 include 'header.php';
 include 'lib/motd.php';
 
 ?>
 <!-- Begin page content -->
-<div id='content'>
+<div id='content' class='workflow-page'>
 
   <a name='title'></a>
   <h1 class="title">Queue Setup (part 1)</h1>
@@ -215,7 +215,7 @@ function get_email_text($link)
   if ( $_SESSION['loginID'] != $_SESSION['id'] )
   {
     $copy_owner = "Add e-mail address of data owner?" .
-                  "<input type='checkbox' name='add_owner'$checked class='w-5em'/>";
+                  "<input type='checkbox' name='add_owner'$checked/>";
   }
 
   $text = <<<HTML

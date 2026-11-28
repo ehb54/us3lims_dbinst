@@ -38,7 +38,7 @@ $page_title = 'My Profile';
 $js = 'js/edit_users.js';
 include 'header.php';
 ?>
-<div id='content'>
+<div id='content' class='record-page'>
 
   <h1 class="title">My Profile</h1>
 
@@ -169,11 +169,12 @@ function display_record($link)
     $$key = (empty($value)) ? "" : html_entity_decode(stripslashes( $value ), ENT_COMPAT | ENT_HTML401);
   }
 
+$record_name = htmlspecialchars( trim( "$fname $lname" ), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1'>
     <thead>
-      <tr><th colspan='8'>Edit My Information</th></tr>
+      <tr><th colspan='2'>$record_name</th></tr>
     </thead>
     <tfoot>
       <tr><td colspan='2'>

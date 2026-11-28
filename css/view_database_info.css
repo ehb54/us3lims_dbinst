@@ -1,7 +1,3 @@
-/* Styles for view_database_info.php */
-
-table td
-{
-  font-size     : 120%;
-}
-
+#main table { border-collapse: collapse; }
+#main :is(th, td) { padding: .4em .65em; border-bottom: 1px solid #d9e1df; text-align: left; }
+#main td code { font: 1em ui-monospace, monospace; overflow-wrap: anywhere; }

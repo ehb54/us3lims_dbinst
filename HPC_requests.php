@@ -26,9 +26,8 @@ ini_set('display_errors', 'On');
 $page_title = 'HPC Request Data';
 include 'header.php';
 
-echo "<div id='content'>\n";
-echo "<pre>\n\n";
-echo "</pre>\n\n";
+echo "<div id='content' class='diagnostic-page'>\n";
+echo "<h1 class='title'>HPC Request Data</h1>\n";
 
 if ( ! isset( $_GET[ 'RequestID' ] ) )
 {
