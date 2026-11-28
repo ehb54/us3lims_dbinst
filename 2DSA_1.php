@@ -76,7 +76,8 @@ $num_datasets = sizeof( $_SESSION['request'] );
 // Create the payload manager
 $payload  = new Payload_2DSA( $_SESSION );
 elogrsp( __FILE__ . " after new payload" );
-$submit_refused = '';
+$submit_refused = $_SESSION['global_fit_refusal'] ?? '';
+unset( $_SESSION['global_fit_refusal'] );
 
 // First, let's see if the "TIGRE" button has been pressed
 if ( isset($_POST['TIGRE']) )
@@ -217,7 +218,9 @@ if ( isset($_SESSION['edit_select_type'])  &&
   <h1 class="title"><?php echo $page_title; ?></h1>
   <!-- Place page content here -->
   <?php echo $new_noise; ?>
-  <?php if ( $submit_refused != '' ) echo "<p class='message'><b>" . htmlspecialchars( $submit_refused ) . "</b></p>\n"; ?>
+  <?php if ( $submit_refused !== '' && $advanced_review && $dataset_id > 0 )
+          $submit_refused .= ' Start the analysis again to change this setting on the first dataset.';
+        if ( $submit_refused !== '' ) echo "<p class='message'><b>" . htmlspecialchars( $submit_refused ) . "</b></p>\n"; ?>
 
 <div>
 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"

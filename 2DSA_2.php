@@ -43,6 +43,7 @@ include_once 'config.php';
 include_once 'db.php';
 include_once 'lib/utility.php';
 include_once 'lib/payload_manager.php';
+include_once 'lib/global_fit_check.php';
 include_once 'lib/HPC_analysis.php';
 include_once 'lib/file_writer.php';
 include_once $class_dir . 'submit_slurm.php';
@@ -78,6 +79,19 @@ if ( $submit_stopped ) {
 // Create the payload manager and restore the data
 $payload = new Payload_2DSA( $_SESSION );
 $payload->restore();
+$separate_datasets = $_SESSION['separate_datasets'];
+$submit_refused = global_fit_refusal( $payload->get( 'job_parameters' ), $payload->get( 'datasetCount' ), $separate_datasets );
+if ( $submit_refused !== '' )
+{
+  if ( $is_cli )
+  {
+    $cli_errors[] = $submit_refused;
+    return;
+  }
+  $_SESSION['global_fit_refusal'] = $submit_refused;
+  header( 'Location: 2DSA_1.php' );
+  exit();
+}
 
 // A pool submission is recorded for the dispatch queue in one transaction; a
 // repeated post of an already received submission shows its original receipt.
@@ -95,7 +109,6 @@ $HPC       = new HPC_2DSA();
 $file      = new File_2DSA();
 $filenames = array();
 $HPCAnalysisRequestID = 0;
-$separate_datasets = $_SESSION['separate_datasets'];
 
 $files_ok  = true;  // Let's also make sure there weren't any problems writing the files
 
