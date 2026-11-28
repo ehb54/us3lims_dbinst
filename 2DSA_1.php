@@ -59,6 +59,7 @@ include_once 'db.php';
 include_once 'lib/utility.php';
 include_once 'lib/payload_manager.php';
 include_once 'lib/controls.php';
+include_once 'lib/global_fit_check.php';
 
 // Make sure the advancement level is set
 $advanceLevel = ( isset($_SESSION['advancelevel']) )
@@ -75,6 +76,8 @@ $num_datasets = sizeof( $_SESSION['request'] );
 // Create the payload manager
 $payload  = new Payload_2DSA( $_SESSION );
 elogrsp( __FILE__ . " after new payload" );
+$submit_refused = $_SESSION['global_fit_refusal'] ?? '';
+unset( $_SESSION['global_fit_refusal'] );
 
 // First, let's see if the "TIGRE" button has been pressed
 if ( isset($_POST['TIGRE']) )
@@ -138,14 +141,23 @@ if ( isset($_POST['TIGRE']) )
 
 //  $payload->show();
 
-  if ( $is_cli ) {
-    $_REQUEST = [];
-    $_POST    = [];
-    include "2DSA_2.php";
+  // A refused submission shows the form again with the reason
+  $submit_refused = global_fit_refusal( $payload->get( 'job_parameters' ), $num_datasets, $separate_datasets );
+  if ( $submit_refused != ''  &&  $is_cli ) {
+    $cli_errors[] = $submit_refused;
     return;
-  } else {
-    header("Location: 2DSA_2.php");
-    exit();
+  }
+
+  if ( $submit_refused == '' ) {
+    if ( $is_cli ) {
+      $_REQUEST = [];
+      $_POST    = [];
+      include "2DSA_2.php";
+      return;
+    } else {
+      header("Location: 2DSA_2.php");
+      exit();
+    }
   }
 }
 
@@ -206,6 +218,9 @@ if ( isset($_SESSION['edit_select_type'])  &&
   <h1 class="title"><?php echo $page_title; ?></h1>
   <!-- Place page content here -->
   <?php echo $new_noise; ?>
+  <?php if ( $submit_refused !== '' && $advanced_review && $dataset_id > 0 )
+          $submit_refused .= ' Start the analysis again to change this setting on the first dataset.';
+        if ( $submit_refused !== '' ) echo "<p class='message'><b>" . htmlspecialchars( $submit_refused ) . "</b></p>\n"; ?>
 
 <div>
 <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post"
