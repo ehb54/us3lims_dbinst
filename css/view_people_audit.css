@@ -19,7 +19,7 @@
 
 /* List table */
 .audit-list             { width: 100%; border-collapse: collapse; border: 1px solid #25483f; }
-.audit-list th          { background: #25483f; color: #fff; padding: 6px 8px; text-align: left;
+.audit-list th          { padding: 6px 8px; text-align: left;
                           font-size: 12px; white-space: nowrap; }
 .audit-list td          { padding: 5px 8px; border-bottom: 1px solid #ddd; vertical-align: top;
                           font-size: 12px; }
@@ -37,7 +37,7 @@
                           background: #f0f2f5; border: 1px solid #ccc;
                           font-weight: normal; color: #333; }
 .audit-detail td        { padding: 6px 12px; border: 1px solid #ccc; }
-/* Section divider rows — dark blue, readable white text */
+/* Section divider rows */
 .audit-section          { background: #25483f !important; color: #fff !important;
                           font-size: 0.78em; font-weight: bold;
                           letter-spacing: 0.08em; text-transform: uppercase;
@@ -46,7 +46,7 @@
 
 /* Before/after diff table */
 .audit-diff             { border-collapse: collapse; width: 100%; margin-top: 4px; }
-.audit-diff th          { background: #25483f; color: #fff; padding: 6px 10px; text-align: left;
+.audit-diff th          { padding: 6px 10px; text-align: left;
                           font-size: 12px; }
 .audit-diff td          { padding: 6px 10px; border-bottom: 1px solid #ddd; vertical-align: top;
                           font-size: 12px; }

@@ -108,7 +108,7 @@ include 'header.php';
   <h1 class="title">Share Data with Other Investigators</h1>
   <!-- Place page content here -->
 
-  <h2><?php echo htmlspecialchars(trim(($_SESSION['firstname'] ?? '') . ' ' . ($_SESSION['lastname'] ?? '')), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?></h2>
+  <h2><?php echo htmlspecialchars(html_entity_decode(trim(($_SESSION['firstname'] ?? '') . ' ' . ($_SESSION['lastname'] ?? '')), ENT_COMPAT | ENT_HTML401, 'UTF-8'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?></h2>
   <p>Check other investigators who are permitted to view your reports.</p>
 
   <?php echo "<p id='message' class='message'>$message</p>\n"; ?>

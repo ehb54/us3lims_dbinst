@@ -46,7 +46,9 @@ include 'header.php';
   else
     $text  = person_select( $link, 'personID', $_SESSION['id'] );
 
-  $identity = htmlspecialchars( trim( ($_SESSION['firstname'] ?? '') . ' ' . ($_SESSION['lastname'] ?? '') ), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
+  $name = trim( ($_SESSION['firstname'] ?? '') . ' ' . ($_SESSION['lastname'] ?? '') );
+  $identity = htmlspecialchars( html_entity_decode( $name, ENT_COMPAT | ENT_HTML401, 'UTF-8' ),
+                                ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
   echo "<h2>$identity</h2>\n";
   echo $text;
 

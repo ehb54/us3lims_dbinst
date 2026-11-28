@@ -306,7 +306,7 @@ function display_record($link)
   }
   $nav_listbox .= "</select>\n";
 
-$record_name = htmlspecialchars( $name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
+$record_name = htmlspecialchars( html_entity_decode( $name, ENT_COMPAT | ENT_HTML401, 'UTF-8' ), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8' );
 echo<<<HTML
   <form action="{$_SERVER['PHP_SELF']}" method='post'>
   <table cellspacing='0' cellpadding='10' class='style1'>

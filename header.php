@@ -12,6 +12,12 @@ $title_devel = '';
 if ( preg_match( "/_devel/", $class_dir ) )
    $title_devel = '&nbsp;&nbsp;[Development]';
 
+$common_css = '/common/css/common.css';
+$common_css_file = $common_dir . 'css/common.css';
+$common_css_hash = is_readable( $common_css_file ) ? @hash_file( 'sha256', $common_css_file ) : false;
+if ( $common_css_hash !== false )
+  $common_css .= '?v=' . substr( $common_css_hash, 0, 12 );
+
 echo<<<HTML
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -46,7 +52,7 @@ Released      : 6/30/2011
   <meta name="robots" content="index, follow" />
   <meta name="verify-v1" content="+TIfXSnY08mlIGLtDJVkQxTV4kDYMoWu2GLfWLI7VBE=" />
   <link rel="shortcut icon" href="images/favicon.ico" />
-  <link href="/common/css/common.css?v=6cd08a268d9a" rel="stylesheet" type="text/css" />
+  <link href="$common_css" rel="stylesheet" type="text/css" />
   <script src="js/main.js" type="text/javascript"></script>
   <script type='text/javascript' src='js/jquery.js'></script>
   <script type='text/javascript' src='js/jquery-ui.js'></script>

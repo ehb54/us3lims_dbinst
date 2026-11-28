@@ -31,6 +31,6 @@
     text-align: left;
 }
 .profile-heading span { overflow-wrap: anywhere; }
-.profile-heading input[type=submit] { background: #225952; color: white; padding: .4em .9em; }
+.profile-heading input[type=submit] { padding: .4em .9em; }
 #content table.style1 tbody th:not([colspan]) { width: 32%; }
 #content table.style1 :is(select, input, textarea) { max-width: 100%; box-sizing: border-box; }
