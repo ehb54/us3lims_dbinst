@@ -179,11 +179,28 @@ foreach ( $expected as $key => $value )
 {
   if ( $key === 'timezone' )
   {
-    $equal = date_default_timezone_get() === $value;
+    ## Set by date_default_timezone_set(), not a variable, so show both zones.
+    $legacy_zone = date_default_timezone_get();
+    if ( $legacy_zone !== $value )
+    {
+      echo sprintf( "%-22s %s\n", $key, "DIFFERENT (legacy uses $legacy_zone, base $value)" );
+      $differences++;
+      $differing[] = "$key DIFFERENT";
+      continue;
+    }
+    $equal = true;
   }
   else
   {
     $equal = array_key_exists( $key, $legacy ) && $legacy[ $key ] === $value;
+  }
+  ## An optional switch a legacy config never set reads as off everywhere, so it
+  ## matches a false value.
+  if ( !$equal && !array_key_exists( $key, $legacy ) && $value === false
+       && ( $optional[ $key ] ?? null ) === 'boolean' )
+  {
+    echo sprintf( "%-22s %s\n", $key, 'MISSING (unset is false, as in the base)' );
+    continue;
   }
   ## MISSING, not just DIFFERENT, when the legacy config never set this key
   ## at all (e.g. no $enable_GMP line) -- a value that collides with what
@@ -375,15 +392,19 @@ if ( $activate )
                                    ? US3_DBINST_CREDENTIALS_FILE : '' )
            . ' ' . escapeshellarg( $candidate_path )
            . ' ' . escapeshellarg( $expected[ 'dbname' ] );
-  $command = ( function_exists( 'posix_geteuid' ) && posix_geteuid() === 0 )
-           ? 'runuser -l us3 -s /bin/sh -c ' . escapeshellarg( $probe_inner ) . ' 2>&1'
-           : $probe_inner . ' 2>&1';
+  ## stderr apart from the "ok": a login profile that prints a notice must not fail the check.
+  $probe_err = tempnam( sys_get_temp_dir(), 'us3-probe-' );
+  $command = ( ( function_exists( 'posix_geteuid' ) && posix_geteuid() === 0 )
+             ? 'runuser -l us3 -s /bin/sh -c ' . escapeshellarg( $probe_inner )
+             : $probe_inner ) . ' 2>' . escapeshellarg( (string) $probe_err );
   $probe_out = array();
   $probe_rc = 0;
   exec( $command, $probe_out, $probe_rc );
+  $probe_errors = trim( (string) @file_get_contents( (string) $probe_err ) );
+  @unlink( (string) $probe_err );
   if ( $probe_rc !== 0 || trim( implode( "\n", $probe_out ) ) !== 'ok' )
     migration_fail( "the candidate shim does not load, so config.php was left alone: "
-                  . trim( implode( ' ', $probe_out ) ) );
+                  . trim( implode( ' ', $probe_out ) . ' ' . $probe_errors ) );
   echo "Candidate shim loads and reports the expected database.\n";
 
   /* Keep the legacy file under a name that says what it is, and never overwrite
@@ -424,14 +445,6 @@ if ( $activate )
   exit( 0 );
 }
 
-foreach ( array( $overlay_path, $candidate_path ) as $path )
-{
-  if ( file_exists( $path ) )
-    migration_fail( "refusing to replace existing file: $path" );
-  if ( !is_dir( dirname( $path ) ) || !is_writable( dirname( $path ) ) )
-    migration_fail( "directory is missing or unwritable: " . dirname( $path ) );
-}
-
 /*
  * Group-readable by the web server, which owns the instances directory's
  * group -- but owned by us3 explicitly, not by whoever runs this tool. Run
@@ -446,19 +459,43 @@ if ( !$us3_pw )
   migration_fail( "could not resolve the us3 account; the overlay must be"
                 . " owned by it, not by whoever runs this tool" );
 
-$overlay_temp = migration_write_temp(
-  $overlay_path, us3_dbinst_config_overlay_source( $contract ), 0640,
-  filegroup( dirname( $overlay_path ) ), $us3_pw[ 'uid' ] );
+$overlay_group = is_dir( dirname( $overlay_path ) ) ? filegroup( dirname( $overlay_path ) ) : false;
+
+/* The printed rollback leaves the overlay in place, so a later migration finds it: one that
+ * has the expected contents, mode, owner and group is kept; anything else is still refused. */
+$overlay_source = us3_dbinst_config_overlay_source( $contract );
+$overlay_kept = is_file( $overlay_path ) && !is_link( $overlay_path )
+  && file_get_contents( $overlay_path ) === $overlay_source
+  && ( fileperms( $overlay_path ) & 0777 ) === 0640
+  && fileowner( $overlay_path ) === $us3_pw[ 'uid' ]
+  && filegroup( $overlay_path ) === $overlay_group;
+
+foreach ( array( $overlay_path, $candidate_path ) as $path )
+{
+  if ( $path === $overlay_path && $overlay_kept )
+    continue;
+  if ( file_exists( $path ) )
+    migration_fail( "refusing to replace existing file: $path" );
+  if ( !is_dir( dirname( $path ) ) || !is_writable( dirname( $path ) ) )
+    migration_fail( "directory is missing or unwritable: " . dirname( $path ) );
+}
+
+if ( !$overlay_kept )
+  $overlay_temp = migration_write_temp(
+    $overlay_path, $overlay_source, 0640,
+    $overlay_group, $us3_pw[ 'uid' ] );
 $candidate_temp = migration_write_temp(
   $candidate_path, us3_dbinst_config_shim_source( $instance ), 0644 );
 // link() never replaces an existing file; the temporaries are removed at exit
-if ( !@link( $overlay_temp, $overlay_path ) )
+if ( !$overlay_kept && !@link( $overlay_temp, $overlay_path ) )
   migration_fail( "could not install candidate overlay" );
 if ( !@link( $candidate_temp, $candidate_path ) )
 {
-  @unlink( $overlay_path );
+  if ( !$overlay_kept )
+    @unlink( $overlay_path );
   migration_fail( "could not install candidate shim" );
 }
-echo "Created: $overlay_path\n";
+echo ( $overlay_kept ? "Kept: $overlay_path (identical to the overlay this migration writes)\n"
+                     : "Created: $overlay_path\n" );
 echo "Created: $candidate_path\n";
 echo "The active legacy config.php was not changed.\n";
