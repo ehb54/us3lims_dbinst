@@ -10,6 +10,7 @@ if ( !isset($_SESSION['id']) )
 
 include 'config.php';
 include 'db.php';
+include 'lib/access.php';
 
 if ( isset( $_GET['type']   ) && 
      isset( $_GET['expID']  ) &&
@@ -55,6 +56,12 @@ HTML;
 // Function to display info about a solution, analyte, or buffer
 function do_getInfo( $link, $type, $experimentID, $triple )
 {
+  if ( ! may_view_solution( $link, $experimentID, $triple ) )
+  {
+    http_response_code( 403 );
+    display_error( "You do not have access to that experiment." );
+  }
+
   // Let's start with header information
   $header  = get_header_info( $link, $type, $experimentID, $triple );
   $ptype   = ucwords( $type );
